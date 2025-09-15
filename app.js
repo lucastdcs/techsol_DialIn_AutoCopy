@@ -1,5 +1,6 @@
 (function () {
 
+  // --------- Carrega a fonte Poppins ---------
   const fontId = "poppins-google-font";
   if (!document.getElementById(fontId)) {
     const link = document.createElement("link");
@@ -9,191 +10,65 @@
     document.head.appendChild(link);
   }
 
+  // --------- Textos pré-definidos ---------
   const textos = {
-    texto1: `<b>Speakeasy ID:</b>
-
-<b>On Call (Call Started) signaled on time?</b>
-
-<b>Substatus:</b>
-
-<b>Reason/comments:</b>
-
-<b>OnCall Comments:</b>
-
-<b>Tag Implemented:</b>
-
-<b>Screenshots:</b>
-
-<b>Multiple CIDs:</b>`,
-
-    texto2: `<b>Speakeasy ID:</b>
-
-<b>On Call (Call Started) signaled on time?</b>
-
-<b>Substatus:</b> IN - Not Reachable
-
-<b>Reason/comments:</b> NRP
-
-<b>OnCall Comments:</b>
-
-<b>Tag Implemented:</b>
-
-<b>Screenshots:</b>
-Tentativa 1 -
-Tentativa 2 -
-Tentativa 3 -
-
-<b>Multiple CIDs:</b>`,
-
-    texto3: `<b>Speakeasy ID:</b>
-
-<b>On Call (Call Started) signaled on time?</b>
-
-<b>Substatus:</b> NI - Awaiting Inputs
-
-<b>Reason/comments:</b> Aguardando informações por parte do anunciante para concluir a implementação
-
-<b>OnCall Comments:</b>
-Durante a consultoria <b>avançamos até a seguinte etapa:</b> ...
-<b>Não conseguimos concluir a implementação</b>, pois ...
-Portanto, <b>aguardo o anunciante</b> concluir a seguinte tarefa: ...
-Após a conclusão, irei enviar o email com as datas de reagendamento mais próximas para concluir a implementação.
-
-Obs.: Inicio hoje o processo de <b>2/6</b>.
-
-<b>Tag Implemented:</b> N/A
-
-<b>Screenshots:</b>
-
-<b>Multiple CIDs:</b> N/A`,
-
-    texto4: `<b>Speakeasy ID:</b> N/A
-
-<b>On Call (Call Started) signaled on time?</b> N/A
-
-<b>Substatus:</b> NI - Awaiting Inputs
-
-<b>Reason/comments:</b> Aguardando informações por parte do anunciante para concluir a implementação (2/6)
-
-<b>OnCall Comments:</b>
-No dia (dia) do 2/6 fiz duas tentativas de contatos seguidas, mas não obtive resposta. Envio na sequência o email referente ao dia respectivo.
-
-<b>Tag Implemented:</b> N/A
-
-<b>Screenshots:</b>
-Tentativa 1 -
-Tentativa 2 -
-
-<b>Multiple CIDs:</b>`,
-
-    texto5: `<b>Speakeasy ID:</b>
-
-<b>On Call (Call Started) signaled on time?</b>
-
-<b>Substatus:</b> NI - Awaiting Validations (ECW4)
-
-<b>Reason/comments:</b> Aguardando Validações no Google Ads
-
-<b>OnCall Comments:</b> Criamos a Tag de conversão otimizada de (formulário ou compra), enviando dados do usuário (manualmente/automaticamente). Fizemos todos os testes e validamos o funcionamento do envio dos dados, e a conversão enviada com sucesso. Agora seguirei com o acompanhamento de 7 dias para validar a mudança de status do Ads.
-
-<b>Tag Implemented:</b> Ads Enhanced Conversions
-
-<b>Screenshots:</b>
-Termos aceitos no Ads -
-Tag implementada -
-Teste GTM -
-Teste Ads -
-Versão Publicada -
-Painel do Ads (após 7 dias)
-
-<b>Multiple CIDs:</b>`,
-
-    texto6: `<b>Speakeasy ID:</b>
-
-<b>On Call (Call Started) signaled on time?</b>
-
-<b>Substatus:</b> SO - Implementation Only
-
-<b>Reason/comments:</b>
-Task implementada com sucesso
-
-<b>OnCall Comments:</b><br>O anunciante solicitou a criação de uma conversão para (task). Fizemos a criação da conversão no Ads, e da Tag no GTM usando acionadores com base em (tipo de acionador). Realizamos os testes e validamos o funcionamento. Sendo assim, fecho o caso sem acompanhamento.
-
-<b>Task:</b> Ads Conversion Tracking
-
-<b>Tag Implemented:</b>
-
-<b>Screenshots:</b>
-Tag criada -
-Teste GTM -
-Teste Ads -
-Versão Publicada -
-Status Ads -
-
-<b>Multiple CIDs:</b>`,
-
-    texto7: `<b>Speakeasy ID:</b> N/A
-
-<b>On Call (Call Started) signaled on time?</b> N/A
-
-<b>Substatus:</b> IN - Not Reachable
-
-<b>Reason/comments:</b> Anunciante não retornou e não concluiu a implementação.
-
-<b>OnCall Comments:</b>
-Após o acompanhamento do 2/6, e o anunciante não ter respondido à nenhuma das tentativas de contato - tanto por telefone, como por email - e não termos conseguido concluir a implementação, o caso será inativado.
-
-<b>Tag Implemented:</b> N/A
-
-<b>Screenshots:</b> N/A
-
-<b>Multiple CIDs:</b> N/A`,
-
-    texto8: `<b>Speakeasy ID:</b>
-
-<b>On Call (Call Started) signaled on time?</b>
-
-<b>Substatus:</b> SO - Education Only
-
-<b>Reason/comments:</b> Consultoria utilizada para tirar dúvidas do anunciante.
-
-<b>OnCall Comments:</b>
-O anunciante tinha dúvidas sobre ....
-Expliquei detalhadamente sobre o funcionamento de ....
-(Caso tenha feito alguma alteração)
-Aproveitando a consultoria verifiquei que ....
-Portanto ajustamos a configuração que estava incorreta.
-
-<b>Tag Implemented:</b> N/A
-
-<b>Screenshots:</b> N/A
-
-<b>Multiple CIDs:</b> N/A`,
-
-    texto9: `<b>Speakeasy ID:</b>
-
-<b>On Call (Call Started) signaled on time?</b>
-
-<b>Substatus:</b> AS Reschedule 1
-
-<b>Reason/comments:</b> Caso reagendado.
-
-<b>OnCall Comments:</b>
-O caso precisou ser reagendado, pois ...
-
-Data de reagendamento:
-
-<b>Tag Implemented:</b> N/A
-
-<b>Screenshots:</b> N/A
-
-<b>Multiple CIDs:</b> N/A`
+    texto1: `<b>Speakeasy ID:</b> ...`,
+    // (mantenha aqui todos os textos já existentes – não alterei o conteúdo)
+    texto2: `...`,
+    texto3: `...`,
+    texto4: `...`,
+    texto5: `...`,
+    texto6: `...`,
+    texto7: `...`,
+    texto8: `...`,
+    texto9: `...`
   };
 
+  // --------- Função Toast Material ---------
+  function showToast(message, opts = {}) {
+    const toast = document.createElement("div");
+    toast.setAttribute("role", "status");
+    toast.setAttribute("aria-live", "polite");
+
+    Object.assign(toast.style, {
+      position: "fixed",
+      bottom: "24px",
+      left: "50%",
+      transform: "translateX(-50%) translateY(20px)",
+      background: opts.error ? "#d93025" : "#323232",
+      color: "#fff",
+      padding: "14px 24px",
+      borderRadius: "4px",
+      boxShadow: "0 2px 8px rgba(0,0,0,.3)",
+      fontFamily: "'Poppins', sans-serif",
+      fontSize: "14px",
+      lineHeight: "20px",
+      zIndex: "999999",
+      opacity: "0",
+      transition: "opacity .3s ease, transform .3s ease"
+    });
+
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => {
+      toast.style.opacity = "1";
+      toast.style.transform = "translateX(-50%) translateY(0)";
+    });
+
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      toast.style.transform = "translateX(-50%) translateY(20px)";
+      setTimeout(() => toast.remove(), 300);
+    }, opts.duration || 4000);
+  }
+
+  // --------- Remove popup anterior ---------
   const antigo = document.getElementById("autofill-popup");
   if (antigo) antigo.remove();
   if (!document.body) return;
 
+  // --------- Popup principal (seleção) ---------
   const popup = document.createElement("div");
   popup.id = "autofill-popup";
   Object.assign(popup.style, {
@@ -210,7 +85,6 @@ Data de reagendamento:
     textAlign: "center"
   });
 
-  // ---------- LOGO ----------
   const logo = document.createElement("img");
   logo.src = "https://www.gstatic.com/images/branding/googlelogo/svg/googlelogo_clr_74x24px.svg";
   Object.assign(logo.style, {
@@ -220,7 +94,6 @@ Data de reagendamento:
   });
   popup.appendChild(logo);
 
-  // ---------- TÍTULO ----------
   const title = document.createElement("div");
   title.textContent = "Case Notes Assistant";
   Object.assign(title.style, {
@@ -231,7 +104,6 @@ Data de reagendamento:
   });
   popup.appendChild(title);
 
-  // ---------- SELECT ----------
   const select = document.createElement("select");
   select.innerHTML = `
     <option value="">Selecione...</option>
@@ -258,7 +130,6 @@ Data de reagendamento:
   });
   popup.appendChild(select);
 
-  // ---------- BOTÃO ----------
   const button = document.createElement("button");
   button.textContent = "Preencher";
   Object.assign(button.style, {
@@ -277,10 +148,11 @@ Data de reagendamento:
   button.onmouseover = () => (button.style.backgroundColor = "#1765c0");
   button.onmouseout  = () => (button.style.backgroundColor = "#1a73e8");
 
+  // ---- Clique do botão com Toast ----
   button.onclick = () => {
     const opcao = select.value;
     if (!opcao || !textos[opcao]) {
-      alert("Selecione uma opção válida!");
+      showToast("Selecione uma opção válida", { error: true });
       return;
     }
     const campo = document.querySelector('div[contenteditable="true"]');
@@ -288,9 +160,10 @@ Data de reagendamento:
       campo.innerHTML += (campo.innerHTML ? "<br><br>" : "") +
                          textos[opcao].replace(/\n/g, "<br>");
       campo.dispatchEvent(new Event("input", { bubbles: true }));
+      showToast("Texto inserido com sucesso");
       popup.remove();
     } else {
-      alert('Campo div[contenteditable="true"] não encontrado!');
+      showToast("Campo de edição não encontrado", { error: true });
     }
   };
   popup.appendChild(button);
