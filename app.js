@@ -117,7 +117,7 @@
 
   // --------- Logo (Material Icon) ---------
   const logo = document.createElement("img");
-  logo.src = "https://fonts.gstatic.com/s/i/materialiconsoutlined/description/v13/24px.svg";
+  logo.src = "https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_92x30dp.png";
   Object.assign(logo.style, {
     width: "40px",
     height: "40px",
