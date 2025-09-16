@@ -127,7 +127,7 @@ Object.assign(header.style, {
 
 // Logo minimalista (ex.: só o “G” colorido)
 const logo = document.createElement("img");
-logo.src = "https://www.google.com/images/branding/product/1x/gsa_color_64dp.png";
+logo.src = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
 // ou hospede um ícone próprio no seu repo: 
 // logo.src = "https://cdn.jsdelivr.net/gh/lucastdcs/techsol_DialIn_AutoCopy@main/assets/google-g.svg";
 Object.assign(logo.style, {
