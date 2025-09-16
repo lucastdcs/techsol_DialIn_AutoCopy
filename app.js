@@ -115,28 +115,40 @@
     document.removeEventListener("touchend", stopDrag);
   }
 
-  // --------- Logo (Material Icon) ---------
-  const logo = document.createElement("img");
-  logo.src = "https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_92x30dp.png";
-  Object.assign(logo.style, {
-    width: "40px",
-    height: "40px",
-    marginBottom: "8px",
-    opacity: "0.9"
-  });
-  popup.appendChild(logo);
+// ---------- HEADER COM LOGO + TÍTULO ----------
+const header = document.createElement("div");
+Object.assign(header.style, {
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+  marginBottom: "16px"
+});
 
-  // --------- Título ---------
-  const title = document.createElement("div");
-  title.textContent = "Case Notes Assistant";
-  Object.assign(title.style, {
-    fontSize: "16px",
-    fontWeight: "600",
-    marginBottom: "16px",
-    color: "#3c4043" // Blue Gray 700
-  });
-  popup.appendChild(title);
+// Logo minimalista (ex.: só o “G” colorido)
+const logo = document.createElement("img");
+logo.src = "https://www.google.com/images/branding/product/1x/gsa_color_64dp.png";
+// ou hospede um ícone próprio no seu repo: 
+// logo.src = "https://cdn.jsdelivr.net/gh/lucastdcs/techsol_DialIn_AutoCopy@main/assets/google-g.svg";
+Object.assign(logo.style, {
+  width: "24px",
+  height: "24px"
+});
+header.appendChild(logo);
 
+// Título ao lado do logo
+const title = document.createElement("div");
+title.textContent = "Case Notes Assistant";
+Object.assign(title.style, {
+  fontSize: "16px",
+  fontWeight: "600",
+  fontFamily: "'Poppins', sans-serif",
+  color: "#202124"
+});
+header.appendChild(title);
+
+// Adiciona o header ao popup
+popup.appendChild(header);
   // --------- Botão Fechar (X) ---------
   const closeBtn = document.createElement("div");
   closeBtn.textContent = "✕";
