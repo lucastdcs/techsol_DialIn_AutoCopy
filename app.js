@@ -324,31 +324,31 @@ header.appendChild(title);
 // Adiciona o header ao popup
 popup.appendChild(header);
   // --------- Botão Fechar (X) ---------
-  const closeBtn = document.createElement("div");
-  closeBtn.textContent = "✕";
-  Object.assign(closeBtn.style, {
-    position: "absolute",
-    top: "8px",
-    right: "10px",
-    fontSize: "18px",
-    color: "#5f6368",
-    cursor: "pointer",
-    transition: "transform .2s ease, opacity .2s ease"
-  });
-  closeBtn.onmouseenter = () => {
-    closeBtn.style.transform = "scale(1.2)";
-    closeBtn.style.opacity = "0.7";
-  };
-  closeBtn.onmouseleave = () => {
-    closeBtn.style.transform = "scale(1)";
-    closeBtn.style.opacity = "1";
-  };
-  closeBtn.onclick = () => {
-    popup.style.opacity = "0";
-    popup.style.transform = "scale(0.95)";
-    setTimeout(() => popup.remove(), 200);
-  };
-  popup.appendChild(closeBtn);
+  // const closeBtn = document.createElement("div");
+  // closeBtn.textContent = "✕";
+  // Object.assign(closeBtn.style, {
+  //   position: "absolute",
+  //   top: "8px",
+  //   right: "10px",
+  //   fontSize: "18px",
+  //   color: "#5f6368",
+  //   cursor: "pointer",
+  //   transition: "transform .2s ease, opacity .2s ease"
+  // });
+  // closeBtn.onmouseenter = () => {
+  //   closeBtn.style.transform = "scale(1.2)";
+  //   closeBtn.style.opacity = "0.7";
+  // };
+  // closeBtn.onmouseleave = () => {
+  //   closeBtn.style.transform = "scale(1)";
+  //   closeBtn.style.opacity = "1";
+  // };
+  // closeBtn.onclick = () => {
+  //   popup.style.opacity = "0";
+  //   popup.style.transform = "scale(0.95)";
+  //   setTimeout(() => popup.remove(), 200);
+  // };
+  // popup.appendChild(closeBtn);
 
   // --------- Select ---------
   const select = document.createElement("select");
