@@ -11,10 +11,184 @@
   }
 
   const textos = {
-    texto1: `<b>Speakeasy ID:</b> ...`,
-    texto2: `...`, texto3: `...`, texto4: `...`,
-    texto5: `...`, texto6: `...`,
-    texto7: `...`, texto8: `...`, texto9: `...`
+      texto1: `<b>Speakeasy ID:</b>
+
+<b>On Call (Call Started) signaled on time?</b>
+
+<b>Substatus:</b>
+
+<b>Reason/comments:</b>
+
+<b>OnCall Comments:</b>
+
+<b>Tag Implemented:</b>
+
+<b>Screenshots:</b>
+
+<b>Multiple CIDs:</b>`,
+
+    texto2: `<b>Speakeasy ID:</b>
+
+<b>On Call (Call Started) signaled on time?</b>
+
+<b>Substatus:</b> IN - Not Reachable
+
+<b>Reason/comments:</b> NRP
+
+<b>OnCall Comments:</b>
+
+<b>Tag Implemented:</b>
+
+<b>Screenshots:</b>
+Tentativa 1 -
+Tentativa 2 -
+Tentativa 3 -
+
+<b>Multiple CIDs:</b>`,
+
+    texto3: `<b>Speakeasy ID:</b>
+
+<b>On Call (Call Started) signaled on time?</b>
+
+<b>Substatus:</b> NI - Awaiting Inputs
+
+<b>Reason/comments:</b> Aguardando informações por parte do anunciante para concluir a implementação
+
+<b>OnCall Comments:</b>
+Durante a consultoria <b>avançamos até a seguinte etapa:</b> ...
+<b>Não conseguimos concluir a implementação</b>, pois ...
+Portanto, <b>aguardo o anunciante</b> concluir a seguinte tarefa: ...
+Após a conclusão, irei enviar o email com as datas de reagendamento mais pŕoximas para concluir a implementação.
+
+Obs.: Inicio hoje o processo de <b>2/6</b>.
+
+<b>Tag Implemented:</b> N/A
+
+<b>Screenshots:</b>
+
+<b>Multiple CIDs:</b> N/A`,
+
+    texto4: `<b>Speakeasy ID:</b> N/A
+
+<b>On Call (Call Started) signaled on time?</b> N/A
+
+<b>Substatus:</b> NI - Awaiting Inputs
+
+<b>Reason/comments:</b> Aguardando informações por parte do anunciante para concluir a implementação (2/6)
+
+<b>OnCall Comments:</b>
+No dia (dia) do 2/6 fiz duas tentativas de contatos seguidas, mas não obtive resposta. Envio na sequência o email referente ao dia respectivo.
+
+<b>Tag Implemented:</b> N/A
+
+<b>Screenshots:</b>
+Tentativa 1 -
+Tentativa 2 -
+
+<b>Multiple CIDs:</b>`,
+
+    texto5: `<b>Speakeasy ID:</b>
+
+<b>On Call (Call Started) signaled on time?</b>
+
+<b>Substatus:</b> NI - Awaiting Validations (ECW4)
+
+<b>Reason/comments:</b> Aguardando Validações no Google Ads
+
+<b>OnCall Comments:</b> Criamos a Tag de conversão otimizada de (formulário ou compra), enviando dados do usuário (manualmente/automáticamente). Fizemos todos os testes e validamos o funcionamento do envio dos dados, e a conversão enviada com sucesso. Agora seguirei com o acompanhamento de 7 dias para validar a mudança de status do Ads.
+
+<b>Tag Implemented:</b> Ads Enhanced Conversions
+
+<b>Screenshots:</b>
+Termos aceitos no Ads -
+Tag implementada -
+Teste GTM -
+Teste Ads -
+Versão Publicada -
+Painel do Ads (após 7 dias)
+
+<b>Multiple CIDs:</b>`,
+
+    texto6: `<b>Speakeasy ID:</b>
+
+<b>On Call (Call Started) signaled on time?</b>
+
+<b>Substatus:</b> SO - Implementation Only
+
+<b>Reason/comments:</b>
+Task implementada com sucesso
+
+<b>OnCall Comments:</b><br>O anunciante solicitou a criação de uma conversão para (task). Fizemos a criação da conversão no Ads, e da Tag no GTM usando acionadores com base em (tipo de acionador). Realizamos os testes e validamos o funcionamento. Sendo assim, fecho o caso sem acomapanhamento.
+
+<b>Task:</b> Ads Conversion Tracking
+
+<b>Tag Implemented:</b>
+
+<b>Screenshots:</b>
+Tag criada -
+Teste GTM -
+Teste Ads -
+Versão Publicada -
+Status Ads -
+
+<b>Multiple CIDs:</b>`,
+
+    texto7: `<b>Speakeasy ID:</b> N/A
+
+<b>On Call (Call Started) signaled on time?</b> N/A
+
+<b>Substatus:</b> IN - Not Reachable
+
+<b>Reason/comments:</b> Anunciante não retornou e não concluiu a implementação.
+
+<b>OnCall Comments:</b>
+Após o acompanhamento do 2/6, e o anunciante não ter respondido à nenhuma das tentativas de contato - tanto por telefone, como por email - e não termos conseguido concluir a implementação, o caso será inativado.
+
+<b>Tag Implemented:</b> N/A
+
+<b>Screenshots:</b> N/A
+
+<b>Multiple CIDs:</b> N/A`,
+
+  texto8: `<b>Speakeasy ID:</b> 
+
+<b>On Call (Call Started) signaled on time?</b> 
+
+<b>Substatus:</b> SO - Education Only
+
+<b>Reason/comments:</b> Consultoria utilizada para tirar dúvidas do anunciante.
+
+<b>OnCall Comments:</b>
+O anunciante tinha dúvidas sobre ....
+Expliquei detalhadamente sobre o funcionamento de ....
+
+(Caso tenha feito alguma alteração)
+Aproveitando a consultoria verifiquei que ....
+Portanto ajustamos a configuração que estava incorreta.
+
+<b>Tag Implemented:</b> N/A
+
+<b>Screenshots:</b> N/A
+
+<b>Multiple CIDs:</b> N/A`,
+texto9: `<b>Speakeasy ID:</b> 
+
+<b>On Call (Call Started) signaled on time?</b> 
+
+<b>Substatus:</b> AS - Reschedule 1
+
+<b>Reason/comments:</b> Caso Reagendado.
+
+<b>OnCall Comments:</b>
+Precisamos readgendar o caso, já que ...
+
+Data do reagendamento:
+<b>Tag Implemented:</b> N/A
+
+<b>Screenshots:</b> N/A
+
+<b>Multiple CIDs:</b> N/A`,
+
   };
 
   // --------- Função Toast ---------
