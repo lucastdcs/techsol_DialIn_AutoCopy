@@ -48,8 +48,8 @@
   }
 
   // --------- Textos ---------
-  const textos = {
-    texto1: `<b>Speakeasy ID:</b>
+ const textos = {
+    texto1: `<b>Speakeasy ID:</b>
 
 <b>On Call (Call Started) signaled on time?</b>
 
@@ -64,7 +64,7 @@
 <b>Screenshots:</b>
 
 <b>Multiple CIDs:</b>`,
-    texto2: `<b>Speakeasy ID:</b>
+    texto2: `<b>Speakeasy ID:</b>
 
 <b>On Call (Call Started) signaled on time?</b>
 
@@ -82,7 +82,7 @@ Tentativa 2 -
 Tentativa 3 -
 
 <b>Multiple CIDs:</b>`,
-    texto3: `<b>Speakeasy ID:</b>
+    texto3: `<b>Speakeasy ID:</b>
 
 <b>On Call (Call Started) signaled on time?</b>
 
@@ -91,19 +91,27 @@ Tentativa 3 -
 <b>Reason/comments:</b> Aguardando informações por parte do anunciante para concluir a implementação
 
 <b>OnCall Comments:</b>
-Durante a consultoria <b>avançamos até a seguinte etapa:</b> ...
-<b>Não conseguimos concluir a implementação</b>, pois ...
-Portanto, <b>aguardo o anunciante</b> concluir a seguinte tarefa: ...
-Após a conclusão, irei enviar o email com as datas de reagendamento mais pŕoximas para concluir a implementação.
-
-Obs.: Inicio hoje o processo de <b>2/6</b>.
+<b>Tasks solicitadas:</b>
+<br>• (task 1)
+<br>• (task 2)
+<br>
+<br><b>Avançamos até a seguinte etapa:</b>
+<br>• (descrever o que foi feito)
+<br>
+<br><b>Impedimento (Não concluímos pois):</b>
+<br>• (descrever o bloqueio)
+<br>
+<br><b>Próximos passos (Aguardando anunciante):</b>
+<br>• (descrever a ação necessária do anunciante)
+<br>
+<br>Obs.: Inicio hoje o processo de <b>2/6</b>.
 
 <b>Tag Implemented:</b> N/A
 
 <b>Screenshots:</b>
 
 <b>Multiple CIDs:</b> N/A`,
-    texto4: `<b>Speakeasy ID:</b> N/A
+    texto4: `<b>Speakeasy ID:</b> N/A
 
 <b>On Call (Call Started) signaled on time?</b> N/A
 
@@ -121,7 +129,7 @@ Tentativa 1 -
 Tentativa 2 -
 
 <b>Multiple CIDs:</b>`,
-    texto5: `<b>Speakeasy ID:</b>
+    texto5: `<b>Speakeasy ID:</b>
 
 <b>On Call (Call Started) signaled on time?</b>
 
@@ -129,20 +137,52 @@ Tentativa 2 -
 
 <b>Reason/comments:</b> Aguardando Validações no Google Ads
 
-<b>OnCall Comments:</b> Criamos a Tag de conversão otimizada de (formulário ou compra), enviando dados do usuário (manualmente/automáticamente). Fizemos todos os testes e validamos o funcionamento do envio dos dados, e a conversão enviada com sucesso. Agora seguirei com o acompanhamento de 7 dias para validar a mudança de status do Ads.
+<b>OnCall Comments:</b>
+<b>Tasks solicitadas pelo AM:</b>
+<br>• (task 1)
+<br>• (task 2)
+<br>
+<br><b>Tasks implementadas na call:</b>
+<br>• (task A)
+<br>• (task B)
+<br>
+<br><b>Seguimos com os passos:</b>
+<br>• (ex: Criamos a conta e instalamos o GTM. Configuramos o Vinculador de Conversões.)
+<br>• (ex: Criamos a Tag de conversão otimizada de [formulário/compra], enviando dados do usuário [manualmente/automaticamente].)
+<br>• (ex: Fizemos todos os testes e validamos o funcionamento do envio dos dados, e a conversão enviada com sucesso.)
+<br>
+<br><b>Próximos passos (Acompanhamento):</b>
+<br>• Seguirei com o acompanhamento de 7 dias para validar a mudança de status do Ads da conversão otimizada.
+<br>
+<br><b>Considerações adicionais:</b>
+<br>• (opcional: ex: tempo de call, perfil do cliente, etc.)
+<br>
+<br><b>Obs.:</b> (opcional: ex: caso BAU aberto para tasks pendentes)
 
-<b>Tag Implemented:</b> Ads Enhanced Conversions
+<b>Tag Implemented:</b> (ex: Ads Enhanced Conversions, GTM Installation, Ads Conversion Tracking)
 
 <b>Screenshots:</b>
-Termos aceitos no Ads -
-Tag implementada -
-Teste GTM -
-Teste Ads -
-Versão Publicada -
-Painel do Ads (após 7 dias)
+<br><b>[Nome da Tag 1, ex: Ads Enhanced Conversions]</b>
+<br>Termos aceitos no Ads -
+<br>Tag implementada -
+<br>Teste GTM -
+<br>Teste Ads -
+<br>Versão Publicada -
+<br>Painel do Ads (após 7 dias) -
+<br>
+<br><b>[Nome da Tag 2, ex: Ads Conversion Tracking]</b>
+<br>Tag implementada -
+<br>Teste GTM -
+<br>Teste Ads -
+<br>Versão Publicada -
+<br>Painel do Ads -
+<br>
+<br><b>[Nome da Tag 3, ex: GTM Installation]</b>
+<br>GTM Instalado -
+<br>Vinculador de conversões -
 
 <b>Multiple CIDs:</b>`,
-    texto6: `<b>Speakeasy ID:</b>
+    texto6: `<b>Speakeasy ID:</b>
 
 <b>On Call (Call Started) signaled on time?</b>
 
@@ -151,21 +191,30 @@ Painel do Ads (após 7 dias)
 <b>Reason/comments:</b>
 Task implementada com sucesso
 
-<b>OnCall Comments:</b><br>O anunciante solicitou a criação de uma conversão para (task). Fizemos a criação da conversão no Ads, e da Tag no GTM usando acionadores com base em (tipo de acionador). Realizamos os testes e validamos o funcionamento. Sendo assim, fecho o caso sem acomapanhamento.
+<b>OnCall Comments:</b>
+<br><b>Task solicitada:</b>
+<br>• (descrever a task, ex: criação de conversão para [objetivo])
+<br>
+<br><b>Seguimos com os passos:</b>
+<br>• Fizemos a criação da conversão no Ads.
+<br>• Implementamos a Tag no GTM usando acionadores com base em (tipo de acionador).
+<br>• Realizamos os testes e validamos o funcionamento.
+<br>
+<br><b>Resultado:</b>
+<br>• Task implementada com sucesso. Fechando o caso sem acompanhamento.
 
-<b>Task:</b> Ads Conversion Tracking
-
-<b>Tag Implemented:</b>
+<b>Tag Implemented:</b> (ex: Ads Conversion Tracking)
 
 <b>Screenshots:</b>
-Tag criada -
-Teste GTM -
-Teste Ads -
-Versão Publicada -
-Status Ads -
+<br><b>[Nome da Tag, ex: Ads Conversion Tracking]</b>
+<br>Tag criada -
+<br>Teste GTM -
+<br>Teste Ads -
+<br>Versão Publicada -
+<br>Status Ads -
 
 <b>Multiple CIDs:</b>`,
-    texto7: `<b>Speakeasy ID:</b> N/A
+    texto7: `<b>Speakeasy ID:</b> N/A
 
 <b>On Call (Call Started) signaled on time?</b> N/A
 
@@ -181,30 +230,34 @@ Após o acompanhamento do 2/6, e o anunciante não ter respondido à nenhuma das
 <b>Screenshots:</b> N/A
 
 <b>Multiple CIDs:</b> N/A`,
-    texto8: `<b>Speakeasy ID:</b> 
+    texto8: `<b>Speakeasy ID:</b> 
 
-<b>On Call (Call Started) signaled on time?</b> 
+<b>On Call (Call Started) signaled on time?</b> 
 
 <b>Substatus:</b> SO - Education Only
 
 <b>Reason/comments:</b> Consultoria utilizada para tirar dúvidas do anunciante.
 
 <b>OnCall Comments:</b>
-O anunciante tinha dúvidas sobre ....
-Expliquei detalhadamente sobre o funcionamento de ....
-
-(Caso tenha feito alguma alteração)
-Aproveitando a consultoria verifiquei que ....
-Portanto ajustamos a configuração que estava incorreta.
+<b>Dúvidas do anunciante:</b>
+<br>• (dúvida 1)
+<br>• (dúvida 2)
+<br>
+<br><b>Resoluções/Explicações:</b>
+<br>• Expliquei detalhadamente sobre o funcionamento de (tópico 1).
+<br>• Esclareci (tópico 2).
+<br>
+<br><b>Ajustes realizados (se houver):</b>
+<br>• (opcional: ex: Aproveitando a consultoria, verifiquei que [problema] e ajustamos a configuração [descrever ajuste].)
 
 <b>Tag Implemented:</b> N/A
 
 <b>Screenshots:</b> N/A
 
 <b>Multiple CIDs:</b> N/A`,
-    texto9: `<b>Speakeasy ID:</b> 
+    texto9: `<b>Speakeasy ID:</b> 
 
-<b>On Call (Call Started) signaled on time?</b> 
+<b>On Call (Call Started) signaled on time?</b> 
 
 <b>Substatus:</b> AS - Reschedule 1
 
@@ -219,7 +272,7 @@ Data do reagendamento:
 <b>Screenshots:</b> N/A
 
 <b>Multiple CIDs:</b> N/A`,
-  };
+};
 
   // --------- Cria botão flutuante ---------
   const btn = document.createElement("button");
