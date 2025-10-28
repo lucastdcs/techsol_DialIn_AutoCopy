@@ -14,7 +14,8 @@
 
   // --------- Função Toast ---------
   function showToast(message, opts = {}) {
-    const toast = document.createElement("div");
+    // ... (código do toast sem alterações) ...
+     const toast = document.createElement("div");
     toast.setAttribute("role", "status");
     toast.setAttribute("aria-live", "polite");
     Object.assign(toast.style, {
@@ -41,7 +42,8 @@
 
   // --------- Função para Copiar HTML (Rich Text) ---------
   function copyHtmlToClipboard(html) {
-      const container = document.createElement('div');
+      // ... (código de copiar sem alterações) ...
+       const container = document.createElement('div');
       container.style.position = 'fixed';
       container.style.left = '-9999px';
       container.innerHTML = html;
@@ -63,7 +65,8 @@
 
   // --------- Função para tornar elementos arrastáveis ---------
   function makeDraggable(element, handle) {
-    const dragHandle = handle || element;
+    // ... (código de arrastar sem alterações) ...
+     const dragHandle = handle || element;
     let isDragging = false, initialMouseX, initialMouseY, initialElemX, initialElemY;
     dragHandle.onmousedown = function(e) {
       e.preventDefault(); isDragging = true;
@@ -95,19 +98,53 @@
   
   // 1. O "Banco de Dados" de Tasks e seus Screenshots
   const TASKS_DB = {
-    'gtm_installation': { name: 'GTM Installation', screenshots: ['GTM Instalado', 'Vinculador de conversões'] },
-    'ads_conversion_tracking': { name: 'Ads Conversion Tracking', screenshots: ['Tag criada', 'Teste GTM', 'Teste Ads', 'Versão Publicada', 'Status Ads'] },
-    'ads_enhanced_conversions': { name: 'Ads Enhanced Conversions (ECW4)', screenshots: ['Termos aceitos no Ads', 'Tag implementada', 'Teste GTM', 'Teste Ads', 'Versão Publicada', 'Painel do Ads (após 7 dias)'] },
+    'gtm_installation': { 
+        name: 'GTM Installation', 
+        screenshots: { implementation: ['GTM Instalado', 'Vinculador de conversões'], education: [] }
+    },
+    'ads_conversion_tracking': { 
+        name: 'Ads Conversion Tracking', 
+        screenshots: {
+            implementation: ['Tag criada', 'Teste GTM', 'Teste Ads', 'Versão Publicada', 'Status Ads'],
+            education: ['Screenshot for TAG assistant of tag working...', 'Screenshot of conversion tracking status in Google Ads']
+        }
+    },
+    'ads_enhanced_conversions': { 
+        name: 'Ads Enhanced Conversions (ECW4)', 
+        screenshots: {
+            implementation: ['Termos aceitos no Ads', 'Tag implementada', 'Teste GTM', 'Teste Ads', 'Versão Publicada', 'Painel do Ads (após 7 dias)'],
+            education: []
+        }
+    },
+    'ga4_event_tracking': { 
+        name: 'Analytics Event Tracking (GA4)', 
+        screenshots: {
+            implementation: ['Tag do evento GA4 implementado no GTM', 'Teste GTM (tagassistant.google.com)', 'Teste GA4 (DebugView - tagassistant.google.com)', 'Versão publicada no GTM', '(Se houver parâmetros) Dimensões customizadas criadas no GA4', 'Evento marcado como principal no GA4', 'GA4 e Google Ads vinculados corretamente', 'Evento principal GA4 importado no Google Ads (como secundário)', 'Métricas app & web ativadas no Google Ads', '(Opcional) Teste no Relatório do Tempo Real (GA4)'],
+            education: []
+        }
+    },
+    'upd_for_ga4': { 
+        name: 'UPD for GA4 (User-Provided Data)', 
+        screenshots: {
+            implementation: ['Validação: Conta GA4 (somente fluxo web, não é setor de saúde)', '"Coleta de dados fornecidos pelo usuário" habilitado no GA4 (Admin > Coleta de Dados)', 'Confirmação de coleta de dados (UI)', 'Tag do evento GA4 otimizado (UPD) implementado no GTM', 'Teste GTM (tagassistant - parâmetro \'em\' sem erro)', 'Teste GA4 (DebugView - tagassistant)', 'Versão publicada no GTM', '(Treinamento) Evento principal importado no Google Ads como secundário'],
+            education: []
+        }
+    }
   };
 
-  // 2. Os "Templates" de Substatus
-  const SUBSTATUS_TEMPLATES = {
+  // 2. Os "Templates" de Substatus (ATUALIZADO)
+const SUBSTATUS_TEMPLATES = {
+    // --- SO ---
     'SO_Implementation_Only': {
         status: 'SO', name: 'SO - Implementation Only', requiresTasks: true,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}
+
 <b>On Call (Call Started) signaled on time?</b> {ON_CALL}
+
 <b>Substatus:</b> SO - Implementation Only
+
 <b>Reason/comments:</b> Task implementada com sucesso
+
 <b>OnCall Comments:</b>
 <b>Task(s) solicitada(s):</b>
 {TASKS_SOLICITADAS}
@@ -115,32 +152,45 @@
 {PASSOS_EXECUTADOS}
 <b>Resultado:</b>
 {RESULTADO}
+
 <b>Tag Implemented:</b> {TAGS_IMPLEMENTED}
+
 <b>Screenshots:</b>
 {SCREENSHOTS_LIST}
 <b>Multiple CIDs:</b> {CIDS}`
     },
-    'SO_Education_Only': {
-        status: 'SO', name: 'SO - Education Only', requiresTasks: false,
+    'SO_Education_Only': { 
+        status: 'SO', name: 'SO - Education Only', requiresTasks: true, 
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}
+
 <b>On Call (Call Started) signaled on time?</b> {ON_CALL}
+
 <b>Substatus:</b> SO - Education Only
+
 <b>Reason/comments:</b> Consultoria utilizada para tirar dúvidas do anunciante.
+
 <b>OnCall Comments:</b>
 <b>Dúvidas do anunciante:</b>
 {DUVIDAS}
 <b>Resoluções/Explicações:</b>
 {RESOLUCOES}
-<b>Tag Implemented:</b> N/A
-<b>Screenshots:</b> N/A
+<b>Tag Implemented:</b> {TAGS_IMPLEMENTED}
+
+<b>Screenshots:</b>
+{SCREENSHOTS_LIST}
 <b>Multiple CIDs:</b> {CIDS}`
     },
+    // --- NI ---
     'NI_Awaiting_Validations': {
-        status: 'NI', name: 'NI - Awaiting Validations (ECW4)', requiresTasks: true,
+        status: 'NI', name: 'NI - Awaiting Validations', requiresTasks: true,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}
+
 <b>On Call (Call Started) signaled on time?</b> {ON_CALL}
-<b>Substatus:</b> NI - Awaiting Validations (ECW4)
+
+<b>Substatus:</b> NI - Awaiting Validations
+
 <b>Reason/comments:</b> Aguardando Validações no Google Ads
+
 <b>OnCall Comments:</b>
 <b>Tasks solicitadas pelo AM:</b>
 {TASKS_SOLICITADAS}
@@ -153,6 +203,7 @@
 <b>Considerações adicionais:</b>
 {CONSIDERACOES}
 <b>Tag Implemented:</b> {TAGS_IMPLEMENTED}
+
 <b>Screenshots:</b>
 {SCREENSHOTS_LIST}
 <b>Multiple CIDs:</b> {CIDS}`
@@ -160,53 +211,93 @@
     'NI_Awaiting_Inputs_Initial': {
         status: 'NI', name: 'NI - Awaiting Inputs (Início 2/6)', requiresTasks: false,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}
+
 <b>On Call (Call Started) signaled on time?</b> {ON_CALL}
+
 <b>Substatus:</b> NI - Awaiting Inputs
+
 <b>Reason/comments:</b> Aguardando informações por parte do anunciante para concluir a implementação
+
 <b>OnCall Comments:</b>
-<b>Tasks solicitadas pelo AM:</b>
-{TASKS_SOLICITADAS}
-<b>Contexto/O que foi feito:</b>
-{CONTEXTO_CALL}
-<b>Impedimento / Próximo passo (Anunciante):</b>
-{IMPEDIMENTO_CLIENTE}
-<b>Minha Ação:</b>
-{MINHA_ACAO}
-<b>Considerações adicionais:</b>
-{CONSIDERACOES}
+  <b>Tasks solicitadas pelo AM:</b>
+  {TASKS_SOLICITADAS}
+  <b>Contexto/O que foi feito:</b>
+  {CONTEXTO_CALL}
+  <b>Impedimento / Próximo passo (Anunciante):</b>
+  {IMPEDIMENTO_CLIENTE}
+  <b>Minha Ação:</b>
+  {MINHA_ACAO}
+  <b>Considerações adicionais:</b>
+  {CONSIDERACOES}
 <b>Tag Implemented:</b> N/A
+
 <b>Screenshots:</b>
 {SCREENSHOTS}
+
 <b>Multiple CIDs:</b> {CIDS}`
     },
     'NI_Awaiting_Inputs_Followup': {
         status: 'NI', name: 'NI - Awaiting Inputs (Follow-up 2/6)', requiresTasks: false,
         template: `<b>Speakeasy ID:</b> N/A
+
 <b>On Call (Call Started) signaled on time?</b> N/A
+
 <b>Substatus:</b> NI - Awaiting Inputs
+
 <b>Reason/comments:</b> Aguardando informações por parte do anunciante para concluir a implementação (2/6)
+
 <b>OnCall Comments:</b>
 No dia {DIA} do 2/6 fiz duas tentativas de contatos seguidas, mas não obtive resposta. Envio na sequência o email referente ao dia respectivo.
 <b>Tag Implemented:</b> N/A
+
 <b>Screenshots:</b>
 Tentativa 1 -
 Tentativa 2 -
+
 <b>Multiple CIDs:</b>`
     },
+    // --- IN ---
     'IN_Not_Reachable': {
         status: 'IN', name: 'IN - Not Reachable (NRP)', requiresTasks: false,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}
+
 <b>On Call (Call Started) signaled on time?</b> {ON_CALL}
+
 <b>Substatus:</b> IN - Not Reachable
+
 <b>Reason/comments:</b> NRP
+
 <b>OnCall Comments:</b>
 {COMENTARIOS}
 <b>Tag Implemented:</b> N/A
+
 <b>Screenshots:</b>
 Tentativa 1 -
 Tentativa 2 -
 Tentativa 3 -
+
 <b>Multiple CIDs:</b> {CIDS}`
+    },
+    // *** NOVO TEMPLATE AS ***
+    'AS_Reschedule_1': {
+        status: 'AS', name: 'AS - Reschedule 1', requiresTasks: false,
+        template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}
+
+<b>On Call (Call Started) signaled on time?</b> {ON_CALL}
+
+<b>Substatus:</b> AS - Reschedule 1
+
+<b>Reason/comments:</b> Caso Reagendado.
+
+<b>OnCall Comments:</b>
+{MOTIVO_REAGENDAMENTO}
+Data do reagendamento: {DATA_REAGENDAMENTO}
+
+<b>Tag Implemented:</b> N/A
+
+<b>Screenshots:</b> N/A
+
+<b>Multiple CIDs:</b> N/A`
     }
   };
 
@@ -225,18 +316,19 @@ Tentativa 3 -
   document.body.appendChild(btn);
   makeDraggable(btn);
 
-  // --------- Popup (inicialmente oculto) ---------
+// --------- Popup (inicialmente oculto) ---------
   const popup = document.createElement("div");
   popup.id = "autofill-popup";
   Object.assign(popup.style, {
     position: "fixed", top: "24px", right: "24px", padding: "16px",
     background: "#fff", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,.2)",
-    fontFamily: "'Poppins', sans-serif", zIndex: "999999", width: "320px",
+    fontFamily: "'Poppins', sans-serif", zIndex: "999999", 
+    width: "360px", // <-- AJUSTE DE LARGURA
+    border: "1px solid #dadce0", // <-- AJUSTE DE CONTRASTE
     maxHeight: "90vh", overflowY: "auto", textAlign: "left",
     transition: "opacity .3s ease, transform .3s ease", opacity: "0",
     pointerEvents: "none", transform: "scale(0.95)"
   });
-
   // ---------- Header ----------
   const header = document.createElement("div");
   Object.assign(header.style, {
@@ -303,7 +395,8 @@ Tentativa 3 -
   const textareaListFields = [
       'TASKS_SOLICITADAS', 'PASSOS_EXECUTADOS', 'RESULTADO', 'DUVIDAS', 'RESOLUCOES',
       'TASKS_IMPLEMENTADAS_CALL', 'PROXIMOS_PASSOS', 'CONTEXTO_CALL', 
-      'IMPEDIMENTO_CLIENTE', 'MINHA_ACAO', 'SCREENSHOTS'
+      'IMPEDIMENTO_CLIENTE', 'MINHA_ACAO', 'SCREENSHOTS', 
+      'MOTIVO_REAGENDAMENTO' // Adicionado
   ];
   const textareaParagraphFields = ['CONSIDERACOES', 'COMENTARIOS'];
   
@@ -349,7 +442,7 @@ Tentativa 3 -
     <option value="NI">NI - Need Info</option>
     <option value="SO">SO - Solution Offered</option>
     <option value="IN">IN - Inactive</option>
-    <option value="AS">AS - Awaiting Schedule</option>`;
+    <option value="AS">AS - Assigned</option>`;
   Object.assign(mainStatusSelect.style, styleSelect);
   const subStatusLabel = document.createElement("label");
   subStatusLabel.textContent = "Substatus:";
@@ -498,7 +591,6 @@ Tentativa 3 -
     
     // Snippets "SO - Implementation Only"
     if (selectedSubStatusKey === 'SO_Implementation_Only') {
-      // Snippet WhatsApp
       const quickFillLabelWA = document.createElement('label');
       Object.assign(quickFillLabelWA.style, styleCheckboxLabel);
       const quickFillCheckboxWA = document.createElement('input');
@@ -509,7 +601,6 @@ Tentativa 3 -
       quickFillLabelWA.appendChild(document.createTextNode(" Cenário: Conversão de WhatsApp"));
       snippetContainer.appendChild(quickFillLabelWA);
 
-      // *** NOVO: Snippet Fechamento ECW4 ***
       const quickFillLabelECW4 = document.createElement('label');
       Object.assign(quickFillLabelECW4.style, styleCheckboxLabel);
       const quickFillCheckboxECW4 = document.createElement('input');
@@ -519,8 +610,55 @@ Tentativa 3 -
       quickFillLabelECW4.appendChild(quickFillCheckboxECW4);
       quickFillLabelECW4.appendChild(document.createTextNode(" Cenário: Fechamento ECW4 (Pós 7 dias)"));
       snippetContainer.appendChild(quickFillLabelECW4);
-      // *** FIM NOVO SNIPPET ***
-      
+      snippetAdded = true;
+    }
+    
+    // ===================================================================
+    // --- AJUSTE 1: Dropdown "AS" trocado por Checkboxes ---
+    // ===================================================================
+    if (selectedSubStatusKey === 'AS_Reschedule_1') {
+        const reasonTitle = document.createElement('label');
+        reasonTitle.textContent = "Cenários Comuns (Motivo):";
+        Object.assign(reasonTitle.style, styleLabel); // Reutiliza o estilo de label
+        snippetContainer.appendChild(reasonTitle);
+
+        // Lista de cenários comuns para AS
+        const reasons = [
+            { id: 'quickfill-as-no-show', text: 'Anunciante não compareceu (respondeu e-mail)' },
+            { id: 'quickfill-as-insufficient-time', text: 'Tempo insuficiente' },
+            { id: 'quickfill-as-no-access', text: 'Anunciante sem acessos necessários' }
+        ];
+
+        // Cria um checkbox para cada cenário
+        reasons.forEach(reason => {
+            const quickFillLabel = document.createElement('label');
+            Object.assign(quickFillLabel.style, styleCheckboxLabel);
+            const quickFillCheckbox = document.createElement('input');
+            quickFillCheckbox.type = 'checkbox';
+            quickFillCheckbox.id = reason.id;
+            Object.assign(quickFillCheckbox.style, styleCheckboxInput);
+            quickFillLabel.appendChild(quickFillCheckbox);
+            quickFillLabel.appendChild(document.createTextNode(` ${reason.text}`));
+            snippetContainer.appendChild(quickFillLabel);
+        });
+        
+        snippetAdded = true;
+    }
+    // ===================================================================
+    // --- FIM DO AJUSTE 1 ---
+    // ===================================================================
+    
+    // *** NOVO: Snippet (Checkbox) "IN - Not Reachable" ***
+    if (selectedSubStatusKey === 'IN_Not_Reachable') {
+      const quickFillLabel = document.createElement('label');
+      Object.assign(quickFillLabel.style, styleCheckboxLabel);
+      const quickFillCheckbox = document.createElement('input');
+      quickFillCheckbox.type = 'checkbox';
+      quickFillCheckbox.id = 'quickfill-nrp-standard';
+      Object.assign(quickFillCheckbox.style, styleCheckboxInput);
+      quickFillLabel.appendChild(quickFillCheckbox);
+      quickFillLabel.appendChild(document.createTextNode(" Cenário: NRP Padrão (3 tentativas)"));
+      snippetContainer.appendChild(quickFillLabel);
       snippetAdded = true;
     }
 
@@ -528,7 +666,6 @@ Tentativa 3 -
       dynamicFormFieldsContainer.appendChild(snippetContainer);
     }
     // --- Fim: Bloco de Snippets ---
-
 
     // **Etapa 3: Formulário Dinâmico**
     const placeholders = templateData.template.match(/{([A-Z_]+)}/g) || [];
@@ -559,7 +696,8 @@ Tentativa 3 -
       dynamicFormFieldsContainer.appendChild(field);
     });
 
-    // **Listener para o Snippet "ADV sem acesso"**
+    // --- Início: Bloco de Listeners para Snippets ---
+    // Listener "ADV sem acesso"
     const quickFillCheckbox = document.getElementById('quickfill-cms-access');
     if (quickFillCheckbox) {
       quickFillCheckbox.onchange = (e) => {
@@ -585,15 +723,13 @@ Tentativa 3 -
       };
     }
     
-    // **Listener para o Snippet "WhatsApp"**
+    // Listener "WhatsApp"
     const quickFillWhatsappCheckbox = document.getElementById('quickfill-whatsapp');
     if (quickFillWhatsappCheckbox) {
       quickFillWhatsappCheckbox.onchange = (e) => {
         const isChecked = e.target.checked;
         const taskCheckbox = document.querySelector('#step-2-tasks input[value="ads_conversion_tracking"]');
-        if (taskCheckbox) {
-            taskCheckbox.checked = isChecked;
-        }
+        if (taskCheckbox) taskCheckbox.checked = isChecked;
         const tasksField = document.getElementById('field-TASKS_SOLICITADAS');
         const passosField = document.getElementById('field-PASSOS_EXECUTADOS');
         const resultadoField = document.getElementById('field-RESULTADO');
@@ -610,29 +746,21 @@ Tentativa 3 -
       };
     }
 
-    // *** NOVO: Listener para o Snippet "Fechamento ECW4" ***
+    // Listener "Fechamento ECW4"
     const quickFillECW4Checkbox = document.getElementById('quickfill-ecw4-close');
     if (quickFillECW4Checkbox) {
       quickFillECW4Checkbox.onchange = (e) => {
         const isChecked = e.target.checked;
-        
-        // 1. Auto-check the correct task
         const taskCheckbox = document.querySelector('#step-2-tasks input[value="ads_enhanced_conversions"]');
-        if (taskCheckbox) {
-            taskCheckbox.checked = isChecked;
-        }
-
-        // 2. Fill the form fields
+        if (taskCheckbox) taskCheckbox.checked = isChecked;
         const tasksField = document.getElementById('field-TASKS_SOLICITADAS');
         const passosField = document.getElementById('field-PASSOS_EXECUTADOS');
         const resultadoField = document.getElementById('field-RESULTADO');
-
         if (isChecked) {
           if (tasksField) tasksField.value = "• Acompanhamento da conversão otimizada (ECW4) após 7 dias.";
           if (passosField) passosField.value = "• Após o período de 7 dias de acompanhamento, verifiquei o painel do Ads.\n• A conversão está sendo registrada corretamente.";
           if (resultadoField) resultadoField.value = "• Valido o bom funcionamento da conversão otimizada.\n• Assim, fecho o caso.";
         } else {
-          // Clear fields
           if (taskCheckbox) taskCheckbox.checked = false;
           if (tasksField) { tasksField.value = ""; enableAutoBullet(tasksField); }
           if (passosField) { passosField.value = ""; enableAutoBullet(passosField); }
@@ -640,6 +768,69 @@ Tentativa 3 -
         }
       };
     }
+    
+    // ===================================================================
+    // --- AJUSTE 2: Listener do Dropdown "AS" trocado por Listeners de Checkbox ---
+    // ===================================================================
+    const asCheckboxes = [
+        { id: 'quickfill-as-no-show', text: '• Precisamos reagendar o caso, já que o anunciante não compareceu na meet, porém respondeu o e-mail pedindo o reagendamento' },
+        { id: 'quickfill-as-insufficient-time', text: '• Precisamos reagendar o caso, já que o tempo foi insuficiente para terminar as Tasks\n• Implementamos [descrever o que foi feito]' },
+        { id: 'quickfill-as-no-access', text: '• Precisamos reagendar o caso, já que o anunciante não tinha os acessos necessários para podermos implementar as tasks' }
+    ];
+
+    // Função única para atualizar o campo de motivo com base nos checkboxes
+    function updateAsMotivo() {
+        const motivoField = document.getElementById('field-MOTIVO_REAGENDAMENTO');
+        if (!motivoField) return;
+
+        let combinedText = '';
+        asCheckboxes.forEach(cbInfo => {
+            const checkbox = document.getElementById(cbInfo.id);
+            if (checkbox && checkbox.checked) {
+                // Adiciona o texto e uma nova linha
+                combinedText += cbInfo.text + '\n';
+            }
+        });
+
+        // Remove a última nova linha desnecessária
+        combinedText = combinedText.trim(); 
+
+        if (combinedText === '') {
+            motivoField.value = '• '; // Reseta com bullet se estiver vazio
+            enableAutoBullet(motivoField); // Re-ativa a função de bullet
+        } else {
+            // Define o valor e adiciona um novo bullet no final para o usuário continuar digitando
+            motivoField.value = combinedText + '\n• '; 
+        }
+    }
+
+    // Adiciona o listener a cada checkbox "AS"
+    asCheckboxes.forEach(cbInfo => {
+        const checkbox = document.getElementById(cbInfo.id);
+        if (checkbox) {
+            checkbox.onchange = updateAsMotivo;
+        }
+    });
+    // ===================================================================
+    // --- FIM DO AJUSTE 2 ---
+    // ===================================================================
+    
+    // *** NOVO: Listener para Checkbox NRP Padrão ***
+    const nrpCheckbox = document.getElementById('quickfill-nrp-standard');
+    if (nrpCheckbox) {
+        nrpCheckbox.onchange = (e) => {
+            const isChecked = e.target.checked;
+            const comentariosField = document.getElementById('field-COMENTARIOS');
+            if (!comentariosField) return;
+            
+            if (isChecked) {
+                comentariosField.value = "Duas ligações seguidas, e-mail \"Antes dos 10 minutos\" e uma terceira e ultima tentativa de ligação.\nNão houve resposta às tentativas de ligação ou e-mail, por isso o caso será inativado.";
+            } else {
+                comentariosField.value = ""; // Limpa
+            }
+        };
+    }
+    // --- Fim: Bloco de Listeners para Snippets ---
 
     step3Div.style.display = 'block';
     buttonContainer.style.display = 'flex';
@@ -660,14 +851,18 @@ Tentativa 3 -
       const selectedCheckboxes = taskCheckboxesContainer.querySelectorAll('input[type="checkbox"]:checked');
       let tagNames = [];
       let screenshotsText = '';
+      const screenshotType = (selectedSubStatusKey === 'SO_Education_Only') ? 'education' : 'implementation';
 
       selectedCheckboxes.forEach(checkbox => {
         const taskKey = checkbox.value;
         const task = TASKS_DB[taskKey];
         tagNames.push(task.name);
-        screenshotsText += `<b>${task.name}</b>`;
-        const screenItems = task.screenshots.map(print => `<li>${print} - </li>`).join('');
-        screenshotsText += `<ul ${ulStyle}>${screenItems}</ul>`;
+        const screenshotList = task.screenshots[screenshotType] || [];
+        if (screenshotList.length > 0) {
+            screenshotsText += `<b>${task.name}</b>`;
+            const screenItems = screenshotList.map(print => `<li>${print} - </li>`).join('');
+            screenshotsText += `<ul ${ulStyle}>${screenItems}</ul>`;
+        }
       });
       outputText = outputText.replace(/{TAGS_IMPLEMENTED}/g, tagNames.join(', ') || 'N/A');
       outputText = outputText.replace(/{SCREENSHOTS_LIST}/g, screenshotsText ? `<br>${screenshotsText}` : 'N/A');
@@ -683,9 +878,9 @@ Tentativa 3 -
       if (textareaListFields.includes(fieldName) && value.trim() !== '') {
           const lines = value.split('\n')
                            .map(line => line.trim())
-                           .filter(line => line !== '' && line !== '•')
-                           .map(line => line.startsWith('• ') ? line.substring(2) : line)
-                           .map(line => `<li>${line.trim()}</li>`)
+                           .filter(line => line !== '' && line !== '•') // Filtra linhas vazias ou só com bullet
+                           .map(line => line.startsWith('• ') ? line.substring(2) : line) // Remove bullet
+                           .map(line => `<li>${line.trim()}</li>`) // Adiciona <li>
                            .join('');
           value = `<br><ul ${ulStyle}>${lines}</ul>`;
       } else if (textareaParagraphFields.includes(fieldName) && value.trim() !== '') {
@@ -696,7 +891,6 @@ Tentativa 3 -
       } else if (input.tagName === 'TEXTAREA') {
           value = '';
       } else if (fieldName === 'ON_CALL' && value.trim() === '') {
-          // *** NOVO: Default "N/A" para ON_CALL ***
           value = 'N/A';
       }
       
