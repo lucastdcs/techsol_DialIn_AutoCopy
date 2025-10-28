@@ -339,7 +339,7 @@ Data do reagendamento: {DATA_REAGENDAMENTO}
   logo.src = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
   Object.assign(logo.style, { width: "24px", height: "24px" });
   const title = document.createElement("div");
-  title.textContent = "Case Notes Assistant";
+  title.textContent = "Case Notes Assistant v2.3";
   Object.assign(title.style, { fontSize: "16px", fontWeight: "600", color: "#202124" });
   header.appendChild(logo);
   header.appendChild(title);
