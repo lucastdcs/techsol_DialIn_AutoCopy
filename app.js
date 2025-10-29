@@ -170,7 +170,7 @@ javascript:(function() {
     };
 
     // ===================================================================
-    // === MÓDULO 1: CASE NOTES ASSISTANT (Sem alterações) ===
+    // === MÓDULO 1: CASE NOTES ASSISTANT (Atualizado) ===
     // ===================================================================
     (function() {
         // --- Funções e Dados (Apenas para o Módulo 1) ---
@@ -196,7 +196,7 @@ javascript:(function() {
         }
 
         const TASKS_DB = {
-            'gtm_installation': { 
+           'gtm_installation': { 
                 name: 'GTM Installation', 
                 screenshots: { implementation: ['GTM Instalado', 'Vinculador de conversões'], education: [] }
             },
@@ -227,29 +227,45 @@ javascript:(function() {
                     implementation: ['Validação: Conta GA4 (somente fluxo web, não é setor de saúde)', '"Coleta de dados fornecidos pelo usuário" habilitado no GA4 (Admin > Coleta de Dados)', 'Confirmação de coleta de dados (UI)', 'Tag do evento GA4 otimizado (UPD) implementado no GTM', 'Teste GTM (tagassistant - parâmetro \'em\' sem erro)', 'Teste GA4 (DebugView - tagassistant)', 'Versão publicada no GTM', '(Treinamento) Evento principal importado no Google Ads como secundário'],
                     education: []
                 }
+            },
+            // ===== NOVA TASK ADICIONADA ABAIXO =====
+            'ads_website_call_conversion': {
+                name: 'Google Ads WEBSITE CALL CONVERSION',
+                screenshots: {
+                    implementation: [
+                        'Tag implementado no GTM',
+                        'Versão publicada no GTM',
+                        'Teste do disparo da etiqueta de configuração no tag assistant em mais de uma página, mostrando ID e rótulo',
+                        'Teste usando o #google-wcc-debug, validando que o número de exibição foi substituído pelo número do Google (999999) em um cenário de teste',
+                        'Mudança do status da conversão no Google Ads, de “Inativo” para “Não há conversões recentes” [Aguardar alguns minutos]'
+                    ],
+                    education: [] // Não foram fornecidos screenshots de educação
+                }
             }
+            // ======================================
         };
 
+        // ===== ALTERAÇÃO REQ 1: Adicionado {GTM_GA4_VERIFICADO} =====
         const SUBSTATUS_TEMPLATES = {
             'SO_Implementation_Only': {
                 status: 'SO', name: 'SO - Implementation Only', requiresTasks: true,
-                template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> SO - Implementation Only<br><br><b>Reason/comments:</b> Task implementada com sucesso<br><br><b>OnCall Comments:</b><br><b>Task(s) solicitada(s):</b><br>{TASKS_SOLICITADAS}<br><b>Seguimos com os passos:</b><br>{PASSOS_EXECUTADOS}<br><b>Resultado:</b><br>{RESULTADO}<br><br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
+                template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> SO - Implementation Only<br><br><b>Reason/comments:</b> Task implementada com sucesso<br><br><b>OnCall Comments:</b><br><b>Task(s) solicitada(s):</b><br>{TASKS_SOLICITADAS}<br><b>Seguimos com os passos:</b><br>{PASSOS_EXECUTADOS}<br><b>Resultado:</b><br>{RESULTADO}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
             },
             'SO_Education_Only': { 
                 status: 'SO', name: 'SO - Education Only', requiresTasks: true, 
-                template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> SO - Education Only<br><br><b>Reason/comments:</b> Consultoria utilizada para tirar dúvidas do anunciante.<br><br><b>OnCall Comments:</b><br><b>Dúvidas do anunciante:</b><br>{DUVIDAS}<br><b>Resoluções/Explicações:</b><br>{RESOLUCOES}<br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
+                template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> SO - Education Only<br><br><b>Reason/comments:</b> Consultoria utilizada para tirar dúvidas do anunciante.<br><br><b>OnCall Comments:</b><br><b>Dúvidas do anunciante:</b><br>{DUVIDAS}<br><b>Resoluções/Explicações:</b><br>{RESOLUCOES}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
             },
             'NI_Awaiting_Validations': {
                 status: 'NI', name: 'NI - Awaiting Validations', requiresTasks: true,
-                template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> NI - Awaiting Validations<br><br><b>Reason/comments:</b> Aguardando Validações no Google Ads<br><br><b>OnCall Comments:</b><br><b>Tasks solicitadas pelo AM:</b><br>{TASKS_SOLICITADAS}<br><b>Tasks implementadas na call:</b><br>{TASKS_IMPLEMENTADAS_CALL}<br><b>Seguimos com os passos:</b><br>{PASSOS_EXECUTADOS}<br><b>Próximos passos (Acompanhamento):</b><br>{PROXIMOS_PASSOS}<br><b>Considerações adicionais:</b><br>{CONSIDERACOES}<br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
+                template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> NI - Awaiting Validations<br><br><b>Reason/comments:</b> Aguardando Validações no Google Ads<br><br><b>OnCall Comments:</b><br><b>Tasks solicitadas pelo AM:</b><br>{TASKS_SOLICITADAS}<br><b>Tasks implementadas na call:</b><br>{TASKS_IMPLEMENTADAS_CALL}<br><b>Seguimos com os passos:</b><br>{PASSOS_EXECUTADOS}<br><b>Próximos passos (Acompanhamento):</b><br>{PROXIMOS_PASSOS}<br><b>Considerações adicionais:</b><br>{CONSIDERACOES}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
             },
             'NI_Awaiting_Inputs_Initial': {
                 status: 'NI', name: 'NI - Awaiting Inputs (Início 2/6)', requiresTasks: false,
-                template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> NI - Awaiting Inputs<br><br><b>Reason/comments:</b> Aguardando informações por parte do anunciante para concluir a implementação<br><br><b>OnCall Comments:</b><br>  <b>Tasks solicitadas pelo AM:</b><br>  {TASKS_SOLICITADAS}<br>  <b>Contexto/O que foi feito:</b><br>  {CONTEXTO_CALL}<br>  <b>Impedimento / Próximo passo (Anunciante):</b><br>  {IMPEDIMENTO_CLIENTE}<br>  <b>Minha Ação:</b><br>  {MINHA_ACAO}<br>  <b>Considerações adicionais:</b><br>  {CONSIDERACOES}<br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
+                template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> NI - Awaiting Inputs<br><br><b>Reason/comments:</b> Aguardando informações por parte do anunciante para concluir a implementação<br><br><b>OnCall Comments:</b><br>  <b>Tasks solicitadas pelo AM:</b><br>  {TASKS_SOLICITADAS}<br>  <b>Contexto/O que foi feito:</b><br>  {CONTEXTO_CALL}<br>  <b>Impedimento / Próximo passo (Anunciante):</b><br>  {IMPEDIMENTO_CLIENTE}<br>  <b>Minha Ação:</b><br>  {MINHA_ACAO}<br>  <b>Considerações adicionais:</b><br>  {CONSIDERACOES}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
             },
             'NI_Awaiting_Inputs_Followup': {
                 status: 'NI', name: 'NI - Awaiting Inputs (Follow-up 2/6)', requiresTasks: false,
-                template: `<b>Speakeasy ID:</b> N/A<br><br><b>On Call (Call Started) signaled on time?</b> N/A<br><br><b>Substatus:</b> NI - Awaiting Inputs<br><br><b>Reason/comments:</b> Aguardando informações por parte do anunciante para concluir a implementação (2/6)<br><br><b>OnCall Comments:</b><br>No dia {DIA} do 2/6 fiz duas tentativas de contatos seguidas, mas não obtive resposta. Envio na sequência o email referente ao dia respectivo.<br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>Tentativa 1 -<br>Tentativa 2 -<br><br><b>Multiple CIDs:</b>`
+                template: `<b>Speakeasy ID:</b> N/A<br><br><b>On Call (Call Started) signaled on time?</b> N/A<br><br><b>Substatus:</b> NI - Awaiting Inputs<br><br><b>Reason/comments:</b> Aguardando informações por parte do anunciante para concluir a implementação (2/6)<br><br><b>OnCall Comments:</b><br>No dia {DIA} do 2/6 fiz duas tentativas de contatos seguidas, mas não obtive resposta. Envio na sequência o email referente ao dia respectivo.<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>Tentativa 1 -<br>Tentativa 2 -<br><br><b>Multiple CIDs:</b>`
             },
             'IN_Not_Reachable': {
                 status: 'IN', name: 'IN - Not Reachable (NRP)', requiresTasks: false,
@@ -281,7 +297,7 @@ javascript:(function() {
         logo.src = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
         Object.assign(logo.style, { width: "24px", height: "24px" });
         const title = document.createElement("div");
-        title.textContent = "Case Notes Assistant v2.3";
+        title.textContent = "Case Notes Assistant v2.4"; // Versão atualizada
         Object.assign(title.style, stylePopupTitle);
         header.appendChild(logo);
         header.appendChild(title);
@@ -355,6 +371,7 @@ javascript:(function() {
             };
         }
 
+        // ---------- ETAPA 1: SELEÇÃO DE STATUS ----------
         const step1Div = document.createElement("div");
         step1Div.id = "step-1-selection";
         const mainStatusLabel = document.createElement("label");
@@ -378,6 +395,21 @@ javascript:(function() {
         step1Div.appendChild(subStatusSelect);
         popup.appendChild(step1Div);
 
+        // ===== ALTERAÇÃO REQ 2: Adicionada ETAPA 1.5 (Snippets) =====
+        const stepSnippetsDiv = document.createElement("div");
+        stepSnippetsDiv.id = "step-1-5-snippets";
+        Object.assign(stepSnippetsDiv.style, { ...styleStepBlock, display: 'none' });
+        const stepSnippetsTitle = document.createElement("h3");
+        stepSnippetsTitle.textContent = "Cenários Comuns";
+        Object.assign(stepSnippetsTitle.style, styleH3);
+        const snippetContainer = document.createElement("div");
+        snippetContainer.id = "snippet-container";
+        stepSnippetsDiv.appendChild(stepSnippetsTitle);
+        stepSnippetsDiv.appendChild(snippetContainer);
+        popup.appendChild(stepSnippetsDiv);
+        // ==========================================================
+
+        // ---------- ETAPA 2: SELEÇÃO DE TASKS (Oculto) ----------
         const step2Div = document.createElement("div");
         step2Div.id = "step-2-tasks";
         Object.assign(step2Div.style, { ...styleStepBlock, display: 'none' });
@@ -390,6 +422,7 @@ javascript:(function() {
         step2Div.appendChild(taskCheckboxesContainer);
         popup.appendChild(step2Div);
 
+        // ---------- ETAPA 3: FORMULÁRIO DINÂMICO (Oculto) ----------
         const step3Div = document.createElement("div");
         step3Div.id = "step-3-form";
         Object.assign(step3Div.style, { ...styleStepBlock, display: 'none' });
@@ -423,7 +456,13 @@ javascript:(function() {
         document.body.appendChild(popup);
 
         // --- Lógica (Módulo 1) ---
-        function resetSteps(startFrom = 2) {
+
+        // ===== ALTERAÇÃO REQ 2: resetSteps atualizado =====
+        function resetSteps(startFrom = 1.5) {
+            if (startFrom <= 1.5) {
+                stepSnippetsDiv.style.display = 'none';
+                snippetContainer.innerHTML = '';
+            }
             if (startFrom <= 2) {
                 step2Div.style.display = 'none';
                 taskCheckboxesContainer.innerHTML = '';
@@ -437,7 +476,7 @@ javascript:(function() {
 
         mainStatusSelect.onchange = () => {
             const selectedStatus = mainStatusSelect.value;
-            resetSteps(2);
+            resetSteps(1.5); // Atualizado
             subStatusSelect.innerHTML = '<option value="">-- Selecione o Substatus --</option>';
             if (!selectedStatus) {
                 subStatusSelect.disabled = true;
@@ -455,34 +494,17 @@ javascript:(function() {
             subStatusSelect.disabled = false;
         };
 
+        // ===== ALTERAÇÃO REQ 2: Fluxo do onchange invertido =====
         subStatusSelect.onchange = () => {
             const selectedSubStatusKey = subStatusSelect.value;
-            resetSteps(2);
+            resetSteps(1.5); // Atualizado
             if (!selectedSubStatusKey) return;
 
             const templateData = SUBSTATUS_TEMPLATES[selectedSubStatusKey];
 
-            if (templateData.requiresTasks) {
-                taskCheckboxesContainer.innerHTML = '';
-                for (const taskKey in TASKS_DB) {
-                    const task = TASKS_DB[taskKey];
-                    const label = document.createElement('label');
-                    Object.assign(label.style, styleCheckboxLabel);
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.value = taskKey;
-                    Object.assign(checkbox.style, styleCheckboxInput);
-                    label.appendChild(checkbox);
-                    label.appendChild(document.createTextNode(` ${task.name}`));
-                    taskCheckboxesContainer.appendChild(label);
-                }
-                step2Div.style.display = 'block';
-            }
-
-            dynamicFormFieldsContainer.innerHTML = '';
-            
-            const snippetContainer = document.createElement("div");
-            Object.assign(snippetContainer.style, { marginBottom: '15px', borderBottom: '1px solid #eee', paddingBottom: '10px' });
+            // --- ETAPA 1.5: Bloco de Snippets (Agora vem primeiro) ---
+            const snippetContainer = document.getElementById("snippet-container");
+            snippetContainer.innerHTML = ''; // Limpa o container
             let snippetAdded = false;
 
             if (selectedSubStatusKey === 'NI_Awaiting_Inputs_Initial') {
@@ -524,7 +546,7 @@ javascript:(function() {
             if (selectedSubStatusKey === 'AS_Reschedule_1') {
                 const reasonTitle = document.createElement('label');
                 reasonTitle.textContent = "Cenários Comuns (Motivo):";
-                Object.assign(reasonTitle.style, styleLabel);
+                Object.assign(reasonTitle.style, styleLabel); 
                 snippetContainer.appendChild(reasonTitle);
                 const reasons = [
                     { id: 'quickfill-as-no-show', text: 'Anunciante não compareceu (respondeu e-mail)' },
@@ -558,10 +580,34 @@ javascript:(function() {
                 snippetAdded = true;
             }
 
+            // Mostra a ETAPA 1.5 se houver snippets
             if (snippetAdded) {
-                dynamicFormFieldsContainer.appendChild(snippetContainer);
+                stepSnippetsDiv.style.display = 'block';
+            }
+            // --- Fim: Bloco de Snippets ---
+
+
+            // --- ETAPA 2: Tasks (Agora vem em segundo) ---
+            if (templateData.requiresTasks) {
+                taskCheckboxesContainer.innerHTML = '';
+                for (const taskKey in TASKS_DB) {
+                    const task = TASKS_DB[taskKey];
+                    const label = document.createElement('label');
+                    Object.assign(label.style, styleCheckboxLabel);
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.value = taskKey;
+                    Object.assign(checkbox.style, styleCheckboxInput);
+                    label.appendChild(checkbox);
+                    label.appendChild(document.createTextNode(` ${task.name}`));
+                    taskCheckboxesContainer.appendChild(label);
+                }
+                step2Div.style.display = 'block';
             }
 
+            // --- ETAPA 3: Formulário Dinâmico (Agora vem em terceiro) ---
+            dynamicFormFieldsContainer.innerHTML = ''; // Limpa o container do formulário
+            
             const placeholders = templateData.template.match(/{([A-Z_]+)}/g) || [];
             const uniquePlaceholders = [...new Set(placeholders)];
             uniquePlaceholders.forEach(placeholder => {
@@ -590,6 +636,7 @@ javascript:(function() {
                 dynamicFormFieldsContainer.appendChild(field);
             });
 
+            // --- Listeners dos Snippets (permanecem aqui, pois precisam que os campos do formulário existam) ---
             const quickFillCheckbox = document.getElementById('quickfill-cms-access');
             if (quickFillCheckbox) {
                 quickFillCheckbox.onchange = (e) => {
@@ -739,6 +786,12 @@ javascript:(function() {
                     value = '';
                 } else if (fieldName === 'ON_CALL' && value.trim() === '') {
                     value = 'N/A';
+                
+                // ===== ALTERAÇÃO REQ 1: Lógica do N/A para o novo campo =====
+                } else if (fieldName === 'GTM_GA4_VERIFICADO' && value.trim() === '') {
+                    value = 'N/A';
+                // ==========================================================
+
                 }
                 const safeValue = (value || '').replace(/\$/g, '$$$$');
                 outputText = outputText.replace(placeholder, safeValue);
@@ -756,28 +809,36 @@ javascript:(function() {
             }
         };
 
-        generateButton.onclick = () => {
+       generateButton.onclick = () => {
             const htmlOutput = generateOutputHtml();
             if (!htmlOutput) {
-                showToast("Nenhum substatus selecionado", { error: true });
-                return;
+              showToast("Nenhum substatus selecionado", { error: true });
+              return;
             }
             const campo = document.querySelector('div[contenteditable="true"]');
+            
             if (campo) {
-                campo.focus();
-                if (campo.innerHTML.trim() !== '' && !campo.innerHTML.endsWith('<br><br>')) {
-                    document.execCommand('insertHTML', false, '<br><br>');
-                }
-                document.execCommand('insertHTML', false, htmlOutput);
-                campo.dispatchEvent(new Event("input", { bubbles: true }));
-                showToast("Texto inserido com sucesso");
-                togglePopup(false);
-                resetSteps(2);
-                mainStatusSelect.value = "";
-                subStatusSelect.innerHTML = '<option value="">-- Selecione o Status --</option>';
-                subStatusSelect.disabled = true;
+              // SUCESSO: Campo encontrado
+              campo.focus();
+              if (campo.innerHTML.trim() !== '' && !campo.innerHTML.endsWith('<br><br>')) {
+                  document.execCommand('insertHTML', false, '<br><br>');
+              }
+              document.execCommand('insertHTML', false, htmlOutput);
+              campo.dispatchEvent(new Event("input", { bubbles: true }));
+              showToast("Texto inserido com sucesso");
+              togglePopup(false);
+              resetSteps(1.5); 
+              mainStatusSelect.value = "";
+              subStatusSelect.innerHTML = '<option value="">-- Selecione o Status --</option>';
+              subStatusSelect.disabled = true;
+            
             } else {
-                showToast("Campo de edição [contenteditable] não encontrado", { error: true });
+              // FALHA: Campo NÃO encontrado (ESTA É A LÓGICA ATUALIZADA)
+              showToast("Campo de edição não encontrado. Copiando...", { error: true, duration: 2500 });
+              // Chama a função de copiar. Ela já tem seu próprio toast de sucesso.
+              copyHtmlToClipboard(htmlOutput); 
+              // Não fechamos o popup e não limpamos os dados.
+              // O usuário pode colar manualmente ou tentar clicar de novo.
             }
         };
 
@@ -801,7 +862,7 @@ javascript:(function() {
     })();
 
     // ===================================================================
-    // === MÓDULO 2: CALL SCRIPT ASSISTANT (Atualizado) ===
+    // === MÓDULO 2: CALL SCRIPT ASSISTANT (Sem alterações) ===
     // ===================================================================
     (function() {
         // --- Dados e Estado (Módulo 2) ---
