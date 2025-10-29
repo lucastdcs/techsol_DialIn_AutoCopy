@@ -531,6 +531,18 @@ javascript:(function() {
                 quickFillLabelWA.appendChild(document.createTextNode(" Cenário: Conversão de WhatsApp"));
                 snippetContainer.appendChild(quickFillLabelWA);
 
+                // ===== NOVO CHECKBOX DE FORMULÁRIO =====
+                const quickFillLabelForm = document.createElement('label');
+                Object.assign(quickFillLabelForm.style, styleCheckboxLabel);
+                const quickFillCheckboxForm = document.createElement('input');
+                quickFillCheckboxForm.type = 'checkbox';
+                quickFillCheckboxForm.id = 'quickfill-form';
+                Object.assign(quickFillCheckboxForm.style, styleCheckboxInput);
+                quickFillLabelForm.appendChild(quickFillCheckboxForm);
+                quickFillLabelForm.appendChild(document.createTextNode(" Cenário: Conversão de Formulário (Padrão)"));
+                snippetContainer.appendChild(quickFillLabelForm);
+                // =======================================
+
                 const quickFillLabelECW4 = document.createElement('label');
                 Object.assign(quickFillLabelECW4.style, styleCheckboxLabel);
                 const quickFillCheckboxECW4 = document.createElement('input');
@@ -675,6 +687,31 @@ javascript:(function() {
                     }
                 };
             }
+            // ===== NOVO LISTENER PARA FORMULÁRIO =====
+            const quickFillFormCheckbox = document.getElementById('quickfill-form');
+            if (quickFillFormCheckbox) {
+                quickFillFormCheckbox.onchange = (e) => {
+                    const isChecked = e.target.checked;
+                    // Marca a task 'ads_conversion_tracking' automaticamente
+                    const taskCheckbox = document.querySelector('#step-2-tasks input[value="ads_conversion_tracking"]');
+                    if (taskCheckbox) taskCheckbox.checked = isChecked;
+                    
+                    const f = (id) => document.getElementById(id);
+                    
+                    if (isChecked) {
+                        if (f('field-TASKS_SOLICITADAS')) f('field-TASKS_SOLICITADAS').value = "• Criação de conversão para FORMULÁRIO (padrão, não-otimizada).";
+                        if (f('field-PASSOS_EXECUTADOS')) f('field-PASSOS_EXECUTADOS').value = "• Fizemos a criação da conversão no Ads.\n• Criamos a Tag no GTM usando o acionador de envio de formulário (Form Submission) ou visualização de página de agradecimento (Thank You Page).\n• Realizamos os testes e validamos o funcionamento.";
+                        if (f('field-RESULTADO')) f('field-RESULTADO').value = "• Task implementada com sucesso. Fecho o caso sem acompanhamento.";
+                    } else {
+                        // Limpa os campos se for desmarcado
+                        if (taskCheckbox) taskCheckbox.checked = false;
+                        ['field-TASKS_SOLICITADAS', 'field-PASSOS_EXECUTADOS', 'field-RESULTADO'].forEach(id => {
+                             if (f(id)) { f(id).value = ""; enableAutoBullet(f(id)); }
+                        });
+                    }
+                };
+            }
+            // =========================================
 
             const quickFillECW4Checkbox = document.getElementById('quickfill-ecw4-close');
             if (quickFillECW4Checkbox) {
