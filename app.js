@@ -102,14 +102,14 @@ javascript:(function() {
             initialMouseX = e.clientX; initialMouseY = e.clientY;
             const rect = element.getBoundingClientRect();
             initialElemX = rect.left; initialElemY = rect.top;
-            element.style.top = initialElemY + 'px'; 
+            element.style.top = initialElemY + 'px';
             element.style.left = initialElemX + 'px';
-            element.style.right = 'auto'; 
+            element.style.right = 'auto';
             element.style.bottom = 'auto';
             if (element.id === 'autofill-popup' || element.id === 'call-script-popup') {
                 element.style.transform = 'scale(1)';
             }
-            document.onmousemove = onMouseMove; 
+            document.onmousemove = onMouseMove;
             document.onmouseup = onMouseUp;
         };
         function onMouseMove(e) {
@@ -118,17 +118,17 @@ javascript:(function() {
             let newElemX = initialElemX + deltaX, newElemY = initialElemY + deltaY;
             const vpWidth = window.innerWidth, vpHeight = window.innerHeight;
             const elemWidth = element.offsetWidth, elemHeight = element.offsetHeight;
-            if (newElemX < 0) newElemX = 0; 
+            if (newElemX < 0) newElemX = 0;
             if (newElemY < 0) newElemY = 0;
             if (newElemX + elemWidth > vpWidth) newElemX = vpWidth - elemWidth;
             if (newElemY + elemHeight > vpHeight) newElemY = vpHeight - elemHeight;
-            element.style.top = newElemY + 'px'; 
+            element.style.top = newElemY + 'px';
             element.style.left = newElemX + 'px';
         }
         function onMouseUp() {
-            isDragging = false; 
+            isDragging = false;
             dragHandle.style.cursor = 'grab';
-            document.onmousemove = null; 
+            document.onmousemove = null;
             document.onmouseup = null;
         }
     }
@@ -145,7 +145,7 @@ javascript:(function() {
     const stylePopup = {
         position: "fixed", top: "24px", padding: "16px",
         background: "#fff", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,.2)",
-        fontFamily: "'Poppins', sans-serif", zIndex: "999999", 
+        fontFamily: "'Poppins', sans-serif", zIndex: "999999",
         width: "360px", border: "1px solid #dadce0",
         maxHeight: "90vh", overflowY: "auto", textAlign: "left",
         transition: "opacity .3s ease, transform .3s ease", opacity: "0",
@@ -196,39 +196,38 @@ javascript:(function() {
         }
 
         const TASKS_DB = {
-           'gtm_installation': { 
-                name: 'GTM Installation', 
+           'gtm_installation': {
+                name: 'GTM Installation',
                 screenshots: { implementation: ['GTM Instalado', 'Vinculador de conversões'], education: [] }
             },
-            'ads_conversion_tracking': { 
-                name: 'Ads Conversion Tracking', 
+            'ads_conversion_tracking': {
+                name: 'Ads Conversion Tracking',
                 screenshots: {
                     implementation: ['Tag criada', 'Teste GTM', 'Teste Ads', 'Versão Publicada', 'Status Ads'],
                     education: ['Screenshot for TAG assistant of tag working...', 'Screenshot of conversion tracking status in Google Ads']
                 }
             },
-            'ads_enhanced_conversions': { 
-                name: 'Ads Enhanced Conversions (ECW4)', 
+            'ads_enhanced_conversions': {
+                name: 'Ads Enhanced Conversions (ECW4)',
                 screenshots: {
                     implementation: ['Termos aceitos no Ads', 'Tag implementada', 'Teste GTM', 'Teste Ads', 'Versão Publicada', 'Painel do Ads (após 7 dias)'],
                     education: []
                 }
             },
-            'ga4_event_tracking': { 
-                name: 'Analytics Event Tracking (GA4)', 
+            'ga4_event_tracking': {
+                name: 'Analytics Event Tracking (GA4)',
                 screenshots: {
                     implementation: ['Tag do evento GA4 implementado no GTM', 'Teste GTM (tagassistant.google.com)', 'Teste GA4 (DebugView - tagassistant.google.com)', 'Versão publicada no GTM', '(Se houver parâmetros) Dimensões customizadas criadas no GA4', 'Evento marcado como principal no GA4', 'GA4 e Google Ads vinculados corretamente', 'Evento principal GA4 importado no Google Ads (como secundário)', 'Métricas app & web ativadas no Google Ads', '(Opcional) Teste no Relatório do Tempo Real (GA4)'],
                     education: []
                 }
             },
-            'upd_for_ga4': { 
-                name: 'UPD for GA4 (User-Provided Data)', 
+            'upd_for_ga4': {
+                name: 'UPD for GA4 (User-Provided Data)',
                 screenshots: {
                     implementation: ['Validação: Conta GA4 (somente fluxo web, não é setor de saúde)', '"Coleta de dados fornecidos pelo usuário" habilitado no GA4 (Admin > Coleta de Dados)', 'Confirmação de coleta de dados (UI)', 'Tag do evento GA4 otimizado (UPD) implementado no GTM', 'Teste GTM (tagassistant - parâmetro \'em\' sem erro)', 'Teste GA4 (DebugView - tagassistant)', 'Versão publicada no GTM', '(Treinamento) Evento principal importado no Google Ads como secundário'],
                     education: []
                 }
             },
-            // ===== NOVA TASK ADICIONADA ABAIXO =====
             'ads_website_call_conversion': {
                 name: 'Google Ads WEBSITE CALL CONVERSION',
                 screenshots: {
@@ -239,20 +238,18 @@ javascript:(function() {
                         'Teste usando o #google-wcc-debug, validando que o número de exibição foi substituído pelo número do Google (999999) em um cenário de teste',
                         'Mudança do status da conversão no Google Ads, de “Inativo” para “Não há conversões recentes” [Aguardar alguns minutos]'
                     ],
-                    education: [] // Não foram fornecidos screenshots de educação
+                    education: []
                 }
             }
-            // ======================================
         };
 
-        // ===== ALTERAÇÃO REQ 1: Adicionado {GTM_GA4_VERIFICADO} =====
         const SUBSTATUS_TEMPLATES = {
             'SO_Implementation_Only': {
                 status: 'SO', name: 'SO - Implementation Only', requiresTasks: true,
                 template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> SO - Implementation Only<br><br><b>Reason/comments:</b> Task implementada com sucesso<br><br><b>OnCall Comments:</b><br><b>Task(s) solicitada(s):</b><br>{TASKS_SOLICITADAS}<br><b>Seguimos com os passos:</b><br>{PASSOS_EXECUTADOS}<br><b>Resultado:</b><br>{RESULTADO}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
             },
-            'SO_Education_Only': { 
-                status: 'SO', name: 'SO - Education Only', requiresTasks: true, 
+            'SO_Education_Only': {
+                status: 'SO', name: 'SO - Education Only', requiresTasks: true,
                 template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> SO - Education Only<br><br><b>Reason/comments:</b> Consultoria utilizada para tirar dúvidas do anunciante.<br><br><b>OnCall Comments:</b><br><b>Dúvidas do anunciante:</b><br>{DUVIDAS}<br><b>Resoluções/Explicações:</b><br>{RESOLUCOES}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
             },
             'NI_Awaiting_Validations': {
@@ -290,14 +287,14 @@ javascript:(function() {
         const popup = document.createElement("div");
         popup.id = "autofill-popup";
         Object.assign(popup.style, stylePopup, { right: "24px" });
-        
+
         const header = document.createElement("div");
         Object.assign(header.style, stylePopupHeader);
         const logo = document.createElement("img");
         logo.src = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
         Object.assign(logo.style, { width: "24px", height: "24px" });
         const title = document.createElement("div");
-        title.textContent = "Case Notes Assistant v2.4"; // Versão atualizada
+        title.textContent = "Case Notes Assistant v2.5"; // Versão atualizada
         Object.assign(title.style, stylePopupTitle);
         header.appendChild(logo);
         header.appendChild(title);
@@ -334,42 +331,175 @@ javascript:(function() {
             borderRadius: "8px", fontSize: "14px", fontWeight: "500",
             cursor: "pointer", marginTop: "16px"
         };
-        
+
         const textareaListFields = [
             'TASKS_SOLICITADAS', 'PASSOS_EXECUTADOS', 'RESULTADO', 'DUVIDAS', 'RESOLUCOES',
-            'TASKS_IMPLEMENTADAS_CALL', 'PROXIMOS_PASSOS', 'CONTEXTO_CALL', 
-            'IMPEDIMENTO_CLIENTE', 'MINHA_ACAO', 'SCREENSHOTS', 
+            'TASKS_IMPLEMENTADAS_CALL', 'PROXIMOS_PASSOS', 'CONTEXTO_CALL',
+            'IMPEDIMENTO_CLIENTE', 'MINHA_ACAO', 'SCREENSHOTS',
             'MOTIVO_REAGENDAMENTO'
         ];
         const textareaParagraphFields = ['CONSIDERACOES', 'COMENTARIOS'];
-        
+
+        // ===== INSERÇÃO DA NOVA ESTRUTURA E FUNÇÃO CENTRAL =====
+        const scenarioSnippets = {
+            'quickfill-cms-access': { // NI - Awaiting Inputs
+                'field-TASKS_SOLICITADAS': "• Instalação do GTM\n• Configuração de Conversões",
+                'field-CONTEXTO_CALL': "• Percebi que o(a) anunciante não tinha GTM Instalado.\n• Seguimos com a criação de conta no GTM.\n• Entretanto, a conta de acesso ao painel do site (ex: WordPress) não tinha permissão para instalar plugins ou editar o código.",
+                'field-IMPEDIMENTO_CLIENTE': "• Anunciante precisa conseguir acesso de administrador ao painel do site.\n• OU\n• Anunciante precisa contatar o(a) desenvolvedor(a) para que ele(a) instale o GTM.",
+                'field-MINHA_ACAO': "• Coloco o caso em 2/6.\n• Assim que o anunciante tiver o acesso ou a instalação for feita, abrirei um caso em BAU para dar continuidade.",
+                'field-SCREENSHOTS': "• Print do painel do CMS mostrando a falta de permissão (opcional)."
+            },
+            'quickfill-whatsapp': { // SO - Implementation Only
+                'field-TASKS_SOLICITADAS': "• Criação de conversão para WHATSAPP",
+                'field-PASSOS_EXECUTADOS': "• Fizemos a criação da conversão no Ads.\n• Criamos a Tag no GTM usando acionadores de clique (ex: Click URL / Click Text) para os botões de WhatsApp.\n• Realizamos os testes e validamos o funcionamento.",
+                'field-RESULTADO': "• Task implementada com sucesso. Fecho o caso sem acompanhamento.",
+                linkedTask: 'ads_conversion_tracking' // Task associada
+            },
+             'quickfill-form': { // SO - Implementation Only
+                'field-TASKS_SOLICITADAS': "• Criação de conversão para FORMULÁRIO (padrão, não-otimizada).",
+                'field-PASSOS_EXECUTADOS': "• Fizemos a criação da conversão no Ads.\n• Criamos a Tag no GTM usando o acionador de envio de formulário (Form Submission) ou visualização de página de agradecimento (Thank You Page).\n• Realizamos os testes e validamos o funcionamento.",
+                'field-RESULTADO': "• Task implementada com sucesso. Fecho o caso sem acompanhamento.",
+                linkedTask: 'ads_conversion_tracking' // Task associada
+            },
+            'quickfill-ecw4-close': { // SO - Implementation Only
+                'field-TASKS_SOLICITADAS': "• Acompanhamento da conversão otimizada (ECW4) após 7 dias.",
+                'field-PASSOS_EXECUTADOS': "• Após o período de 7 dias de acompanhamento, verifiquei o painel do Ads.\n• A conversão está sendo registrada corretamente.",
+                'field-RESULTADO': "• Valido o bom funcionamento da conversão otimizada.\n• Assim, fecho o caso.",
+                linkedTask: 'ads_enhanced_conversions' // Task associada
+            },
+            'quickfill-as-no-show': { // AS - Reschedule 1
+                'field-MOTIVO_REAGENDAMENTO': '• Precisamos reagendar o caso, já que o anunciante não compareceu na meet, porém respondeu o e-mail pedindo o reagendamento'
+            },
+            'quickfill-as-insufficient-time': { // AS - Reschedule 1
+                'field-MOTIVO_REAGENDAMENTO': '• Precisamos reagendar o caso, já que o tempo foi insuficiente para terminar as Tasks\n• Implementamos [descrever o que foi feito]'
+            },
+            'quickfill-as-no-access': { // AS - Reschedule 1
+                 'field-MOTIVO_REAGENDAMENTO': '• Precisamos reagendar o caso, já que o anunciante não tinha os acessos necessários para podermos implementar as tasks'
+            },
+            'quickfill-nrp-standard': { // IN - Not Reachable
+                'field-COMENTARIOS': "Duas ligações seguidas, e-mail \"Antes dos 10 minutos\" e uma terceira e ultima tentativa de ligação.\nNão houve resposta às tentativas de ligação ou e-mail, por isso o caso será inativado."
+            }
+        };
+
+        function updateFieldsFromScenarios() {
+            const activeScenarioCheckboxes = snippetContainer.querySelectorAll('input[type="checkbox"]:checked');
+            const targetFieldsContent = {}; // Armazena o texto combinado para cada campo
+            const activeLinkedTasks = new Set(); // Armazena tasks a serem marcadas
+
+            // 1. Coleta textos e tasks dos cenários ativos
+            activeScenarioCheckboxes.forEach(checkbox => {
+                const scenarioId = checkbox.id;
+                const snippets = scenarioSnippets[scenarioId];
+                if (snippets) {
+                    // Adiciona textos aos campos correspondentes
+                    for (const fieldId in snippets) {
+                        if (fieldId !== 'linkedTask') {
+                            if (!targetFieldsContent[fieldId]) {
+                                targetFieldsContent[fieldId] = [];
+                            }
+                            // Adiciona o texto apenas se ainda não estiver lá (evita duplicar ao desmarcar/remarcar)
+                             if (!targetFieldsContent[fieldId].includes(snippets[fieldId])) {
+                                targetFieldsContent[fieldId].push(snippets[fieldId]);
+                             }
+                        } else {
+                            // Adiciona a task associada
+                             activeLinkedTasks.add(snippets.linkedTask);
+                        }
+                    }
+                }
+            });
+
+            // 2. Atualiza os campos de texto
+            // Limpa primeiro os campos que *poderiam* ser preenchidos por *qualquer* cenário
+            const allPossibleTargetFields = new Set();
+             Object.values(scenarioSnippets).forEach(snippets => {
+                 Object.keys(snippets).forEach(key => {
+                     if(key !== 'linkedTask') allPossibleTargetFields.add(key);
+                 });
+             });
+
+            allPossibleTargetFields.forEach(fieldId => {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    const combinedTextArray = targetFieldsContent[fieldId] || [];
+                    let finalValue = "";
+
+                    if (textareaListFields.includes(fieldId.replace('field-', ''))) {
+                        // Junta com \n para campos de lista, garantindo bullets
+                        finalValue = combinedTextArray
+                            .map(line => line.startsWith('• ') ? line : '• ' + line) // Garante bullet inicial
+                            .join('\n'); // Junta com nova linha
+
+                        if (finalValue === '') {
+                             finalValue = '• '; // Default bullet if empty
+                        } else if (!finalValue.endsWith('\n• ')) {
+                             // Adiciona bullet no final se houver texto e ainda não tiver
+                             finalValue += '\n• ';
+                        }
+                    } else {
+                         // Junta com linha dupla para campos de parágrafo ou input
+                         finalValue = combinedTextArray.join('\n\n');
+                    }
+
+                    field.value = finalValue;
+                    // Reativa auto-bullet se necessário após limpar/preencher
+                    if (field.tagName === 'TEXTAREA' && textareaListFields.includes(fieldId.replace('field-', ''))) {
+                         // Se o campo ficou só com '• ', ativa o auto-bullet
+                         if (field.value.trim() === '•') enableAutoBullet(field);
+                    }
+                 }
+            });
+
+
+            // 3. Atualiza os checkboxes de Tasks associadas
+            const taskCheckboxes = taskCheckboxesContainer.querySelectorAll('input[type="checkbox"]');
+            taskCheckboxes.forEach(taskCheckbox => {
+                // Desmarca primeiro, depois marca se necessário
+                taskCheckbox.checked = false;
+                if (activeLinkedTasks.has(taskCheckbox.value)) {
+                    taskCheckbox.checked = true;
+                }
+            });
+        }
+        // =====================================
+
         function enableAutoBullet(textarea) {
-            if(textarea.value === '') {
+            // Pequena correção: não adiciona bullet se já tiver texto
+            if(textarea.value.trim() === '' || textarea.value.trim() === '•') {
                 textarea.value = '• ';
             }
             textarea.onkeydown = function(e) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     const start = this.selectionStart, end = this.selectionEnd, value = this.value;
-                    this.value = value.substring(0, start) + '\n• ' + value.substring(end);
-                    const newPos = start + 3;
+                    // Adiciona \n• apenas se a linha atual não for só o bullet
+                    const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                    const currentLine = value.substring(lineStart, start);
+                    const insertText = (currentLine.trim() === '•' || currentLine.trim() === '') ? '\n' : '\n• ';
+
+                    this.value = value.substring(0, start) + insertText + value.substring(end);
+                    const newPos = start + insertText.length;
                     this.selectionStart = newPos; this.selectionEnd = newPos;
                 } else if (e.key === 'Backspace') {
                     const start = this.selectionStart;
                     if (start === this.selectionEnd && start > 0) {
                         const textBefore = this.value.substring(0, start);
-                        if (textBefore.endsWith('\n• ') || textBefore.endsWith('• ')) {
+                        if (textBefore.endsWith('\n• ')) { // Remove \n•
                             e.preventDefault();
-                            const isAtStart = textBefore.endsWith('• ');
-                            const charsToRemove = isAtStart ? 2 : 3;
+                            const charsToRemove = 3;
                             this.value = textBefore.substring(0, start - charsToRemove) + this.value.substring(this.selectionEnd);
                             const newPos = start - charsToRemove;
                             this.selectionStart = newPos; this.selectionEnd = newPos;
+                        } else if (textBefore === '• ') { // Limpa se for só o bullet inicial
+                             e.preventDefault();
+                             this.value = '';
+                             this.selectionStart = 0; this.selectionEnd = 0;
                         }
                     }
                 }
             };
         }
+
 
         // ---------- ETAPA 1: SELEÇÃO DE STATUS ----------
         const step1Div = document.createElement("div");
@@ -402,7 +532,7 @@ javascript:(function() {
         const stepSnippetsTitle = document.createElement("h3");
         stepSnippetsTitle.textContent = "Cenários Comuns";
         Object.assign(stepSnippetsTitle.style, styleH3);
-        const snippetContainer = document.createElement("div");
+        const snippetContainer = document.createElement("div"); // <-- snippetContainer é definido aqui
         snippetContainer.id = "snippet-container";
         stepSnippetsDiv.appendChild(stepSnippetsTitle);
         stepSnippetsDiv.appendChild(snippetContainer);
@@ -416,7 +546,7 @@ javascript:(function() {
         const step2Title = document.createElement("h3");
         step2Title.textContent = "Selecione as Tasks";
         Object.assign(step2Title.style, styleH3);
-        const taskCheckboxesContainer = document.createElement("div");
+        const taskCheckboxesContainer = document.createElement("div"); // <-- taskCheckboxesContainer é definido aqui
         taskCheckboxesContainer.id = "task-checkboxes-container";
         step2Div.appendChild(step2Title);
         step2Div.appendChild(taskCheckboxesContainer);
@@ -429,12 +559,12 @@ javascript:(function() {
         const step3Title = document.createElement("h3");
         step3Title.textContent = "Preencha os Detalhes";
         Object.assign(step3Title.style, styleH3);
-        const dynamicFormFieldsContainer = document.createElement("div");
+        const dynamicFormFieldsContainer = document.createElement("div"); // <-- dynamicFormFieldsContainer é definido aqui
         dynamicFormFieldsContainer.id = "dynamic-form-fields-container";
         step3Div.appendChild(step3Title);
         step3Div.appendChild(dynamicFormFieldsContainer);
         popup.appendChild(step3Div);
-        
+
         const buttonContainer = document.createElement("div");
         Object.assign(buttonContainer.style, { display: "flex", gap: "8px", display: "none" });
         popup.appendChild(buttonContainer);
@@ -445,7 +575,7 @@ javascript:(function() {
         copyButton.onmouseover = () => (copyButton.style.backgroundColor = "#4a4d50");
         copyButton.onmouseout = () => (copyButton.style.backgroundColor = "#5f6368");
         buttonContainer.appendChild(copyButton);
-        
+
         const generateButton = document.createElement("button");
         generateButton.textContent = "Preencher";
         Object.assign(generateButton.style, { ...styleButtonBase, backgroundColor: "#1a73e8" });
@@ -457,7 +587,6 @@ javascript:(function() {
 
         // --- Lógica (Módulo 1) ---
 
-        // ===== ALTERAÇÃO REQ 2: resetSteps atualizado =====
         function resetSteps(startFrom = 1.5) {
             if (startFrom <= 1.5) {
                 stepSnippetsDiv.style.display = 'none';
@@ -476,7 +605,7 @@ javascript:(function() {
 
         mainStatusSelect.onchange = () => {
             const selectedStatus = mainStatusSelect.value;
-            resetSteps(1.5); // Atualizado
+            resetSteps(1.5);
             subStatusSelect.innerHTML = '<option value="">-- Selecione o Substatus --</option>';
             if (!selectedStatus) {
                 subStatusSelect.disabled = true;
@@ -494,17 +623,16 @@ javascript:(function() {
             subStatusSelect.disabled = false;
         };
 
-        // ===== ALTERAÇÃO REQ 2: Fluxo do onchange invertido =====
         subStatusSelect.onchange = () => {
             const selectedSubStatusKey = subStatusSelect.value;
-            resetSteps(1.5); // Atualizado
+            resetSteps(1.5);
             if (!selectedSubStatusKey) return;
 
             const templateData = SUBSTATUS_TEMPLATES[selectedSubStatusKey];
 
-            // --- ETAPA 1.5: Bloco de Snippets (Agora vem primeiro) ---
-            const snippetContainer = document.getElementById("snippet-container");
-            snippetContainer.innerHTML = ''; // Limpa o container
+            // --- ETAPA 1.5: Bloco de Snippets ---
+            // const snippetContainer = document.getElementById("snippet-container"); // Já definido globalmente no módulo
+            snippetContainer.innerHTML = '';
             let snippetAdded = false;
 
             if (selectedSubStatusKey === 'NI_Awaiting_Inputs_Initial') {
@@ -519,7 +647,7 @@ javascript:(function() {
                 snippetContainer.appendChild(quickFillLabel);
                 snippetAdded = true;
             }
-            
+
             if (selectedSubStatusKey === 'SO_Implementation_Only') {
                 const quickFillLabelWA = document.createElement('label');
                 Object.assign(quickFillLabelWA.style, styleCheckboxLabel);
@@ -531,7 +659,6 @@ javascript:(function() {
                 quickFillLabelWA.appendChild(document.createTextNode(" Cenário: Conversão de WhatsApp"));
                 snippetContainer.appendChild(quickFillLabelWA);
 
-                // ===== NOVO CHECKBOX DE FORMULÁRIO =====
                 const quickFillLabelForm = document.createElement('label');
                 Object.assign(quickFillLabelForm.style, styleCheckboxLabel);
                 const quickFillCheckboxForm = document.createElement('input');
@@ -541,7 +668,6 @@ javascript:(function() {
                 quickFillLabelForm.appendChild(quickFillCheckboxForm);
                 quickFillLabelForm.appendChild(document.createTextNode(" Cenário: Conversão de Formulário (Padrão)"));
                 snippetContainer.appendChild(quickFillLabelForm);
-                // =======================================
 
                 const quickFillLabelECW4 = document.createElement('label');
                 Object.assign(quickFillLabelECW4.style, styleCheckboxLabel);
@@ -554,11 +680,11 @@ javascript:(function() {
                 snippetContainer.appendChild(quickFillLabelECW4);
                 snippetAdded = true;
             }
-            
+
             if (selectedSubStatusKey === 'AS_Reschedule_1') {
                 const reasonTitle = document.createElement('label');
                 reasonTitle.textContent = "Cenários Comuns (Motivo):";
-                Object.assign(reasonTitle.style, styleLabel); 
+                Object.assign(reasonTitle.style, styleLabel);
                 snippetContainer.appendChild(reasonTitle);
                 const reasons = [
                     { id: 'quickfill-as-no-show', text: 'Anunciante não compareceu (respondeu e-mail)' },
@@ -578,7 +704,7 @@ javascript:(function() {
                 });
                 snippetAdded = true;
             }
-            
+
             if (selectedSubStatusKey === 'IN_Not_Reachable') {
                 const quickFillLabel = document.createElement('label');
                 Object.assign(quickFillLabel.style, styleCheckboxLabel);
@@ -592,15 +718,13 @@ javascript:(function() {
                 snippetAdded = true;
             }
 
-            // Mostra a ETAPA 1.5 se houver snippets
             if (snippetAdded) {
                 stepSnippetsDiv.style.display = 'block';
             }
-            // --- Fim: Bloco de Snippets ---
 
-
-            // --- ETAPA 2: Tasks (Agora vem em segundo) ---
+            // --- ETAPA 2: Tasks ---
             if (templateData.requiresTasks) {
+                // const taskCheckboxesContainer = document.getElementById("task-checkboxes-container"); // Já definido globalmente
                 taskCheckboxesContainer.innerHTML = '';
                 for (const taskKey in TASKS_DB) {
                     const task = TASKS_DB[taskKey];
@@ -617,9 +741,10 @@ javascript:(function() {
                 step2Div.style.display = 'block';
             }
 
-            // --- ETAPA 3: Formulário Dinâmico (Agora vem em terceiro) ---
-            dynamicFormFieldsContainer.innerHTML = ''; // Limpa o container do formulário
-            
+            // --- ETAPA 3: Formulário Dinâmico ---
+            // const dynamicFormFieldsContainer = document.getElementById("dynamic-form-fields-container"); // Já definido globalmente
+            dynamicFormFieldsContainer.innerHTML = '';
+
             const placeholders = templateData.template.match(/{([A-Z_]+)}/g) || [];
             const uniquePlaceholders = [...new Set(placeholders)];
             uniquePlaceholders.forEach(placeholder => {
@@ -648,139 +773,24 @@ javascript:(function() {
                 dynamicFormFieldsContainer.appendChild(field);
             });
 
-            // --- Listeners dos Snippets (permanecem aqui, pois precisam que os campos do formulário existam) ---
-            const quickFillCheckbox = document.getElementById('quickfill-cms-access');
-            if (quickFillCheckbox) {
-                quickFillCheckbox.onchange = (e) => {
-                    const isChecked = e.target.checked;
-                    const f = (id) => document.getElementById(id);
-                    if (isChecked) {
-                        if (f('field-TASKS_SOLICITADAS')) f('field-TASKS_SOLICITADAS').value = "• Instalação do GTM\n• Configuração de Conversões";
-                        if (f('field-CONTEXTO_CALL')) f('field-CONTEXTO_CALL').value = "• Percebi que o(a) anunciante não tinha GTM Instalado.\n• Seguimos com a criação de conta no GTM.\n• Entretanto, a conta de acesso ao painel do site (ex: WordPress) não tinha permissão para instalar plugins ou editar o código.";
-                        if (f('field-IMPEDIMENTO_CLIENTE')) f('field-IMPEDIMENTO_CLIENTE').value = "• Anunciante precisa conseguir acesso de administrador ao painel do site.\n• OU\n• Anunciante precisa contatar o(a) desenvolvedor(a) para que ele(a) instale o GTM.";
-                        if (f('field-MINHA_ACAO')) f('field-MINHA_ACAO').value = "• Coloco o caso em 2/6.\n• Assim que o anunciante tiver o acesso ou a instalação for feita, abrirei um caso em BAU para dar continuidade.";
-                        if (f('field-SCREENSHOTS')) f('field-SCREENSHOTS').value = "• Print do painel do CMS mostrando a falta de permissão (opcional).";
-                    } else {
-                        ['field-TASKS_SOLICITADAS', 'field-CONTEXTO_CALL', 'field-IMPEDIMENTO_CLIENTE', 'field-MINHA_ACAO', 'field-SCREENSHOTS'].forEach(id => {
-                            if (f(id)) { f(id).value = ""; if (f(id).tagName === 'TEXTAREA') enableAutoBullet(f(id)); }
-                        });
-                    }
-                };
-            }
-            
-            const quickFillWhatsappCheckbox = document.getElementById('quickfill-whatsapp');
-            if (quickFillWhatsappCheckbox) {
-                quickFillWhatsappCheckbox.onchange = (e) => {
-                    const isChecked = e.target.checked;
-                    const taskCheckbox = document.querySelector('#step-2-tasks input[value="ads_conversion_tracking"]');
-                    if (taskCheckbox) taskCheckbox.checked = isChecked;
-                    const f = (id) => document.getElementById(id);
-                    if (isChecked) {
-                        if (f('field-TASKS_SOLICITADAS')) f('field-TASKS_SOLICITADAS').value = "• Criação de conversão para WHATSAPP";
-                        if (f('field-PASSOS_EXECUTADOS')) f('field-PASSOS_EXECUTADOS').value = "• Fizemos a criação da conversão no Ads.\n• Criamos a Tag no GTM usando acionadores de clique (ex: Click URL / Click Text) para os botões de WhatsApp.\n• Realizamos os testes e validamos o funcionamento.";
-                        if (f('field-RESULTADO')) f('field-RESULTADO').value = "• Task implementada com sucesso. Fecho o caso sem acompanhamento.";
-                    } else {
-                        if (taskCheckbox) taskCheckbox.checked = false;
-                        ['field-TASKS_SOLICITADAS', 'field-PASSOS_EXECUTADOS', 'field-RESULTADO'].forEach(id => {
-                             if (f(id)) { f(id).value = ""; enableAutoBullet(f(id)); }
-                        });
-                    }
-                };
-            }
-            // ===== NOVO LISTENER PARA FORMULÁRIO =====
-            const quickFillFormCheckbox = document.getElementById('quickfill-form');
-            if (quickFillFormCheckbox) {
-                quickFillFormCheckbox.onchange = (e) => {
-                    const isChecked = e.target.checked;
-                    // Marca a task 'ads_conversion_tracking' automaticamente
-                    const taskCheckbox = document.querySelector('#step-2-tasks input[value="ads_conversion_tracking"]');
-                    if (taskCheckbox) taskCheckbox.checked = isChecked;
-                    
-                    const f = (id) => document.getElementById(id);
-                    
-                    if (isChecked) {
-                        if (f('field-TASKS_SOLICITADAS')) f('field-TASKS_SOLICITADAS').value = "• Criação de conversão para FORMULÁRIO (padrão, não-otimizada).";
-                        if (f('field-PASSOS_EXECUTADOS')) f('field-PASSOS_EXECUTADOS').value = "• Fizemos a criação da conversão no Ads.\n• Criamos a Tag no GTM usando o acionador de envio de formulário (Form Submission) ou visualização de página de agradecimento (Thank You Page).\n• Realizamos os testes e validamos o funcionamento.";
-                        if (f('field-RESULTADO')) f('field-RESULTADO').value = "• Task implementada com sucesso. Fecho o caso sem acompanhamento.";
-                    } else {
-                        // Limpa os campos se for desmarcado
-                        if (taskCheckbox) taskCheckbox.checked = false;
-                        ['field-TASKS_SOLICITADAS', 'field-PASSOS_EXECUTADOS', 'field-RESULTADO'].forEach(id => {
-                             if (f(id)) { f(id).value = ""; enableAutoBullet(f(id)); }
-                        });
-                    }
-                };
-            }
-            // =========================================
-
-            const quickFillECW4Checkbox = document.getElementById('quickfill-ecw4-close');
-            if (quickFillECW4Checkbox) {
-                quickFillECW4Checkbox.onchange = (e) => {
-                    const isChecked = e.target.checked;
-                    const taskCheckbox = document.querySelector('#step-2-tasks input[value="ads_enhanced_conversions"]');
-                    if (taskCheckbox) taskCheckbox.checked = isChecked;
-                     const f = (id) => document.getElementById(id);
-                    if (isChecked) {
-                        if (f('field-TASKS_SOLICITADAS')) f('field-TASKS_SOLICITADAS').value = "• Acompanhamento da conversão otimizada (ECW4) após 7 dias.";
-                        if (f('field-PASSOS_EXECUTADOS')) f('field-PASSOS_EXECUTADOS').value = "• Após o período de 7 dias de acompanhamento, verifiquei o painel do Ads.\n• A conversão está sendo registrada corretamente.";
-                        if (f('field-RESULTADO')) f('field-RESULTADO').value = "• Valido o bom funcionamento da conversão otimizada.\n• Assim, fecho o caso.";
-                    } else {
-                        if (taskCheckbox) taskCheckbox.checked = false;
-                        ['field-TASKS_SOLICITADAS', 'field-PASSOS_EXECUTADOS', 'field-RESULTADO'].forEach(id => {
-                             if (f(id)) { f(id).value = ""; enableAutoBullet(f(id)); }
-                        });
-                    }
-                };
-            }
-            
-            const asCheckboxes = [
-                { id: 'quickfill-as-no-show', text: '• Precisamos reagendar o caso, já que o anunciante não compareceu na meet, porém respondeu o e-mail pedindo o reagendamento' },
-                { id: 'quickfill-as-insufficient-time', text: '• Precisamos reagendar o caso, já que o tempo foi insuficiente para terminar as Tasks\n• Implementamos [descrever o que foi feito]' },
-                { id: 'quickfill-as-no-access', text: '• Precisamos reagendar o caso, já que o anunciante não tinha os acessos necessários para podermos implementar as tasks' }
-            ];
-
-            function updateAsMotivo() {
-                const motivoField = document.getElementById('field-MOTIVO_REAGENDAMENTO');
-                if (!motivoField) return;
-                let combinedText = '';
-                asCheckboxes.forEach(cbInfo => {
-                    const checkbox = document.getElementById(cbInfo.id);
-                    if (checkbox && checkbox.checked) {
-                        combinedText += cbInfo.text + '\n';
-                    }
+            // --- Adiciona o Listener Centralizado aos Snippets ---
+            const snippetCheckboxes = snippetContainer.querySelectorAll('input[type="checkbox"]');
+            if (snippetCheckboxes.length > 0) {
+                snippetCheckboxes.forEach(checkbox => {
+                    // Remove listener antigo se houver para evitar duplicatas (precaução)
+                    checkbox.removeEventListener('change', updateFieldsFromScenarios);
+                    // Adiciona o novo listener
+                    checkbox.addEventListener('change', updateFieldsFromScenarios);
                 });
-                combinedText = combinedText.trim(); 
-                if (combinedText === '') {
-                    motivoField.value = '• '; 
-                    enableAutoBullet(motivoField);
-                } else {
-                    motivoField.value = combinedText + '\n• '; 
-                }
+                // Chama a função uma vez para garantir estado inicial correto
+                 updateFieldsFromScenarios();
             }
-            asCheckboxes.forEach(cbInfo => {
-                const checkbox = document.getElementById(cbInfo.id);
-                if (checkbox) {
-                    checkbox.onchange = updateAsMotivo;
-                }
-            });
-            
-            const nrpCheckbox = document.getElementById('quickfill-nrp-standard');
-            if (nrpCheckbox) {
-                nrpCheckbox.onchange = (e) => {
-                    const isChecked = e.target.checked;
-                    const comentariosField = document.getElementById('field-COMENTARIOS');
-                    if (!comentariosField) return;
-                    if (isChecked) {
-                        comentariosField.value = "Duas ligações seguidas, e-mail \"Antes dos 10 minutos\" e uma terceira e ultima tentativa de ligação.\nNão houve resposta às tentativas de ligação ou e-mail, por isso o caso será inativado.";
-                    } else {
-                        comentariosField.value = "";
-                    }
-                };
-            }
+            // ---------------------------------------------------
 
             step3Div.style.display = 'block';
             buttonContainer.style.display = 'flex';
         };
+
 
         function generateOutputHtml() {
             const selectedSubStatusKey = subStatusSelect.value;
@@ -815,27 +825,33 @@ javascript:(function() {
                 const placeholder = new RegExp(`{${fieldName}}`, 'g');
                 let value = input.value;
                 if (textareaListFields.includes(fieldName) && value.trim() !== '') {
-                    const lines = value.split('\n').map(line => line.trim()).filter(line => line !== '' && line !== '•').map(line => line.startsWith('• ') ? line.substring(2) : line).map(line => `<li>${line.trim()}</li>`).join('');
-                    value = `<ul ${ulStyle}>${lines}</ul>`;
+                    // Filtra linhas vazias ou só com bullet ANTES de adicionar <li>
+                    const lines = value.split('\n')
+                                     .map(line => line.trim())
+                                     .filter(line => line !== '' && line !== '•')
+                                     .map(line => line.startsWith('• ') ? line.substring(2).trim() : line.trim()) // Remove bullet e espaços extras
+                                     .filter(line => line !== '') // Filtra novamente se a linha ficou vazia após remover bullet
+                                     .map(line => `<li>${line}</li>`)
+                                     .join('');
+                    value = lines ? `<ul ${ulStyle}>${lines}</ul>` : ''; // Só adiciona UL se houver LIs
                 } else if (textareaParagraphFields.includes(fieldName) && value.trim() !== '') {
                     value = value.split('\n').filter(line => line.trim() !== '').map(line => `<p style="margin: 0 0 8px 0;">${line}</p>`).join('');
-                } else if (input.tagName === 'TEXTAREA') {
-                    value = '';
+                } else if (input.tagName === 'TEXTAREA' && !textareaListFields.includes(fieldName) && !textareaParagraphFields.includes(fieldName)) { // Textareas genéricos
+                     value = value.replace(/\n/g, '<br>'); // Converte quebras de linha
+                } else if (input.tagName === 'TEXTAREA' && value.trim() === '') { // Textareas vazios (listas ou paragrafos)
+                     value = ''; // Garante que fique vazio
                 } else if (fieldName === 'ON_CALL' && value.trim() === '') {
                     value = 'N/A';
-                
-                // ===== ALTERAÇÃO REQ 1: Lógica do N/A para o novo campo =====
                 } else if (fieldName === 'GTM_GA4_VERIFICADO' && value.trim() === '') {
                     value = 'N/A';
-                // ==========================================================
-
                 }
-                const safeValue = (value || '').replace(/\$/g, '$$$$');
+                const safeValue = (value || '').replace(/\$/g, '$$$$'); // Garante que value não seja null/undefined
                 outputText = outputText.replace(placeholder, safeValue);
             });
-            outputText = outputText.replace(/{([A-Z_]+)}/g, '');
+            outputText = outputText.replace(/{([A-Z_]+)}/g, ''); // Remove placeholders restantes
             return outputText;
         }
+
 
         copyButton.onclick = () => {
             const htmlOutput = generateOutputHtml();
@@ -853,7 +869,7 @@ javascript:(function() {
               return;
             }
             const campo = document.querySelector('div[contenteditable="true"]');
-            
+
             if (campo) {
               // SUCESSO: Campo encontrado
               campo.focus();
@@ -864,20 +880,19 @@ javascript:(function() {
               campo.dispatchEvent(new Event("input", { bubbles: true }));
               showToast("Texto inserido com sucesso");
               togglePopup(false);
-              resetSteps(1.5); 
+              resetSteps(1.5);
               mainStatusSelect.value = "";
               subStatusSelect.innerHTML = '<option value="">-- Selecione o Status --</option>';
               subStatusSelect.disabled = true;
-            
+
             } else {
-              // FALHA: Campo NÃO encontrado (ESTA É A LÓGICA ATUALIZADA)
+              // FALHA: Campo NÃO encontrado (LÓGICA ATUALIZADA)
               showToast("Campo de edição não encontrado. Copiando...", { error: true, duration: 2500 });
-              // Chama a função de copiar. Ela já tem seu próprio toast de sucesso.
-              copyHtmlToClipboard(htmlOutput); 
+              copyHtmlToClipboard(htmlOutput);
               // Não fechamos o popup e não limpamos os dados.
-              // O usuário pode colar manualmente ou tentar clicar de novo.
             }
         };
+
 
         function togglePopup(show) {
             if (show) {
@@ -939,10 +954,10 @@ javascript:(function() {
         const csaBtn = document.createElement("button");
         csaBtn.id = "call-script-floating-btn";
         csaBtn.textContent = "📋";
-        Object.assign(csaBtn.style, styleFloatingButton, { 
+        Object.assign(csaBtn.style, styleFloatingButton, {
             top: "70%",
             background: "#5f6368"
-        }); 
+        });
         csaBtn.onmouseenter = () => (csaBtn.style.background = "#4a4d50");
         csaBtn.onmouseleave = () => (csaBtn.style.background = "#5f6368");
         document.body.appendChild(csaBtn);
@@ -951,7 +966,7 @@ javascript:(function() {
         const csaPopup = document.createElement("div");
         csaPopup.id = "call-script-popup";
         Object.assign(csaPopup.style, stylePopup, { right: "80px" });
-        
+
         const csaHeader = document.createElement("div");
         Object.assign(csaHeader.style, stylePopupHeader);
         const csaLogo = document.createElement("div");
@@ -982,16 +997,16 @@ javascript:(function() {
         // Seletor de TIPO (BAU/LT)
         const csaTypeContainer = document.createElement("div");
         Object.assign(csaTypeContainer.style, { display: 'flex', borderRadius: '8px', border: '1px solid #dadce0', overflow: 'hidden' });
-        
+
         const csaTypeBAU = document.createElement("div");
         csaTypeBAU.textContent = "BAU";
         const csaTypeLT = document.createElement("div");
         csaTypeLT.textContent = "LT";
-        
+
         const typeBtnStyle = { padding: '6px 12px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: '#5f6368', background: '#f8f9fa', transition: 'all 0.2s ease' };
         Object.assign(csaTypeBAU.style, typeBtnStyle);
         Object.assign(csaTypeLT.style, typeBtnStyle);
-        
+
         csaTypeContainer.appendChild(csaTypeBAU);
         csaTypeContainer.appendChild(csaTypeLT);
 
@@ -1000,7 +1015,7 @@ javascript:(function() {
         Object.assign(csaLangSelect.style, styleSelect, { marginBottom: '0', width: 'auto', padding: '6px' }); // Estilo ajustado
         csaLangSelect.innerHTML = `<option value="PT">PT</option><option value="ES">ES</option><option value="EN">EN</option>`;
         csaLangSelect.value = csaCurrentLang;
-        
+
         csaControlsDiv.appendChild(csaTypeContainer);
         csaControlsDiv.appendChild(csaLangSelect);
         csaContent.appendChild(csaControlsDiv); // Adiciona os controles
@@ -1041,7 +1056,7 @@ javascript:(function() {
         // Nova função de estilo que usa classes e JS (Req 2 e 3)
         function csaSetLiStyle(li, isCompleted, color) {
             li.classList.toggle('csa-completed', isCompleted);
-            
+
             if (isCompleted) {
                 li.style.borderColor = color;
                 li.style.backgroundColor = hexToRgba(color, 0.1);
@@ -1091,13 +1106,13 @@ javascript:(function() {
                 const groupDiv = document.createElement('div');
                 groupDiv.className = 'csa-group-container'; // Classe para animação
                 Object.assign(groupDiv.style, { marginBottom: '16px' });
-                
+
                 const groupTitle = document.createElement('div');
                 groupTitle.className = 'csa-group-title'; // Classe para animação
                 let titleText = groupKey === 'inicio' ? 'Início' : 'Fim';
                 if (csaCurrentLang.includes("ES")) titleText = groupKey === 'inicio' ? 'Inicio' : 'Fin';
                 if (csaCurrentLang.includes("EN")) titleText = groupKey === 'inicio' ? 'Start' : 'End';
-                
+
                 groupTitle.textContent = titleText;
                 Object.assign(groupTitle.style, styleLabel, {
                     fontWeight: "600",
@@ -1109,17 +1124,17 @@ javascript:(function() {
 
                 const list = document.createElement("ul");
                 Object.assign(list.style, { listStyle: 'none', paddingLeft: '0', margin: '0' });
-                
+
                 items.forEach((item, index) => {
                     const li = document.createElement("li");
                     li.className = 'csa-li'; // Adiciona a classe base para estilo/animação
                     li.textContent = item;
-                    
+
                     const key = `${combinedKey}-${groupKey}-${index}`;
                     const done = !!csaCompletedTasks[key];
-                    
+
                     csaSetLiStyle(li, done, color); // Aplica o estilo
-                    
+
                     li.addEventListener("click", () => {
                         const newDone = !csaCompletedTasks[key];
                         csaCompletedTasks[key] = newDone;
@@ -1153,7 +1168,7 @@ javascript:(function() {
              csaTypeLT.style.color = (type === 'LT') ? '#1967d2' : '#5f6368';
              csaBuildChecklist(); // Recarrega a lista
         }
-        
+
         csaTypeBAU.onclick = () => setActiveType('BAU');
         csaTypeLT.onclick = () => setActiveType('LT');
 
