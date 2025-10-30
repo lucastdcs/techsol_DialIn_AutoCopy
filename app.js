@@ -16,59 +16,24 @@ javascript:(function() {
         document.head.appendChild(link);
     }
 
-    // --- 1.B. ESTILOS GLOBAIS PARA O CALL SCRIPT ASSISTANT (Req. 2 e 3) ---
+    // --- 1.B. ESTILOS GLOBAIS PARA O CALL SCRIPT ASSISTANT ---
     const csaStyleId = "call-script-assistant-styles";
     if (!document.getElementById(csaStyleId)) {
         const styleEl = document.createElement("style");
         styleEl.id = csaStyleId;
         styleEl.textContent = `
-            /* Animação de conclusão de grupo (Borda e cor do título) */
-            .csa-group-container {
-                border-left: 3px solid transparent; /* Estado Padrão */
-                padding-left: 5px;
-                transition: all 0.3s ease-out;
-            }
-            .csa-group-title {
-                transition: color 0.3s ease-out;
-            }
-            .csa-group-container.csa-group-completed {
-                border-left: 3px solid #34a853; /* Verde Google */
-                padding-left: 5px;
-            }
-            .csa-group-container.csa-group-completed .csa-group-title {
-                color: #34a853; /* Verde Google */
-            }
-
-            /* Estilo e Animação dos Itens da Lista (Req. 2 e 3) */
-            .csa-li {
-                margin: 4px 0;
-                padding: 8px 10px;
-                border-radius: 6px;
-                border: 2px solid transparent;
-                transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
-                font-size: 14px;
-                cursor: pointer;
-                user-select: none;
-                background-color: #f8f9fa;
-                color: #202124;
-                line-height: 1.4;
-                text-decoration: none; /* --- CORREÇÃO DO BUG (Req 2) --- */
-                transform: scale(1);
-            }
-            .csa-li:hover {
-                background-color: #f1f3f4;
-            }
-            .csa-li.csa-completed {
-                text-decoration: line-through;
-                color: #5f6368;
-                transform: scale(0.98); /* --- ANIMAÇÃO DE CHECK (Req 3) --- */
-            }
+            .csa-group-container { border-left: 3px solid transparent; padding-left: 5px; transition: all 0.3s ease-out; }
+            .csa-group-title { transition: color 0.3s ease-out; }
+            .csa-group-container.csa-group-completed { border-left: 3px solid #34a853; }
+            .csa-group-container.csa-group-completed .csa-group-title { color: #34a853; }
+            .csa-li { margin: 4px 0; padding: 8px 10px; border-radius: 6px; border: 2px solid transparent; transition: all 0.2s ease; font-size: 14px; cursor: pointer; user-select: none; background-color: #f8f9fa; color: #202124; line-height: 1.4; text-decoration: none; transform: scale(1); }
+            .csa-li:hover { background-color: #f1f3f4; }
+            .csa-li.csa-completed { text-decoration: line-through; color: #5f6368; transform: scale(0.98); }
         `;
         document.head.appendChild(styleEl);
     }
 
     // --- 2. UTILITÁRIOS GLOBAIS E ESTILOS COMPARTILHADOS ---
-
     function showToast(message, opts = {}) {
         const toast = document.createElement("div");
         Object.assign(toast.style, {
@@ -243,7 +208,9 @@ javascript:(function() {
             }
         };
 
+        // ===== AJUSTE: TEMPLATES CONSOLIDADOS (NI, IN, AS) =====
         const SUBSTATUS_TEMPLATES = {
+            // --- SO ---
             'SO_Implementation_Only': {
                 status: 'SO', name: 'SO - Implementation Only', requiresTasks: true,
                 template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> SO - Implementation Only<br><br><b>Reason/comments:</b> Task implementada com sucesso<br><br><b>OnCall Comments:</b><br><b>Task(s) solicitada(s):</b><br>{TASKS_SOLICITADAS}<br><b>Seguimos com os passos:</b><br>{PASSOS_EXECUTADOS}<br><b>Resultado:</b><br>{RESULTADO}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
@@ -252,25 +219,24 @@ javascript:(function() {
                 status: 'SO', name: 'SO - Education Only', requiresTasks: true,
                 template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> SO - Education Only<br><br><b>Reason/comments:</b> Consultoria utilizada para tirar dúvidas do anunciante.<br><br><b>OnCall Comments:</b><br><b>Dúvidas do anunciante:</b><br>{DUVIDAS}<br><b>Resoluções/Explicações:</b><br>{RESOLUCOES}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
             },
+            // --- NI ---
             'NI_Awaiting_Validations': {
                 status: 'NI', name: 'NI - Awaiting Validations', requiresTasks: true,
                 template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> NI - Awaiting Validations<br><br><b>Reason/comments:</b> Aguardando Validações no Google Ads<br><br><b>OnCall Comments:</b><br><b>Tasks solicitadas pelo AM:</b><br>{TASKS_SOLICITADAS}<br><b>Tasks implementadas na call:</b><br>{TASKS_IMPLEMENTADAS_CALL}<br><b>Seguimos com os passos:</b><br>{PASSOS_EXECUTADOS}<br><b>Próximos passos (Acompanhamento):</b><br>{PROXIMOS_PASSOS}<br><b>Considerações adicionais:</b><br>{CONSIDERACOES}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
             },
-            'NI_Awaiting_Inputs_Initial': {
-                status: 'NI', name: 'NI - Awaiting Inputs (Início 2/6)', requiresTasks: false,
-                template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> NI - Awaiting Inputs<br><br><b>Reason/comments:</b> Aguardando informações por parte do anunciante para concluir a implementação<br><br><b>OnCall Comments:</b><br>  <b>Tasks solicitadas pelo AM:</b><br>  {TASKS_SOLICITADAS}<br>  <b>Contexto/O que foi feito:</b><br>  {CONTEXTO_CALL}<br>  <b>Impedimento / Próximo passo (Anunciante):</b><br>  {IMPEDIMENTO_CLIENTE}<br>  <b>Minha Ação:</b><br>  {MINHA_ACAO}<br>  <b>Considerações adicionais:</b><br>  {CONSIDERACOES}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
+            'NI_Awaiting_Inputs': { // NOVO TEMPLATE CONSOLIDADO
+                status: 'NI', name: 'NI - Awaiting Inputs', requiresTasks: false,
+                template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> NI - Awaiting Inputs<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>  <b>Tasks solicitadas pelo AM:</b><br>  {TASKS_SOLICITADAS}<br>  <b>Contexto/O que foi feito:</b><br>  {CONTEXTO_CALL}<br>  <b>Impedimento / Próximo passo (Anunciante):</b><br>  {IMPEDIMENTO_CLIENTE}<br>  <b>Minha Ação:</b><br>  {MINHA_ACAO}<br>  <b>Considerações adicionais:</b><br>  {CONSIDERACOES}<br>  <b>Dia do Follow-up (se aplicável):</b> {DIA}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
             },
-            'NI_Awaiting_Inputs_Followup': {
-                status: 'NI', name: 'NI - Awaiting Inputs (Follow-up 2/6)', requiresTasks: false,
-                template: `<b>Speakeasy ID:</b> N/A<br><br><b>On Call (Call Started) signaled on time?</b> N/A<br><br><b>Substatus:</b> NI - Awaiting Inputs<br><br><b>Reason/comments:</b> Aguardando informações por parte do anunciante para concluir a implementação (2/6)<br><br><b>OnCall Comments:</b><br>No dia {DIA} do 2/6 fiz duas tentativas de contatos seguidas, mas não obtive resposta. Envio na sequência o email referente ao dia respectivo.<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>Tentativa 1 -<br>Tentativa 2 -<br><br><b>Multiple CIDs:</b>`
+            // --- IN ---
+           'IN_Inactive': { // TEMPLATE CONSOLIDADO (Renomeado)
+                status: 'IN', name: 'IN - Inactive', requiresTasks: false,
+                template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> IN - Inactive<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>{COMENTARIOS}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
             },
-            'IN_Not_Reachable': {
-                status: 'IN', name: 'IN - Not Reachable (NRP)', requiresTasks: false,
-                template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> IN - Not Reachable<br><br><b>Reason/comments:</b> NRP<br><br><b>OnCall Comments:</b><br>{COMENTARIOS}<br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>Tentativa 1 -<br>Tentativa 2 -<br>Tentativa 3 -<br><br><b>Multiple CIDs:</b> {CIDS}`
-            },
-            'AS_Reschedule_1': {
-                status: 'AS', name: 'AS - Reschedule 1', requiresTasks: false,
-                template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> AS - Reschedule 1<br><br><b>Reason/comments:</b> Caso Reagendado.<br><br><b>OnCall Comments:</b><br>{MOTIVO_REAGENDAMENTO}<br>Data do reagendamento: {DATA_REAGENDAMENTO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b> N/A<br><br><b>Multiple CIDs:</b> N/A`
+            // --- AS ---
+            'AS_Assigned': { // TEMPLATE CONSOLIDADO (Renomeado)
+                status: 'AS', name: 'AS - Assigned', requiresTasks: false,
+                template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> AS - Assigned<br><br><b>Reason/comments:</b> Caso Reagendado.<br><br><b>OnCall Comments:</b><br>{MOTIVO_REAGENDAMENTO}<br>Data do reagendamento: {DATA_REAGENDAMENTO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b> N/A<br><br><b>Multiple CIDs:</b> N/A`
             }
         };
 
@@ -294,7 +260,7 @@ javascript:(function() {
         logo.src = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
         Object.assign(logo.style, { width: "24px", height: "24px" });
         const title = document.createElement("div");
-        title.textContent = "Case Notes Assistant v2.5"; // Versão atualizada
+        title.textContent = "Case Notes Assistant v2.6"; // Versão atualizada
         Object.assign(title.style, stylePopupTitle);
         header.appendChild(logo);
         header.appendChild(title);
@@ -318,12 +284,12 @@ javascript:(function() {
         const styleH3 = {
             fontSize: "14px", fontWeight: "600", color: "#202124", margin: "0 0 12px 0"
         };
-        const styleCheckboxLabel = {
+        const styleCheckboxLabel = { // Usado para Checkbox E Radio
             display: "flex", alignItems: "center", marginBottom: "10px",
             fontSize: "14px", fontWeight: "400", cursor: "pointer",
             padding: "8px", background: "#f8f9fa", borderRadius: "6px"
         };
-        const styleCheckboxInput = {
+        const styleCheckboxInput = { // Usado para Checkbox E Radio
             width: "auto", marginRight: "8px", marginBottom: "0"
         };
         const styleButtonBase = {
@@ -339,70 +305,100 @@ javascript:(function() {
             'MOTIVO_REAGENDAMENTO'
         ];
         const textareaParagraphFields = ['CONSIDERACOES', 'COMENTARIOS'];
-
-        // ===== INSERÇÃO DA NOVA ESTRUTURA E FUNÇÃO CENTRAL =====
+        
+        // ===== AJUSTE: ESTRUTURA DE SNIPPETS ATUALIZADA (Incluindo NI e IN) =====
         const scenarioSnippets = {
-            'quickfill-cms-access': { // NI - Awaiting Inputs
+            // --- Cenários de NI (Exclusivos) ---
+            'quickfill-ni-inicio-manual': {
+                'field-REASON_COMMENTS': "Aguardando informações por parte do anunciante (Início 2/6)"
+                // Campos manuais
+            },
+            'quickfill-ni-cms-access': { 
+                'field-REASON_COMMENTS': "Aguardando informações por parte do anunciante (Início 2/6 - Sem Acesso ao CMS)",
                 'field-TASKS_SOLICITADAS': "• Instalação do GTM\n• Configuração de Conversões",
                 'field-CONTEXTO_CALL': "• Percebi que o(a) anunciante não tinha GTM Instalado.\n• Seguimos com a criação de conta no GTM.\n• Entretanto, a conta de acesso ao painel do site (ex: WordPress) não tinha permissão para instalar plugins ou editar o código.",
                 'field-IMPEDIMENTO_CLIENTE': "• Anunciante precisa conseguir acesso de administrador ao painel do site.\n• OU\n• Anunciante precisa contatar o(a) desenvolvedor(a) para que ele(a) instale o GTM.",
                 'field-MINHA_ACAO': "• Coloco o caso em 2/6.\n• Assim que o anunciante tiver o acesso ou a instalação for feita, abrirei um caso em BAU para dar continuidade.",
                 'field-SCREENSHOTS': "• Print do painel do CMS mostrando a falta de permissão (opcional)."
             },
-            'quickfill-whatsapp': { // SO - Implementation Only
+            'quickfill-ni-followup': {
+                'field-REASON_COMMENTS': "Aguardando informações por parte do anunciante (Follow-up 2/6)",
+                'field-SPEAKEASY_ID': "N/A",
+                'field-ON_CALL': "N/A",
+                'field-TASKS_SOLICITADAS': "• N/A",
+                'field-CONTEXTO_CALL': "• No dia {DIA} do 2/6 fiz duas tentativas de contatos seguidas, mas não obtive resposta. Envio na sequência o email referente ao dia respectivo.",
+                'field-IMPEDIMENTO_CLIENTE': "• N/A",
+                'field-MINHA_ACAO': "• N/A",
+                'field-SCREENSHOTS': "• Tentativa 1 -\n• Tentativa 2 -"
+            },
+            // --- Cenários de SO (Combináveis) ---
+            'quickfill-whatsapp': {
                 'field-TASKS_SOLICITADAS': "• Criação de conversão para WHATSAPP",
                 'field-PASSOS_EXECUTADOS': "• Fizemos a criação da conversão no Ads.\n• Criamos a Tag no GTM usando acionadores de clique (ex: Click URL / Click Text) para os botões de WhatsApp.\n• Realizamos os testes e validamos o funcionamento.",
                 'field-RESULTADO': "• Task implementada com sucesso. Fecho o caso sem acompanhamento.",
-                linkedTask: 'ads_conversion_tracking' // Task associada
+                linkedTask: 'ads_conversion_tracking'
             },
-             'quickfill-form': { // SO - Implementation Only
+             'quickfill-form': {
                 'field-TASKS_SOLICITADAS': "• Criação de conversão para FORMULÁRIO (padrão, não-otimizada).",
                 'field-PASSOS_EXECUTADOS': "• Fizemos a criação da conversão no Ads.\n• Criamos a Tag no GTM usando o acionador de envio de formulário (Form Submission) ou visualização de página de agradecimento (Thank You Page).\n• Realizamos os testes e validamos o funcionamento.",
                 'field-RESULTADO': "• Task implementada com sucesso. Fecho o caso sem acompanhamento.",
-                linkedTask: 'ads_conversion_tracking' // Task associada
+                linkedTask: 'ads_conversion_tracking'
             },
-            'quickfill-ecw4-close': { // SO - Implementation Only
+            'quickfill-ecw4-close': {
                 'field-TASKS_SOLICITADAS': "• Acompanhamento da conversão otimizada (ECW4) após 7 dias.",
                 'field-PASSOS_EXECUTADOS': "• Após o período de 7 dias de acompanhamento, verifiquei o painel do Ads.\n• A conversão está sendo registrada corretamente.",
                 'field-RESULTADO': "• Valido o bom funcionamento da conversão otimizada.\n• Assim, fecho o caso.",
-                linkedTask: 'ads_enhanced_conversions' // Task associada
+                linkedTask: 'ads_enhanced_conversions'
             },
-            'quickfill-as-no-show': { // AS - Reschedule 1
+            // --- Cenários de AS (Combináveis) ---
+            'quickfill-as-no-show': {
                 'field-MOTIVO_REAGENDAMENTO': '• Precisamos reagendar o caso, já que o anunciante não compareceu na meet, porém respondeu o e-mail pedindo o reagendamento'
             },
-            'quickfill-as-insufficient-time': { // AS - Reschedule 1
+            'quickfill-as-insufficient-time': {
                 'field-MOTIVO_REAGENDAMENTO': '• Precisamos reagendar o caso, já que o tempo foi insuficiente para terminar as Tasks\n• Implementamos [descrever o que foi feito]'
             },
-            'quickfill-as-no-access': { // AS - Reschedule 1
+            'quickfill-as-no-access': {
                  'field-MOTIVO_REAGENDAMENTO': '• Precisamos reagendar o caso, já que o anunciante não tinha os acessos necessários para podermos implementar as tasks'
             },
-            'quickfill-nrp-standard': { // IN - Not Reachable
-                'field-COMENTARIOS': "Duas ligações seguidas, e-mail \"Antes dos 10 minutos\" e uma terceira e ultima tentativa de ligação.\nNão houve resposta às tentativas de ligação ou e-mail, por isso o caso será inativado."
+
+// --- Cenários de IN (Exclusivos - Rádio) ---
+            'quickfill-in-nrp-standard': { // Atualizado
+                'field-REASON_COMMENTS': "NRP",
+                'field-COMENTARIOS': "• Duas ligações seguidas, e-mail \"Antes dos 10 minutos\" e uma terceira e ultima tentativa de ligação.\n• Não houve resposta às tentativas de ligação ou e-mail, por isso o caso será inativado.",
+                'field-SCREENSHOTS': "• Tentativa 1 -\n• Tentativa 2 -\n• Tentativa 3 -"
+            },
+            'quickfill-in-no-show': { // NOVO CENÁRIO
+                'field-REASON_COMMENTS': "Anunciante não compareceu à chamada (No-Show).",
+                'field-ON_CALL': "N/A", // Preenchido do seu exemplo
+                'field-COMENTARIOS': "• O caso foi gerado e entrei na chamada no horário agendado.\n• O anunciante não compareceu à reunião.\n• Segui o protocolo de espera: realizei duas tentativas de ligação, aguardei os 10 minutos, e fiz uma terceira tentativa, sem sucesso.\n• Nenhuma das ligações foi atendida (ex: Caixa Postal).\n• Caso inativado por No-Show.",
+                'field-SCREENSHOTS': "• Tentativa 1 (Caixa Postal) - https://screenshot.googleplex.com/BW3RLJNgf9SUVzx\n• Tentativa 2 (Caixa Postal) - https://screenshot.googleplex.com/9VEjdvGghueznHv\n• Tentativa 3 (Chamada desconectada) - https://screenshot.googleplex.com/C4yPjgvXN9kovcw"
+            },
+            'quickfill-in-manual': { // IN - Inactive
+                'field-REASON_COMMENTS': "Outro (Manual)"
+                // Campos manuais, GTM_GA4_VERIFICADO, etc.
             }
         };
 
+        // ===== FUNÇÃO CENTRALIZADORA (CORRIGE BUG DE MÚLTIPLA SELEÇÃO) =====
         function updateFieldsFromScenarios() {
-            const activeScenarioCheckboxes = snippetContainer.querySelectorAll('input[type="checkbox"]:checked');
-            const targetFieldsContent = {}; // Armazena o texto combinado para cada campo
-            const activeLinkedTasks = new Set(); // Armazena tasks a serem marcadas
+            const activeScenarioInputs = snippetContainer.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
+            const targetFieldsContent = {}; 
+            const activeLinkedTasks = new Set(); 
 
             // 1. Coleta textos e tasks dos cenários ativos
-            activeScenarioCheckboxes.forEach(checkbox => {
-                const scenarioId = checkbox.id;
+            activeScenarioInputs.forEach(input => {
+                const scenarioId = input.id;
                 const snippets = scenarioSnippets[scenarioId];
                 if (snippets) {
-                    // Adiciona textos aos campos correspondentes
                     for (const fieldId in snippets) {
                         if (fieldId !== 'linkedTask') {
                             if (!targetFieldsContent[fieldId]) {
                                 targetFieldsContent[fieldId] = [];
                             }
-                            // Adiciona o texto apenas se ainda não estiver lá (evita duplicar ao desmarcar/remarcar)
                              if (!targetFieldsContent[fieldId].includes(snippets[fieldId])) {
                                 targetFieldsContent[fieldId].push(snippets[fieldId]);
                              }
                         } else {
-                            // Adiciona a task associada
                              activeLinkedTasks.add(snippets.linkedTask);
                         }
                     }
@@ -410,7 +406,6 @@ javascript:(function() {
             });
 
             // 2. Atualiza os campos de texto
-            // Limpa primeiro os campos que *poderiam* ser preenchidos por *qualquer* cenário
             const allPossibleTargetFields = new Set();
              Object.values(scenarioSnippets).forEach(snippets => {
                  Object.keys(snippets).forEach(key => {
@@ -425,27 +420,30 @@ javascript:(function() {
                     let finalValue = "";
 
                     if (textareaListFields.includes(fieldId.replace('field-', ''))) {
-                        // Junta com \n para campos de lista, garantindo bullets
                         finalValue = combinedTextArray
-                            .map(line => line.startsWith('• ') ? line : '• ' + line) // Garante bullet inicial
-                            .join('\n'); // Junta com nova linha
+                            .map(line => line.startsWith('• ') ? line : '• ' + line) 
+                            .join('\n'); 
 
                         if (finalValue === '') {
-                             finalValue = '• '; // Default bullet if empty
+                             finalValue = '• '; 
                         } else if (!finalValue.endsWith('\n• ')) {
-                             // Adiciona bullet no final se houver texto e ainda não tiver
                              finalValue += '\n• ';
                         }
                     } else {
-                         // Junta com linha dupla para campos de parágrafo ou input
                          finalValue = combinedTextArray.join('\n\n');
                     }
+                    
+                    // Preenche apenas se houver conteúdo, exceto para listas (que precisam do bullet)
+                    if (finalValue.trim() !== '•' && finalValue.trim() !== '') {
+                        field.value = finalValue;
+                    } else if (textareaListFields.includes(fieldId.replace('field-', ''))) {
+                         field.value = '• '; // Garante o bullet
+                    } else {
+                        field.value = ''; // Limpa campos de input/parágrafo
+                    }
 
-                    field.value = finalValue;
-                    // Reativa auto-bullet se necessário após limpar/preencher
                     if (field.tagName === 'TEXTAREA' && textareaListFields.includes(fieldId.replace('field-', ''))) {
-                         // Se o campo ficou só com '• ', ativa o auto-bullet
-                         if (field.value.trim() === '•') enableAutoBullet(field);
+                         if (field.value.trim() === '•' || field.value.trim() === '') enableAutoBullet(field);
                     }
                  }
             });
@@ -454,8 +452,7 @@ javascript:(function() {
             // 3. Atualiza os checkboxes de Tasks associadas
             const taskCheckboxes = taskCheckboxesContainer.querySelectorAll('input[type="checkbox"]');
             taskCheckboxes.forEach(taskCheckbox => {
-                // Desmarca primeiro, depois marca se necessário
-                taskCheckbox.checked = false;
+                taskCheckbox.checked = false; // Desmarca primeiro
                 if (activeLinkedTasks.has(taskCheckbox.value)) {
                     taskCheckbox.checked = true;
                 }
@@ -464,7 +461,6 @@ javascript:(function() {
         // =====================================
 
         function enableAutoBullet(textarea) {
-            // Pequena correção: não adiciona bullet se já tiver texto
             if(textarea.value.trim() === '' || textarea.value.trim() === '•') {
                 textarea.value = '• ';
             }
@@ -472,9 +468,9 @@ javascript:(function() {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     const start = this.selectionStart, end = this.selectionEnd, value = this.value;
-                    // Adiciona \n• apenas se a linha atual não for só o bullet
                     const lineStart = value.lastIndexOf('\n', start - 1) + 1;
                     const currentLine = value.substring(lineStart, start);
+                    // Não adiciona novo bullet se a linha atual estiver vazia ou for só um bullet
                     const insertText = (currentLine.trim() === '•' || currentLine.trim() === '') ? '\n' : '\n• ';
 
                     this.value = value.substring(0, start) + insertText + value.substring(end);
@@ -486,10 +482,8 @@ javascript:(function() {
                         const textBefore = this.value.substring(0, start);
                         if (textBefore.endsWith('\n• ')) { // Remove \n•
                             e.preventDefault();
-                            const charsToRemove = 3;
-                            this.value = textBefore.substring(0, start - charsToRemove) + this.value.substring(this.selectionEnd);
-                            const newPos = start - charsToRemove;
-                            this.selectionStart = newPos; this.selectionEnd = newPos;
+                            this.value = textBefore.substring(0, start - 3) + this.value.substring(this.selectionEnd);
+                            this.selectionStart = start - 3; this.selectionEnd = start - 3;
                         } else if (textBefore === '• ') { // Limpa se for só o bullet inicial
                              e.preventDefault();
                              this.value = '';
@@ -500,7 +494,6 @@ javascript:(function() {
             };
         }
 
-
         // ---------- ETAPA 1: SELEÇÃO DE STATUS ----------
         const step1Div = document.createElement("div");
         step1Div.id = "step-1-selection";
@@ -509,6 +502,7 @@ javascript:(function() {
         mainStatusLabel.textContent = "Status Principal:";
         const mainStatusSelect = document.createElement("select");
         mainStatusSelect.id = "main-status";
+        // AJUSTE: Atualizado para refletir nomes consolidados
         mainStatusSelect.innerHTML = `<option value="">-- Selecione --</option><option value="NI">NI - Need Info</option><option value="SO">SO - Solution Offered</option><option value="IN">IN - Inactive</option><option value="AS">AS - Assigned</option>`;
         Object.assign(mainStatusSelect.style, styleSelect);
         const subStatusLabel = document.createElement("label");
@@ -525,19 +519,18 @@ javascript:(function() {
         step1Div.appendChild(subStatusSelect);
         popup.appendChild(step1Div);
 
-        // ===== ALTERAÇÃO REQ 2: Adicionada ETAPA 1.5 (Snippets) =====
+        // ---------- ETAPA 1.5: CENÁRIOS COMUNS (Snippets) ----------
         const stepSnippetsDiv = document.createElement("div");
         stepSnippetsDiv.id = "step-1-5-snippets";
         Object.assign(stepSnippetsDiv.style, { ...styleStepBlock, display: 'none' });
         const stepSnippetsTitle = document.createElement("h3");
         stepSnippetsTitle.textContent = "Cenários Comuns";
         Object.assign(stepSnippetsTitle.style, styleH3);
-        const snippetContainer = document.createElement("div"); // <-- snippetContainer é definido aqui
+        const snippetContainer = document.createElement("div");
         snippetContainer.id = "snippet-container";
         stepSnippetsDiv.appendChild(stepSnippetsTitle);
         stepSnippetsDiv.appendChild(snippetContainer);
         popup.appendChild(stepSnippetsDiv);
-        // ==========================================================
 
         // ---------- ETAPA 2: SELEÇÃO DE TASKS (Oculto) ----------
         const step2Div = document.createElement("div");
@@ -546,7 +539,7 @@ javascript:(function() {
         const step2Title = document.createElement("h3");
         step2Title.textContent = "Selecione as Tasks";
         Object.assign(step2Title.style, styleH3);
-        const taskCheckboxesContainer = document.createElement("div"); // <-- taskCheckboxesContainer é definido aqui
+        const taskCheckboxesContainer = document.createElement("div");
         taskCheckboxesContainer.id = "task-checkboxes-container";
         step2Div.appendChild(step2Title);
         step2Div.appendChild(taskCheckboxesContainer);
@@ -559,7 +552,7 @@ javascript:(function() {
         const step3Title = document.createElement("h3");
         step3Title.textContent = "Preencha os Detalhes";
         Object.assign(step3Title.style, styleH3);
-        const dynamicFormFieldsContainer = document.createElement("div"); // <-- dynamicFormFieldsContainer é definido aqui
+        const dynamicFormFieldsContainer = document.createElement("div");
         dynamicFormFieldsContainer.id = "dynamic-form-fields-container";
         step3Div.appendChild(step3Title);
         step3Div.appendChild(dynamicFormFieldsContainer);
@@ -623,98 +616,114 @@ javascript:(function() {
             subStatusSelect.disabled = false;
         };
 
+        // ===== AJUSTE: Lógica de `onchange` ATUALIZADA para criar RÁDIOS e CHECKBOXES =====
         subStatusSelect.onchange = () => {
             const selectedSubStatusKey = subStatusSelect.value;
             resetSteps(1.5);
             if (!selectedSubStatusKey) return;
 
             const templateData = SUBSTATUS_TEMPLATES[selectedSubStatusKey];
-
-            // --- ETAPA 1.5: Bloco de Snippets ---
-            // const snippetContainer = document.getElementById("snippet-container"); // Já definido globalmente no módulo
             snippetContainer.innerHTML = '';
             let snippetAdded = false;
 
-            if (selectedSubStatusKey === 'NI_Awaiting_Inputs_Initial') {
-                const quickFillLabel = document.createElement('label');
-                Object.assign(quickFillLabel.style, styleCheckboxLabel);
-                const quickFillCheckbox = document.createElement('input');
-                quickFillCheckbox.type = 'checkbox';
-                quickFillCheckbox.id = 'quickfill-cms-access';
-                Object.assign(quickFillCheckbox.style, styleCheckboxInput);
-                quickFillLabel.appendChild(quickFillCheckbox);
-                quickFillLabel.appendChild(document.createTextNode(" Cenário: ADV sem acesso ao CMS"));
-                snippetContainer.appendChild(quickFillLabel);
+            // --- ETAPA 1.5: Bloco de Snippets ---
+
+            // --- Cenários para NI - Awaiting Inputs (BOTÕES DE RÁDIO) ---
+            if (selectedSubStatusKey === 'NI_Awaiting_Inputs') {
+                const radioName = "ni-scenario";
+                const scenarios = [
+                    { id: 'quickfill-ni-inicio-manual', text: 'Início 2/6 (Manual)'},
+                    { id: 'quickfill-ni-cms-access', text: 'Início 2/6 (ADV sem acesso ao CMS)' },
+                    { id: 'quickfill-ni-followup', text: 'Follow-up 2/6' }
+                ];
+                
+                scenarios.forEach((scenario, index) => {
+                    const label = document.createElement('label');
+                    Object.assign(label.style, styleCheckboxLabel); // Reusa o estilo
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.id = scenario.id;
+                    radio.name = radioName;
+                    if (index === 0) radio.checked = true; // Marca o primeiro por padrão
+                    Object.assign(radio.style, styleCheckboxInput); // Reusa o estilo
+                    label.appendChild(radio);
+                    label.appendChild(document.createTextNode(` ${scenario.text}`));
+                    snippetContainer.appendChild(label);
+                });
                 snippetAdded = true;
             }
-
+            
+            // --- Cenários para SO - Implementation Only (CHECKBOXES) ---
             if (selectedSubStatusKey === 'SO_Implementation_Only') {
-                const quickFillLabelWA = document.createElement('label');
-                Object.assign(quickFillLabelWA.style, styleCheckboxLabel);
-                const quickFillCheckboxWA = document.createElement('input');
-                quickFillCheckboxWA.type = 'checkbox';
-                quickFillCheckboxWA.id = 'quickfill-whatsapp';
-                Object.assign(quickFillCheckboxWA.style, styleCheckboxInput);
-                quickFillLabelWA.appendChild(quickFillCheckboxWA);
-                quickFillLabelWA.appendChild(document.createTextNode(" Cenário: Conversão de WhatsApp"));
-                snippetContainer.appendChild(quickFillLabelWA);
-
-                const quickFillLabelForm = document.createElement('label');
-                Object.assign(quickFillLabelForm.style, styleCheckboxLabel);
-                const quickFillCheckboxForm = document.createElement('input');
-                quickFillCheckboxForm.type = 'checkbox';
-                quickFillCheckboxForm.id = 'quickfill-form';
-                Object.assign(quickFillCheckboxForm.style, styleCheckboxInput);
-                quickFillLabelForm.appendChild(quickFillCheckboxForm);
-                quickFillLabelForm.appendChild(document.createTextNode(" Cenário: Conversão de Formulário (Padrão)"));
-                snippetContainer.appendChild(quickFillLabelForm);
-
-                const quickFillLabelECW4 = document.createElement('label');
-                Object.assign(quickFillLabelECW4.style, styleCheckboxLabel);
-                const quickFillCheckboxECW4 = document.createElement('input');
-                quickFillCheckboxECW4.type = 'checkbox';
-                quickFillCheckboxECW4.id = 'quickfill-ecw4-close';
-                Object.assign(quickFillCheckboxECW4.style, styleCheckboxInput);
-                quickFillLabelECW4.appendChild(quickFillCheckboxECW4);
-                quickFillLabelECW4.appendChild(document.createTextNode(" Cenário: Fechamento ECW4 (Pós 7 dias)"));
-                snippetContainer.appendChild(quickFillLabelECW4);
+                const scenarios = [
+                    { id: 'quickfill-whatsapp', text: 'Conversão de WhatsApp' },
+                    { id: 'quickfill-form', text: 'Conversão de Formulário (Padrão)' },
+                    { id: 'quickfill-ecw4-close', text: 'Fechamento ECW4 (Pós 7 dias)' }
+                ];
+                
+                scenarios.forEach(scenario => {
+                    const label = document.createElement('label');
+                    Object.assign(label.style, styleCheckboxLabel);
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = scenario.id;
+                    Object.assign(checkbox.style, styleCheckboxInput);
+                    label.appendChild(checkbox);
+                    label.appendChild(document.createTextNode(` ${scenario.text}`));
+                    snippetContainer.appendChild(label);
+                });
                 snippetAdded = true;
             }
-
-            if (selectedSubStatusKey === 'AS_Reschedule_1') {
+            
+            // --- Cenários para AS - Assigned (CHECKBOXES) ---
+            if (selectedSubStatusKey === 'AS_Assigned') {
                 const reasonTitle = document.createElement('label');
-                reasonTitle.textContent = "Cenários Comuns (Motivo):";
+                reasonTitle.textContent = "Motivos Comuns:";
                 Object.assign(reasonTitle.style, styleLabel);
                 snippetContainer.appendChild(reasonTitle);
-                const reasons = [
+
+                const scenarios = [
                     { id: 'quickfill-as-no-show', text: 'Anunciante não compareceu (respondeu e-mail)' },
                     { id: 'quickfill-as-insufficient-time', text: 'Tempo insuficiente' },
                     { id: 'quickfill-as-no-access', text: 'Anunciante sem acessos necessários' }
                 ];
-                reasons.forEach(reason => {
-                    const quickFillLabel = document.createElement('label');
-                    Object.assign(quickFillLabel.style, styleCheckboxLabel);
-                    const quickFillCheckbox = document.createElement('input');
-                    quickFillCheckbox.type = 'checkbox';
-                    quickFillCheckbox.id = reason.id;
-                    Object.assign(quickFillCheckbox.style, styleCheckboxInput);
-                    quickFillLabel.appendChild(quickFillCheckbox);
-                    quickFillLabel.appendChild(document.createTextNode(` ${reason.text}`));
-                    snippetContainer.appendChild(quickFillLabel);
+                
+                scenarios.forEach(scenario => {
+                    const label = document.createElement('label');
+                    Object.assign(label.style, styleCheckboxLabel);
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = scenario.id;
+                    Object.assign(checkbox.style, styleCheckboxInput);
+                    label.appendChild(checkbox);
+                    label.appendChild(document.createTextNode(` ${scenario.text}`));
+                    snippetContainer.appendChild(label);
                 });
                 snippetAdded = true;
             }
-
-            if (selectedSubStatusKey === 'IN_Not_Reachable') {
-                const quickFillLabel = document.createElement('label');
-                Object.assign(quickFillLabel.style, styleCheckboxLabel);
-                const quickFillCheckbox = document.createElement('input');
-                quickFillCheckbox.type = 'checkbox';
-                quickFillCheckbox.id = 'quickfill-nrp-standard';
-                Object.assign(quickFillCheckbox.style, styleCheckboxInput);
-                quickFillLabel.appendChild(quickFillCheckbox);
-                quickFillLabel.appendChild(document.createTextNode(" Cenário: NRP Padrão (3 tentativas)"));
-                snippetContainer.appendChild(quickFillLabel);
+            
+            // --- Cenários para IN - Inactive (BOTÕES DE RÁDIO) ---
+           if (selectedSubStatusKey === 'IN_Inactive') {
+                 const radioName = "in-scenario";
+                 const scenarios = [
+                    { id: 'quickfill-in-nrp-standard', text: 'NRP Padrão (3 tentativas)' },
+                    { id: 'quickfill-in-no-show', text: 'No-Show (LM)' }, 
+                    { id: 'quickfill-in-manual', text: 'Outro (Manual)' }
+                 ];
+                 
+                 scenarios.forEach((scenario, index) => {
+                    const label = document.createElement('label');
+                    Object.assign(label.style, styleCheckboxLabel);
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.id = scenario.id;
+                    radio.name = radioName;
+                    if (index === 0) radio.checked = true; // Marca o primeiro por padrão
+                    Object.assign(radio.style, styleCheckboxInput);
+                    label.appendChild(radio);
+                    label.appendChild(document.createTextNode(` ${scenario.text}`));
+                    snippetContainer.appendChild(label);
+                });
                 snippetAdded = true;
             }
 
@@ -724,7 +733,6 @@ javascript:(function() {
 
             // --- ETAPA 2: Tasks ---
             if (templateData.requiresTasks) {
-                // const taskCheckboxesContainer = document.getElementById("task-checkboxes-container"); // Já definido globalmente
                 taskCheckboxesContainer.innerHTML = '';
                 for (const taskKey in TASKS_DB) {
                     const task = TASKS_DB[taskKey];
@@ -742,11 +750,10 @@ javascript:(function() {
             }
 
             // --- ETAPA 3: Formulário Dinâmico ---
-            // const dynamicFormFieldsContainer = document.getElementById("dynamic-form-fields-container"); // Já definido globalmente
             dynamicFormFieldsContainer.innerHTML = '';
-
             const placeholders = templateData.template.match(/{([A-Z_]+)}/g) || [];
             const uniquePlaceholders = [...new Set(placeholders)];
+            
             uniquePlaceholders.forEach(placeholder => {
                 if (placeholder === '{TAGS_IMPLEMENTED}' || placeholder === '{SCREENSHOTS_LIST}') {
                     return;
@@ -767,6 +774,11 @@ javascript:(function() {
                     field = document.createElement('input');
                     field.type = 'text';
                     Object.assign(field.style, styleInput);
+                     // Oculta o campo 'Reason/Comments' se ele for preenchido por snippet (NI e IN)
+                    if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey === 'NI_Awaiting_Inputs' || selectedSubStatusKey === 'IN_Inactive')) {
+                        Object.assign(label.style, { display: 'none' });
+                        Object.assign(field.style, { display: 'none' });
+                    }
                 }
                 field.id = `field-${fieldName}`;
                 dynamicFormFieldsContainer.appendChild(label);
@@ -774,16 +786,13 @@ javascript:(function() {
             });
 
             // --- Adiciona o Listener Centralizado aos Snippets ---
-            const snippetCheckboxes = snippetContainer.querySelectorAll('input[type="checkbox"]');
-            if (snippetCheckboxes.length > 0) {
-                snippetCheckboxes.forEach(checkbox => {
-                    // Remove listener antigo se houver para evitar duplicatas (precaução)
-                    checkbox.removeEventListener('change', updateFieldsFromScenarios);
-                    // Adiciona o novo listener
-                    checkbox.addEventListener('change', updateFieldsFromScenarios);
+            const snippetInputs = snippetContainer.querySelectorAll('input[type="checkbox"], input[type="radio"]');
+            if (snippetInputs.length > 0) {
+                snippetInputs.forEach(input => {
+                    input.removeEventListener('change', updateFieldsFromScenarios);
+                    input.addEventListener('change', updateFieldsFromScenarios);
                 });
-                // Chama a função uma vez para garantir estado inicial correto
-                 updateFieldsFromScenarios();
+                 updateFieldsFromScenarios(); // Chama uma vez para preencher com o padrão (radio button)
             }
             // ---------------------------------------------------
 
@@ -824,28 +833,36 @@ javascript:(function() {
                 const fieldName = input.id.replace('field-', '');
                 const placeholder = new RegExp(`{${fieldName}}`, 'g');
                 let value = input.value;
+                
+                // Preenche o {REASON_COMMENTS} vindo dos snippets de rádio
+                if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey === 'NI_Awaiting_Inputs' || selectedSubStatusKey === 'IN_Inactive')) {
+                    const checkedRadio = snippetContainer.querySelector('input[type="radio"]:checked');
+                    if (checkedRadio && scenarioSnippets[checkedRadio.id] && scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS']) {
+                         value = scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS'];
+                    }
+                }
+
                 if (textareaListFields.includes(fieldName) && value.trim() !== '') {
-                    // Filtra linhas vazias ou só com bullet ANTES de adicionar <li>
                     const lines = value.split('\n')
                                      .map(line => line.trim())
                                      .filter(line => line !== '' && line !== '•')
-                                     .map(line => line.startsWith('• ') ? line.substring(2).trim() : line.trim()) // Remove bullet e espaços extras
-                                     .filter(line => line !== '') // Filtra novamente se a linha ficou vazia após remover bullet
+                                     .map(line => line.startsWith('• ') ? line.substring(2).trim() : line.trim())
+                                     .filter(line => line !== '')
                                      .map(line => `<li>${line}</li>`)
                                      .join('');
-                    value = lines ? `<ul ${ulStyle}>${lines}</ul>` : ''; // Só adiciona UL se houver LIs
+                    value = lines ? `<ul ${ulStyle}>${lines}</ul>` : '';
                 } else if (textareaParagraphFields.includes(fieldName) && value.trim() !== '') {
                     value = value.split('\n').filter(line => line.trim() !== '').map(line => `<p style="margin: 0 0 8px 0;">${line}</p>`).join('');
-                } else if (input.tagName === 'TEXTAREA' && !textareaListFields.includes(fieldName) && !textareaParagraphFields.includes(fieldName)) { // Textareas genéricos
-                     value = value.replace(/\n/g, '<br>'); // Converte quebras de linha
-                } else if (input.tagName === 'TEXTAREA' && value.trim() === '') { // Textareas vazios (listas ou paragrafos)
-                     value = ''; // Garante que fique vazio
+                } else if (input.tagName === 'TEXTAREA' && !textareaListFields.includes(fieldName) && !textareaParagraphFields.includes(fieldName)) {
+                     value = value.replace(/\n/g, '<br>');
+                } else if (input.tagName === 'TEXTAREA' && value.trim() === '') {
+                     value = '';
                 } else if (fieldName === 'ON_CALL' && value.trim() === '') {
                     value = 'N/A';
                 } else if (fieldName === 'GTM_GA4_VERIFICADO' && value.trim() === '') {
                     value = 'N/A';
                 }
-                const safeValue = (value || '').replace(/\$/g, '$$$$'); // Garante que value não seja null/undefined
+                const safeValue = (value || '').replace(/\$/g, '$$$$');
                 outputText = outputText.replace(placeholder, safeValue);
             });
             outputText = outputText.replace(/{([A-Z_]+)}/g, ''); // Remove placeholders restantes
@@ -931,7 +948,7 @@ javascript:(function() {
             },
             "ES BAU": {
                 color: "#00bbff",
-                inicio: ["Introducción (Nombre y  Equipo).", "La llamada puede ser grabada con fines de entrenamiento y calidad de acuerdo con nuestra política de privacidad.", "Informar sitio web registrado en el caso.", "Confirmación: Solicitar al Anunciante que confirme los 10 dígitos del CID el email del anunciante.", "Confirmaciones: Tarea, AM", "Informar el tiempo que va a durar la reunión.", "Confirmación: Copia de seguridad y acceso de ADM", "Cerrar contenido sensible antes de compartir la pantalla.", ],
+                inicio: ["Introducción (Nombre y  Equipo).", "La llamada pode ser grabada con fines de entrenamiento y calidad de acuerdo con nuestra política de privacidad.", "Informar sitio web registrado en el caso.", "Confirmación: Solicitar al Anunciante que confirme los 10 dígitos del CID el email del anunciante.", "Confirmaciones: Tarea, AM", "Informar el tiempo que va a durar la reunión.", "Confirmación: Copia de seguridad y acceso de ADM", "Cerrar contenido sensible antes de compartir la pantalla.", ],
                 fim: ["Resumen de la llamada.", "Ayuda adicional.", "Cerrar la pantalla compartida.", "Próximos passos (¿Cuánto tempo seguirá el caso?)", "Encuesta de satisfacción.", "Estaré monitoreando su caso durante XX días para asegurarme de que todo esté funcionando correctamente. Durante este tiempo, nuestro equipo de qualidade podría realizar una prueba de conversión para validar la implementación. ¿Estás de acuerdo con esta prueba para garantizar la efectividad de la implementación? Perfecto, ¡gracias!", ]
             },
             "ES LT": {
