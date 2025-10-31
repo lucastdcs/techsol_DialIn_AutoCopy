@@ -26,7 +26,7 @@ import {
 } from 'notes-data';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v2.7"; // Atualize sua versão aqui!
+    const CURRENT_VERSION = "v2.7.1"; // Atualize sua versão aqui!
 
     function copyHtmlToClipboard(html) { /* ... mantido ... */ }
     function enableAutoBullet(textarea) { /* ... mantido ... */ }
