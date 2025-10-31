@@ -11,9 +11,9 @@ import {
     stylePopupTitle,
     stylePopupCloseBtn,
     styleFloatingButton,
-    stylePopupVersion, // NOVO: Estilo para a versão
-    styleCredit,       // NOVO: Estilo para o crédito
-    styleExpandButton  // NOVO: Estilo para o botão de expansão
+    stylePopupVersion,
+    styleCredit,
+    styleExpandButton
 } from 'utils';
 
 // Importa dados
@@ -26,10 +26,28 @@ import {
 } from 'notes-data';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v2.7.1"; // Atualize sua versão aqui!
+    const CURRENT_VERSION = "v2.7.1"; // Sua versão
 
-    function copyHtmlToClipboard(html) { /* ... mantido ... */ }
-    function enableAutoBullet(textarea) { /* ... mantido ... */ }
+    function copyHtmlToClipboard(html) {
+        const container = document.createElement('div');
+        container.style.position = 'fixed';
+        container.style.left = '-9999px';
+        container.innerHTML = html;
+        document.body.appendChild(container);
+        const range = document.createRange();
+        range.selectNodeContents(container);
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        try {
+            document.execCommand('copy');
+            showToast("Texto copiado com sucesso"); 
+        } catch (err) {
+            showToast("Falha ao copiar", { error: true });
+        }
+        selection.removeAllRanges();
+        document.body.removeChild(container);
+    }
 
     // --- UI (Módulo 1) ---
     const btn = document.createElement("button");
@@ -50,21 +68,21 @@ export function initCaseNotesAssistant() {
     const logo = document.createElement("img");
     logo.src = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
     Object.assign(logo.style, { width: "24px", height: "24px" });
-    const titleContainer = document.createElement("div"); // Container para título e versão
+    const titleContainer = document.createElement("div");
     Object.assign(titleContainer.style, { display: 'flex', flexDirection: 'column', flexGrow: '1' });
 
     const title = document.createElement("div");
-    title.textContent = "Case Notes Assistant"; // Título sem a versão
+    title.textContent = "Case Notes Assistant";
     Object.assign(title.style, stylePopupTitle);
     titleContainer.appendChild(title);
 
-    const versionDisplay = document.createElement("div"); // Elemento da versão
+    const versionDisplay = document.createElement("div");
     versionDisplay.textContent = CURRENT_VERSION;
     Object.assign(versionDisplay.style, stylePopupVersion);
     titleContainer.appendChild(versionDisplay);
 
     header.appendChild(logo);
-    header.appendChild(titleContainer); // Adiciona o container de título/versão
+    header.appendChild(titleContainer);
     popup.appendChild(header);
     makeDraggable(popup, header);
 
@@ -74,42 +92,46 @@ export function initCaseNotesAssistant() {
     closeBtn.onclick = () => togglePopup(false);
     popup.appendChild(closeBtn);
 
-    // NOVO: Botão de Expansão
     const expandBtn = document.createElement("div");
-    expandBtn.textContent = "↔"; // Unicode para setas horizontais
+    expandBtn.textContent = "↔";
     Object.assign(expandBtn.style, styleExpandButton);
     popup.appendChild(expandBtn);
 
     let isExpanded = false;
-    const initialWidth = parseInt(stylePopup.width, 10); // Obtém a largura inicial do estilo
-    const expandedWidth = initialWidth * 2; // Dobro da largura
+    const initialWidth = parseInt(stylePopup.width, 10);
+    const expandedWidth = initialWidth * 2;
 
+    // ===== LÓGICA DE EXPANSÃO CORRIGIDA =====
     expandBtn.onclick = () => {
         isExpanded = !isExpanded;
-        popup.style.width = isExpanded ? `${expandedWidth}px` : `${initialWidth}px`;
+        const newWidth = isExpanded ? expandedWidth : initialWidth;
+        const widthDifference = expandedWidth - initialWidth;
+
+        popup.style.width = `${newWidth}px`;
         
-        // Ajusta a largura dos campos de texto dentro do pop-up
-        const fields = popup.querySelectorAll('input[type="text"], textarea, select');
-        fields.forEach(field => {
-            field.style.width = '100%'; // Sempre 100% do container pai
-        });
-
-        // Adapta o posicionamento do pop-up para manter a centralização ou a âncora à direita
-        // Se ancorado à direita, ajusta `right` para manter a posição
-        const currentRight = parseInt(popup.style.right, 10);
-        if (isExpanded) {
-            popup.style.right = `${currentRight - (expandedWidth - initialWidth)}px`;
-        } else {
-            popup.style.right = `${currentRight + (expandedWidth - initialWidth)}px`;
+        // Só ajusta o 'right' se o popup NÃO foi arrastado (ou seja, 'right' não é 'auto')
+        if (popup.style.right && popup.style.right !== 'auto') {
+            const currentRight = parseInt(popup.style.right, 10);
+            if (!isNaN(currentRight)) { // Checa se 'right' era um número
+                if (isExpanded) {
+                    // Expande para a esquerda, subtraindo a diferença
+                    popup.style.right = `${currentRight - widthDifference}px`;
+                } else {
+                    // Contrai para a direita, adicionando a diferença
+                    popup.style.right = `${currentRight + widthDifference}px`;
+                }
+            }
         }
+        // Se 'right' for 'auto', o popup foi arrastado e está posicionado por 'left'.
+        // Mudar a largura fará com que ele se expanda para a direita, o que é o comportamento esperado.
     };
-    // FIM NOVO: Botão de Expansão
+    // ======================================
 
-    // Estilos locais do Módulo 1 (pequenas mudanças para animacões)
+    // Estilos locais do Módulo 1
     const styleInput = {
         width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #dadce0",
         fontSize: "14px", marginBottom: "12px", boxSizing: "border-box", fontFamily: "'Poppins', sans-serif",
-        transition: "border-color 0.2s ease, box-shadow 0.2s ease" // Adicionado transição
+        transition: "border-color 0.2s ease, box-shadow 0.2s ease"
     };
     const styleTextarea = { ...styleInput, height: "100px", resize: "vertical" };
     const styleStepBlock = {
@@ -122,35 +144,152 @@ export function initCaseNotesAssistant() {
         display: "flex", alignItems: "center", marginBottom: "10px",
         fontSize: "14px", fontWeight: "400", cursor: "pointer",
         padding: "8px", background: "#f8f9fa", borderRadius: "6px",
-        transition: "background-color 0.2s ease, box-shadow 0.2s ease", // Adicionado transição
-        userSelect: "none" // Evita seleção de texto ao clicar
+        transition: "background-color 0.2s ease, box-shadow 0.2s ease",
+        userSelect: "none"
     };
-    styleCheckboxLabel[':hover'] = { // Efeito de hover no JS (simulado)
-        backgroundColor: "#e0e0e0"
-    };
+    // O :hover bugado foi removido daqui. A lógica está no addSnippetInput.
     const styleCheckboxInput = {
         width: "auto", marginRight: "8px", marginBottom: "0",
         cursor: "pointer",
-        accentColor: "#1a73e8" // Cor do checkbox
+        accentColor: "#1a73e8"
     };
-    // styleButtonBase já é importado e tem transições
 
     // Conteúdo principal do popup
     const popupContent = document.createElement("div");
     Object.assign(popupContent.style, {
-        padding: "0 16px 16px 16px", // Ajuste para o padding lateral e inferior
-        overflowY: "auto", // Scroll para o conteúdo
-        flexGrow: "1" // Permite que o conteúdo ocupe o espaço restante
+        padding: "0 16px 16px 16px",
+        overflowY: "auto",
+        flexGrow: "1"
     });
-    popup.appendChild(popupContent); // Todos os steps agora vão para popupContent
+    popup.appendChild(popupContent);
 
-    // Adiciona o crédito no final do popup
+    // Crédito no final
     const credit = document.createElement("div");
     credit.textContent = "created by lucaste@";
     Object.assign(credit.style, styleCredit);
-    popup.appendChild(credit); // Adiciona o crédito diretamente ao popup, abaixo do conteúdo
+    popup.appendChild(credit);
 
-    // ... (restante do seu código da UI, mas todos os steps agora são appendChildren de popupContent)
+    // --- Declaração dos elementos da UI ---
+    const stepSnippetsDiv = document.createElement("div");
+    const snippetContainer = document.createElement("div");
+    const step2Div = document.createElement("div");
+    const taskCheckboxesContainer = document.createElement("div");
+    const step3Div = document.createElement("div");
+    const dynamicFormFieldsContainer = document.createElement("div");
+    const mainStatusSelect = document.createElement("select");
+    const subStatusSelect = document.createElement("select");
+    const buttonContainer = document.createElement("div");
+
+    // --- Funções de Lógica Interna ---
+
+    function updateFieldsFromScenarios() {
+        const activeScenarioInputs = snippetContainer.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
+        const targetFieldsContent = {};
+        const activeLinkedTasks = new Set();
+
+        activeScenarioInputs.forEach(input => {
+            const scenarioId = input.id;
+            const snippets = scenarioSnippets[scenarioId];
+            if (snippets) {
+                for (const fieldId in snippets) {
+                    if (fieldId !== 'linkedTask') {
+                        if (!targetFieldsContent[fieldId]) {
+                            targetFieldsContent[fieldId] = [];
+                        }
+                         if (!targetFieldsContent[fieldId].includes(snippets[fieldId])) {
+                            targetFieldsContent[fieldId].push(snippets[fieldId]);
+                         }
+                    } else {
+                         activeLinkedTasks.add(snippets.linkedTask);
+                    }
+                }
+            }
+        });
+
+        const allPossibleTargetFields = new Set();
+         Object.values(scenarioSnippets).forEach(snippets => {
+             Object.keys(snippets).forEach(key => {
+                 if(key !== 'linkedTask') allPossibleTargetFields.add(key);
+             });
+         });
+
+        allPossibleTargetFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                const combinedTextArray = targetFieldsContent[fieldId] || [];
+                let finalValue = "";
+
+                if (textareaListFields.includes(fieldId.replace('field-', ''))) {
+                    finalValue = combinedTextArray
+                        .map(line => line.startsWith('• ') ? line : '• ' + line)
+                        .join('\n');
+
+                    if (finalValue === '') {
+                         finalValue = '• ';
+                    } else if (!finalValue.endsWith('\n• ')) {
+                         finalValue += '\n• ';
+                    }
+                } else {
+                     finalValue = combinedTextArray.join('\n\n');
+                }
+                
+                if (finalValue.trim() !== '•' && finalValue.trim() !== '') {
+                    field.value = finalValue;
+                } else if (textareaListFields.includes(fieldId.replace('field-', ''))) {
+                     field.value = '• ';
+                } else {
+                    field.value = '';
+                }
+
+                if (field.tagName === 'TEXTAREA' && textareaListFields.includes(fieldId.replace('field-', ''))) {
+                     if (field.value.trim() === '•' || field.value.trim() === '') enableAutoBullet(field);
+                }
+             }
+        });
+
+        const taskCheckboxes = taskCheckboxesContainer.querySelectorAll('input[type="checkbox"]');
+        taskCheckboxes.forEach(taskCheckbox => {
+            taskCheckbox.checked = false;
+            if (activeLinkedTasks.has(taskCheckbox.value)) {
+                taskCheckbox.checked = true;
+            }
+        });
+    }
+
+    function enableAutoBullet(textarea) {
+        if(textarea.value.trim() === '' || textarea.value.trim() === '•') {
+            textarea.value = '• ';
+        }
+        textarea.onkeydown = function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const start = this.selectionStart, end = this.selectionEnd, value = this.value;
+                const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                const currentLine = value.substring(lineStart, start);
+                const insertText = (currentLine.trim() === '•' || currentLine.trim() === '') ? '\n' : '\n• ';
+
+                this.value = value.substring(0, start) + insertText + value.substring(end);
+                const newPos = start + insertText.length;
+                this.selectionStart = newPos; this.selectionEnd = newPos;
+            } else if (e.key === 'Backspace') {
+                const start = this.selectionStart;
+                if (start === this.selectionEnd && start > 0) {
+                    const textBefore = this.value.substring(0, start);
+                    if (textBefore.endsWith('\n• ')) {
+                        e.preventDefault();
+                        this.value = textBefore.substring(0, start - 3) + this.value.substring(this.selectionEnd);
+                        this.selectionStart = start - 3; this.selectionEnd = start - 3;
+                    } else if (textBefore === '• ') {
+                         e.preventDefault();
+                         this.value = '';
+                         this.selectionStart = 0; this.selectionEnd = 0;
+                    }
+                }
+            }
+        };
+    }
+
+    // --- Montagem da UI (continuação) ---
     const step1Div = document.createElement("div");
     step1Div.id = "step-1-selection";
     const mainStatusLabel = document.createElement("label");
@@ -170,9 +309,8 @@ export function initCaseNotesAssistant() {
     step1Div.appendChild(mainStatusSelect);
     step1Div.appendChild(subStatusLabel);
     step1Div.appendChild(subStatusSelect);
-    popupContent.appendChild(step1Div); // Mudança aqui!
+    popupContent.appendChild(step1Div);
 
-    // ETAPA 1.5
     stepSnippetsDiv.id = "step-1-5-snippets";
     Object.assign(stepSnippetsDiv.style, { ...styleStepBlock, display: 'none' });
     const stepSnippetsTitle = document.createElement("h3");
@@ -181,9 +319,8 @@ export function initCaseNotesAssistant() {
     snippetContainer.id = "snippet-container";
     stepSnippetsDiv.appendChild(stepSnippetsTitle);
     stepSnippetsDiv.appendChild(snippetContainer);
-    popupContent.appendChild(stepSnippetsDiv); // Mudança aqui!
+    popupContent.appendChild(stepSnippetsDiv);
 
-    // ETAPA 2
     step2Div.id = "step-2-tasks";
     Object.assign(step2Div.style, { ...styleStepBlock, display: 'none' });
     const step2Title = document.createElement("h3");
@@ -192,9 +329,8 @@ export function initCaseNotesAssistant() {
     taskCheckboxesContainer.id = "task-checkboxes-container";
     step2Div.appendChild(step2Title);
     step2Div.appendChild(taskCheckboxesContainer);
-    popupContent.appendChild(step2Div); // Mudança aqui!
+    popupContent.appendChild(step2Div);
 
-    // ETAPA 3
     step3Div.id = "step-3-form";
     Object.assign(step3Div.style, { ...styleStepBlock, display: 'none' });
     const step3Title = document.createElement("h3");
@@ -203,11 +339,10 @@ export function initCaseNotesAssistant() {
     dynamicFormFieldsContainer.id = "dynamic-form-fields-container";
     step3Div.appendChild(step3Title);
     step3Div.appendChild(dynamicFormFieldsContainer);
-    popupContent.appendChild(step3Div); // Mudança aqui!
+    popupContent.appendChild(step3Div);
 
-    // Botões
-    Object.assign(buttonContainer.style, { display: "flex", gap: "8px", padding: "0 0 16px 0", display: "none" }); // Ajuste de padding
-    popupContent.appendChild(buttonContainer); // Mudança aqui!
+    Object.assign(buttonContainer.style, { display: "flex", gap: "8px", padding: "0", display: "none" }); // Padding removido, pois está no popupContent
+    popupContent.appendChild(buttonContainer);
 
     const copyButton = document.createElement("button");
     copyButton.textContent = "Copiar";
@@ -223,10 +358,46 @@ export function initCaseNotesAssistant() {
     generateButton.onmouseout = () => (generateButton.style.backgroundColor = "#1a73e8");
     buttonContainer.appendChild(generateButton);
 
-    // --- Lógica (Módulo 1) --- (Mantida)
+    document.body.appendChild(popup);
 
-    function resetSteps(startFrom = 1.5) { /* ... mantido ... */ }
-    mainStatusSelect.onchange = () => { /* ... mantido ... */ }
+    // --- Lógica (Módulo 1) ---
+
+    function resetSteps(startFrom = 1.5) {
+        if (startFrom <= 1.5) {
+            stepSnippetsDiv.style.display = 'none';
+            snippetContainer.innerHTML = '';
+        }
+        if (startFrom <= 2) {
+            step2Div.style.display = 'none';
+            taskCheckboxesContainer.innerHTML = '';
+        }
+        if (startFrom <= 3) {
+            step3Div.style.display = 'none';
+            dynamicFormFieldsContainer.innerHTML = '';
+            buttonContainer.style.display = 'none';
+        }
+    }
+
+    mainStatusSelect.onchange = () => {
+        const selectedStatus = mainStatusSelect.value;
+        resetSteps(1.5);
+        subStatusSelect.innerHTML = '<option value="">-- Selecione o Substatus --</option>';
+        if (!selectedStatus) {
+            subStatusSelect.disabled = true;
+            return;
+        }
+        for (const key in SUBSTATUS_TEMPLATES) {
+            const template = SUBSTATUS_TEMPLATES[key];
+            if (template.status === selectedStatus) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = template.name;
+                subStatusSelect.appendChild(option);
+            }
+        }
+        subStatusSelect.disabled = false;
+    };
+
     subStatusSelect.onchange = () => {
         const selectedSubStatusKey = subStatusSelect.value;
         resetSteps(1.5);
@@ -236,13 +407,11 @@ export function initCaseNotesAssistant() {
         snippetContainer.innerHTML = '';
         let snippetAdded = false;
 
-        // --- ETAPA 1.5: Bloco de Snippets ---
-        // ... (seu código atual aqui, mas adicione os listeners de hover para os checkboxes/radios)
         const addSnippetInput = (scenario, type, container) => {
             const label = document.createElement('label');
-            Object.assign(label.style, styleCheckboxLabel); // Aplica o estilo base
-            label.onmouseover = () => label.style.backgroundColor = '#e8eaed'; // Efeito de hover
-            label.onmouseout = () => label.style.backgroundColor = '#f8f9fa'; // Retorna ao normal
+            Object.assign(label.style, styleCheckboxLabel);
+            label.onmouseover = () => label.style.backgroundColor = '#e8eaed';
+            label.onmouseout = () => label.style.backgroundColor = '#f8f9fa';
 
             const input = document.createElement('input');
             input.type = type;
@@ -251,7 +420,7 @@ export function initCaseNotesAssistant() {
             label.appendChild(input);
             label.appendChild(document.createTextNode(` ${scenario.text}`));
             container.appendChild(label);
-            return input; // Retorna o input para configurar name/checked
+            return input;
         };
 
         if (selectedSubStatusKey === 'NI_Awaiting_Inputs') {
@@ -316,15 +485,14 @@ export function initCaseNotesAssistant() {
             stepSnippetsDiv.style.display = 'block';
         }
 
-        // --- ETAPA 2: Tasks ---
         if (templateData.requiresTasks) {
             taskCheckboxesContainer.innerHTML = '';
             for (const taskKey in TASKS_DB) {
                 const task = TASKS_DB[taskKey];
                 const label = document.createElement('label');
-                Object.assign(label.style, styleCheckboxLabel); // Aplica o estilo base
-                label.onmouseover = () => label.style.backgroundColor = '#e8eaed'; // Efeito de hover
-                label.onmouseout = () => label.style.backgroundColor = '#f8f9fa'; // Retorna ao normal
+                Object.assign(label.style, styleCheckboxLabel);
+                label.onmouseover = () => label.style.backgroundColor = '#e8eaed';
+                label.onmouseout = () => label.style.backgroundColor = '#f8f9fa';
                 
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
@@ -337,7 +505,6 @@ export function initCaseNotesAssistant() {
             step2Div.style.display = 'block';
         }
 
-        // --- ETAPA 3: Formulário Dinâmico ---
         dynamicFormFieldsContainer.innerHTML = '';
         const placeholders = templateData.template.match(/{([A-Z_]+)}/g) || [];
         const uniquePlaceholders = [...new Set(placeholders)];
@@ -354,7 +521,7 @@ export function initCaseNotesAssistant() {
             if (textareaListFields.includes(fieldName)) {
                 field = document.createElement('textarea');
                 Object.assign(field.style, styleTextarea);
-                field.classList.add('bullet-textarea'); // Adiciona classe para estilo da scrollbar
+                field.classList.add('bullet-textarea');
                 enableAutoBullet(field);
             } else if (textareaParagraphFields.includes(fieldName)) {
                 field = document.createElement('textarea');
@@ -386,13 +553,10 @@ export function initCaseNotesAssistant() {
         buttonContainer.style.display = 'flex';
     };
 
-
-  
-
     function generateOutputHtml() {
         const selectedSubStatusKey = subStatusSelect.value;
         if (!selectedSubStatusKey) return null;
-        const templateData = SUBSTATUS_TEMPLATES[selectedSubStatusKey]; // SUBSTATUS_TEMPLATES é importado
+        const templateData = SUBSTATUS_TEMPLATES[selectedSubStatusKey];
         let outputText = templateData.template.replace(/\n/g, "<br>");
         const ulStyle = "style=\"margin-bottom: 12px; padding-left: 30px;\"";
 
@@ -403,7 +567,7 @@ export function initCaseNotesAssistant() {
             const screenshotType = (selectedSubStatusKey === 'SO_Education_Only') ? 'education' : 'implementation';
             selectedCheckboxes.forEach(checkbox => {
                 const taskKey = checkbox.value;
-                const task = TASKS_DB[taskKey]; // TASKS_DB é importado
+                const task = TASKS_DB[taskKey];
                 tagNames.push(task.name);
                 const screenshotList = task.screenshots[screenshotType] || [];
                 if (screenshotList.length > 0) {
@@ -424,12 +588,12 @@ export function initCaseNotesAssistant() {
             
             if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey === 'NI_Awaiting_Inputs' || selectedSubStatusKey === 'IN_Inactive')) {
                 const checkedRadio = snippetContainer.querySelector('input[type="radio"]:checked');
-                if (checkedRadio && scenarioSnippets[checkedRadio.id] && scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS']) { // scenarioSnippets é importado
+                if (checkedRadio && scenarioSnippets[checkedRadio.id] && scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS']) {
                      value = scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS'];
                 }
             }
 
-            if (textareaListFields.includes(fieldName) && value.trim() !== '') { // textareaListFields é importado
+            if (textareaListFields.includes(fieldName) && value.trim() !== '') {
                 const lines = value.split('\n')
                                  .map(line => line.trim())
                                  .filter(line => line !== '' && line !== '•')
@@ -438,9 +602,9 @@ export function initCaseNotesAssistant() {
                                  .map(line => `<li>${line}</li>`)
                                  .join('');
                 value = lines ? `<ul ${ulStyle}>${lines}</ul>` : '';
-            } else if (textareaParagraphFields.includes(fieldName) && value.trim() !== '') { // textareaParagraphFields é importado
+            } else if (textareaParagraphFields.includes(fieldName) && value.trim() !== '') {
                 value = value.split('\n').filter(line => line.trim() !== '').map(line => `<p style="margin: 0 0 8px 0;">${line}</p>`).join('');
-            } else if (input.tagName === 'TEXTAREA' && !textareaListFields.includes(fieldName) && !textareaParagraphFields.includes(fieldName)) { // textareaListFields é importado
+            } else if (input.tagName === 'TEXTAREA' && !textareaListFields.includes(fieldName) && !textareaParagraphFields.includes(fieldName)) {
                  value = value.replace(/\n/g, '<br>');
             } else if (input.tagName === 'TEXTAREA' && value.trim() === '') {
                  value = '';
@@ -455,7 +619,6 @@ export function initCaseNotesAssistant() {
         outputText = outputText.replace(/{([A-Z_]+)}/g, '');
         return outputText;
     }
-
 
     copyButton.onclick = () => {
         const htmlOutput = generateOutputHtml();
@@ -494,8 +657,8 @@ export function initCaseNotesAssistant() {
         }
     };
 
-
-  function togglePopup(show) {
+    // ===== LÓGICA DE FECHAR O POPUP CORRIGIDA =====
+    function togglePopup(show) {
         if (show) {
             popup.style.opacity = "1";
             popup.style.pointerEvents = "auto";
@@ -505,12 +668,18 @@ export function initCaseNotesAssistant() {
             popup.style.pointerEvents = "none";
             popup.style.transform = "scale(0.95)";
             
-            // NOVO: Reseta o estado de expansão ao fechar
+            // Reseta o estado de expansão E a posição original
             isExpanded = false;
             popup.style.width = `${initialWidth}px`;
-            popup.style.right = "24px"; // Volta para a posição original se estava expandido
+            
+            // Se foi arrastado (style.right === 'auto'), deixa 'left' e 'top' onde estão.
+            // Se NÃO foi arrastado, reseta 'right' para a posição inicial.
+            if (popup.style.right !== 'auto') {
+                 popup.style.right = "24px"; 
+            }
         }
     }
+    // ===========================================
 
     let visible = false;
     btn.onclick = () => {
