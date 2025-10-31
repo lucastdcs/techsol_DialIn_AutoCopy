@@ -1,6 +1,3 @@
-// call-script.js
-
-// Importa as funções e estilos necessários do utils.js
 import { 
     makeDraggable,
     styleSelect,
@@ -10,7 +7,7 @@ import {
     stylePopupTitle,
     stylePopupCloseBtn,
     styleFloatingButton
-} from './utils.js';
+} from 'utils';
 
 // Envolve todo o módulo em uma função exportada
 export function initCallScriptAssistant() {

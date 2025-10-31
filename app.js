@@ -1,12 +1,11 @@
 // app.js
 
-// Importa os inicializadores dos outros arquivos
-import { initGlobalStylesAndFont } from './utils.js';
-import { initCaseNotesAssistant } from './notes-assistant.js';
-import { initCallScriptAssistant } from './call-script.js';
+// Importa usando os NOMES do "importmap", e não os caminhos
+import { initGlobalStylesAndFont } from 'utils';
+import { initCaseNotesAssistant } from 'notes-assistant';
+import { initCallScriptAssistant } from 'call-script';
 
 // --- 1. VERIFICAÇÕES GLOBAIS ---
-// (Esta verificação fica aqui para parar tudo se já estiver carregado)
 if (document.getElementById("autofill-floating-btn") || document.getElementById("call-script-floating-btn")) {
     console.log("Assistentes já carregados.");
 } else {

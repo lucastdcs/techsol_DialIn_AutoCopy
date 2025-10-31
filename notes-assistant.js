@@ -1,6 +1,3 @@
-// notes-assistant.js
-
-// Importa as funções e estilos necessários do utils.js
 import { 
     showToast, 
     makeDraggable,
@@ -11,17 +8,15 @@ import {
     stylePopupTitle,
     stylePopupCloseBtn,
     styleFloatingButton
-} from './utils.js';
+} from 'utils';
 
-// ===== NOVA IMPORTAÇÃO DE DADOS =====
 import {
     TASKS_DB,
     SUBSTATUS_TEMPLATES,
     textareaListFields,
     textareaParagraphFields,
     scenarioSnippets
-} from './notes-data.js';
-// ==================================
+} from 'notes-data';
 
 // Envolve todo o módulo em uma função exportada
 export function initCaseNotesAssistant() {
