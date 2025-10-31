@@ -16,7 +16,7 @@ import {
 
 // Envolve todo o módulo em uma função exportada
 export function initCallScriptAssistant() {
-    const CURRENT_VERSION = "v1.1"; // Defina a versão aqui
+    const CURRENT_VERSION = "v1.2"; // Defina a versão aqui
 
     // --- Dados e Estado (Módulo 2) ---
     const csaChecklistData = {
