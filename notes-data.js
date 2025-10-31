@@ -76,13 +76,13 @@ export const SUBSTATUS_TEMPLATES = {
 };
 
 export const textareaListFields = [
-    'TASKS_SOLICITADAS', 'PASSOS_EXECUTADOS', 'RESULTADO', 'DUVIDAS', 'RESOLUCOES',
+    'TASKS_SOLICITADAS', 'PASSOS_EXECUTADOS', 'RESULTADO', 'DÚVIDAS', 'RESOLUÇÕES',
     'TASKS_IMPLEMENTADAS_CALL', 'PROXIMOS_PASSOS', 'CONTEXTO_CALL',
     'IMPEDIMENTO_CLIENTE', 'MINHA_ACAO', 'SCREENSHOTS',
     'MOTIVO_REAGENDAMENTO'
 ];
 
-export const textareaParagraphFields = ['CONSIDERACOES', 'COMENTARIOS'];
+export const textareaParagraphFields = ['CONSIDERAÇÕES FINAIS', 'COMENTÁRIOS'];
 
 export const scenarioSnippets = {
     // --- Cenários de NI (Exclusivos) ---
@@ -110,19 +110,19 @@ export const scenarioSnippets = {
     // --- Cenários de SO (Combináveis) ---
     'quickfill-whatsapp': {
         'field-TASKS_SOLICITADAS': "• Criação de conversão para WHATSAPP",
-        'field-PASSOS_EXECUTADOS': "• Fizemos a criação da conversão no Ads.\n• Criamos a Tag no GTM usando acionadores de clique (ex: Click URL / Click Text) para os botões de WhatsApp.\n• Realizamos os testes e validamos o funcionamento.",
+        'field-PASSOS_EXECUTADOS': "• Fizemos a criação da conversão no Ads.\n• Criamos a Tag no GTM usando acionadores de clique para os botões de WhatsApp.\n• Realizamos os testes e validamos o funcionamento.",
         'field-RESULTADO': "• Task implementada com sucesso. Fecho o caso sem acompanhamento.",
         linkedTask: 'ads_conversion_tracking'
     },
      'quickfill-form': {
         'field-TASKS_SOLICITADAS': "• Criação de conversão para FORMULÁRIO (padrão, não-otimizada).",
-        'field-PASSOS_EXECUTADOS': "• Fizemos a criação da conversão no Ads.\n• Criamos a Tag no GTM usando o acionador de envio de formulário (Form Submission) ou visualização de página de agradecimento (Thank You Page).\n• Realizamos os testes e validamos o funcionamento.",
+        'field-PASSOS_EXECUTADOS': "• Fizemos a criação da conversão no Ads.\n• Criamos a Tag no GTM usando o acionador de envio de formulário.\n• Realizamos os testes e validamos o funcionamento.",
         'field-RESULTADO': "• Task implementada com sucesso. Fecho o caso sem acompanhamento.",
         linkedTask: 'ads_conversion_tracking'
     },
     'quickfill-ecw4-close': {
         'field-TASKS_SOLICITADAS': "• Acompanhamento da conversão otimizada (ECW4) após 7 dias.",
-        'field-PASSOS_EXECUTADOS': "• Após o período de 7 dias de acompanhamento, verifiquei o painel do Ads.\n• A conversão está sendo registrada corretamente.",
+        'field-PASSOS_EXECUTADOS': "• Após o período de 7 dias de acompanhamento, verifiquei o painel do Ads, diagnóstico da conversão, e o dash interno.\n• A conversão está sendo registrada corretamente.",
         'field-RESULTADO': "• Valido o bom funcionamento da conversão otimizada.\n• Assim, fecho o caso.",
         linkedTask: 'ads_enhanced_conversions'
     },
@@ -145,8 +145,8 @@ export const scenarioSnippets = {
     'quickfill-in-no-show': {
         'field-REASON_COMMENTS': "Anunciante não compareceu à chamada (No-Show).",
         'field-ON_CALL': "N/A",
-        'field-COMENTARIOS': "• O caso foi gerado e entrei na chamada no horário agendado.\n• O anunciante não compareceu à reunião.\n• Segui o protocolo de espera: realizei duas tentativas de ligação, aguardei os 10 minutos, e fiz uma terceira tentativa, sem sucesso.\n• Nenhuma das ligações foi atendida (ex: Caixa Postal).\n• Caso inativado por No-Show.",
-        'field-SCREENSHOTS': "• Tentativa 1 (Caixa Postal) - https://screenshot.googleplex.com/BW3RLJNgf9SUVzx\n• Tentativa 2 (Caixa Postal) - https://screenshot.googleplex.com/9VEjdvGghueznHv\n• Tentativa 3 (Chamada desconectada) - https://screenshot.googleplex.com/C4yPjgvXN9kovcw"
+        'field-COMENTARIOS': "• O caso foi gerado e entrei na chamada no horário agendado.\n• O anunciante não compareceu à reunião.\n• Não tive contato com o AM.\n• Segui o protocolo de espera: realizei duas tentativas de ligação, aguardei os 10 minutos, e fiz uma terceira tentativa, sem sucesso.\n• Nenhuma das ligações foi atendida (ex: Caixa Postal).\n• Caso inativado por No-Show.",
+        'field-SCREENSHOTS': "• Tentativa 1 - \n• Tentativa 2 - \n• Tentativa 3 - "
     },
     'quickfill-in-manual': {
         'field-REASON_COMMENTS': "Outro (Manual)"
