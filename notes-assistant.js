@@ -13,6 +13,16 @@ import {
     styleFloatingButton
 } from './utils.js';
 
+// ===== NOVA IMPORTAÇÃO DE DADOS =====
+import {
+    TASKS_DB,
+    SUBSTATUS_TEMPLATES,
+    textareaListFields,
+    textareaParagraphFields,
+    scenarioSnippets
+} from './notes-data.js';
+// ==================================
+
 // Envolve todo o módulo em uma função exportada
 export function initCaseNotesAssistant() {
     
@@ -30,123 +40,56 @@ export function initCaseNotesAssistant() {
         selection.addRange(range);
         try {
             document.execCommand('copy');
-            showToast("Texto copiado com sucesso"); // showToast() é importada
+            showToast("Texto copiado com sucesso"); 
         } catch (err) {
-            showToast("Falha ao copiar", { error: true }); // showToast() é importada
+            showToast("Falha ao copiar", { error: true });
         }
         selection.removeAllRanges();
         document.body.removeChild(container);
     }
 
-    const TASKS_DB = {
-       'gtm_installation': {
-            name: 'GTM Installation',
-            screenshots: { implementation: ['GTM Instalado', 'Vinculador de conversões'], education: [] }
-        },
-        'ads_conversion_tracking': {
-            name: 'Ads Conversion Tracking',
-            screenshots: {
-                implementation: ['Tag criada', 'Teste GTM', 'Teste Ads', 'Versão Publicada', 'Status Ads'],
-                education: ['Screenshot for TAG assistant of tag working...', 'Screenshot of conversion tracking status in Google Ads']
-            }
-        },
-        'ads_enhanced_conversions': {
-            name: 'Ads Enhanced Conversions (ECW4)',
-            screenshots: {
-                implementation: ['Termos aceitos no Ads', 'Tag implementada', 'Teste GTM', 'Teste Ads', 'Versão Publicada', 'Painel do Ads (após 7 dias)'],
-                education: []
-            }
-        },
-        'ga4_event_tracking': {
-            name: 'Analytics Event Tracking (GA4)',
-            screenshots: {
-                implementation: ['Tag do evento GA4 implementado no GTM', 'Teste GTM (tagassistant.google.com)', 'Teste GA4 (DebugView - tagassistant.google.com)', 'Versão publicada no GTM', '(Se houver parâmetros) Dimensões customizadas criadas no GA4', 'Evento marcado como principal no GA4', 'GA4 e Google Ads vinculados corretamente', 'Evento principal GA4 importado no Google Ads (como secundário)', 'Métricas app & web ativadas no Google Ads', '(Opcional) Teste no Relatório do Tempo Real (GA4)'],
-                education: []
-            }
-        },
-        'upd_for_ga4': {
-            name: 'UPD for GA4 (User-Provided Data)',
-            screenshots: {
-                implementation: ['Validação: Conta GA4 (somente fluxo web, não é setor de saúde)', '"Coleta de dados fornecidos pelo usuário" habilitado no GA4 (Admin > Coleta de Dados)', 'Confirmação de coleta de dados (UI)', 'Tag do evento GA4 otimizado (UPD) implementado no GTM', 'Teste GTM (tagassistant - parâmetro \'em\' sem erro)', 'Teste GA4 (DebugView - tagassistant)', 'Versão publicada no GTM', '(Treinamento) Evento principal importado no Google Ads como secundário'],
-                education: []
-            }
-        },
-        'ads_website_call_conversion': {
-            name: 'Google Ads WEBSITE CALL CONVERSION',
-            screenshots: {
-                implementation: [
-                    'Tag implementado no GTM',
-                    'Versão publicada no GTM',
-                    'Teste do disparo da etiqueta de configuração no tag assistant em mais de uma página, mostrando ID e rótulo',
-                    'Teste usando o #google-wcc-debug, validando que o número de exibição foi substituído pelo número do Google (999999) em um cenário de teste',
-                    'Mudança do status da conversão no Google Ads, de “Inativo” para “Não há conversões recentes” [Aguardar alguns minutos]'
-                ],
-                education: []
-            }
-        }
-    };
-
-    const SUBSTATUS_TEMPLATES = {
-        'SO_Implementation_Only': {
-            status: 'SO', name: 'SO - Implementation Only', requiresTasks: true,
-            template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> SO - Implementation Only<br><br><b>Reason/comments:</b> Task implementada com sucesso<br><br><b>OnCall Comments:</b><br><b>Task(s) solicitada(s):</b><br>{TASKS_SOLICITADAS}<br><b>Seguimos com os passos:</b><br>{PASSOS_EXECUTADOS}<br><b>Resultado:</b><br>{RESULTADO}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
-        },
-        'SO_Education_Only': {
-            status: 'SO', name: 'SO - Education Only', requiresTasks: true,
-            template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> SO - Education Only<br><br><b>Reason/comments:</b> Consultoria utilizada para tirar dúvidas do anunciante.<br><br><b>OnCall Comments:</b><br><b>Dúvidas do anunciante:</b><br>{DUVIDAS}<br><b>Resoluções/Explicações:</b><br>{RESOLUCOES}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
-        },
-        'NI_Awaiting_Validations': {
-            status: 'NI', name: 'NI - Awaiting Validations', requiresTasks: true,
-            template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> NI - Awaiting Validations<br><br><b>Reason/comments:</b> Aguardando Validações no Google Ads<br><br><b>OnCall Comments:</b><br><b>Tasks solicitadas pelo AM:</b><br>{TASKS_SOLICITADAS}<br><b>Tasks implementadas na call:</b><br>{TASKS_IMPLEMENTADAS_CALL}<br><b>Seguimos com os passos:</b><br>{PASSOS_EXECUTADOS}<br><b>Próximos passos (Acompanhamento):</b><br>{PROXIMOS_PASSOS}<br><b>Considerações adicionais:</b><br>{CONSIDERACOES}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
-        },
-        'NI_Awaiting_Inputs': {
-            status: 'NI', name: 'NI - Awaiting Inputs', requiresTasks: false,
-            template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> NI - Awaiting Inputs<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>  <b>Tasks solicitadas pelo AM:</b><br>  {TASKS_SOLICITADAS}<br>  <b>Contexto/O que foi feito:</b><br>  {CONTEXTO_CALL}<br>  <b>Impedimento / Próximo passo (Anunciante):</b><br>  {IMPEDIMENTO_CLIENTE}<br>  <b>Minha Ação:</b><br>  {MINHA_ACAO}<br>  <b>Considerações adicionais:</b><br>  {CONSIDERACOES}<br>  <b>Dia do Follow-up (se aplicável):</b> {DIA}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
-        },
-       'IN_Inactive': {
-            status: 'IN', name: 'IN - Inactive', requiresTasks: false,
-            template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> IN - Inactive<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>{COMENTARIOS}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
-        },
-        'AS_Assigned': {
-            status: 'AS', name: 'AS - Assigned', requiresTasks: false,
-            template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> AS - Assigned<br><br><b>Reason/comments:</b> Caso Reagendado.<br><br><b>OnCall Comments:</b><br>{MOTIVO_REAGENDAMENTO}<br>Data do reagendamento: {DATA_REAGENDAMENTO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b> N/A<br><br><b>Multiple CIDs:</b> N/A`
-        }
-    };
+    // ===== OBJETOS DE DADOS REMOVIDOS DAQUI (AGORA SÃO IMPORTADOS) =====
+    // const TASKS_DB = { ... };
+    // const SUBSTATUS_TEMPLATES = { ... };
+    // const textareaListFields = [ ... ];
+    // const textareaParagraphFields = [ ... ];
+    // const scenarioSnippets = { ... };
+    // =================================================================
 
     // --- UI (Módulo 1) ---
     const btn = document.createElement("button");
     btn.id = "autofill-floating-btn";
     btn.textContent = "✎";
-    Object.assign(btn.style, styleFloatingButton, { top: "60%" }); // styleFloatingButton é importado
+    Object.assign(btn.style, styleFloatingButton, { top: "60%" });
     btn.onmouseenter = () => (btn.style.background = "#1765c0");
     btn.onmouseleave = () => (btn.style.background = "#1a73e8");
     document.body.appendChild(btn);
-    makeDraggable(btn); // makeDraggable é importado
+    makeDraggable(btn); 
 
     const popup = document.createElement("div");
     popup.id = "autofill-popup";
-    Object.assign(popup.style, stylePopup, { right: "24px" }); // stylePopup é importado
+    Object.assign(popup.style, stylePopup, { right: "24px" }); 
 
     const header = document.createElement("div");
-    Object.assign(header.style, stylePopupHeader); // stylePopupHeader é importado
+    Object.assign(header.style, stylePopupHeader); 
     const logo = document.createElement("img");
     logo.src = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
     Object.assign(logo.style, { width: "24px", height: "24px" });
     const title = document.createElement("div");
     title.textContent = "Case Notes Assistant v2.6";
-    Object.assign(title.style, stylePopupTitle); // stylePopupTitle é importado
+    Object.assign(title.style, stylePopupTitle); 
     header.appendChild(logo);
     header.appendChild(title);
     popup.appendChild(header);
-    makeDraggable(popup, header); // makeDraggable é importado
+    makeDraggable(popup, header); 
 
     const closeBtn = document.createElement("div");
     closeBtn.textContent = "✕";
-    Object.assign(closeBtn.style, stylePopupCloseBtn); // stylePopupCloseBtn é importado
+    Object.assign(closeBtn.style, stylePopupCloseBtn); 
     closeBtn.onclick = () => togglePopup(false);
     popup.appendChild(closeBtn);
 
-    // Estilos locais do Módulo 1 (não precisam ser exportados)
+    // Estilos locais do Módulo 1
     const styleInput = {
         width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #dadce0",
         fontSize: "14px", marginBottom: "12px", boxSizing: "border-box", fontFamily: "'Poppins', sans-serif"
@@ -172,81 +115,7 @@ export function initCaseNotesAssistant() {
         cursor: "pointer", marginTop: "16px"
     };
 
-    const textareaListFields = [
-        'TASKS_SOLICITADAS', 'PASSOS_EXECUTADOS', 'RESULTADO', 'DUVIDAS', 'RESOLUCOES',
-        'TASKS_IMPLEMENTADAS_CALL', 'PROXIMOS_PASSOS', 'CONTEXTO_CALL',
-        'IMPEDIMENTO_CLIENTE', 'MINHA_ACAO', 'SCREENSHOTS',
-        'MOTIVO_REAGENDAMENTO'
-    ];
-    const textareaParagraphFields = ['CONSIDERACOES', 'COMENTARIOS'];
-    
-    const scenarioSnippets = {
-        'quickfill-ni-inicio-manual': {
-            'field-REASON_COMMENTS': "Aguardando informações por parte do anunciante (Início 2/6)"
-        },
-        'quickfill-ni-cms-access': {
-            'field-REASON_COMMENTS': "Aguardando informações por parte do anunciante (Início 2/6 - Sem Acesso ao CMS)",
-            'field-TASKS_SOLICITADAS': "• Instalação do GTM\n• Configuração de Conversões",
-            'field-CONTEXTO_CALL': "• Percebi que o(a) anunciante não tinha GTM Instalado.\n• Seguimos com a criação de conta no GTM.\n• Entretanto, a conta de acesso ao painel do site (ex: WordPress) não tinha permissão para instalar plugins ou editar o código.",
-            'field-IMPEDIMENTO_CLIENTE': "• Anunciante precisa conseguir acesso de administrador ao painel do site.\n• OU\n• Anunciante precisa contatar o(a) desenvolvedor(a) para que ele(a) instale o GTM.",
-            'field-MINHA_ACAO': "• Coloco o caso em 2/6.\n• Assim que o anunciante tiver o acesso ou a instalação for feita, abrirei um caso em BAU para dar continuidade.",
-            'field-SCREENSHOTS': "• Print do painel do CMS mostrando a falta de permissão (opcional)."
-        },
-        'quickfill-ni-followup': {
-            'field-REASON_COMMENTS': "Aguardando informações por parte do anunciante (Follow-up 2/6)",
-            'field-SPEAKEASY_ID': "N/A",
-            'field-ON_CALL': "N/A",
-            'field-TASKS_SOLICITADAS': "• N/A",
-            'field-CONTEXTO_CALL': "• No dia {DIA} do 2/6 fiz duas tentativas de contatos seguidas, mas não obtive resposta. Envio na sequência o email referente ao dia respectivo.",
-            'field-IMPEDIMENTO_CLIENTE': "• N/A",
-            'field-MINHA_ACAO': "• N/A",
-            'field-SCREENSHOTS': "• Tentativa 1 -\n• Tentativa 2 -"
-        },
-        'quickfill-whatsapp': {
-            'field-TASKS_SOLICITADAS': "• Criação de conversão para WHATSAPP",
-            'field-PASSOS_EXECUTADOS': "• Fizemos a criação da conversão no Ads.\n• Criamos a Tag no GTM usando acionadores de clique (ex: Click URL / Click Text) para os botões de WhatsApp.\n• Realizamos os testes e validamos o funcionamento.",
-            'field-RESULTADO': "• Task implementada com sucesso. Fecho o caso sem acompanhamento.",
-            linkedTask: 'ads_conversion_tracking'
-        },
-         'quickfill-form': {
-            'field-TASKS_SOLICITADAS': "• Criação de conversão para FORMULÁRIO (padrão, não-otimizada).",
-            'field-PASSOS_EXECUTADOS': "• Fizemos a criação da conversão no Ads.\n• Criamos a Tag no GTM usando o acionador de envio de formulário (Form Submission) ou visualização de página de agradecimento (Thank You Page).\n• Realizamos os testes e validamos o funcionamento.",
-            'field-RESULTADO': "• Task implementada com sucesso. Fecho o caso sem acompanhamento.",
-            linkedTask: 'ads_conversion_tracking'
-        },
-        'quickfill-ecw4-close': {
-            'field-TASKS_SOLICITADAS': "• Acompanhamento da conversão otimizada (ECW4) após 7 dias.",
-            'field-PASSOS_EXECUTADOS': "• Após o período de 7 dias de acompanhamento, verifiquei o painel do Ads.\n• A conversão está sendo registrada corretamente.",
-            'field-RESULTADO': "• Valido o bom funcionamento da conversão otimizada.\n• Assim, fecho o caso.",
-            linkedTask: 'ads_enhanced_conversions'
-        },
-        'quickfill-as-no-show': {
-            'field-MOTIVO_REAGENDAMENTO': '• Precisamos reagendar o caso, já que o anunciante não compareceu na meet, porém respondeu o e-mail pedindo o reagendamento'
-        },
-        'quickfill-as-insufficient-time': {
-            'field-MOTIVO_REAGENDAMENTO': '• Precisamos reagendar o caso, já que o tempo foi insuficiente para terminar as Tasks\n• Implementamos [descrever o que foi feito]'
-        },
-        'quickfill-as-no-access': {
-             'field-MOTIVO_REAGENDAMENTO': '• Precisamos reagendar o caso, já que o anunciante não tinha os acessos necessários para podermos implementar as tasks'
-        },
-        'quickfill-in-nrp-standard': {
-            'field-REASON_COMMENTS': "NRP",
-            'field-COMENTARIOS': "• Duas ligações seguidas, e-mail \"Antes dos 10 minutos\" e uma terceira e ultima tentativa de ligação.\n• Não houve resposta às tentativas de ligação ou e-mail, por isso o caso será inativado.",
-            'field-SCREENSHOTS': "• Tentativa 1 -\n• Tentativa 2 -\n• Tentativa 3 -"
-        },
-        'quickfill-in-no-show': {
-            'field-REASON_COMMENTS': "Anunciante não compareceu à chamada (No-Show).",
-            'field-ON_CALL': "N/A",
-            'field-COMENTARIOS': "• O caso foi gerado e entrei na chamada no horário agendado.\n• O anunciante não compareceu à reunião.\n• Segui o protocolo de espera: realizei duas tentativas de ligação, aguardei os 10 minutos, e fiz uma terceira tentativa, sem sucesso.\n• Nenhuma das ligações foi atendida (ex: Caixa Postal).\n• Caso inativado por No-Show.",
-            'field-SCREENSHOTS': "• Tentativa 1 (Caixa Postal) - https://screenshot.googleplex.com/BW3RLJNgf9SUVzx\n• Tentativa 2 (Caixa Postal) - https://screenshot.googleplex.com/9VEjdvGghueznHv\n• Tentativa 3 (Chamada desconectada) - https://screenshot.googleplex.com/C4yPjgvXN9kovcw"
-        },
-        'quickfill-in-manual': {
-            'field-REASON_COMMENTS': "Outro (Manual)"
-        }
-    };
-
-    // --- Declaração dos elementos da UI para que as funções internas os acessem ---
-    // (Estas são as variáveis que eram "globais" dentro do módulo)
+    // --- Declaração dos elementos da UI ---
     const stepSnippetsDiv = document.createElement("div");
     const snippetContainer = document.createElement("div");
     const step2Div = document.createElement("div");
@@ -264,7 +133,7 @@ export function initCaseNotesAssistant() {
 
         activeScenarioInputs.forEach(input => {
             const scenarioId = input.id;
-            const snippets = scenarioSnippets[scenarioId];
+            const snippets = scenarioSnippets[scenarioId]; // scenarioSnippets é importado
             if (snippets) {
                 for (const fieldId in snippets) {
                     if (fieldId !== 'linkedTask') {
@@ -282,7 +151,7 @@ export function initCaseNotesAssistant() {
         });
 
         const allPossibleTargetFields = new Set();
-         Object.values(scenarioSnippets).forEach(snippets => {
+         Object.values(scenarioSnippets).forEach(snippets => { // scenarioSnippets é importado
              Object.keys(snippets).forEach(key => {
                  if(key !== 'linkedTask') allPossibleTargetFields.add(key);
              });
@@ -294,7 +163,7 @@ export function initCaseNotesAssistant() {
                 const combinedTextArray = targetFieldsContent[fieldId] || [];
                 let finalValue = "";
 
-                if (textareaListFields.includes(fieldId.replace('field-', ''))) {
+                if (textareaListFields.includes(fieldId.replace('field-', ''))) { // textareaListFields é importado
                     finalValue = combinedTextArray
                         .map(line => line.startsWith('• ') ? line : '• ' + line)
                         .join('\n');
@@ -310,13 +179,13 @@ export function initCaseNotesAssistant() {
                 
                 if (finalValue.trim() !== '•' && finalValue.trim() !== '') {
                     field.value = finalValue;
-                } else if (textareaListFields.includes(fieldId.replace('field-', ''))) {
+                } else if (textareaListFields.includes(fieldId.replace('field-', ''))) { // textareaListFields é importado
                      field.value = '• ';
                 } else {
                     field.value = '';
                 }
 
-                if (field.tagName === 'TEXTAREA' && textareaListFields.includes(fieldId.replace('field-', ''))) {
+                if (field.tagName === 'TEXTAREA' && textareaListFields.includes(fieldId.replace('field-', ''))) { // textareaListFields é importado
                      if (field.value.trim() === '•' || field.value.trim() === '') enableAutoBullet(field);
                 }
              }
@@ -368,19 +237,17 @@ export function initCaseNotesAssistant() {
     const step1Div = document.createElement("div");
     step1Div.id = "step-1-selection";
     const mainStatusLabel = document.createElement("label");
-    Object.assign(mainStatusLabel.style, styleLabel); // styleLabel é importado
+    Object.assign(mainStatusLabel.style, styleLabel); 
     mainStatusLabel.textContent = "Status Principal:";
-    // mainStatusSelect já foi criado
     mainStatusSelect.id = "main-status";
     mainStatusSelect.innerHTML = `<option value="">-- Selecione --</option><option value="NI">NI - Need Info</option><option value="SO">SO - Solution Offered</option><option value="IN">IN - Inactive</option><option value="AS">AS - Assigned</option>`;
-    Object.assign(mainStatusSelect.style, styleSelect); // styleSelect é importado
+    Object.assign(mainStatusSelect.style, styleSelect); 
     const subStatusLabel = document.createElement("label");
-    Object.assign(subStatusLabel.style, styleLabel); // styleLabel é importado
+    Object.assign(subStatusLabel.style, styleLabel); 
     subStatusLabel.textContent = "Substatus:";
-    // subStatusSelect já foi criado
     subStatusSelect.id = "sub-status";
     subStatusSelect.innerHTML = `<option value="">-- Selecione o Status --</option>`;
-    Object.assign(subStatusSelect.style, styleSelect); // styleSelect é importado
+    Object.assign(subStatusSelect.style, styleSelect); 
     subStatusSelect.disabled = true;
     step1Div.appendChild(mainStatusLabel);
     step1Div.appendChild(mainStatusSelect);
@@ -467,7 +334,7 @@ export function initCaseNotesAssistant() {
             subStatusSelect.disabled = true;
             return;
         }
-        for (const key in SUBSTATUS_TEMPLATES) {
+        for (const key in SUBSTATUS_TEMPLATES) { // SUBSTATUS_TEMPLATES é importado
             const template = SUBSTATUS_TEMPLATES[key];
             if (template.status === selectedStatus) {
                 const option = document.createElement('option');
@@ -484,7 +351,7 @@ export function initCaseNotesAssistant() {
         resetSteps(1.5);
         if (!selectedSubStatusKey) return;
 
-        const templateData = SUBSTATUS_TEMPLATES[selectedSubStatusKey];
+        const templateData = SUBSTATUS_TEMPLATES[selectedSubStatusKey]; // SUBSTATUS_TEMPLATES é importado
         snippetContainer.innerHTML = '';
         let snippetAdded = false;
 
@@ -591,7 +458,7 @@ export function initCaseNotesAssistant() {
         // --- ETAPA 2: Tasks ---
         if (templateData.requiresTasks) {
             taskCheckboxesContainer.innerHTML = '';
-            for (const taskKey in TASKS_DB) {
+            for (const taskKey in TASKS_DB) { // TASKS_DB é importado
                 const task = TASKS_DB[taskKey];
                 const label = document.createElement('label');
                 Object.assign(label.style, styleCheckboxLabel);
@@ -620,11 +487,11 @@ export function initCaseNotesAssistant() {
             label.textContent = fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) + ':';
             Object.assign(label.style, styleLabel);
             let field;
-            if (textareaListFields.includes(fieldName)) {
+            if (textareaListFields.includes(fieldName)) { // textareaListFields é importado
                 field = document.createElement('textarea');
                 Object.assign(field.style, styleTextarea);
                 enableAutoBullet(field);
-            } else if (textareaParagraphFields.includes(fieldName)) {
+            } else if (textareaParagraphFields.includes(fieldName)) { // textareaParagraphFields é importado
                 field = document.createElement('textarea');
                 Object.assign(field.style, styleTextarea);
             } else {
@@ -660,7 +527,7 @@ export function initCaseNotesAssistant() {
     function generateOutputHtml() {
         const selectedSubStatusKey = subStatusSelect.value;
         if (!selectedSubStatusKey) return null;
-        const templateData = SUBSTATUS_TEMPLATES[selectedSubStatusKey];
+        const templateData = SUBSTATUS_TEMPLATES[selectedSubStatusKey]; // SUBSTATUS_TEMPLATES é importado
         let outputText = templateData.template.replace(/\n/g, "<br>");
         const ulStyle = "style=\"margin-bottom: 12px; padding-left: 30px;\"";
 
@@ -671,7 +538,7 @@ export function initCaseNotesAssistant() {
             const screenshotType = (selectedSubStatusKey === 'SO_Education_Only') ? 'education' : 'implementation';
             selectedCheckboxes.forEach(checkbox => {
                 const taskKey = checkbox.value;
-                const task = TASKS_DB[taskKey];
+                const task = TASKS_DB[taskKey]; // TASKS_DB é importado
                 tagNames.push(task.name);
                 const screenshotList = task.screenshots[screenshotType] || [];
                 if (screenshotList.length > 0) {
@@ -692,12 +559,12 @@ export function initCaseNotesAssistant() {
             
             if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey === 'NI_Awaiting_Inputs' || selectedSubStatusKey === 'IN_Inactive')) {
                 const checkedRadio = snippetContainer.querySelector('input[type="radio"]:checked');
-                if (checkedRadio && scenarioSnippets[checkedRadio.id] && scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS']) {
+                if (checkedRadio && scenarioSnippets[checkedRadio.id] && scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS']) { // scenarioSnippets é importado
                      value = scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS'];
                 }
             }
 
-            if (textareaListFields.includes(fieldName) && value.trim() !== '') {
+            if (textareaListFields.includes(fieldName) && value.trim() !== '') { // textareaListFields é importado
                 const lines = value.split('\n')
                                  .map(line => line.trim())
                                  .filter(line => line !== '' && line !== '•')
@@ -706,9 +573,9 @@ export function initCaseNotesAssistant() {
                                  .map(line => `<li>${line}</li>`)
                                  .join('');
                 value = lines ? `<ul ${ulStyle}>${lines}</ul>` : '';
-            } else if (textareaParagraphFields.includes(fieldName) && value.trim() !== '') {
+            } else if (textareaParagraphFields.includes(fieldName) && value.trim() !== '') { // textareaParagraphFields é importado
                 value = value.split('\n').filter(line => line.trim() !== '').map(line => `<p style="margin: 0 0 8px 0;">${line}</p>`).join('');
-            } else if (input.tagName === 'TEXTAREA' && !textareaListFields.includes(fieldName) && !textareaParagraphFields.includes(fieldName)) {
+            } else if (input.tagName === 'TEXTAREA' && !textareaListFields.includes(fieldName) && !textareaParagraphFields.includes(fieldName)) { // textareaListFields é importado
                  value = value.replace(/\n/g, '<br>');
             } else if (input.tagName === 'TEXTAREA' && value.trim() === '') {
                  value = '';
