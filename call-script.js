@@ -11,6 +11,7 @@ import {
 
 // Envolve todo o módulo em uma função exportada
 export function initCallScriptAssistant() {
+    const CURRENT_VERSION = "v1.1";
     
     // --- Dados e Estado (Módulo 2) ---
     const csaChecklistData = {
@@ -44,83 +45,95 @@ export function initCallScriptAssistant() {
     let csaCurrentLang = "PT";
     let csaCurrentType = "BAU";
 
-    // --- UI (Módulo 2) ---
-    const csaBtn = document.createElement("button");
-    csaBtn.id = "call-script-floating-btn";
-    csaBtn.textContent = "📋";
-    Object.assign(csaBtn.style, styleFloatingButton, { // styleFloatingButton é importado
-        top: "70%",
-        background: "#5f6368"
+      const btn = document.createElement("button");
+    btn.id = "call-script-floating-btn";
+    btn.textContent = "📞";
+    Object.assign(btn.style, styleFloatingButton, { top: "68%" }); // Posição abaixo do Notes
+    btn.onmouseenter = () => (btn.style.background = "#1765c0");
+    btn.onmouseleave = () => (btn.style.background = "#1a73e8");
+    document.body.appendChild(btn);
+    makeDraggable(btn);
+
+    const popup = document.createElement("div");
+    popup.id = "call-script-popup";
+    Object.assign(popup.style, stylePopup, { right: "24px" }); // Posição igual ao Notes
+
+    const header = document.createElement("div");
+    Object.assign(header.style, stylePopupHeader);
+    const logo = document.createElement("img");
+    logo.src = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
+    Object.assign(logo.style, { width: "24px", height: "24px" });
+    const titleContainer = document.createElement("div"); // Container para título e versão
+    Object.assign(titleContainer.style, { display: 'flex', flexDirection: 'column', flexGrow: '1' });
+
+    const title = document.createElement("div");
+    title.textContent = "Call Script Assistant"; // Título sem a versão
+    Object.assign(title.style, stylePopupTitle);
+    titleContainer.appendChild(title);
+
+    const versionDisplay = document.createElement("div"); // Elemento da versão
+    versionDisplay.textContent = CURRENT_VERSION;
+    Object.assign(versionDisplay.style, stylePopupVersion);
+    titleContainer.appendChild(versionDisplay);
+
+    header.appendChild(logo);
+    header.appendChild(titleContainer); // Adiciona o container de título/versão
+    popup.appendChild(header);
+    makeDraggable(popup, header);
+
+    const closeBtn = document.createElement("div");
+    closeBtn.textContent = "✕";
+    Object.assign(closeBtn.style, stylePopupCloseBtn);
+    closeBtn.onclick = () => togglePopup(false);
+    popup.appendChild(closeBtn);
+
+    // Conteúdo principal do popup
+    const popupContent = document.createElement("div");
+    Object.assign(popupContent.style, {
+        padding: "0 16px 16px 16px", // Ajuste para o padding lateral e inferior
+        overflowY: "auto", // Scroll para o conteúdo
+        flexGrow: "1" // Permite que o conteúdo ocupe o espaço restante
     });
-    csaBtn.onmouseenter = () => (csaBtn.style.background = "#4a4d50");
-    csaBtn.onmouseleave = () => (csaBtn.style.background = "#5f6368");
-    document.body.appendChild(csaBtn);
-    makeDraggable(csaBtn); // makeDraggable é importado
+    popup.appendChild(popupContent); // Todos os elementos vão para popupContent
 
-    const csaPopup = document.createElement("div");
-    csaPopup.id = "call-script-popup";
-    Object.assign(csaPopup.style, stylePopup, { right: "80px" }); // stylePopup é importado
+    // Adiciona o crédito no final do popup
+    const credit = document.createElement("div");
+    credit.textContent = "created by lucaste@";
+    Object.assign(credit.style, styleCredit);
+    popup.appendChild(credit); // Adiciona o crédito diretamente ao popup, abaixo do conteúdo
 
-    const csaHeader = document.createElement("div");
-    Object.assign(csaHeader.style, stylePopupHeader); // stylePopupHeader é importado
-    const csaLogo = document.createElement("div");
-    csaLogo.textContent = "📋";
-    Object.assign(csaLogo.style, { fontSize: "20px" });
-    const csaTitle = document.createElement("div");
-    csaTitle.textContent = "Call Script Assistant v1.0";
-    Object.assign(csaTitle.style, stylePopupTitle); // stylePopupTitle é importado
-    csaHeader.appendChild(csaLogo);
-    csaHeader.appendChild(csaTitle);
-    csaPopup.appendChild(csaHeader);
-    makeDraggable(csaPopup, csaHeader); // makeDraggable é importado
+    // ... (o restante do seu código da UI e Lógica, garantindo que os elementos sejam filhos de `popupContent` )
+    // Exemplo:
+    const accountIdLabel = document.createElement("label");
+    Object.assign(accountIdLabel.style, styleLabel);
+    accountIdLabel.textContent = "Account ID:";
+    // ... e assim por diante
+    popupContent.appendChild(accountIdLabel); // Mudança aqui!
 
-    const csaCloseBtn = document.createElement("div");
-    csaCloseBtn.textContent = "✕";
-    Object.assign(csaCloseBtn.style, stylePopupCloseBtn); // stylePopupCloseBtn é importado
-    csaCloseBtn.onclick = () => csaTogglePopup(false);
-    csaPopup.appendChild(csaCloseBtn);
+    // ... (todos os outros elementos devem ser appendChildren de popupContent)
 
-    const csaContent = document.createElement("div");
-    csaContent.id = "csa-content";
-    csaPopup.appendChild(csaContent);
+    // Botões
+    const buttonContainer = document.createElement("div");
+    Object.assign(buttonContainer.style, { display: "flex", gap: "8px", padding: "0 0 16px 0" });
+    popupContent.appendChild(buttonContainer); // Mudança aqui!
 
-    const csaControlsDiv = document.createElement("div");
-    Object.assign(csaControlsDiv.style, { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', gap: '8px' });
+    const clearButton = document.createElement("button");
+    clearButton.textContent = "Limpar Tudo";
+    Object.assign(clearButton.style, { ...styleButtonBase, backgroundColor: "#e0e0e0", color: "#3c4043" });
+    clearButton.onmouseover = () => (clearButton.style.backgroundColor = "#dadce0");
+    clearButton.onmouseout = () => (clearButton.style.backgroundColor = "#e0e0e0");
+    clearButton.onclick = clearAllFields;
+    buttonContainer.appendChild(clearButton);
 
-    const csaTypeContainer = document.createElement("div");
-    Object.assign(csaTypeContainer.style, { display: 'flex', borderRadius: '8px', border: '1px solid #dadce0', overflow: 'hidden' });
+    const copyAllButton = document.createElement("button");
+    copyAllButton.textContent = "Copiar Tudo";
+    Object.assign(copyAllButton.style, { ...styleButtonBase, backgroundColor: "#1a73e8" });
+    copyAllButton.onmouseover = () => (copyAllButton.style.backgroundColor = "#1765c0");
+    copyAllButton.onmouseout = () => (copyAllButton.style.backgroundColor = "#1a73e8");
+    copyAllButton.onclick = copyAllToClipboard;
+    buttonContainer.appendChild(copyAllButton);
 
-    const csaTypeBAU = document.createElement("div");
-    csaTypeBAU.textContent = "BAU";
-    const csaTypeLT = document.createElement("div");
-    csaTypeLT.textContent = "LT";
-
-    const typeBtnStyle = { padding: '6px 12px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: '#5f6368', background: '#f8f9fa', transition: 'all 0.2s ease' };
-    Object.assign(csaTypeBAU.style, typeBtnStyle);
-    Object.assign(csaTypeLT.style, typeBtnStyle);
-
-    csaTypeContainer.appendChild(csaTypeBAU);
-    csaTypeContainer.appendChild(csaTypeLT);
-
-    const csaLangSelect = document.createElement("select");
-    Object.assign(csaLangSelect.style, styleSelect, { marginBottom: '0', width: 'auto', padding: '6px' }); // styleSelect é importado
-    csaLangSelect.innerHTML = `<option value="PT">PT</option><option value="ES">ES</option><option value="EN">EN</option>`;
-    csaLangSelect.value = csaCurrentLang;
-
-    csaControlsDiv.appendChild(csaTypeContainer);
-    csaControlsDiv.appendChild(csaLangSelect);
-    csaContent.appendChild(csaControlsDiv);
-
-    const csaChecklistArea = document.createElement("div");
-    csaChecklistArea.id = "csa-checklist-area";
-    Object.assign(csaChecklistArea.style, {
-        maxHeight: "60vh",
-        overflowY: "auto",
-        paddingRight: "5px"
-    });
-    csaContent.appendChild(csaChecklistArea);
-    document.body.appendChild(csaPopup);
-
+    
     // --- Lógica (Módulo 2) ---
 
     function hexToRgba(hex, alpha) {
@@ -264,3 +277,45 @@ export function initCallScriptAssistant() {
     setActiveType(csaCurrentType);
 
 } // Fim do initCallScriptAssistant()
+
+// call-script.js
+
+import {
+    makeDraggable,
+    styleSelect,
+    styleLabel,
+    stylePopup,
+    stylePopupHeader,
+    stylePopupTitle,
+    stylePopupCloseBtn,
+    styleFloatingButton,
+    stylePopupVersion, // NOVO: Estilo para a versão
+    styleCredit        // NOVO: Estilo para o crédito
+} from 'utils';
+
+export function initCallScriptAssistant() {
+    const CURRENT_VERSION = "v1.1"; // Atualize sua versão aqui!
+
+    // ... (funções helper mantidas)
+
+  
+    // ... (Lógica de togglePopup)
+
+    function togglePopup(show) {
+        if (show) {
+            popup.style.opacity = "1";
+            popup.style.pointerEvents = "auto";
+            popup.style.transform = "scale(1)";
+        } else {
+            popup.style.opacity = "0";
+            popup.style.pointerEvents = "none";
+            popup.style.transform = "scale(0.95)";
+        }
+    }
+
+    let visible = false;
+    btn.onclick = () => {
+        visible = !visible;
+        togglePopup(visible);
+    };
+}
