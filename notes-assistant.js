@@ -1,6 +1,6 @@
 // notes-assistant.js
 
-// Importa as funções e estilos necessários do utils.js
+// CORREÇÃO: Usando caminhos relativos
 import { 
     showToast, 
     makeDraggable,
@@ -14,16 +14,16 @@ import {
     stylePopupVersion,
     styleCredit,
     styleExpandButton
-} from './utils.js'; // <-- MUDANÇA AQUI
+} from './utils.js';
 
-// Importa dados
+// CORREÇÃO: Usando caminhos relativos
 import {
     TASKS_DB,
     SUBSTATUS_TEMPLATES,
     textareaListFields,
     textareaParagraphFields,
     scenarioSnippets
-} from './notes-data.js'; // <-- MUDANÇA AQUI
+} from './notes-data.js';
 
 export function initCaseNotesAssistant() {
     const CURRENT_VERSION = "v2.7.1"; 
@@ -545,7 +545,6 @@ export function initCaseNotesAssistant() {
         buttonContainer.style.display = 'flex';
     };
 
-
     function generateOutputHtml() {
         const selectedSubStatusKey = subStatusSelect.value;
         if (!selectedSubStatusKey) return null;
@@ -613,7 +612,6 @@ export function initCaseNotesAssistant() {
         return outputText;
     }
 
-
     copyButton.onclick = () => {
         const htmlOutput = generateOutputHtml();
         if (htmlOutput) {
@@ -661,7 +659,6 @@ export function initCaseNotesAssistant() {
             popup.style.pointerEvents = "none";
             popup.style.transform = "scale(0.95)";
             
-            // Reseta o estado de expansão E a posição original
             isExpanded = false;
             popup.style.width = `${initialWidth}px`;
             

@@ -1,6 +1,6 @@
 // call-script.js
 
-// Importa as funções e estilos necessários do utils.js
+// CORREÇÃO: Usando caminhos relativos
 import { 
     makeDraggable,
     styleSelect,
@@ -10,25 +10,61 @@ import {
     stylePopupTitle,
     stylePopupCloseBtn,
     styleFloatingButton,
-    stylePopupVersion, // Importa os novos estilos
-    styleCredit        // Importa os novos estilos
-} from 'utils.js';
+    stylePopupVersion,
+    styleCredit
+} from './utils.js';
 
 // Envolve todo o módulo em uma função exportada
 export function initCallScriptAssistant() {
-    const CURRENT_VERSION = "v1.3"; // Defina a versão aqui
+    const CURRENT_VERSION = "v1.2"; 
 
     // --- Dados e Estado (Módulo 2) ---
     const csaChecklistData = {
         "PT BAU": {
             color: "#6c1199",
-            inicio: ["Apresentação (Nome e Time)", "A ligação poderá ser gravada para fins de treinamento e qualidade de acordo com nossa política de privacidade.", "Informar site registrado no caso", "Confirmar os 10 dígitos do CID e e-mail do anunciante.", "Confirmar a task e o AM", "Informar tempo da ligação", "Confirmar backup e acessos admin", "Fechar conteúdo sensível", ],
-            fim: ["Resumo da chamada.", "Ajuda Adicional.", "Fechar compartilhamento de tela.", "Próximos passos (quanto tempo irá acompanhar o caso).", "Pesquisa de Satisfação.", "Durante esse tempo, nossa equipede qualidade poderá realizar um teste de conversão para validar a implementação. Você concorda com esse teste para garantirmos a efetividade da implementação?"]
+            inicio: [
+                "Apresentação (Nome e Time)",
+                "Aviso de Gravação e Política de Privacidade",
+                "Confirmação de CID e Email",
+                "Confirmação da Task e do AM",
+                "Informar tempo da ligação (30-45 min)",
+                "Pedir para fechar conteúdo sensível (antes de compartilhar)",
+                "(Opcional) Validar autenticação da conta via link",
+                "Validar Backup e Acessos Admin"
+            ],
+            fim: [
+                "Resumo da chamada (o que foi feito e como funciona)",
+                "Oferecer ajuda adicional / Abrir para dúvidas",
+                "Pedir para fechar compartilhamento de tela",
+                "Próximos passos (Acompanhamento por XX dias)",
+                "Pedir consentimento para teste de QA",
+                "Alinhar escopo (Técnico vs. Gerente de Contas)",
+                "Pesquisa de Satisfação (e confirmar email para envio)",
+                "Despedida"
+            ]
         },
         "PT LT": {
             color: "#004f67",
-            inicio: ["Apresentação (Nome e Time)", "Tempo de ligação", "Informar o site fornecido pelo AM", "Confirmar os 10 dígitos do CID e e-mail do anunciante.", "Confirmar a Task e o AM", "Termos e condições.", "Confirmar acessos Admin e Backup", "Fechar conteúdo sensível"],
-            fim: ["Resumo da chamada", "Ajuda adicional", "Fechar compartilhamento de tela","Próximos passos (quanto tempo irá acompanhar)", "Pesquisa de satisfação", "Durante esse tempo, nossa equipe de qualidade poderá realizar um teste de conversão para validar a implementação. Você concorda com esse teste para garantirmos a efetividade da implemetação?"]
+            inicio: [
+                "Apresentação (Nome e Time)",
+                "Aviso de Gravação e Política de Privacidade",
+                "Confirmação de CID e Email",
+                "Confirmação da Task e do AM",
+                "Informar tempo da ligação (30-45 min)",
+                "Pedir para fechar conteúdo sensível (antes de compartilhar)",
+                "(Opcional) Validar autenticação da conta via link",
+                "Validar Backup e Acessos Admin"
+            ],
+            fim: [
+                "Resumo da chamada (o que foi feito e como funciona)",
+                "Oferecer ajuda adicional / Abrir para dúvidas",
+                "Pedir para fechar compartilhamento de tela",
+                "Próximos passos (Acompanhamento por XX dias)",
+                "Pedir consentimento para teste de QA",
+                "Alinhar escopo (Técnico vs. Gerente de Contas)",
+                "Pesquisa de Satisfação (e confirmar email para envio)",
+                "Despedida"
+            ]
         },
         "ES BAU": {
             color: "#00bbff",
@@ -73,7 +109,6 @@ export function initCallScriptAssistant() {
     csaLogo.textContent = "📋";
     Object.assign(csaLogo.style, { fontSize: "20px" });
     
-    // --- NOVO CABEÇALHO COM VERSÃO E TÍTULO ---
     const titleContainer = document.createElement("div");
     Object.assign(titleContainer.style, { display: 'flex', flexDirection: 'column', flexGrow: '1' });
     const csaTitle = document.createElement("div");
@@ -88,7 +123,6 @@ export function initCallScriptAssistant() {
     
     csaHeader.appendChild(csaLogo);
     csaHeader.appendChild(titleContainer);
-    // --- FIM DO NOVO CABEÇALHO ---
     
     csaPopup.appendChild(csaHeader);
     makeDraggable(csaPopup, csaHeader);
@@ -102,18 +136,16 @@ export function initCallScriptAssistant() {
     const csaContent = document.createElement("div");
     csaContent.id = "csa-content";
     Object.assign(csaContent.style, {
-        padding: "16px",
+        padding: "16px", // Padding corrigido para "respiro"
         overflowY: "auto",
         flexGrow: "1"
     });
     csaPopup.appendChild(csaContent);
 
-    // --- NOVO CRÉDITO ---
     const credit = document.createElement("div");
     credit.textContent = "created by lucaste@";
     Object.assign(credit.style, styleCredit);
     csaPopup.appendChild(credit);
-    // --- FIM DO CRÉDITO ---
 
     const csaControlsDiv = document.createElement("div");
     Object.assign(csaControlsDiv.style, { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', gap: '8px' });
@@ -153,9 +185,6 @@ export function initCallScriptAssistant() {
     document.body.appendChild(csaPopup);
 
     // --- Lógica (Módulo 2) ---
-
-    // ===== FUNÇÃO DUPLICADA 'makeDraggable' REMOVIDA DAQUI =====
-    // A versão correta agora é importada do utils.js
 
     function hexToRgba(hex, alpha) {
         const clean = hex.replace("#","");
