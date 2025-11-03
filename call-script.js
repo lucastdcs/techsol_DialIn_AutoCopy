@@ -102,7 +102,7 @@ export function initCallScriptAssistant() {
     const csaContent = document.createElement("div");
     csaContent.id = "csa-content";
     Object.assign(csaContent.style, {
-        padding: "0 16px 16px 16px",
+        padding: "16px",
         overflowY: "auto",
         flexGrow: "1"
     });
