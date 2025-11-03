@@ -1,4 +1,4 @@
-
+// call-script.js
 
 // Importa as funções e estilos necessários do utils.js
 import { 
@@ -16,7 +16,7 @@ import {
 
 // Envolve todo o módulo em uma função exportada
 export function initCallScriptAssistant() {
-    const CURRENT_VERSION = "v1.2"; // Defina a versão aqui
+    const CURRENT_VERSION = "v1.3"; // Defina a versão aqui
 
     // --- Dados e Estado (Módulo 2) ---
     const csaChecklistData = {
@@ -32,7 +32,7 @@ export function initCallScriptAssistant() {
         },
         "ES BAU": {
             color: "#00bbff",
-            inicio: ["Introducción (Nombre y  Equipo).", "La llamada pode ser grabada con fines de entrenamiento y calidad de acuerdo con nuestra política de privacidad.", "Informar sitio web registrado en el caso.", "Confirmación: Solicitar al Anunciante que confirme los 10 dígitos del CID el email del anunciante.", "Confirmaciones: Tarea, AM", "Informar el tiempo que va a durar la reunión.", "Confirmación: Copia de seguridad y acceso de ADM", "Cerrar conteúdo sensível antes de compartir la pantalla.", ],
+            inicio: ["Introducción (Nombre y  Equipo).", "La llamada pode ser grabada con fines de entrenamiento y calidad de acuerdo con nuestra política de privacidad.", "Informar sitio web registrado en el caso.", "Confirmación: Solicitar al Anunciante que confirme los 10 dígitos del CID el email del anunciante.", "Confirmaciones: Tarea, AM", "Informar el tiempo que va a durar la reunião.", "Confirmación: Copia de seguridad y acceso de ADM", "Cerrar conteúdo sensível antes de compartir la pantalla.", ],
             fim: ["Resumen de la llamada.", "Ayuda adicional.", "Cerrar la pantalla compartida.", "Próximos passos (¿Cuánto tempo seguirá el caso?)", "Encuesta de satisfacción.", "Estaré monitoreando su caso durante XX días para asegurarme de que todo esté funcionando correctamente. Durante este tiempo, nuestro equipo de qualidade podría realizar una prueba de conversión para validar la implementación. ¿Estás de acuerdo con esta prueba para garantizar la efectividad de la implementación? Perfecto, ¡gracias!", ]
         },
         "ES LT": {
@@ -154,7 +154,8 @@ export function initCallScriptAssistant() {
 
     // --- Lógica (Módulo 2) ---
 
-    // A FUNÇÃO makeDraggable() FOI REMOVIDA DAQUI. ELA AGORA É IMPORTADA.
+    // ===== FUNÇÃO DUPLICADA 'makeDraggable' REMOVIDA DAQUI =====
+    // A versão correta agora é importada do utils.js
 
     function hexToRgba(hex, alpha) {
         const clean = hex.replace("#","");
