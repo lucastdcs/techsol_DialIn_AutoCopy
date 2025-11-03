@@ -1,9 +1,9 @@
 // app.js
 
-// Importa usando os NOMES do "importmap", e não os caminhos
-import { initGlobalStylesAndFont } from 'utils';
-import { initCaseNotesAssistant } from 'notes-assistant';
-import { initCallScriptAssistant } from 'call-script';
+// Importa usando caminhos relativos (para o 'esbuild' funcionar)
+import { initGlobalStylesAndFont } from './utils.js';
+import { initCaseNotesAssistant } from './notes-assistant.js';
+import { initCallScriptAssistant } from './call-script.js';
 
 // --- 1. VERIFICAÇÕES GLOBAIS ---
 if (document.getElementById("autofill-floating-btn") || document.getElementById("call-script-floating-btn")) {

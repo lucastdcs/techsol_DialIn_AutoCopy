@@ -12,7 +12,7 @@ import {
     styleFloatingButton,
     stylePopupVersion, // Importa os novos estilos
     styleCredit        // Importa os novos estilos
-} from 'utils';
+} from 'utils.js';
 
 // Envolve todo o módulo em uma função exportada
 export function initCallScriptAssistant() {

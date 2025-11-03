@@ -14,7 +14,7 @@ import {
     stylePopupVersion,
     styleCredit,
     styleExpandButton
-} from 'utils';
+} from './utils.js'; // <-- MUDANÇA AQUI
 
 // Importa dados
 import {
@@ -23,10 +23,10 @@ import {
     textareaListFields,
     textareaParagraphFields,
     scenarioSnippets
-} from 'notes-data';
+} from './notes-data.js'; // <-- MUDANÇA AQUI
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v2.7.1"; // Sua versão
+    const CURRENT_VERSION = "v2.7.1"; 
 
     function copyHtmlToClipboard(html) {
         const container = document.createElement('div');
@@ -101,7 +101,6 @@ export function initCaseNotesAssistant() {
     const initialWidth = parseInt(stylePopup.width, 10);
     const expandedWidth = initialWidth * 2;
 
-    // ===== LÓGICA DE EXPANSÃO CORRIGIDA =====
     expandBtn.onclick = () => {
         isExpanded = !isExpanded;
         const newWidth = isExpanded ? expandedWidth : initialWidth;
@@ -109,23 +108,17 @@ export function initCaseNotesAssistant() {
 
         popup.style.width = `${newWidth}px`;
         
-        // Só ajusta o 'right' se o popup NÃO foi arrastado (ou seja, 'right' não é 'auto')
         if (popup.style.right && popup.style.right !== 'auto') {
             const currentRight = parseInt(popup.style.right, 10);
-            if (!isNaN(currentRight)) { // Checa se 'right' era um número
+            if (!isNaN(currentRight)) {
                 if (isExpanded) {
-                    // Expande para a esquerda, subtraindo a diferença
                     popup.style.right = `${currentRight - widthDifference}px`;
                 } else {
-                    // Contrai para a direita, adicionando a diferença
                     popup.style.right = `${currentRight + widthDifference}px`;
                 }
             }
         }
-        // Se 'right' for 'auto', o popup foi arrastado e está posicionado por 'left'.
-        // Mudar a largura fará com que ele se expanda para a direita, o que é o comportamento esperado.
     };
-    // ======================================
 
     // Estilos locais do Módulo 1
     const styleInput = {
@@ -147,7 +140,6 @@ export function initCaseNotesAssistant() {
         transition: "background-color 0.2s ease, box-shadow 0.2s ease",
         userSelect: "none"
     };
-    // O :hover bugado foi removido daqui. A lógica está no addSnippetInput.
     const styleCheckboxInput = {
         width: "auto", marginRight: "8px", marginBottom: "0",
         cursor: "pointer",
@@ -341,7 +333,7 @@ export function initCaseNotesAssistant() {
     step3Div.appendChild(dynamicFormFieldsContainer);
     popupContent.appendChild(step3Div);
 
-    Object.assign(buttonContainer.style, { display: "flex", gap: "8px", padding: "0", display: "none" }); // Padding removido, pois está no popupContent
+    Object.assign(buttonContainer.style, { display: "flex", gap: "8px", padding: "0", display: "none" });
     popupContent.appendChild(buttonContainer);
 
     const copyButton = document.createElement("button");
@@ -553,6 +545,7 @@ export function initCaseNotesAssistant() {
         buttonContainer.style.display = 'flex';
     };
 
+
     function generateOutputHtml() {
         const selectedSubStatusKey = subStatusSelect.value;
         if (!selectedSubStatusKey) return null;
@@ -620,6 +613,7 @@ export function initCaseNotesAssistant() {
         return outputText;
     }
 
+
     copyButton.onclick = () => {
         const htmlOutput = generateOutputHtml();
         if (htmlOutput) {
@@ -657,7 +651,6 @@ export function initCaseNotesAssistant() {
         }
     };
 
-    // ===== LÓGICA DE FECHAR O POPUP CORRIGIDA =====
     function togglePopup(show) {
         if (show) {
             popup.style.opacity = "1";
@@ -672,14 +665,11 @@ export function initCaseNotesAssistant() {
             isExpanded = false;
             popup.style.width = `${initialWidth}px`;
             
-            // Se foi arrastado (style.right === 'auto'), deixa 'left' e 'top' onde estão.
-            // Se NÃO foi arrastado, reseta 'right' para a posição inicial.
             if (popup.style.right !== 'auto') {
                  popup.style.right = "24px"; 
             }
         }
     }
-    // ===========================================
 
     let visible = false;
     btn.onclick = () => {
