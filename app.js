@@ -1,6 +1,6 @@
 // app.js
 
-// CORREÇÃO: Usando caminhos relativos para o 'esbuild' (robô) funcionar
+// CORREÇÃO: Usando caminhos relativos (com ./) para o robô entender
 import { initGlobalStylesAndFont } from './utils.js';
 import { initCaseNotesAssistant } from './notes-assistant.js';
 import { initCallScriptAssistant } from './call-script.js';

@@ -1,6 +1,6 @@
 // call-script.js
 
-// CORREÇÃO: Usando caminhos relativos
+// CORREÇÃO: Usando caminhos relativos (com ./)
 import { 
     makeDraggable,
     styleSelect,
@@ -16,7 +16,7 @@ import {
 
 // Envolve todo o módulo em uma função exportada
 export function initCallScriptAssistant() {
-    const CURRENT_VERSION = "v1.3"; 
+    const CURRENT_VERSION = "v1.2"; 
 
     // --- Dados e Estado (Módulo 2) ---
     const csaChecklistData = {
@@ -136,7 +136,7 @@ export function initCallScriptAssistant() {
     const csaContent = document.createElement("div");
     csaContent.id = "csa-content";
     Object.assign(csaContent.style, {
-        padding: "16px", // Padding corrigido para "respiro"
+        padding: "16px", 
         overflowY: "auto",
         flexGrow: "1"
     });

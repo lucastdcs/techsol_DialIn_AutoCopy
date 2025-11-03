@@ -1,6 +1,6 @@
 // notes-assistant.js
 
-// CORREÇÃO: Usando caminhos relativos
+// CORREÇÃO: Usando caminhos relativos (com ./)
 import { 
     showToast, 
     makeDraggable,
@@ -14,9 +14,9 @@ import {
     stylePopupVersion,
     styleCredit,
     styleExpandButton
-} from './utils.js';
+} from './utils.js'; 
 
-// CORREÇÃO: Usando caminhos relativos
+// CORREÇÃO: Usando caminhos relativos (com ./)
 import {
     TASKS_DB,
     SUBSTATUS_TEMPLATES,
@@ -26,7 +26,7 @@ import {
 } from './notes-data.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v2.7.3"; 
+    const CURRENT_VERSION = "v2.7.1"; 
 
     function copyHtmlToClipboard(html) {
         const container = document.createElement('div');
@@ -145,6 +145,11 @@ export function initCaseNotesAssistant() {
         cursor: "pointer",
         accentColor: "#1a73e8"
     };
+     const styleButtonBase = {
+        flex: "1 1 0", padding: "10px 0", color: "#fff", border: "none",
+        borderRadius: "8px", fontSize: "14px", fontWeight: "500",
+        cursor: "pointer", marginTop: "16px"
+    };
 
     // Conteúdo principal do popup
     const popupContent = document.createElement("div");
@@ -161,7 +166,7 @@ export function initCaseNotesAssistant() {
     Object.assign(credit.style, styleCredit);
     popup.appendChild(credit);
 
-    // --- Declaração dos elementos da UI ---
+    // --- CORREÇÃO: Variáveis da UI declaradas UMA VEZ ---
     const stepSnippetsDiv = document.createElement("div");
     const snippetContainer = document.createElement("div");
     const step2Div = document.createElement("div");
@@ -171,8 +176,7 @@ export function initCaseNotesAssistant() {
     const mainStatusSelect = document.createElement("select");
     const subStatusSelect = document.createElement("select");
     const buttonContainer = document.createElement("div");
-
-    // --- Funções de Lógica Interna ---
+    // --- FIM DA CORREÇÃO ---
 
     function updateFieldsFromScenarios() {
         const activeScenarioInputs = snippetContainer.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
@@ -545,6 +549,7 @@ export function initCaseNotesAssistant() {
         buttonContainer.style.display = 'flex';
     };
 
+
     function generateOutputHtml() {
         const selectedSubStatusKey = subStatusSelect.value;
         if (!selectedSubStatusKey) return null;
@@ -611,6 +616,7 @@ export function initCaseNotesAssistant() {
         outputText = outputText.replace(/{([A-Z_]+)}/g, '');
         return outputText;
     }
+
 
     copyButton.onclick = () => {
         const htmlOutput = generateOutputHtml();
