@@ -45,21 +45,21 @@ export function initCallScriptAssistant() {
         "PT LT": {
             color: "#004f67",
             inicio: [
-                "Apresentação (Nome e Time)",
-                "Aviso de Gravação e Política de Privacidade",
-                "Confirmação de CID e Email",
+                "Olá [...], eu sou o [...], e faço parte da Equipe de Soluções Técnicas do Google. Tudo bem?",
+                "Nossa ligação poderá ser gravada para fins de treinamento, qualidade e melhorias dos serviços do Google, de acordo com a nossa Política de Privacidade.",
+                "Por questão de segurança preciso que você me informe o seu email e CID (ou número) da conta do Ads, por favor",
                 "Confirmação da Task e do AM",
-                "Informar tempo da ligação (30-45 min)",
-                "Pedir para fechar conteúdo sensível (antes de compartilhar)",
-                "(Opcional) Validar autenticação da conta via link",
-                "Validar Backup e Acessos Admin"
+                "A consultoria tem uma duração média de 30 a 45 minutos.",
+                "Peço para que compartilhe a tela usando a opção “Tela Inteira”",
+                "Por favor, feche todo e qualquer conteúdo confidencial e sensível (conversas, dados pessoais importantes, etc).",
+                "Possui o backup do seu site e todos os acessos às ferramentas do Google?"
             ],
             fim: [
                 "Resumo da chamada (o que foi feito e como funciona)",
                 "Oferecer ajuda adicional / Abrir para dúvidas",
                 "Pedir para fechar compartilhamento de tela",
                 "Próximos passos (Acompanhamento por XX dias)",
-                "Pedir consentimento para teste de QA",
+                "Durante esse tempo, nossa equipe de qualidade poderá realizar um teste de conversão para validar a implementação. Você concorda com esse teste para garantirmos a efetividade da implementação?",
                 "Alinhar escopo (Técnico vs. Gerente de Contas)",
                 "Pesquisa de Satisfação (e confirmar email para envio)",
                 "Despedida"
