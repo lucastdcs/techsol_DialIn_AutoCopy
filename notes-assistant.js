@@ -286,6 +286,7 @@ export function initCaseNotesAssistant() {
     }
 
     // --- Montagem da UI (continuação) ---
+    // CORREÇÃO: Removidas as declarações 'const' duplicadas
     const step1Div = document.createElement("div");
     step1Div.id = "step-1-selection";
     const mainStatusLabel = document.createElement("label");
@@ -467,6 +468,7 @@ export function initCaseNotesAssistant() {
              const scenarios = [
                 { id: 'quickfill-in-nrp-standard', text: 'NRP Padrão (3 tentativas)' },
                 { id: 'quickfill-in-no-show', text: 'No-Show (LM)' }, 
+                { id: 'quickfill-in-2-6-final', text: 'Finalização 2/6 (Sem Resposta)' },
                 { id: 'quickfill-in-manual', text: 'Outro (Manual)' }
              ];
              scenarios.forEach((scenario, index) => {
