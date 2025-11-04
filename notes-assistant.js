@@ -88,14 +88,14 @@ export function initCaseNotesAssistant() {
     const expandBtn = document.createElement("div");
     expandBtn.textContent = "↔";
     Object.assign(expandBtn.style, styleExpandButton);
-    header.appendChild(expandBtn);
-
+    
     header.appendChild(logo);
     header.appendChild(titleContainer);
     popup.appendChild(header);
     makeDraggable(popup, header);
-
-
+    
+    
+    header.appendChild(expandBtn);
     header.appendChild(closeBtn);
 
 

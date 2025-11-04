@@ -275,6 +275,7 @@ export const styleExpandButton = {
     borderRadius: "50%",
     transition: "background-color 0.2s ease, color 0.2s ease",
     lineHeight: "1",
-    zIndex: "10"
+    zIndex: "10",
+    marginRight: "10px"
 };
 // ================================================
