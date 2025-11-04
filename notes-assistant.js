@@ -1,6 +1,5 @@
 // notes-assistant.js
 
-// CORREÇÃO: Usando caminhos relativos (com ./)
 import { 
     showToast, 
     makeDraggable,
@@ -16,7 +15,6 @@ import {
     styleExpandButton
 } from './utils.js'; 
 
-// CORREÇÃO: Usando caminhos relativos (com ./)
 import {
     TASKS_DB,
     SUBSTATUS_TEMPLATES,
@@ -26,7 +24,7 @@ import {
 } from './notes-data.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v2.7.5"; 
+    const CURRENT_VERSION = "v2.7.1"; 
 
     function copyHtmlToClipboard(html) {
         const container = document.createElement('div');
@@ -166,7 +164,8 @@ export function initCaseNotesAssistant() {
     Object.assign(credit.style, styleCredit);
     popup.appendChild(credit);
 
-    // --- CORREÇÃO: Variáveis da UI declaradas UMA VEZ ---
+    // --- Variáveis da UI declaradas UMA VEZ ---
+    const step1Div = document.createElement("div");
     const stepSnippetsDiv = document.createElement("div");
     const snippetContainer = document.createElement("div");
     const step2Div = document.createElement("div");
@@ -176,7 +175,8 @@ export function initCaseNotesAssistant() {
     const mainStatusSelect = document.createElement("select");
     const subStatusSelect = document.createElement("select");
     const buttonContainer = document.createElement("div");
-    // --- FIM DA CORREÇÃO ---
+    const copyButton = document.createElement("button");
+    const generateButton = document.createElement("button");
 
     function updateFieldsFromScenarios() {
         const activeScenarioInputs = snippetContainer.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
@@ -286,8 +286,6 @@ export function initCaseNotesAssistant() {
     }
 
     // --- Montagem da UI (continuação) ---
-    // CORREÇÃO: Removidas as declarações 'const' duplicadas
-    const step1Div = document.createElement("div");
     step1Div.id = "step-1-selection";
     const mainStatusLabel = document.createElement("label");
     Object.assign(mainStatusLabel.style, styleLabel);
@@ -341,14 +339,12 @@ export function initCaseNotesAssistant() {
     Object.assign(buttonContainer.style, { display: "flex", gap: "8px", padding: "0", display: "none" });
     popupContent.appendChild(buttonContainer);
 
-    const copyButton = document.createElement("button");
     copyButton.textContent = "Copiar";
     Object.assign(copyButton.style, { ...styleButtonBase, backgroundColor: "#5f6368" });
     copyButton.onmouseover = () => (copyButton.style.backgroundColor = "#4a4d50");
     copyButton.onmouseout = () => (copyButton.style.backgroundColor = "#5f6368");
     buttonContainer.appendChild(copyButton);
 
-    const generateButton = document.createElement("button");
     generateButton.textContent = "Preencher";
     Object.assign(generateButton.style, { ...styleButtonBase, backgroundColor: "#1a73e8" });
     generateButton.onmouseover = () => (generateButton.style.backgroundColor = "#1765c0");
@@ -504,7 +500,11 @@ export function initCaseNotesAssistant() {
         }
 
         dynamicFormFieldsContainer.innerHTML = '';
-        const placeholders = templateData.template.match(/{([A-Z_]+)}/g) || [];
+        
+        // ===== CORREÇÃO DA REGEX (Permitir números) =====
+        const placeholders = templateData.template.match(/{([A-Z0-9_]+)}/g) || [];
+        // ===============================================
+        
         const uniquePlaceholders = [...new Set(placeholders)];
         
         uniquePlaceholders.forEach(placeholder => {
@@ -615,7 +615,11 @@ export function initCaseNotesAssistant() {
             const safeValue = (value || '').replace(/\$/g, '$$$$');
             outputText = outputText.replace(placeholder, safeValue);
         });
-        outputText = outputText.replace(/{([A-Z_]+)}/g, '');
+        
+        // ===== CORREÇÃO DA REGEX (Permitir números) =====
+        outputText = outputText.replace(/{([A-Z0-9_]+)}/g, ''); // Remove placeholders restantes
+        // ===============================================
+        
         return outputText;
     }
 
