@@ -211,7 +211,8 @@ export function initCallScriptAssistant() {
 
         if (isCompleted) {
             li.style.borderColor = color;
-            li.style.backgroundColor = hexToRgba(color, 0.1);
+            li.style.backgroundColor = hexToRgba(color, 0.9);
+            li.style.textDecorationLine = 'line-through';
         } else {
             li.style.borderColor = 'transparent';
             li.style.backgroundColor = '#f8f9fa';
