@@ -34,7 +34,7 @@ export const TASKS_DB = {
         }
     },
     'ads_website_call_conversion': {
-        name: 'Google Ads WEBSITE CALL CONVERSION',
+        name: 'Google Ads Website Call Conversion',
         screenshots: {
             implementation: [
                 'Tag implementado no GTM',
@@ -66,9 +66,10 @@ export const SUBSTATUS_TEMPLATES = {
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> NI - Awaiting Inputs<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>  <b>Tasks solicitadas pelo AM:</b><br>  {TASKS_SOLICITADAS}<br>  <b>Contexto/O que foi feito:</b><br>  {CONTEXTO_CALL}<br>  <b>Impedimento / Próximo passo (Anunciante):</b><br>  {IMPEDIMENTO_CLIENTE}<br>  <b>Minha Ação:</b><br>  {MINHA_ACAO}<br>  <b>Considerações adicionais:</b><br>  {CONSIDERACOES}<br>  <b>Dia do Follow-up (se aplicável):</b> {DIA}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
     },
    'IN_Inactive': {
-        status: 'IN', name: 'IN - Inactive', requiresTasks: false,
-        template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> IN - Inactive<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>{COMENTARIOS}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
+        status: 'IN', name: 'IN - Not Reachable', requiresTasks: false,
+        template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> IN - Not Reachable<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>{COMENTARIOS}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
     },
+    
     'AS_Assigned': {
         status: 'AS', name: 'AS - Assigned', requiresTasks: false,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> AS - Assigned<br><br><b>Reason/comments:</b> Caso Reagendado.<br><br><b>OnCall Comments:</b><br>{MOTIVO_REAGENDAMENTO}<br>Data do reagendamento: {DATA_REAGENDAMENTO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b> N/A<br><br><b>Multiple CIDs:</b> N/A`
@@ -76,13 +77,13 @@ export const SUBSTATUS_TEMPLATES = {
 };
 
 export const textareaListFields = [
-    'TASKS_SOLICITADAS', 'PASSOS_EXECUTADOS', 'RESULTADO', 'DÚVIDAS', 'RESOLUÇÕES',
+    'TASKS_SOLICITADAS', 'PASSOS_EXECUTADOS', 'RESULTADO', 'DUVIDAS', 'RESOLUCOES',
     'TASKS_IMPLEMENTADAS_CALL', 'PROXIMOS_PASSOS', 'CONTEXTO_CALL',
     'IMPEDIMENTO_CLIENTE', 'MINHA_ACAO', 'SCREENSHOTS',
     'MOTIVO_REAGENDAMENTO'
 ];
 
-export const textareaParagraphFields = ['CONSIDERAÇÕES FINAIS', 'COMENTÁRIOS'];
+export const textareaParagraphFields = ['CONSIDERACOES', 'COMENTARIOS'];
 
 export const scenarioSnippets = {
     // --- Cenários de NI (Exclusivos) ---
@@ -110,19 +111,19 @@ export const scenarioSnippets = {
     // --- Cenários de SO (Combináveis) ---
     'quickfill-whatsapp': {
         'field-TASKS_SOLICITADAS': "• Criação de conversão para WHATSAPP",
-        'field-PASSOS_EXECUTADOS': "• Fizemos a criação da conversão no Ads.\n• Criamos a Tag no GTM usando acionadores de clique para os botões de WhatsApp.\n• Realizamos os testes e validamos o funcionamento.",
+        'field-PASSOS_EXECUTADOS': "• Fizemos a criação da conversão no Ads.\n• Criamos a Tag no GTM usando acionadores de clique (ex: Click URL / Click Text) para os botões de WhatsApp.\n• Realizamos os testes e validamos o funcionamento.",
         'field-RESULTADO': "• Task implementada com sucesso. Fecho o caso sem acompanhamento.",
         linkedTask: 'ads_conversion_tracking'
     },
      'quickfill-form': {
         'field-TASKS_SOLICITADAS': "• Criação de conversão para FORMULÁRIO (padrão, não-otimizada).",
-        'field-PASSOS_EXECUTADOS': "• Fizemos a criação da conversão no Ads.\n• Criamos a Tag no GTM usando o acionador de envio de formulário.\n• Realizamos os testes e validamos o funcionamento.",
+        'field-PASSOS_EXECUTADOS': "• Fizemos a criação da conversão no Ads.\n• Criamos a Tag no GTM usando o acionador de envio de formulário (Form Submission) ou visualização de página de agradecimento (Thank You Page).\n• Realizamos os testes e validamos o funcionamento.",
         'field-RESULTADO': "• Task implementada com sucesso. Fecho o caso sem acompanhamento.",
         linkedTask: 'ads_conversion_tracking'
     },
     'quickfill-ecw4-close': {
         'field-TASKS_SOLICITADAS': "• Acompanhamento da conversão otimizada (ECW4) após 7 dias.",
-        'field-PASSOS_EXECUTADOS': "• Após o período de 7 dias de acompanhamento, verifiquei o painel do Ads, diagnóstico da conversão, e o dash interno.\n• A conversão está sendo registrada corretamente.",
+        'field-PASSOS_EXECUTADOS': "• Após o período de 7 dias de acompanhamento, verifiquei o painel do Ads.\n• A conversão está sendo registrada corretamente.",
         'field-RESULTADO': "• Valido o bom funcionamento da conversão otimizada.\n• Assim, fecho o caso.",
         linkedTask: 'ads_enhanced_conversions'
     },
@@ -137,18 +138,27 @@ export const scenarioSnippets = {
          'field-MOTIVO_REAGENDAMENTO': '• Precisamos reagendar o caso, já que o anunciante não tinha os acessos necessários para podermos implementar as tasks'
     },
     // --- Cenários de IN (Exclusivos - Rádio) ---
-    'quickfill-in-nrp-standard': {
+    'quickfill-in-nrp-standard': { 
         'field-REASON_COMMENTS': "NRP",
         'field-COMENTARIOS': "• Duas ligações seguidas, e-mail \"Antes dos 10 minutos\" e uma terceira e ultima tentativa de ligação.\n• Não houve resposta às tentativas de ligação ou e-mail, por isso o caso será inativado.",
         'field-SCREENSHOTS': "• Tentativa 1 -\n• Tentativa 2 -\n• Tentativa 3 -"
     },
-    'quickfill-in-no-show': {
+    'quickfill-in-no-show': { 
         'field-REASON_COMMENTS': "Anunciante não compareceu à chamada (No-Show).",
         'field-ON_CALL': "N/A",
-        'field-COMENTARIOS': "• O caso foi gerado e entrei na chamada no horário agendado.\n• O anunciante não compareceu à reunião.\n• Não tive contato com o AM.\n• Segui o protocolo de espera: realizei duas tentativas de ligação, aguardei os 10 minutos, e fiz uma terceira tentativa, sem sucesso.\n• Nenhuma das ligações foi atendida (ex: Caixa Postal).\n• Caso inativado por No-Show.",
-        'field-SCREENSHOTS': "• Tentativa 1 - \n• Tentativa 2 - \n• Tentativa 3 - "
+        'field-COMENTARIOS': "• O caso foi gerado e entrei na chamada no horário agendado.\n• O anunciante não compareceu à reunião.\n• Segui o protocolo de espera: realizei duas tentativas de ligação, aguardei os 10 minutos, e fiz uma terceira tentativa, sem sucesso.\n• Nenhuma das ligações foi atendida (ex: Caixa Postal).\n• Caso inativado por No-Show.",
+        'field-SCREENSHOTS': "• Tentativa 1 (Caixa Postal) - https://screenshot.googleplex.com/BW3RLJNgf9SUVzx\n• Tentativa 2 (Caixa Postal) - https://screenshot.googleplex.com/9VEjdvGghueznHv\n• Tentativa 3 (Chamada desconectada) - https://screenshot.googleplex.com/C4yPjgvXN9kovcw"
     },
-    'quickfill-in-manual': {
+    'quickfill-in-manual': { 
         'field-REASON_COMMENTS': "Outro (Manual)"
+    },
+    // ===== NOVO CENÁRIO ADICIONADO AQUI =====
+    'quickfill-in-2-6-final': {
+        'field-REASON_COMMENTS': "Finalização (2/6)",
+        'field-SPEAKEASY_ID': "-",
+        'field-ON_CALL': "-",
+        'field-COMENTARIOS': "• Dia 9 finalização do 2/6, durante o período do acompanhamento não houve retorno do anunciante, então o caso será encerrado.",
+        'field-SCREENSHOTS': "• N/A"
     }
+    // ======================================
 };
