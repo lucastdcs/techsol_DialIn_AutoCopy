@@ -53,7 +53,8 @@ export function initGlobalStylesAndFont() {
         
         /* ===== CORREÇÃO CALL SCRIPT: LINHAS JUNTAS ===== */
         .csa-li { 
-            margin: 8px 0 !important; /* Aumentado de 4px para 8px */
+            margin: 8px 0 !important; 
+            padding: 8px
         }
     `;
     document.head.appendChild(style);
