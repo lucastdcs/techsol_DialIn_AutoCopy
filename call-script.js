@@ -130,7 +130,7 @@ export function initCallScriptAssistant() {
     csaCloseBtn.textContent = "✕";
     Object.assign(csaCloseBtn.style, stylePopupCloseBtn);
     csaCloseBtn.onclick = () => csaTogglePopup(false);
-    csaPopup.appendChild(csaCloseBtn);
+    csaHeader.appendChild(csaCloseBtn);
 
     const csaContent = document.createElement("div");
     csaContent.id = "csa-content";
