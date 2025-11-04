@@ -1,116 +1,5 @@
 // utils.js
 
-export function showToast(message, options = {}) {
-    // Implementação da função showToast (mantida)
-    const toastId = 'techsol-toast';
-    let toast = document.getElementById(toastId);
-
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = toastId;
-        Object.assign(toast.style, {
-            position: 'fixed',
-            bottom: '20px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            backgroundColor: '#323232',
-            color: '#fff',
-            padding: '10px 20px',
-            borderRadius: '4px',
-            fontSize: '14px',
-            fontFamily: "'Google Sans', Roboto, Arial, sans-serif",
-            zIndex: '10000',
-            opacity: '0',
-            transition: 'opacity 0.3s ease-in-out, transform 0.3s ease-in-out',
-            boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-        });
-        document.body.appendChild(toast);
-    }
-
-    toast.innerHTML = ''; // Limpa conteúdo anterior
-    
-    // Adiciona ícone se for erro
-    if (options.error) {
-        const errorIcon = document.createElement('span');
-        errorIcon.innerHTML = '&#9888;'; // Unicode para um triângulo de aviso
-        Object.assign(errorIcon.style, {
-            color: '#FFCC00', // Amarelo para aviso
-            fontSize: '18px',
-            fontWeight: 'bold'
-        });
-        toast.appendChild(errorIcon);
-    }
-
-    const messageSpan = document.createElement('span');
-    messageSpan.textContent = message;
-    toast.appendChild(messageSpan);
-
-    Object.assign(toast.style, {
-        opacity: '0',
-        transform: 'translateX(-50%) translateY(20px)', // Começa um pouco abaixo
-        backgroundColor: options.error ? '#D32F2F' : '#323232' // Vermelho para erro
-    });
-
-    setTimeout(() => {
-        Object.assign(toast.style, {
-            opacity: '1',
-            transform: 'translateX(-50%) translateY(0)'
-        });
-    }, 10); // Pequeno delay para a transição acontecer
-
-    const duration = options.duration || 3000;
-    clearTimeout(toast.timeout);
-    toast.timeout = setTimeout(() => {
-        Object.assign(toast.style, {
-            opacity: '0',
-            transform: 'translateX(-50%) translateY(20px)'
-        });
-        setTimeout(() => {
-            if (toast && toast.parentNode) {
-                toast.parentNode.removeChild(toast);
-            }
-        }, 300); // Remove depois que a transição de saída terminar
-    }, duration);
-}
-
-export function makeDraggable(element, handle = null) {
-    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-    const dragHandle = handle || element;
-
-    dragHandle.onmousedown = dragMouseDown;
-
-    function dragMouseDown(e) {
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT' || e.target.tagName === 'BUTTON' || e.target.classList.contains('no-drag')) {
-            return; // Não permite arrastar se o clique foi em um input, textarea, select, button ou elemento com 'no-drag'
-        }
-        e = e || window.event;
-        e.preventDefault();
-        pos3 = e.clientX;
-        pos4 = e.clientY;
-        document.onmouseup = closeDragElement;
-        document.onmousemove = elementDrag;
-    }
-
-    function elementDrag(e) {
-        e = e || window.event;
-        e.preventDefault();
-        pos1 = pos3 - e.clientX;
-        pos2 = pos4 - e.clientY;
-        pos3 = e.clientX;
-        pos4 = e.clientY;
-        element.style.top = (element.offsetTop - pos2) + "px";
-        element.style.left = (element.offsetLeft - pos1) + "px";
-    }
-
-    function closeDragElement() {
-        document.onmouseup = null;
-        document.onmousemove = null;
-    }
-}
-
 export function initGlobalStylesAndFont() {
     // Verifica se os estilos já foram injetados
     if (document.getElementById('google-font-poppins') && document.getElementById('techsol-global-styles')) {
@@ -161,12 +50,86 @@ export function initGlobalStylesAndFont() {
         textarea.bullet-textarea {
             padding-left: 10px; /* Ajuste para o bullet */
         }
+        
+        /* ===== CORREÇÃO CALL SCRIPT: LINHAS JUNTAS ===== */
+        .csa-li { 
+            margin: 8px 0 !important; /* Aumentado de 4px para 8px */
+        }
     `;
     document.head.appendChild(style);
 }
 
+export function showToast(message, opts = {}) {
+    // ... (código showToast sem alterações) ...
+    const toast = document.createElement("div");
+    Object.assign(toast.style, {
+        position: "fixed", bottom: "24px", left: "50%",
+        transform: "translateX(-50%) translateY(20px)",
+        background: opts.error ? "#d93025" : "#323232",
+        color: "#fff", padding: "14px 24px", borderRadius: "4px",
+        boxShadow: "0 2px 8px rgba(0,0,0,.3)", fontFamily: "'Poppins', sans-serif",
+        fontSize: "14px", lineHeight: "20px", zIndex: "9999999",
+        opacity: "0", transition: "opacity .3s ease, transform .3s ease"
+    });
+    toast.textContent = message;
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => {
+        toast.style.opacity = "1";
+        toast.style.transform = "translateX(-50%) translateY(0)";
+    });
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateX(-50%) translateY(20px)";
+        setTimeout(() => toast.remove(), 300);
+    }, opts.duration || 4000);
+}
+
+// ===== CORREÇÃO HEADER: LÓGICA DE ARRASTAR ATUALIZADA =====
+export function makeDraggable(element, handle = null) {
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+    const dragHandle = handle || element;
+
+    dragHandle.onmousedown = dragMouseDown;
+
+    function dragMouseDown(e) {
+        // Impede o drag se o alvo for um botão, input, ou tiver a classe 'no-drag'
+        if (e.target.tagName === 'INPUT' || 
+            e.target.tagName === 'TEXTAREA' || 
+            e.target.tagName === 'SELECT' || 
+            e.target.tagName === 'BUTTON' || 
+            e.target.classList.contains('no-drag')) { // <-- MUDANÇA AQUI
+            return; 
+        }
+        
+        e = e || window.event;
+        e.preventDefault();
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        document.onmouseup = closeDragElement;
+        document.onmousemove = elementDrag;
+    }
+
+    function elementDrag(e) {
+        e = e || window.event;
+        e.preventDefault();
+        pos1 = pos3 - e.clientX;
+        pos2 = pos4 - e.clientY;
+        pos3 = e.clientX;
+        pos4 = e.clientY;
+        element.style.top = (element.offsetTop - pos2) + "px";
+        element.style.left = (element.offsetLeft - pos1) + "px";
+    }
+
+    function closeDragElement() {
+        document.onmouseup = null;
+        document.onmousemove = null;
+    }
+}
+// ========================================================
+
+
 // =========================================================
-//           ESTILOS PADRÃO (Com pequenas atualizações)
+//           ESTILOS PADRÃO (Com atualizações)
 // =========================================================
 
 export const styleFloatingButton = {
@@ -185,32 +148,34 @@ export const styleFloatingButton = {
     boxShadow: "0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08)",
     zIndex: "9999",
     border: "none",
-    transition: "background-color 0.2s ease, transform 0.2s ease", // Adicionado transform
+    transition: "background-color 0.2s ease, transform 0.2s ease",
     fontFamily: "'Poppins', sans-serif"
 };
 
 export const stylePopup = {
     position: "fixed",
-    top: "calc(50% - 250px)", // Centraliza verticalmente
-    width: "380px", // Largura padrão
+    top: "calc(50% - 250px)",
+    width: "380px", 
     maxHeight: "90vh",
     backgroundColor: "#fff",
     borderRadius: "12px",
     boxShadow: "0 8px 16px rgba(0,0,0,0.2), 0 0 4px rgba(0,0,0,0.08)",
     zIndex: "9999",
-    overflow: "hidden", // Para cantos arredondados
+    overflow: "hidden", 
     display: "flex",
     flexDirection: "column",
-    transition: "opacity 0.3s ease-out, transform 0.3s ease-out, width 0.3s ease-out", // Adicionado 'width' na transição
+    transition: "opacity 0.3s ease-out, transform 0.3s ease-out, width 0.3s ease-out", 
     opacity: "0",
     transform: "scale(0.95)",
     pointerEvents: "none",
     fontFamily: "'Poppins', sans-serif"
 };
 
+// ===== CORREÇÃO HEADER: Estilo do Header =====
 export const stylePopupHeader = {
     display: "flex",
     alignItems: "center",
+    justifyContent: "space-between", // <-- MUDANÇA AQUI
     padding: "16px",
     backgroundColor: "#f8f9fa",
     borderBottom: "1px solid #dadce0",
@@ -218,27 +183,26 @@ export const stylePopupHeader = {
     userSelect: "none",
     gap: "10px"
 };
+// ===========================================
 
 export const stylePopupTitle = {
     fontSize: "18px",
     fontWeight: "600",
     color: "#202124",
-    flexGrow: "1"
+    flexGrow: "1" // Permite que o container do título cresça
 };
 
-// Novo estilo para o número da versão (mais discreto)
 export const stylePopupVersion = {
     fontSize: "12px",
     fontWeight: "400",
     color: "#70757a",
     marginTop: "4px",
-    marginLeft: "34px" // Alinha com o texto do título
+    // marginLeft: "34px" // Não é mais necessário com flex
 };
 
+// ===== CORREÇÃO HEADER: Estilo do Botão Fechar =====
 export const stylePopupCloseBtn = {
-    position: "absolute",
-    top: "12px",
-    right: "12px",
+    // Posição absoluta removida
     fontSize: "20px",
     color: "#5f6368",
     cursor: "pointer",
@@ -246,12 +210,10 @@ export const stylePopupCloseBtn = {
     borderRadius: "50%",
     transition: "background-color 0.2s ease, color 0.2s ease",
     lineHeight: "1",
-    zIndex: "10"
+    zIndex: "10",
+    marginLeft: "8px" // Adiciona espaço entre os botões
 };
-stylePopupCloseBtn[':hover'] = {
-    backgroundColor: "#e8eaed",
-    color: "#202124"
-};
+// ===============================================
 
 export const styleLabel = {
     display: "block",
@@ -271,7 +233,7 @@ export const styleSelect = {
     fontSize: "14px",
     color: "#3c4043",
     boxSizing: "border-box",
-    appearance: "none", // Remove setas padrão
+    appearance: "none", 
     backgroundImage: `url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%233c4043%22%20d%3D%22M287%20197.3l-116.5-116.5c-4.7-4.7-12.4-4.7-17.1%200L5.4%20197.3c-4.7%204.7-4.7%2012.4%200%2017.1l17.1%2017.1c4.7%204.7%2012.4%204.7%2017.1%200l94.3-94.3c4.7-4.7%2012.4-4.7%2017.1%200l94.3%2094.3c4.7%204.7%2012.4%204.7%2017.1%200l17.1-17.1c4.7-4.7%204.7-12.4%200-17.1z%22%2F%3E%3C%2Fsvg%3E')`,
     backgroundRepeat: "no-repeat",
     backgroundPosition: "right 12px center",
@@ -294,7 +256,6 @@ export const styleButtonBase = {
     boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
 };
 
-// Novo estilo para o crédito
 export const styleCredit = {
     fontSize: "10px",
     color: "#9aa0a6",
@@ -304,11 +265,9 @@ export const styleCredit = {
     marginTop: "16px"
 };
 
-// Novo estilo para o botão de expansão
+// ===== CORREÇÃO HEADER: Estilo do Botão Expandir =====
 export const styleExpandButton = {
-    position: "absolute",
-    top: "12px",
-    right: "42px", // Perto do botão de fechar
+    // Posição absoluta removida
     fontSize: "18px",
     color: "#5f6368",
     cursor: "pointer",
@@ -318,7 +277,4 @@ export const styleExpandButton = {
     lineHeight: "1",
     zIndex: "10"
 };
-styleExpandButton[':hover'] = {
-    backgroundColor: "#e8eaed",
-    color: "#202124"
-};
+// ================================================
