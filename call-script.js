@@ -137,7 +137,8 @@ export function initCallScriptAssistant() {
     Object.assign(csaContent.style, {
         padding: "16px", 
         overflowY: "auto",
-        flexGrow: "1"
+        flexGrow: "1",
+        cursor: "pointer"
     });
     csaPopup.appendChild(csaContent);
 
@@ -165,7 +166,7 @@ export function initCallScriptAssistant() {
     csaTypeContainer.appendChild(csaTypeLT);
 
     const csaLangSelect = document.createElement("select");
-    Object.assign(csaLangSelect.style, styleSelect, { marginBottom: '0', width: 'auto', padding: '6px' });
+    Object.assign(csaLangSelect.style, styleSelect, { marginBottom: '0', width: 'auto', minWidth:'10px', padding: '6px' });
     csaLangSelect.innerHTML = `<option value="PT">PT</option><option value="ES">ES</option><option value="EN">EN</option>`;
     csaLangSelect.value = csaCurrentLang;
 
