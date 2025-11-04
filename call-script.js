@@ -15,7 +15,7 @@ import {
 } from './utils.js';
 
 export function initCallScriptAssistant() {
-    const CURRENT_VERSION = "v1.2.1"; 
+    const CURRENT_VERSION = "v1.2"; 
 
     // --- Dados e Estado (Módulo 2) ---
     const csaChecklistData = {
@@ -68,12 +68,12 @@ export function initCallScriptAssistant() {
         "ES BAU": {
             color: "#00bbff",
             inicio: ["Introducción (Nombre y  Equipo).", "La llamada pode ser grabada con fines de entrenamiento y calidad de acuerdo con nuestra política de privacidad.", "Informar sitio web registrado en el caso.", "Confirmación: Solicitar al Anunciante que confirme los 10 dígitos del CID el email del anunciante.", "Confirmaciones: Tarea, AM", "Informar el tiempo que va a durar la reunião.", "Confirmación: Copia de seguridad y acceso de ADM", "Cerrar conteúdo sensível antes de compartir la pantalla.", ],
-            fim: ["Resumen de la llamada.", "Ayuda adicional.", "Cerrar la pantalla compartida.", "Próximos passos (¿Cuánto tempo seguirá el caso?)", "Encuesta de Satisfação.", "Estaré monitoreando su caso durante XX dias para asegurarme de que todo esté funcionando correctamente. Durante este tiempo, nuestro equipo de qualidade podría realizar una prueba de conversión para validar la implementación. ¿Estás de acuerdo con esta prueba para garantizar la efectividad de la implementación? Perfecto, ¡gracias!", ]
+            fim: ["Resumen de la llamada.", "Ayuda adicional.", "Cerrar la pantalla compartida.", "Próximos passos (¿Cuánto tempo seguirá el caso?)", "Encuesta de Satisfação.", "Estaré monitoreando su caso durante XX días para asegurarme de que todo esté funcionando correctamente. Durante este tiempo, nuestro equipo de qualidade podría realizar una prueba de conversión para validar la implementación. ¿Estás de acuerdo con esta prueba para garantizar la efectividad de la implementación? Perfecto, ¡gracias!", ]
         },
         "ES LT": {
             color: "#f269ff",
             inicio: ["Presentación (Nombre y equipo).", "Informar al cliente sobre la llamada grabada.", "Tiempo de duración de la llamada.", "Solicitar al anunciante que confirme lo siguiente: \n A) 10 dígitos de la conta \n B) Correo electrónico \n C) Número de teléfono y \n D) Nombre del sitio web.", "autenticar la cuenta del anunciante en el cases, si corresponde.", "Términos y condições.", "Informar las Task solicitadas y AM.", "Cerrar contenido sensible.", "Confirmación de copia de seguridad y acceso de administrador a las ferramentas.", "Resumen de llamada."],
-            fim: ["Ofrecer ayuda adicional.", "Dejar de compartir la pantalla.", "Pasos siguientes  (Si se le hará seguimiento al caso).", "Encuesta de Satisfacción.", "Informar al cliente que el equipo de QA irá a realizar pruebas en los siguientes dias."]
+            fim: ["Ofrecer ayuda adicional.", "Dejar de compartir la pantalla.", "Pasos siguientes  (Si se le hará seguimiento al caso).", "Encuesta de Satisfação.", "Informar al cliente que el equipo de QA irá a realizar pruebas en los siguientes dias."]
         },
         "EN BAU": {
             color: "#ff0011",

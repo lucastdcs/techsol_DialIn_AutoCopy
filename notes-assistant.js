@@ -1,5 +1,6 @@
 // notes-assistant.js
 
+// CORREÇÃO: Usando caminhos relativos (com ./)
 import { 
     showToast, 
     makeDraggable,
@@ -15,6 +16,7 @@ import {
     styleExpandButton
 } from './utils.js'; 
 
+// CORREÇÃO: Usando caminhos relativos (com ./)
 import {
     TASKS_DB,
     SUBSTATUS_TEMPLATES,
@@ -24,10 +26,9 @@ import {
 } from './notes-data.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v2.7.7"; 
+    const CURRENT_VERSION = "v2.7.1"; 
 
     function copyHtmlToClipboard(html) {
-        // ... (código mantido) ...
         const container = document.createElement('div');
         container.style.position = 'fixed';
         container.style.left = '-9999px';
@@ -62,61 +63,39 @@ export function initCaseNotesAssistant() {
     popup.id = "autofill-popup";
     Object.assign(popup.style, stylePopup, { right: "24px" });
 
-    // ===== CORREÇÃO HEADER: Estrutura do Header =====
     const header = document.createElement("div");
     Object.assign(header.style, stylePopupHeader);
-    makeDraggable(popup, header); // Permite arrastar pelo header
-
-    // --- Parte Esquerda do Header ---
-    const headerLeft = document.createElement("div");
-    Object.assign(headerLeft.style, { display: 'flex', alignItems: 'center', gap: '10px' });
-    
     const logo = document.createElement("img");
     logo.src = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
     Object.assign(logo.style, { width: "24px", height: "24px" });
-    
     const titleContainer = document.createElement("div");
-    Object.assign(titleContainer.style, { display: 'flex', flexDirection: 'column' });
+    Object.assign(titleContainer.style, { display: 'flex', flexDirection: 'column', flexGrow: '1' });
 
     const title = document.createElement("div");
     title.textContent = "Case Notes Assistant";
     Object.assign(title.style, stylePopupTitle);
-    
+    titleContainer.appendChild(title);
+
     const versionDisplay = document.createElement("div");
     versionDisplay.textContent = CURRENT_VERSION;
     Object.assign(versionDisplay.style, stylePopupVersion);
-
-    titleContainer.appendChild(title);
     titleContainer.appendChild(versionDisplay);
-    headerLeft.appendChild(logo);
-    headerLeft.appendChild(titleContainer);
-    
-    // --- Parte Direita do Header ---
-    const headerRight = document.createElement("div");
-    Object.assign(headerRight.style, { display: 'flex', alignItems: 'center' });
 
-    const expandBtn = document.createElement("div");
-    expandBtn.textContent = "↔";
-    expandBtn.classList.add('no-drag'); // Adiciona classe 'no-drag'
-    Object.assign(expandBtn.style, styleExpandButton);
-    expandBtn.onmouseover = () => expandBtn.style.backgroundColor = '#e8eaed';
-    expandBtn.onmouseout = () => expandBtn.style.backgroundColor = 'transparent';
+    header.appendChild(logo);
+    header.appendChild(titleContainer);
+    popup.appendChild(header);
+    makeDraggable(popup, header);
 
     const closeBtn = document.createElement("div");
     closeBtn.textContent = "✕";
-    closeBtn.classList.add('no-drag'); // Adiciona classe 'no-drag'
     Object.assign(closeBtn.style, stylePopupCloseBtn);
-    closeBtn.onmouseover = () => closeBtn.style.backgroundColor = '#e8eaed';
-    closeBtn.onmouseout = () => closeBtn.style.backgroundColor = 'transparent';
-    
-    headerRight.appendChild(expandBtn);
-    headerRight.appendChild(closeBtn);
+    closeBtn.onclick = () => togglePopup(false);
+    popup.appendChild(closeBtn);
 
-    // --- Montagem Final do Header ---
-    popup.appendChild(header);
-    header.appendChild(headerLeft);
-    header.appendChild(headerRight);
-    // ============================================
+    const expandBtn = document.createElement("div");
+    expandBtn.textContent = "↔";
+    Object.assign(expandBtn.style, styleExpandButton);
+    popup.appendChild(expandBtn);
 
     let isExpanded = false;
     const initialWidth = parseInt(stylePopup.width, 10);
@@ -140,10 +119,8 @@ export function initCaseNotesAssistant() {
             }
         }
     };
-    
-    closeBtn.onclick = () => togglePopup(false);
 
-    // Estilos locais do Módulo 1 (pequenas mudanças para animacões)
+    // Estilos locais do Módulo 1
     const styleInput = {
         width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #dadce0",
         fontSize: "14px", marginBottom: "12px", boxSizing: "border-box", fontFamily: "'Poppins', sans-serif",
@@ -189,7 +166,7 @@ export function initCaseNotesAssistant() {
     Object.assign(credit.style, styleCredit);
     popup.appendChild(credit);
 
-    // --- Declaração dos elementos da UI ---
+    // --- CORREÇÃO: Variáveis da UI declaradas UMA VEZ ---
     const step1Div = document.createElement("div");
     const stepSnippetsDiv = document.createElement("div");
     const snippetContainer = document.createElement("div");
@@ -202,9 +179,9 @@ export function initCaseNotesAssistant() {
     const buttonContainer = document.createElement("div");
     const copyButton = document.createElement("button");
     const generateButton = document.createElement("button");
+    // --- FIM DA CORREÇÃO ---
 
     function updateFieldsFromScenarios() {
-        // ... (código mantido) ...
         const activeScenarioInputs = snippetContainer.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
         const targetFieldsContent = {};
         const activeLinkedTasks = new Set();
@@ -279,7 +256,6 @@ export function initCaseNotesAssistant() {
     }
 
     function enableAutoBullet(textarea) {
-        // ... (código mantido) ...
         if(textarea.value.trim() === '' || textarea.value.trim() === '•') {
             textarea.value = '• ';
         }
@@ -313,12 +289,15 @@ export function initCaseNotesAssistant() {
     }
 
     // --- Montagem da UI (continuação) ---
+    // CORREÇÃO: Removidas as declarações 'const' duplicadas
     step1Div.id = "step-1-selection";
+    const mainStatusLabel = document.createElement("label");
     Object.assign(mainStatusLabel.style, styleLabel);
     mainStatusLabel.textContent = "Status Principal:";
     mainStatusSelect.id = "main-status";
     mainStatusSelect.innerHTML = `<option value="">-- Selecione --</option><option value="NI">NI - Need Info</option><option value="SO">SO - Solution Offered</option><option value="IN">IN - Inactive</option><option value="AS">AS - Assigned</option>`;
     Object.assign(mainStatusSelect.style, styleSelect);
+    const subStatusLabel = document.createElement("label");
     Object.assign(subStatusLabel.style, styleLabel);
     subStatusLabel.textContent = "Substatus:";
     subStatusSelect.id = "sub-status";
@@ -381,7 +360,6 @@ export function initCaseNotesAssistant() {
     // --- Lógica (Módulo 1) ---
 
     function resetSteps(startFrom = 1.5) {
-        // ... (código mantido) ...
         if (startFrom <= 1.5) {
             stepSnippetsDiv.style.display = 'none';
             snippetContainer.innerHTML = '';
@@ -398,7 +376,6 @@ export function initCaseNotesAssistant() {
     }
 
     mainStatusSelect.onchange = () => {
-        // ... (código mantido) ...
         const selectedStatus = mainStatusSelect.value;
         resetSteps(1.5);
         subStatusSelect.innerHTML = '<option value="">-- Selecione o Substatus --</option>';
@@ -527,7 +504,11 @@ export function initCaseNotesAssistant() {
         }
 
         dynamicFormFieldsContainer.innerHTML = '';
+        
+        // ===== CORREÇÃO DA REGEX (Permitir números) =====
         const placeholders = templateData.template.match(/{([A-Z0-9_]+)}/g) || [];
+        // ===============================================
+        
         const uniquePlaceholders = [...new Set(placeholders)];
         
         uniquePlaceholders.forEach(placeholder => {
@@ -605,7 +586,11 @@ export function initCaseNotesAssistant() {
         const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
         inputs.forEach(input => {
             const fieldName = input.id.replace('field-', '');
+            
+            // ===== CORREÇÃO DA REGEX (Permitir números) =====
             const placeholder = new RegExp(`{${fieldName}}`, 'g');
+            // ===============================================
+
             let value = input.value;
             
             if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey === 'NI_Awaiting_Inputs' || selectedSubStatusKey === 'IN_Inactive')) {
@@ -639,7 +624,7 @@ export function initCaseNotesAssistant() {
             outputText = outputText.replace(placeholder, safeValue);
         });
         
-        outputText = outputText.replace(/{([A-Z0-9_]+)}/g, ''); // CORREÇÃO da Regex aqui também
+        outputText = outputText.replace(/{([A-Z0-9_]+)}/g, ''); 
         
         return outputText;
     }
