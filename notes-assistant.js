@@ -26,7 +26,7 @@ import {
 } from './notes-data.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v2.7.1"; 
+    const CURRENT_VERSION = "v2.7.7"; 
 
     function copyHtmlToClipboard(html) {
         const container = document.createElement('div');
@@ -80,22 +80,25 @@ export function initCaseNotesAssistant() {
     versionDisplay.textContent = CURRENT_VERSION;
     Object.assign(versionDisplay.style, stylePopupVersion);
     titleContainer.appendChild(versionDisplay);
+        
+    const closeBtn = document.createElement("div");
+    closeBtn.textContent = "✕";
+    Object.assign(closeBtn.style, stylePopupCloseBtn);
+    closeBtn.onclick = () => togglePopup(false);
+    const expandBtn = document.createElement("div");
+    expandBtn.textContent = "↔";
+    Object.assign(expandBtn.style, styleExpandButton);
+    titleContainer.appendChild(expandBtn);
 
     header.appendChild(logo);
     header.appendChild(titleContainer);
     popup.appendChild(header);
     makeDraggable(popup, header);
 
-    const closeBtn = document.createElement("div");
-    closeBtn.textContent = "✕";
-    Object.assign(closeBtn.style, stylePopupCloseBtn);
-    closeBtn.onclick = () => togglePopup(false);
-    popup.appendChild(closeBtn);
 
-    const expandBtn = document.createElement("div");
-    expandBtn.textContent = "↔";
-    Object.assign(expandBtn.style, styleExpandButton);
-    popup.appendChild(expandBtn);
+    titleContainer.appendChild(closeBtn);
+
+
 
     let isExpanded = false;
     const initialWidth = parseInt(stylePopup.width, 10);
