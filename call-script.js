@@ -14,7 +14,7 @@ import {
 } from './utils.js';
 
 export function initCallScriptAssistant() {
-    const CURRENT_VERSION = "v1.2.7"; 
+    const CURRENT_VERSION = "v1.2.8"; 
 
     // --- Dados e Estado (Módulo 2) ---
     const csaChecklistData = {

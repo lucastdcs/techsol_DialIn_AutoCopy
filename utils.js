@@ -225,7 +225,7 @@ export const styleLabel = {
 
 export const styleSelect = {
     width: "100%",
-    padding: "10px 12px",
+    padding: "10px 36px 10px 12px", 
     borderRadius: "8px",
     border: "1px solid #dadce0",
     backgroundColor: "#fff",
