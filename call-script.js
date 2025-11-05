@@ -1,6 +1,5 @@
 // call-script.js
 
-// CORREÇÃO: Usando caminhos relativos (com ./)
 import { 
     makeDraggable,
     styleSelect,
@@ -15,7 +14,7 @@ import {
 } from './utils.js';
 
 export function initCallScriptAssistant() {
-    const CURRENT_VERSION = "v1.2"; 
+    const CURRENT_VERSION = "v1.2.7"; 
 
     // --- Dados e Estado (Módulo 2) ---
     const csaChecklistData = {
@@ -68,7 +67,7 @@ export function initCallScriptAssistant() {
         "ES BAU": {
             color: "#00bbff",
             inicio: ["Introducción (Nombre y  Equipo).", "La llamada pode ser grabada con fines de entrenamiento y calidad de acuerdo con nuestra política de privacidad.", "Informar sitio web registrado en el caso.", "Confirmación: Solicitar al Anunciante que confirme los 10 dígitos del CID el email del anunciante.", "Confirmaciones: Tarea, AM", "Informar el tiempo que va a durar la reunião.", "Confirmación: Copia de seguridad y acceso de ADM", "Cerrar conteúdo sensível antes de compartir la pantalla.", ],
-            fim: ["Resumen de la llamada.", "Ayuda adicional.", "Cerrar la pantalla compartida.", "Próximos passos (¿Cuánto tempo seguirá el caso?)", "Encuesta de Satisfação.", "Estaré monitoreando su caso durante XX días para asegurarme de que todo esté funcionando correctamente. Durante este tiempo, nuestro equipo de qualidade podría realizar una prueba de conversión para validar la implementación. ¿Estás de acuerdo con esta prueba para garantizar la efectividad de la implementación? Perfecto, ¡gracias!", ]
+            fim: ["Resumen de la llamada.", "Ayuda adicional.", "Cerrar la pantalla compartida.", "Próximos passos (¿Cuánto tempo seguirá el caso?)", "Encuesta de Satisfação.", "Estaré monitoreando su caso durante XX días para asegurarme de que todo esté funcionando correctamente. Durante este tiempo, nuestro equipo de qualidade podría realizar una prueba de conversión para validar la implementação. ¿Estás de acuerdo con esta prueba para garantizar la efectividad de la implementación? Perfecto, ¡gracias!", ]
         },
         "ES LT": {
             color: "#f269ff",
@@ -93,8 +92,16 @@ export function initCallScriptAssistant() {
         top: "70%",
         background: "#5f6368"
     });
-    csaBtn.onmouseenter = () => (csaBtn.style.background = "#4a4d50");
-    csaBtn.onmouseleave = () => (csaBtn.style.background = "#5f6368");
+    // ===== ANIMAÇÃO ADICIONADA =====
+    csaBtn.onmouseenter = () => {
+        csaBtn.style.background = "#4a4d50";
+        csaBtn.style.transform = "scale(1.1)"; // Animação
+    };
+    csaBtn.onmouseleave = () => {
+        csaBtn.style.background = "#5f6368";
+        csaBtn.style.transform = "scale(1)"; // Animação
+    };
+    // =================================
     document.body.appendChild(csaBtn);
     makeDraggable(csaBtn);
 
@@ -102,14 +109,21 @@ export function initCallScriptAssistant() {
     csaPopup.id = "call-script-popup";
     Object.assign(csaPopup.style, stylePopup, { right: "80px" });
 
+    // ===== HEADER ATUALIZADO (com Flexbox) =====
     const csaHeader = document.createElement("div");
     Object.assign(csaHeader.style, stylePopupHeader);
+    makeDraggable(csaPopup, csaHeader);
+
+    // --- Parte Esquerda do Header ---
+    const csaHeaderLeft = document.createElement("div");
+    Object.assign(csaHeaderLeft.style, { display: 'flex', alignItems: 'center', gap: '10px' });
+
     const csaLogo = document.createElement("div");
     csaLogo.textContent = "📋";
     Object.assign(csaLogo.style, { fontSize: "20px" });
     
     const titleContainer = document.createElement("div");
-    Object.assign(titleContainer.style, { display: 'flex', flexDirection: 'column', flexGrow: '1' });
+    Object.assign(titleContainer.style, { display: 'flex', flexDirection: 'column' });
     const csaTitle = document.createElement("div");
     csaTitle.textContent = "Call Script Assistant";
     Object.assign(csaTitle.style, stylePopupTitle);
@@ -120,25 +134,36 @@ export function initCallScriptAssistant() {
     Object.assign(versionDisplay.style, stylePopupVersion);
     titleContainer.appendChild(versionDisplay);
     
-    csaHeader.appendChild(csaLogo);
-    csaHeader.appendChild(titleContainer);
-    
-    csaPopup.appendChild(csaHeader);
-    makeDraggable(csaPopup, csaHeader);
+    csaHeaderLeft.appendChild(csaLogo);
+    csaHeaderLeft.appendChild(titleContainer);
+
+    // --- Parte Direita do Header ---
+    const csaHeaderRight = document.createElement("div");
+    Object.assign(csaHeaderRight.style, { display: 'flex', alignItems: 'center' });
 
     const csaCloseBtn = document.createElement("div");
     csaCloseBtn.textContent = "✕";
+    csaCloseBtn.classList.add('no-drag'); // Impede o drag
     Object.assign(csaCloseBtn.style, stylePopupCloseBtn);
     csaCloseBtn.onclick = () => csaTogglePopup(false);
-    csaHeader.appendChild(csaCloseBtn);
+    // ===== ANIMAÇÃO ADICIONADA =====
+    csaCloseBtn.onmouseover = () => csaCloseBtn.style.backgroundColor = '#e8eaed';
+    csaCloseBtn.onmouseout = () => csaCloseBtn.style.backgroundColor = 'transparent';
+    // =================================
+    csaHeaderRight.appendChild(csaCloseBtn);
+    
+    // --- Montagem Final do Header ---
+    csaPopup.appendChild(csaHeader);
+    csaHeader.appendChild(csaHeaderLeft);
+    csaHeader.appendChild(csaHeaderRight);
+    // ======================================
 
     const csaContent = document.createElement("div");
     csaContent.id = "csa-content";
     Object.assign(csaContent.style, {
         padding: "16px", 
         overflowY: "auto",
-        flexGrow: "1",
-        cursor: "pointer"
+        flexGrow: "1"
     });
     csaPopup.appendChild(csaContent);
 
@@ -164,6 +189,13 @@ export function initCallScriptAssistant() {
 
     csaTypeContainer.appendChild(csaTypeBAU);
     csaTypeContainer.appendChild(csaTypeLT);
+    
+    // ===== ANIMAÇÕES ADICIONADAS (BAU/LT) =====
+    csaTypeBAU.onmouseover = () => { if (csaCurrentType !== 'BAU') csaTypeBAU.style.backgroundColor = '#f1f3f4'; };
+    csaTypeBAU.onmouseout = () => { if (csaCurrentType !== 'BAU') csaTypeBAU.style.backgroundColor = '#f8f9fa'; };
+    csaTypeLT.onmouseover = () => { if (csaCurrentType !== 'LT') csaTypeLT.style.backgroundColor = '#f1f3f4'; };
+    csaTypeLT.onmouseout = () => { if (csaCurrentType !== 'LT') csaTypeLT.style.backgroundColor = '#f8f9fa'; };
+    // ===========================================
 
     const csaLangSelect = document.createElement("select");
     Object.assign(csaLangSelect.style, styleSelect, { marginBottom: '0', width: 'auto', minWidth:'10px', padding: '6px' });
@@ -186,7 +218,10 @@ export function initCallScriptAssistant() {
 
     // --- Lógica (Módulo 2) ---
 
+    // A FUNÇÃO 'makeDraggable' FOI REMOVIDA DAQUI (está no utils.js)
+
     function hexToRgba(hex, alpha) {
+        // ... (código mantido) ...
         const clean = hex.replace("#","");
         const r = parseInt(clean.substring(0,2),16);
         const g = parseInt(clean.substring(2,4),16);
@@ -195,6 +230,7 @@ export function initCallScriptAssistant() {
     }
 
     function csaTogglePopup(show) {
+        // ... (código mantido) ...
         if (show) {
             csaPopup.style.opacity = "1";
             csaPopup.style.pointerEvents = "auto";
@@ -216,10 +252,12 @@ export function initCallScriptAssistant() {
         } else {
             li.style.borderColor = 'transparent';
             li.style.backgroundColor = '#f8f9fa';
+            li.style.textDecorationLine = 'none';
         }
     }
 
     function checkGroupCompletion(combinedKey, groupKey, groupDiv) {
+        // ... (código mantido) ...
         const data = csaChecklistData[combinedKey];
         if (!data) return;
 
@@ -238,6 +276,7 @@ export function initCallScriptAssistant() {
     }
 
     function csaBuildChecklist() {
+        // ... (código mantido) ...
         csaChecklistArea.innerHTML = "";
         const combinedKey = `${csaCurrentLang} ${csaCurrentType}`;
         const data = csaChecklistData[combinedKey];

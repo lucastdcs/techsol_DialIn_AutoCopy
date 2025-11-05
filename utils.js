@@ -13,55 +13,63 @@ export function initGlobalStylesAndFont() {
     link.rel = 'stylesheet';
     document.head.appendChild(link);
 
-    // Injeta estilos globais para scrollbar e outros defaults
+    // Injeta estilos globais
     const style = document.createElement('style');
     style.id = 'techsol-global-styles';
     style.textContent = `
-        /* Estilos da Scrollbar (WebKit) */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
+        /* ... (estilos da scrollbar mantidos) ... */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
         
-        /* Estilos de input/textarea para focar na fonte */
+        /* ... (estilos de input/textarea mantidos) ... */
         input:focus, textarea:focus, select:focus {
             outline: none !important;
             border-color: #1a73e8 !important;
             box-shadow: 0 0 0 1px #1a73e8 !important;
         }
-
-        /* Estilos para o efeito de click dos botões */
-        button:active {
-            transform: translateY(1px);
-        }
-
-        /* Estilos para campos de texto com bullet */
-        textarea.bullet-textarea {
-            padding-left: 10px; /* Ajuste para o bullet */
-        }
+        button:active { transform: translateY(1px); }
+        textarea.bullet-textarea { padding-left: 10px; }
         
-        /* ===== CORREÇÃO CALL SCRIPT: LINHAS JUNTAS ===== */
+        /* ===== CORREÇÃO: ESPAÇAMENTO E ANIMAÇÃO DO CALL SCRIPT ===== */
+        .csa-group-container { border-left: 3px solid transparent; padding-left: 5px; transition: all 0.3s ease-out; }
+        .csa-group-title { transition: color 0.3s ease-out; }
+        .csa-group-container.csa-group-completed { border-left: 3px solid #34a853; }
+        .csa-group-container.csa-group-completed .csa-group-title { color: #34a853; }
+        
         .csa-li { 
-            margin: 8px 0 !important; 
-            padding: 8px
+            margin: 8px 0 !important; /* <<< CORRIGIDO (era 4px) */
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 2px solid transparent;
+            transition: all 0.2s ease; /* Transição geral */
+            font-size: 14px;
+            cursor: pointer;
+            user-select: none;
+            background-color: #f8f9fa;
+            color: #202124;
+            line-height: 1.4;
+            text-decoration: none;
+            transform: scale(1);
         }
+        /* ANIMAÇÃO DE HOVER (SALTO) */
+        .csa-li:hover { 
+            background-color: #f1f3f4;
+            transform: scale(1.02); 
+        }
+        .csa-li.csa-completed { 
+            text-decoration: line-through; 
+            color: #5f6368; 
+            transform: scale(0.98); 
+        }
+        /* ======================================================== */
     `;
     document.head.appendChild(style);
 }
 
 export function showToast(message, opts = {}) {
-    // ... (código showToast sem alterações) ...
+    // ... (código showToast mantido) ...
     const toast = document.createElement("div");
     Object.assign(toast.style, {
         position: "fixed", bottom: "24px", left: "50%",
@@ -85,7 +93,6 @@ export function showToast(message, opts = {}) {
     }, opts.duration || 4000);
 }
 
-// ===== CORREÇÃO HEADER: LÓGICA DE ARRASTAR ATUALIZADA =====
 export function makeDraggable(element, handle = null) {
     let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
     const dragHandle = handle || element;
@@ -93,12 +100,11 @@ export function makeDraggable(element, handle = null) {
     dragHandle.onmousedown = dragMouseDown;
 
     function dragMouseDown(e) {
-        // Impede o drag se o alvo for um botão, input, ou tiver a classe 'no-drag'
         if (e.target.tagName === 'INPUT' || 
             e.target.tagName === 'TEXTAREA' || 
             e.target.tagName === 'SELECT' || 
             e.target.tagName === 'BUTTON' || 
-            e.target.classList.contains('no-drag')) { // <-- MUDANÇA AQUI
+            e.target.classList.contains('no-drag')) {
             return; 
         }
         
@@ -126,12 +132,9 @@ export function makeDraggable(element, handle = null) {
         document.onmousemove = null;
     }
 }
-// ========================================================
 
 
-// =========================================================
-//           ESTILOS PADRÃO (Com atualizações)
-// =========================================================
+// ===== ESTILOS PADRÃO (Com atualizações de animação) =====
 
 export const styleFloatingButton = {
     position: "fixed",
@@ -149,7 +152,8 @@ export const styleFloatingButton = {
     boxShadow: "0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08)",
     zIndex: "9999",
     border: "none",
-    transition: "background-color 0.2s ease, transform 0.2s ease",
+    transition: "background-color 0.2s ease, transform 0.2s ease-out", // <-- Transição atualizada
+    transform: 'scale(1)', // <-- Estado base
     fontFamily: "'Poppins', sans-serif"
 };
 
@@ -165,18 +169,17 @@ export const stylePopup = {
     overflow: "hidden", 
     display: "flex",
     flexDirection: "column",
-    transition: "opacity 0.3s ease-out, transform 0.3s ease-out, width 0.3s ease-out", 
+    transition: "opacity 0.2s ease-out, transform 0.2s ease-out, width 0.3s ease-out", // <-- Transição mais rápida
     opacity: "0",
     transform: "scale(0.95)",
     pointerEvents: "none",
     fontFamily: "'Poppins', sans-serif"
 };
 
-// ===== CORREÇÃO HEADER: Estilo do Header =====
 export const stylePopupHeader = {
     display: "flex",
     alignItems: "center",
-    justifyContent: "space-between", // <-- MUDANÇA AQUI
+    justifyContent: "space-between",
     padding: "16px",
     backgroundColor: "#f8f9fa",
     borderBottom: "1px solid #dadce0",
@@ -184,13 +187,12 @@ export const stylePopupHeader = {
     userSelect: "none",
     gap: "10px"
 };
-// ===========================================
 
 export const stylePopupTitle = {
     fontSize: "18px",
     fontWeight: "600",
     color: "#202124",
-    flexGrow: "1" // Permite que o container do título cresça
+    flexGrow: "1"
 };
 
 export const stylePopupVersion = {
@@ -198,12 +200,9 @@ export const stylePopupVersion = {
     fontWeight: "400",
     color: "#70757a",
     marginTop: "4px",
-    // marginLeft: "34px" // Não é mais necessário com flex
 };
 
-// ===== CORREÇÃO HEADER: Estilo do Botão Fechar =====
 export const stylePopupCloseBtn = {
-    // Posição absoluta removida
     fontSize: "20px",
     color: "#5f6368",
     cursor: "pointer",
@@ -212,9 +211,8 @@ export const stylePopupCloseBtn = {
     transition: "background-color 0.2s ease, color 0.2s ease",
     lineHeight: "1",
     zIndex: "10",
-    marginLeft: "8px" // Adiciona espaço entre os botões
+    marginLeft: "8px"
 };
-// ===============================================
 
 export const styleLabel = {
     display: "block",
@@ -266,9 +264,7 @@ export const styleCredit = {
     marginTop: "16px"
 };
 
-// ===== CORREÇÃO HEADER: Estilo do Botão Expandir =====
 export const styleExpandButton = {
-    // Posição absoluta removida
     fontSize: "18px",
     color: "#5f6368",
     cursor: "pointer",
@@ -276,7 +272,5 @@ export const styleExpandButton = {
     borderRadius: "50%",
     transition: "background-color 0.2s ease, color 0.2s ease",
     lineHeight: "1",
-    zIndex: "10",
-    marginRight: "10px"
+    zIndex: "10"
 };
-// ================================================
