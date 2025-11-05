@@ -265,7 +265,9 @@ export const styleCredit = {
 };
 
 export const styleExpandButton = {
-    fontSize: "18px",
+    fontSize: "22px",
+    lineHeight: '50px',
+    textAlign: 'center',
     color: "#5f6368",
     cursor: "pointer",
     padding: "4px",
