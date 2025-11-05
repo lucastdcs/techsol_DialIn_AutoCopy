@@ -26,7 +26,7 @@ import {
 } from './notes-data.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v2.7.8"; 
+    const CURRENT_VERSION = "v2.7.9"; 
 
     function copyHtmlToClipboard(html) {
         const container = document.createElement('div');
@@ -47,15 +47,22 @@ export function initCaseNotesAssistant() {
         }
         selection.removeAllRanges();
         document.body.removeChild(container);
-    }
+    };
 
     // --- UI (Módulo 1) ---
     const btn = document.createElement("button");
     btn.id = "autofill-floating-btn";
     btn.textContent = "✎";
     Object.assign(btn.style, styleFloatingButton, { top: "60%" });
-    btn.onmouseenter = () => (btn.style.background = "#1765c0");
-    btn.onmouseleave = () => (btn.style.background = "#1a73e8");
+    btn.onmouseenter = () => {
+        btn.style.background = "#1765c0";
+        btn.style.transform = "scale(1.1)";
+    };
+    btn.onmouseleave = () => {
+        btn.style.background = "#1a73e8";
+        btn.style.transform = "scale(1)";
+    };
+
     document.body.appendChild(btn);
     makeDraggable(btn);
 
