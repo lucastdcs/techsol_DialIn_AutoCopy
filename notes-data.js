@@ -63,7 +63,8 @@ export const SUBSTATUS_TEMPLATES = {
     },
     'NI_Awaiting_Inputs': {
         status: 'NI', name: 'NI - Awaiting Inputs', requiresTasks: false,
-        template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> NI - Awaiting Inputs<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>  <b>Tasks solicitadas pelo AM:</b><br>  {TASKS_SOLICITADAS}<br>  <b>Contexto/O que foi feito:</b><br>  {CONTEXTO_CALL}<br>  <b>Impedimento / Próximo passo (Anunciante):</b><br>  {IMPEDIMENTO_CLIENTE}<br>  <b>Minha Ação:</b><br>  {MINHA_ACAO}<br>  <b>Considerações adicionais:</b><br>  {CONSIDERACOES}<br>  <b>Dia do Follow-up (se aplicável):</b> {DIA}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
+        // CORREÇÃO: O campo {CONTEXTO_CALL} agora fica dentro de OnCall Comments
+        template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> NI - Awaiting Inputs<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>{CONTEXTO_CALL}<br>  <b>Tasks solicitadas pelo AM:</b><br>  {TASKS_SOLICITADAS}<br>  <b>Impedimento / Próximo passo (Anunciante):</b><br>  {IMPEDIMENTO_CLIENTE}<br>  <b>Minha Ação:</b><br>  {MINHA_ACAO}<br>  <b>Considerações adicionais:</b><br>  {CONSIDERACOES}<br>  <b>Dia do Follow-up (se aplicável):</b> {DIA}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
     },
    'IN_Inactive': {
         status: 'IN', name: 'IN - Not Reachable', requiresTasks: false,
@@ -72,6 +73,7 @@ export const SUBSTATUS_TEMPLATES = {
     
 'AS_Assigned': {
         status: 'AS', name: 'AS - Assigned', requiresTasks: false,
+        // CORREÇÃO: Adicionado {GTM_GA4_VERIFICADO}
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> AS - Assigned<br><br><b>Reason/comments:</b> Caso Reagendado.<br><br><b>OnCall Comments:</b><br>{MOTIVO_REAGENDAMENTO}<br>Data do reagendamento: {DATA_REAGENDAMENTO}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b> N/A<br><br><b>Multiple CIDs:</b> N/A`
     }
 };
@@ -79,8 +81,9 @@ export const SUBSTATUS_TEMPLATES = {
 export const textareaListFields = [
     'TASKS_SOLICITADAS', 'PASSOS_EXECUTADOS', 'RESULTADO', 'DUVIDAS', 'RESOLUCOES',
     'TASKS_IMPLEMENTADAS_CALL', 'PROXIMOS_PASSOS', 'CONTEXTO_CALL',
-    'IMPEDIMENTO_CLIENTE', 'MINHA_ACAO','GTM_GA4_VERIFICADO', 'SCREENSHOTS',
+    'IMPEDIMENTO_CLIENTE', 'MINHA_ACAO', 'SCREENSHOTS',
     'MOTIVO_REAGENDAMENTO'
+    // CORREÇÃO: 'GTM_GA4_VERIFICADO' removido daqui para ser um input simples
 ];
 
 export const textareaParagraphFields = ['CONSIDERACOES', 'COMENTARIOS'];
@@ -98,16 +101,20 @@ export const scenarioSnippets = {
         'field-MINHA_ACAO': "• Coloco o caso em 2/6.\n• Assim que o anunciante tiver o acesso ou a instalação for feita, abrirei um caso em BAU para dar continuidade.",
         'field-SCREENSHOTS': "• Print do painel do CMS mostrando a falta de permissão (opcional)."
     },
+    // ===== CORREÇÃO: Cenário de Follow-up Simplificado =====
     'quickfill-ni-followup': {
         'field-REASON_COMMENTS': "Aguardando informações por parte do anunciante (Follow-up 2/6)",
         'field-SPEAKEASY_ID': "N/A",
         'field-ON_CALL': "N/A",
-        'field-TASKS_SOLICITADAS': "• N/A",
         'field-CONTEXTO_CALL': "• No dia {DIA} do 2/6 fiz duas tentativas de contatos seguidas, mas não obtive resposta. Envio na sequência o email referente ao dia respectivo.",
-        'field-IMPEDIMENTO_CLIENTE': "• N/A",
-        'field-MINHA_ACAO': "• N/A",
+        'field-TASKS_SOLICITADAS': "N/A",
+        'field-IMPEDIMENTO_CLIENTE': "N/A",
+        'field-MINHA_ACAO': "N/A",
+        'field-GTM_GA4_VERIFICADO': 'N/A', // Preenche o campo que antes estava manual
         'field-SCREENSHOTS': "• Tentativa 1 -\n• Tentativa 2 -"
     },
+    // ========================================================
+
     // --- Cenários de SO (Combináveis) ---
     'quickfill-whatsapp': {
         'field-TASKS_SOLICITADAS': "• Criação de conversão para WHATSAPP",
@@ -149,16 +156,14 @@ export const scenarioSnippets = {
         'field-COMENTARIOS': "• O caso foi gerado e entrei na chamada no horário agendado.\n• O anunciante não compareceu à reunião.\n• Segui o protocolo de espera: realizei duas tentativas de ligação, aguardei os 10 minutos, e fiz uma terceira tentativa, sem sucesso.\n• Nenhuma das ligações foi atendida (ex: Caixa Postal).\n• Caso inativado por No-Show.",
         'field-SCREENSHOTS': "• Tentativa 1 (Caixa Postal) - https://screenshot.googleplex.com/BW3RLJNgf9SUVzx\n• Tentativa 2 (Caixa Postal) - https://screenshot.googleplex.com/9VEjdvGghueznHv\n• Tentativa 3 (Chamada desconectada) - https://screenshot.googleplex.com/C4yPjgvXN9kovcw"
     },
-    'quickfill-in-manual': { 
-        'field-REASON_COMMENTS': "Outro (Manual)"
-    },
-    // ===== NOVO CENÁRIO ADICIONADO AQUI =====
     'quickfill-in-2-6-final': {
         'field-REASON_COMMENTS': "Finalização (2/6)",
         'field-SPEAKEASY_ID': "-",
         'field-ON_CALL': "-",
         'field-COMENTARIOS': "• Dia 9 finalização do 2/6, durante o período do acompanhamento não houve retorno do anunciante, então o caso será encerrado.",
         'field-SCREENSHOTS': "• N/A"
+    },
+    'quickfill-in-manual': { 
+        'field-REASON_COMMENTS': "Outro (Manual)"
     }
-    // ======================================
 };

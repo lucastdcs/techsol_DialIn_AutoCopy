@@ -26,7 +26,7 @@ import {
 } from './notes-data.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v2.7.9"; 
+    const CURRENT_VERSION = "v2.8.0"; 
 
     function copyHtmlToClipboard(html) {
         const container = document.createElement('div');
