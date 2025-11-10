@@ -15,14 +15,13 @@ import {
     styleExpandButton
 } from '../shared/utils.js'; 
 
-
 import {
     TASKS_DB,
     SUBSTATUS_TEMPLATES,
     textareaListFields,
     textareaParagraphFields,
     scenarioSnippets
-} from './notes-data.js'; 
+} from './notes-data.js';
 
 export function initCaseNotesAssistant() {
     const CURRENT_VERSION = "v2.8.1"; 
@@ -127,6 +126,7 @@ export function initCaseNotesAssistant() {
         isExpanded = !isExpanded;
         const newWidth = isExpanded ? expandedWidth : initialWidth;
         const widthDifference = expandedWidth - initialWidth;
+
         popup.style.width = `${newWidth}px`;
         
         if (popup.style.right && popup.style.right !== 'auto') {
@@ -189,7 +189,7 @@ export function initCaseNotesAssistant() {
     Object.assign(credit.style, styleCredit);
     popup.appendChild(credit);
 
-    // --- CORREÇÃO: Variáveis da UI declaradas UMA VEZ ---
+    // --- Variáveis da UI declaradas UMA VEZ ---
     const step1Div = document.createElement("div");
     const stepSnippetsDiv = document.createElement("div");
     const snippetContainer = document.createElement("div");
@@ -202,7 +202,6 @@ export function initCaseNotesAssistant() {
     const buttonContainer = document.createElement("div");
     const copyButton = document.createElement("button");
     const generateButton = document.createElement("button");
-    // --- FIM DA CORREÇÃO ---
 
     function updateFieldsFromScenarios() {
         const activeScenarioInputs = snippetContainer.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
@@ -312,6 +311,7 @@ export function initCaseNotesAssistant() {
     }
 
     // --- Montagem da UI (continuação) ---
+    // CORREÇÃO: Removidas as declarações 'const' duplicadas
     step1Div.id = "step-1-selection";
     const mainStatusLabel = document.createElement("label");
     Object.assign(mainStatusLabel.style, styleLabel);
@@ -442,14 +442,13 @@ export function initCaseNotesAssistant() {
             return input;
         };
 
-        // ===== LISTA DE CENÁRIOS ATUALIZADA (NI) =====
         if (selectedSubStatusKey === 'NI_Awaiting_Inputs') {
             const radioName = "ni-scenario";
             const scenarios = [
                 { id: 'quickfill-ni-inicio-manual', text: 'Início 2/6 (Manual)'},
                 { id: 'quickfill-ni-cms-access', text: 'Início 2/6 (ADV sem acesso ao CMS)' },
-                { id: 'quickfill-ni-followup-bau', text: 'Follow-up 2/6 (BAU)' }, // Corrigido
-                { id: 'quickfill-ni-followup-lm', text: 'Follow-up 2/6 (LM)' } // Corrigido
+                { id: 'quickfill-ni-followup-bau', text: 'Follow-up 2/6 (BAU)' }, 
+                { id: 'quickfill-ni-followup-lm', text: 'Follow-up 2/6 (LM)' } 
             ];
             scenarios.forEach((scenario, index) => {
                 const radio = addSnippetInput(scenario, 'radio', snippetContainer);
@@ -487,7 +486,6 @@ export function initCaseNotesAssistant() {
             snippetAdded = true;
         }
         
-
        if (selectedSubStatusKey === 'IN_Inactive') {
              const radioName = "in-scenario";
              const scenarios = [
@@ -531,9 +529,9 @@ export function initCaseNotesAssistant() {
 
         dynamicFormFieldsContainer.innerHTML = '';
         
-
+        // ===== CORREÇÃO DA REGEX (Permitir números) =====
         const placeholders = templateData.template.match(/{([A-Z0-9_]+)}/g) || [];
-
+        // ===============================================
         
         const uniquePlaceholders = [...new Set(placeholders)];
         
