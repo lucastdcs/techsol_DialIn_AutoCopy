@@ -1,29 +1,23 @@
-// utils.js
+// src/modules/shared/utils.js
 
 export function initGlobalStylesAndFont() {
-    // Verifica se os estilos já foram injetados
     if (document.getElementById('google-font-poppins') && document.getElementById('techsol-global-styles')) {
         return;
     }
-
-    // Adiciona a fonte Poppins do Google Fonts
     const link = document.createElement('link');
     link.id = 'google-font-poppins';
     link.href = 'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap';
     link.rel = 'stylesheet';
     document.head.appendChild(link);
 
-    // Injeta estilos globais
     const style = document.createElement('style');
     style.id = 'techsol-global-styles';
     style.textContent = `
-        /* ... (estilos da scrollbar mantidos) ... */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #555; }
         
-        /* ... (estilos de input/textarea mantidos) ... */
         input:focus, textarea:focus, select:focus {
             outline: none !important;
             border-color: #1a73e8 !important;
@@ -32,38 +26,20 @@ export function initGlobalStylesAndFont() {
         button:active { transform: translateY(1px); }
         textarea.bullet-textarea { padding-left: 10px; }
         
-        /* ===== CORREÇÃO: ESPAÇAMENTO E ANIMAÇÃO DO CALL SCRIPT ===== */
         .csa-group-container { border-left: 3px solid transparent; padding-left: 5px; transition: all 0.3s ease-out; }
         .csa-group-title { transition: color 0.3s ease-out; }
         .csa-group-container.csa-group-completed { border-left: 3px solid #34a853; }
         .csa-group-container.csa-group-completed .csa-group-title { color: #34a853; }
         
         .csa-li { 
-            margin: 8px 0 !important; /* <<< CORRIGIDO (era 4px) */
-            padding: 8px 10px;
-            border-radius: 6px;
-            border: 2px solid transparent;
-            transition: all 0.2s ease; /* Transição geral */
-            font-size: 14px;
-            cursor: pointer;
-            user-select: none;
-            background-color: #f8f9fa;
-            color: #202124;
-            line-height: 1.4;
-            text-decoration: none;
-            transform: scale(1);
+            margin: 8px 0 !important; /* CORREÇÃO: Espaçamento aumentado */
+            padding: 8px 10px; border-radius: 6px; border: 2px solid transparent;
+            transition: all 0.2s ease; font-size: 14px; cursor: pointer; user-select: none;
+            background-color: #f8f9fa; color: #202124; line-height: 1.4;
+            text-decoration: none; transform: scale(1);
         }
-        /* ANIMAÇÃO DE HOVER (SALTO) */
-        .csa-li:hover { 
-            background-color: #f1f3f4;
-            transform: scale(1.02); 
-        }
-        .csa-li.csa-completed { 
-            text-decoration: line-through; 
-            color: #5f6368; 
-            transform: scale(0.98); 
-        }
-        /* ======================================================== */
+        .csa-li:hover { background-color: #f1f3f4; transform: scale(1.02); }
+        .csa-li.csa-completed { text-decoration: line-through; color: #5f6368; transform: scale(0.98); }
     `;
     document.head.appendChild(style);
 }
@@ -100,6 +76,7 @@ export function makeDraggable(element, handle = null) {
     dragHandle.onmousedown = dragMouseDown;
 
     function dragMouseDown(e) {
+        // CORREÇÃO: Impede o drag se clicar em botões
         if (e.target.tagName === 'INPUT' || 
             e.target.tagName === 'TEXTAREA' || 
             e.target.tagName === 'SELECT' || 
@@ -133,8 +110,9 @@ export function makeDraggable(element, handle = null) {
     }
 }
 
-
-// ===== ESTILOS PADRÃO (Com atualizações de animação) =====
+// =========================================================
+//           ESTILOS PADRÃO (Com atualizações)
+// =========================================================
 
 export const styleFloatingButton = {
     position: "fixed",
@@ -152,8 +130,8 @@ export const styleFloatingButton = {
     boxShadow: "0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08)",
     zIndex: "9999",
     border: "none",
-    transition: "background-color 0.2s ease, transform 0.2s ease-out", // <-- Transição atualizada
-    transform: 'scale(1)', // <-- Estado base
+    transition: "background-color 0.2s ease, transform 0.2s ease-out", 
+    transform: 'scale(1)', 
     fontFamily: "'Poppins', sans-serif"
 };
 
@@ -169,7 +147,7 @@ export const stylePopup = {
     overflow: "hidden", 
     display: "flex",
     flexDirection: "column",
-    transition: "opacity 0.2s ease-out, transform 0.2s ease-out, width 0.3s ease-out", // <-- Transição mais rápida
+    transition: "opacity 0.2s ease-out, transform 0.2s ease-out, width 0.3s ease-out", 
     opacity: "0",
     transform: "scale(0.95)",
     pointerEvents: "none",
@@ -179,7 +157,7 @@ export const stylePopup = {
 export const stylePopupHeader = {
     display: "flex",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "space-between", // <-- CORREÇÃO
     padding: "16px",
     backgroundColor: "#f8f9fa",
     borderBottom: "1px solid #dadce0",
@@ -211,7 +189,7 @@ export const stylePopupCloseBtn = {
     transition: "background-color 0.2s ease, color 0.2s ease",
     lineHeight: "1",
     zIndex: "10",
-    marginLeft: "8px"
+    marginLeft: "8px" // <-- CORREÇÃO
 };
 
 export const styleLabel = {
@@ -225,7 +203,7 @@ export const styleLabel = {
 
 export const styleSelect = {
     width: "100%",
-    padding: "10px 36px 10px 12px", 
+    padding: "10px 36px 10px 12px", // <-- CORREÇÃO
     borderRadius: "8px",
     border: "1px solid #dadce0",
     backgroundColor: "#fff",
@@ -265,9 +243,7 @@ export const styleCredit = {
 };
 
 export const styleExpandButton = {
-    fontSize: "22px",
-    lineHeight: '50px',
-    textAlign: 'center',
+    fontSize: "18px",
     color: "#5f6368",
     cursor: "pointer",
     padding: "4px",

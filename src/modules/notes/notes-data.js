@@ -67,13 +67,11 @@ export const SUBSTATUS_TEMPLATES = {
     },
    'IN_Inactive': {
         status: 'IN', name: 'IN - Not Reachable', requiresTasks: false,
-        // CORREÇÃO: Adicionado {GTM_GA4_VERIFICADO}
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> IN - Not Reachable<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>{COMENTARIOS}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
     },
     
 'AS_Assigned': {
         status: 'AS', name: 'AS - Assigned', requiresTasks: false,
-        // CORREÇÃO: Adicionado {GTM_GA4_VERIFICADO}
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> AS - Assigned<br><br><b>Reason/comments:</b> Caso Reagendado.<br><br><b>OnCall Comments:</b><br>{MOTIVO_REAGENDAMENTO}<br>Data do reagendamento: {DATA_REAGENDAMENTO}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b> N/A<br><br><b>Multiple CIDs:</b> N/A`
     }
 };
@@ -83,7 +81,6 @@ export const textareaListFields = [
     'TASKS_IMPLEMENTADAS_CALL', 'PROXIMOS_PASSOS', 'CONTEXTO_CALL',
     'IMPEDIMENTO_CLIENTE', 'MINHA_ACAO', 'SCREENSHOTS',
     'MOTIVO_REAGENDAMENTO'
-    // CORREÇÃO: 'GTM_GA4_VERIFICADO' removido daqui (é um input simples)
 ];
 
 export const textareaParagraphFields = ['CONSIDERACOES', 'COMENTARIOS'];
@@ -101,7 +98,6 @@ export const scenarioSnippets = {
         'field-MINHA_ACAO': "• Coloco o caso em 2/6.\n• Assim que o anunciante tiver o acesso ou a instalação for feita, abrirei um caso em BAU para dar continuidade.",
         'field-SCREENSHOTS': "• Print do painel do CMS mostrando a falta de permissão (opcional)."
     },
-    // ATUALIZADO: Cenário de Follow-up (BAU)
     'quickfill-ni-followup-bau': { 
         'field-REASON_COMMENTS': "Aguardando informações por parte do anunciante (Follow-up BAU 2/6)",
         'field-SPEAKEASY_ID': "N/A",
@@ -113,7 +109,6 @@ export const scenarioSnippets = {
         'field-GTM_GA4_VERIFICADO': 'N/A', 
         'field-SCREENSHOTS': "• Tentativa 1 -\n• Tentativa 2 -"
     },
-    // NOVO: Cenário de Follow-up (LM)
     'quickfill-ni-followup-lm': {
         'field-REASON_COMMENTS': "Aguardando informações por parte do anunciante (Follow-up LM 2/6)",
         'field-SPEAKEASY_ID': "N/A",
@@ -157,13 +152,12 @@ export const scenarioSnippets = {
     },
     
     // --- Cenários de IN (Exclusivos - Rádio) ---
-    'quickfill-in-nrp-bau': { // Renomeado
+    'quickfill-in-nrp-bau': { 
         'field-REASON_COMMENTS': "NRP (BAU - 3 tentativas)",
         'field-COMENTARIOS': "• Duas ligações seguidas, e-mail \"Antes dos 10 minutos\" e uma terceira e ultima tentativa de ligação.\n• Não houve resposta às tentativas de ligação ou e-mail, por isso o caso será inativado.",
         'field-SCREENSHOTS': "• Tentativa 1 -\n• Tentativa 2 -\n• Tentativa 3 -",
         'field-GTM_GA4_VERIFICADO': "N/A"
     },
-    // NOVO: Cenário NRP (LM)
     'quickfill-in-nrp-lm': {
         'field-REASON_COMMENTS': "NRP (LM - Sem tentativas)",
         'field-SPEAKEASY_ID': "N/A",
@@ -172,7 +166,7 @@ export const scenarioSnippets = {
         'field-SCREENSHOTS': "• Caso LM, sem tentativas de ligação.",
         'field-GTM_GA4_VERIFICADO': "N/A"
     },
-    'quickfill-in-no-show-bau': { // Renomeado
+    'quickfill-in-no-show-bau': { 
         'field-REASON_COMMENTS': "Anunciante não compareceu à chamada (No-Show BAU).",
         'field-ON_CALL': "N/A", 
         'field-COMENTARIOS': "• O caso foi gerado e entrei na chamada no horário agendado.\n• O anunciante não compareceu à reunião.\n• Segui o protocolo de espera (BAU): realizei duas tentativas de ligação, aguardei os 10 minutos, e fiz uma terceira tentativa, sem sucesso.\n• Nenhuma das ligações foi atendida (ex: Caixa Postal).\n• Caso inativado por No-Show.",
@@ -189,6 +183,6 @@ export const scenarioSnippets = {
     },
     'quickfill-in-manual': { 
         'field-REASON_COMMENTS': "Outro (Manual)",
-        'field-GTM_GA4_VERIFICADO': "N/A" // Adicionado para segurança
+        'field-GTM_GA4_VERIFICADO': "N/A"
     }
 };
