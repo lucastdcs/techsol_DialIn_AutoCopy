@@ -1,4 +1,4 @@
-// notes-data.js
+// src/modules/notes/notes-data.js
 
 export const TASKS_DB = {
    'gtm_installation': {
@@ -63,12 +63,12 @@ export const SUBSTATUS_TEMPLATES = {
     },
     'NI_Awaiting_Inputs': {
         status: 'NI', name: 'NI - Awaiting Inputs', requiresTasks: false,
-        // CORREÇÃO: O campo {CONTEXTO_CALL} agora fica dentro de OnCall Comments
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> NI - Awaiting Inputs<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>{CONTEXTO_CALL}<br>  <b>Tasks solicitadas pelo AM:</b><br>  {TASKS_SOLICITADAS}<br>  <b>Impedimento / Próximo passo (Anunciante):</b><br>  {IMPEDIMENTO_CLIENTE}<br>  <b>Minha Ação:</b><br>  {MINHA_ACAO}<br>  <b>Considerações adicionais:</b><br>  {CONSIDERACOES}<br>  <b>Dia do Follow-up (se aplicável):</b> {DIA}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
     },
    'IN_Inactive': {
         status: 'IN', name: 'IN - Not Reachable', requiresTasks: false,
-        template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> IN - Not Reachable<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>{COMENTARIOS}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
+        // CORREÇÃO: Adicionado {GTM_GA4_VERIFICADO}
+        template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> IN - Not Reachable<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>{COMENTARIOS}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
     },
     
 'AS_Assigned': {
@@ -83,7 +83,7 @@ export const textareaListFields = [
     'TASKS_IMPLEMENTADAS_CALL', 'PROXIMOS_PASSOS', 'CONTEXTO_CALL',
     'IMPEDIMENTO_CLIENTE', 'MINHA_ACAO', 'SCREENSHOTS',
     'MOTIVO_REAGENDAMENTO'
-    // CORREÇÃO: 'GTM_GA4_VERIFICADO' removido daqui para ser um input simples
+    // CORREÇÃO: 'GTM_GA4_VERIFICADO' removido daqui (é um input simples)
 ];
 
 export const textareaParagraphFields = ['CONSIDERACOES', 'COMENTARIOS'];
@@ -101,19 +101,30 @@ export const scenarioSnippets = {
         'field-MINHA_ACAO': "• Coloco o caso em 2/6.\n• Assim que o anunciante tiver o acesso ou a instalação for feita, abrirei um caso em BAU para dar continuidade.",
         'field-SCREENSHOTS': "• Print do painel do CMS mostrando a falta de permissão (opcional)."
     },
-    // ===== CORREÇÃO: Cenário de Follow-up Simplificado =====
-    'quickfill-ni-followup': {
-        'field-REASON_COMMENTS': "Aguardando informações por parte do anunciante (Follow-up 2/6)",
+    // ATUALIZADO: Cenário de Follow-up (BAU)
+    'quickfill-ni-followup-bau': { 
+        'field-REASON_COMMENTS': "Aguardando informações por parte do anunciante (Follow-up BAU 2/6)",
         'field-SPEAKEASY_ID': "N/A",
         'field-ON_CALL': "N/A",
         'field-CONTEXTO_CALL': "• No dia {DIA} do 2/6 fiz duas tentativas de contatos seguidas, mas não obtive resposta. Envio na sequência o email referente ao dia respectivo.",
         'field-TASKS_SOLICITADAS': "N/A",
         'field-IMPEDIMENTO_CLIENTE': "N/A",
         'field-MINHA_ACAO': "N/A",
-        'field-GTM_GA4_VERIFICADO': 'N/A', // Preenche o campo que antes estava manual
+        'field-GTM_GA4_VERIFICADO': 'N/A', 
         'field-SCREENSHOTS': "• Tentativa 1 -\n• Tentativa 2 -"
     },
-    // ========================================================
+    // NOVO: Cenário de Follow-up (LM)
+    'quickfill-ni-followup-lm': {
+        'field-REASON_COMMENTS': "Aguardando informações por parte do anunciante (Follow-up LM 2/6)",
+        'field-SPEAKEASY_ID': "N/A",
+        'field-ON_CALL': "N/A",
+        'field-CONTEXTO_CALL': "• No dia {DIA} do 2/6 enviei e-mail de follow-up (caso LM, sem tentativas de ligação), mas não obtive resposta.",
+        'field-TASKS_SOLICITADAS': "N/A",
+        'field-IMPEDIMENTO_CLIENTE': "N/A",
+        'field-MINHA_ACAO': "N/A",
+        'field-GTM_GA4_VERIFICADO': 'N/A',
+        'field-SCREENSHOTS': "• E-mail de follow-up enviado (LM) -"
+    },
 
     // --- Cenários de SO (Combináveis) ---
     'quickfill-whatsapp': {
@@ -144,26 +155,40 @@ export const scenarioSnippets = {
     'quickfill-as-no-access': {
          'field-MOTIVO_REAGENDAMENTO': '• Precisamos reagendar o caso, já que o anunciante não tinha os acessos necessários para podermos implementar as tasks'
     },
+    
     // --- Cenários de IN (Exclusivos - Rádio) ---
-    'quickfill-in-nrp-standard': { 
-        'field-REASON_COMMENTS': "NRP",
+    'quickfill-in-nrp-bau': { // Renomeado
+        'field-REASON_COMMENTS': "NRP (BAU - 3 tentativas)",
         'field-COMENTARIOS': "• Duas ligações seguidas, e-mail \"Antes dos 10 minutos\" e uma terceira e ultima tentativa de ligação.\n• Não houve resposta às tentativas de ligação ou e-mail, por isso o caso será inativado.",
-        'field-SCREENSHOTS': "• Tentativa 1 -\n• Tentativa 2 -\n• Tentativa 3 -"
+        'field-SCREENSHOTS': "• Tentativa 1 -\n• Tentativa 2 -\n• Tentativa 3 -",
+        'field-GTM_GA4_VERIFICADO': "N/A"
     },
-    'quickfill-in-no-show': { 
-        'field-REASON_COMMENTS': "Anunciante não compareceu à chamada (No-Show).",
+    // NOVO: Cenário NRP (LM)
+    'quickfill-in-nrp-lm': {
+        'field-REASON_COMMENTS': "NRP (LM - Sem tentativas)",
+        'field-SPEAKEASY_ID': "N/A",
         'field-ON_CALL': "N/A",
-        'field-COMENTARIOS': "• O caso foi gerado e entrei na chamada no horário agendado.\n• O anunciante não compareceu à reunião.\n• Segui o protocolo de espera: realizei duas tentativas de ligação, aguardei os 10 minutos, e fiz uma terceira tentativa, sem sucesso.\n• Nenhuma das ligações foi atendida (ex: Caixa Postal).\n• Caso inativado por No-Show.",
-        'field-SCREENSHOTS': "• Tentativa 1 (Caixa Postal) - https://screenshot.googleplex.com/BW3RLJNgf9SUVzx\n• Tentativa 2 (Caixa Postal) - https://screenshot.googleplex.com/9VEjdvGghueznHv\n• Tentativa 3 (Chamada desconectada) - https://screenshot.googleplex.com/C4yPjgvXN9kovcw"
+        'field-COMENTARIOS': "• Tentativa de contato via e-mail (sem chamada) para o caso LM, sem resposta.\n• Caso inativado.",
+        'field-SCREENSHOTS': "• Caso LM, sem tentativas de ligação.",
+        'field-GTM_GA4_VERIFICADO': "N/A"
+    },
+    'quickfill-in-no-show-bau': { // Renomeado
+        'field-REASON_COMMENTS': "Anunciante não compareceu à chamada (No-Show BAU).",
+        'field-ON_CALL': "N/A", 
+        'field-COMENTARIOS': "• O caso foi gerado e entrei na chamada no horário agendado.\n• O anunciante não compareceu à reunião.\n• Segui o protocolo de espera (BAU): realizei duas tentativas de ligação, aguardei os 10 minutos, e fiz uma terceira tentativa, sem sucesso.\n• Nenhuma das ligações foi atendida (ex: Caixa Postal).\n• Caso inativado por No-Show.",
+        'field-SCREENSHOTS': "• Tentativa 1 (Caixa Postal) - \n• Tentativa 2 (Caixa Postal) - \n• Tentativa 3 (Chamada desconectada) - ",
+        'field-GTM_GA4_VERIFICADO': "N/A"
     },
     'quickfill-in-2-6-final': {
         'field-REASON_COMMENTS': "Finalização (2/6)",
         'field-SPEAKEASY_ID': "-",
         'field-ON_CALL': "-",
         'field-COMENTARIOS': "• Dia 9 finalização do 2/6, durante o período do acompanhamento não houve retorno do anunciante, então o caso será encerrado.",
-        'field-SCREENSHOTS': "• N/A"
+        'field-SCREENSHOTS': "• N/A",
+        'field-GTM_GA4_VERIFICADO': "N/A"
     },
     'quickfill-in-manual': { 
-        'field-REASON_COMMENTS': "Outro (Manual)"
+        'field-REASON_COMMENTS': "Outro (Manual)",
+        'field-GTM_GA4_VERIFICADO': "N/A" // Adicionado para segurança
     }
 };
