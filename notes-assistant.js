@@ -1,5 +1,6 @@
-// src/modules/notes/notes-assistant.js
+// notes-assistant.js
 
+// CORREÇÃO: Usando caminhos relativos (com ./)
 import { 
     showToast, 
     makeDraggable,
@@ -13,8 +14,9 @@ import {
     stylePopupVersion,
     styleCredit,
     styleExpandButton
-} from '../shared/utils.js'; 
+} from './utils.js'; 
 
+// CORREÇÃO: Usando caminhos relativos (com ./)
 import {
     TASKS_DB,
     SUBSTATUS_TEMPLATES,
@@ -24,7 +26,7 @@ import {
 } from './notes-data.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v2.8.1"; 
+    const CURRENT_VERSION = "v2.8.0"; 
 
     function copyHtmlToClipboard(html) {
         const container = document.createElement('div');
@@ -60,6 +62,7 @@ export function initCaseNotesAssistant() {
         btn.style.background = "#1a73e8";
         btn.style.transform = "scale(1)";
     };
+
     document.body.appendChild(btn);
     makeDraggable(btn);
 
@@ -69,54 +72,40 @@ export function initCaseNotesAssistant() {
 
     const header = document.createElement("div");
     Object.assign(header.style, stylePopupHeader);
-    makeDraggable(popup, header); 
-
-    const headerLeft = document.createElement("div");
-    Object.assign(headerLeft.style, { display: 'flex', alignItems: 'center', gap: '10px' });
-    
     const logo = document.createElement("img");
     logo.src = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
     Object.assign(logo.style, { width: "24px", height: "24px" });
-    
     const titleContainer = document.createElement("div");
-    Object.assign(titleContainer.style, { display: 'flex', flexDirection: 'column' });
+    Object.assign(titleContainer.style, { display: 'flex', flexDirection: 'column', flexGrow: '1' });
 
     const title = document.createElement("div");
     title.textContent = "Case Notes Assistant";
     Object.assign(title.style, stylePopupTitle);
-    
+    titleContainer.appendChild(title);
+
     const versionDisplay = document.createElement("div");
     versionDisplay.textContent = CURRENT_VERSION;
     Object.assign(versionDisplay.style, stylePopupVersion);
-
-    titleContainer.appendChild(title);
     titleContainer.appendChild(versionDisplay);
-    headerLeft.appendChild(logo);
-    headerLeft.appendChild(titleContainer);
-    
-    const headerRight = document.createElement("div");
-    Object.assign(headerRight.style, { display: 'flex', alignItems: 'center' });
-
-    const expandBtn = document.createElement("div");
-    expandBtn.textContent = "↔";
-    expandBtn.classList.add('no-drag'); 
-    Object.assign(expandBtn.style, styleExpandButton);
-    expandBtn.onmouseover = () => expandBtn.style.backgroundColor = '#e8eaed';
-    expandBtn.onmouseout = () => expandBtn.style.backgroundColor = 'transparent';
-
+        
     const closeBtn = document.createElement("div");
     closeBtn.textContent = "✕";
-    closeBtn.classList.add('no-drag'); 
     Object.assign(closeBtn.style, stylePopupCloseBtn);
-    closeBtn.onmouseover = () => closeBtn.style.backgroundColor = '#e8eaed';
-    closeBtn.onmouseout = () => closeBtn.style.backgroundColor = 'transparent';
+    closeBtn.onclick = () => togglePopup(false);
+    const expandBtn = document.createElement("div");
+    expandBtn.textContent = "↔";
+    Object.assign(expandBtn.style, styleExpandButton);
     
-    headerRight.appendChild(expandBtn);
-    headerRight.appendChild(closeBtn);
- 
+    header.appendChild(logo);
+    header.appendChild(titleContainer);
     popup.appendChild(header);
-    header.appendChild(headerLeft);
-    header.appendChild(headerRight);
+    makeDraggable(popup, header);
+    
+    
+    header.appendChild(expandBtn);
+    header.appendChild(closeBtn);
+
+
 
     let isExpanded = false;
     const initialWidth = parseInt(stylePopup.width, 10);
@@ -140,8 +129,6 @@ export function initCaseNotesAssistant() {
             }
         }
     };
-    
-    closeBtn.onclick = () => togglePopup(false);
 
     // Estilos locais do Módulo 1
     const styleInput = {
@@ -312,14 +299,15 @@ export function initCaseNotesAssistant() {
     }
 
     // --- Montagem da UI (continuação) ---
+    // CORREÇÃO: Removidas as declarações 'const' duplicadas
     step1Div.id = "step-1-selection";
-    // const mainStatusLabel = document.createElement("label"); // Removido, já declarado
+    const mainStatusLabel = document.createElement("label");
     Object.assign(mainStatusLabel.style, styleLabel);
     mainStatusLabel.textContent = "Status Principal:";
     mainStatusSelect.id = "main-status";
     mainStatusSelect.innerHTML = `<option value="">-- Selecione --</option><option value="NI">NI - Need Info</option><option value="SO">SO - Solution Offered</option><option value="IN">IN - Inactive</option><option value="AS">AS - Assigned</option>`;
     Object.assign(mainStatusSelect.style, styleSelect);
-    // const subStatusLabel = document.createElement("label"); // Removido, já declarado
+    const subStatusLabel = document.createElement("label");
     Object.assign(subStatusLabel.style, styleLabel);
     subStatusLabel.textContent = "Substatus:";
     subStatusSelect.id = "sub-status";
@@ -442,14 +430,12 @@ export function initCaseNotesAssistant() {
             return input;
         };
 
-        // ===== LISTA DE CENÁRIOS ATUALIZADA (NI) =====
         if (selectedSubStatusKey === 'NI_Awaiting_Inputs') {
             const radioName = "ni-scenario";
             const scenarios = [
                 { id: 'quickfill-ni-inicio-manual', text: 'Início 2/6 (Manual)'},
                 { id: 'quickfill-ni-cms-access', text: 'Início 2/6 (ADV sem acesso ao CMS)' },
-                { id: 'quickfill-ni-followup-bau', text: 'Follow-up 2/6 (BAU)' }, // Corrigido
-                { id: 'quickfill-ni-followup-lm', text: 'Follow-up 2/6 (LM)' } // Corrigido
+                { id: 'quickfill-ni-followup', text: 'Follow-up 2/6' }
             ];
             scenarios.forEach((scenario, index) => {
                 const radio = addSnippetInput(scenario, 'radio', snippetContainer);
@@ -487,13 +473,11 @@ export function initCaseNotesAssistant() {
             snippetAdded = true;
         }
         
-       // ===== LISTA DE CENÁRIOS ATUALIZADA (IN) =====
        if (selectedSubStatusKey === 'IN_Inactive') {
              const radioName = "in-scenario";
              const scenarios = [
-                { id: 'quickfill-in-nrp-bau', text: 'NRP (BAU - 3 tentativas)' }, // Corrigido
-                { id: 'quickfill-in-nrp-lm', text: 'NRP (LM - Sem tentativas)' }, // Corrigido
-                { id: 'quickfill-in-no-show-bau', text: 'No-Show (BAU - 3 tentativas)' }, // Corrigido
+                { id: 'quickfill-in-nrp-standard', text: 'NRP Padrão (3 tentativas)' },
+                { id: 'quickfill-in-no-show', text: 'No-Show (LM)' }, 
                 { id: 'quickfill-in-2-6-final', text: 'Finalização 2/6 (Sem Resposta)' },
                 { id: 'quickfill-in-manual', text: 'Outro (Manual)' }
              ];
