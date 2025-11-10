@@ -1,5 +1,6 @@
 // src/modules/notes/notes-assistant.js
 
+// CORREÇÃO: Usando caminhos relativos corretos
 import { 
     showToast, 
     makeDraggable,
@@ -15,6 +16,7 @@ import {
     styleExpandButton
 } from '../shared/utils.js'; 
 
+// CORREÇÃO: Usando caminhos relativos corretos
 import {
     TASKS_DB,
     SUBSTATUS_TEMPLATES,
@@ -24,7 +26,7 @@ import {
 } from './notes-data.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v2.8.1"; 
+    const CURRENT_VERSION = "v2.7.9"; 
 
     function copyHtmlToClipboard(html) {
         const container = document.createElement('div');
@@ -189,7 +191,7 @@ export function initCaseNotesAssistant() {
     Object.assign(credit.style, styleCredit);
     popup.appendChild(credit);
 
-    // --- Variáveis da UI declaradas UMA VEZ ---
+    // --- CORREÇÃO: Variáveis da UI declaradas UMA VEZ ---
     const step1Div = document.createElement("div");
     const stepSnippetsDiv = document.createElement("div");
     const snippetContainer = document.createElement("div");
@@ -202,6 +204,7 @@ export function initCaseNotesAssistant() {
     const buttonContainer = document.createElement("div");
     const copyButton = document.createElement("button");
     const generateButton = document.createElement("button");
+    // --- FIM DA CORREÇÃO ---
 
     function updateFieldsFromScenarios() {
         const activeScenarioInputs = snippetContainer.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
@@ -311,7 +314,6 @@ export function initCaseNotesAssistant() {
     }
 
     // --- Montagem da UI (continuação) ---
-    // CORREÇÃO: Removidas as declarações 'const' duplicadas
     step1Div.id = "step-1-selection";
     const mainStatusLabel = document.createElement("label");
     Object.assign(mainStatusLabel.style, styleLabel);
@@ -442,6 +444,7 @@ export function initCaseNotesAssistant() {
             return input;
         };
 
+        // ===== LISTA DE CENÁRIOS ATUALIZADA (NI) =====
         if (selectedSubStatusKey === 'NI_Awaiting_Inputs') {
             const radioName = "ni-scenario";
             const scenarios = [
@@ -486,6 +489,7 @@ export function initCaseNotesAssistant() {
             snippetAdded = true;
         }
         
+       // ===== LISTA DE CENÁRIOS ATUALIZADA (IN) =====
        if (selectedSubStatusKey === 'IN_Inactive') {
              const radioName = "in-scenario";
              const scenarios = [

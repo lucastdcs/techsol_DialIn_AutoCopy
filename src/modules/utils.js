@@ -1,6 +1,7 @@
 // src/modules/shared/utils.js
 
 export function initGlobalStylesAndFont() {
+    // ... (código mantido, incluindo a correção do .csa-li) ...
     if (document.getElementById('google-font-poppins') && document.getElementById('techsol-global-styles')) {
         return;
     }
@@ -9,7 +10,6 @@ export function initGlobalStylesAndFont() {
     link.href = 'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap';
     link.rel = 'stylesheet';
     document.head.appendChild(link);
-
     const style = document.createElement('style');
     style.id = 'techsol-global-styles';
     style.textContent = `
@@ -17,7 +17,6 @@ export function initGlobalStylesAndFont() {
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #555; }
-        
         input:focus, textarea:focus, select:focus {
             outline: none !important;
             border-color: #1a73e8 !important;
@@ -32,7 +31,7 @@ export function initGlobalStylesAndFont() {
         .csa-group-container.csa-group-completed .csa-group-title { color: #34a853; }
         
         .csa-li { 
-            margin: 8px 0 !important; /* CORREÇÃO: Espaçamento aumentado */
+            margin: 8px 0 !important; /* Espaçamento aumentado */
             padding: 8px 10px; border-radius: 6px; border: 2px solid transparent;
             transition: all 0.2s ease; font-size: 14px; cursor: pointer; user-select: none;
             background-color: #f8f9fa; color: #202124; line-height: 1.4;
@@ -72,11 +71,8 @@ export function showToast(message, opts = {}) {
 export function makeDraggable(element, handle = null) {
     let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
     const dragHandle = handle || element;
-
     dragHandle.onmousedown = dragMouseDown;
-
     function dragMouseDown(e) {
-        // CORREÇÃO: Impede o drag se clicar em botões
         if (e.target.tagName === 'INPUT' || 
             e.target.tagName === 'TEXTAREA' || 
             e.target.tagName === 'SELECT' || 
@@ -84,7 +80,6 @@ export function makeDraggable(element, handle = null) {
             e.target.classList.contains('no-drag')) {
             return; 
         }
-        
         e = e || window.event;
         e.preventDefault();
         pos3 = e.clientX;
@@ -92,7 +87,6 @@ export function makeDraggable(element, handle = null) {
         document.onmouseup = closeDragElement;
         document.onmousemove = elementDrag;
     }
-
     function elementDrag(e) {
         e = e || window.event;
         e.preventDefault();
@@ -103,7 +97,6 @@ export function makeDraggable(element, handle = null) {
         element.style.top = (element.offsetTop - pos2) + "px";
         element.style.left = (element.offsetLeft - pos1) + "px";
     }
-
     function closeDragElement() {
         document.onmouseup = null;
         document.onmousemove = null;
@@ -113,7 +106,6 @@ export function makeDraggable(element, handle = null) {
 // =========================================================
 //           ESTILOS PADRÃO (Com atualizações)
 // =========================================================
-
 export const styleFloatingButton = {
     position: "fixed",
     right: "20px",
@@ -134,7 +126,6 @@ export const styleFloatingButton = {
     transform: 'scale(1)', 
     fontFamily: "'Poppins', sans-serif"
 };
-
 export const stylePopup = {
     position: "fixed",
     top: "calc(50% - 250px)",
@@ -153,11 +144,10 @@ export const stylePopup = {
     pointerEvents: "none",
     fontFamily: "'Poppins', sans-serif"
 };
-
 export const stylePopupHeader = {
     display: "flex",
     alignItems: "center",
-    justifyContent: "space-between", // <-- CORREÇÃO
+    justifyContent: "space-between",
     padding: "16px",
     backgroundColor: "#f8f9fa",
     borderBottom: "1px solid #dadce0",
@@ -165,21 +155,18 @@ export const stylePopupHeader = {
     userSelect: "none",
     gap: "10px"
 };
-
 export const stylePopupTitle = {
     fontSize: "18px",
     fontWeight: "600",
     color: "#202124",
     flexGrow: "1"
 };
-
 export const stylePopupVersion = {
     fontSize: "12px",
     fontWeight: "400",
     color: "#70757a",
     marginTop: "4px",
 };
-
 export const stylePopupCloseBtn = {
     fontSize: "20px",
     color: "#5f6368",
@@ -189,9 +176,8 @@ export const stylePopupCloseBtn = {
     transition: "background-color 0.2s ease, color 0.2s ease",
     lineHeight: "1",
     zIndex: "10",
-    marginLeft: "8px" // <-- CORREÇÃO
+    marginLeft: "8px"
 };
-
 export const styleLabel = {
     display: "block",
     fontSize: "14px",
@@ -200,10 +186,9 @@ export const styleLabel = {
     marginBottom: "8px",
     marginTop: "16px"
 };
-
 export const styleSelect = {
     width: "100%",
-    padding: "10px 36px 10px 12px", // <-- CORREÇÃO
+    padding: "10px 36px 10px 12px", 
     borderRadius: "8px",
     border: "1px solid #dadce0",
     backgroundColor: "#fff",
@@ -218,7 +203,6 @@ export const styleSelect = {
     transition: "border-color 0.2s ease, box-shadow 0.2s ease",
     fontFamily: "'Poppins', sans-serif"
 };
-
 export const styleButtonBase = {
     flex: "1 1 0",
     padding: "10px 0",
@@ -232,7 +216,6 @@ export const styleButtonBase = {
     transition: "background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease",
     boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
 };
-
 export const styleCredit = {
     fontSize: "10px",
     color: "#9aa0a6",
@@ -241,7 +224,6 @@ export const styleCredit = {
     borderTop: "1px solid #eee",
     marginTop: "16px"
 };
-
 export const styleExpandButton = {
     fontSize: "18px",
     color: "#5f6368",
