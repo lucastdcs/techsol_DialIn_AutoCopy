@@ -1,7 +1,7 @@
 // src/app.js
 
 // CORREÇÃO: Usando os caminhos corretos da pasta 'modules'
-import { initGlobalStylesAndFont } from './modules/shared/utils.js';
+import { initGlobalStylesAndFont } from './shared/utils.js';
 import { initCaseNotesAssistant } from './modules/notes/notes-assistant.js';
 import { initCallScriptAssistant } from './modules/call-script/call-script-assistant.js';
 

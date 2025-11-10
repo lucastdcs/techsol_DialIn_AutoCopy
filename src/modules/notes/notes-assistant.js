@@ -14,7 +14,7 @@ import {
     stylePopupVersion,
     styleCredit,
     styleExpandButton
-} from '../shared/utils.js'; 
+} from '../../shared/utils.js'; 
 
 // CORREÇÃO: Usando caminhos relativos corretos
 import {

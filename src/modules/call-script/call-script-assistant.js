@@ -12,7 +12,7 @@ import {
     styleFloatingButton,
     stylePopupVersion,
     styleCredit
-} from '../shared/utils.js'; // <-- Caminho corrigido
+} from '../../shared/utils.js'; // <-- Caminho corrigido
 
 // CORREÇÃO: Usando caminhos relativos (com ./)
 import {
