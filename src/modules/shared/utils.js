@@ -247,7 +247,8 @@ export const typeBtnStyle = {
     color: '#5f6368', 
     background: '#f8f9fa', 
     transition: 'all 0.2s ease' ,
-    width: "100%"
+    width: "100%",
+    textAlign: "center"
 };
 
 export const typeBtnStyleActive = {
