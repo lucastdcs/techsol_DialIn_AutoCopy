@@ -251,8 +251,24 @@ export const typeBtnStyle = {
     textAlign: "center"
 };
 
-export const typeBtnStyleActive = {
-    background: '#e8f0fe',
-    color: '#1967d2'
-};
-// ============================================
+const GOOGLE_COLORS_LIST = [
+    { background: '#E8F0FE', color: '#1967D2' }, // Azul
+    { background: '#FCE8E6', color: '#C5221F' }, // Vermelho
+    { background: '#FEF7E0', color: '#F29900' }, // Amarelo
+    { background: '#E6F4EA', color: '#1E8E3E' }  // Verde
+];
+
+let lastColorIndex = -1;
+
+
+export function getRandomGoogleStyle() {
+    let newIndex = Math.floor(Math.random() * GOOGLE_COLORS_LIST.length);
+    
+
+    if (newIndex === lastColorIndex) {
+        newIndex = (newIndex + 1) % GOOGLE_COLORS_LIST.length;
+    }
+    
+    lastColorIndex = newIndex;
+    return GOOGLE_COLORS_LIST[newIndex]; 
+}
