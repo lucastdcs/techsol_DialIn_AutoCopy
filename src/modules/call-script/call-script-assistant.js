@@ -12,18 +12,17 @@ import {
     styleFloatingButton,
     stylePopupVersion,
     styleCredit,
-    typeBtnStyle,       // <-- NOVO: Importa estilo
-    typeBtnStyleActive  // <-- NOVO: Importa estilo
+    typeBtnStyle,           // <-- Importa o estilo INATIVO
+    getRandomGoogleStyle    // <-- Importa a NOVA FUNÇÃO
 } from '../shared/utils.js';
 
 // CORREÇÃO: Usando caminhos relativos corretos
 import { csaChecklistData } from './call-script-data.js';
 
 export function initCallScriptAssistant() {
-    const CURRENT_VERSION = "v1.2.9"; 
+    const CURRENT_VERSION = "v1.2.7"; 
 
     // --- Dados e Estado (Módulo 2) ---
-    // (csaChecklistData é importado)
     const csaCompletedTasks = {};
     let csaCurrentLang = "PT";
     let csaCurrentType = "BAU";
@@ -36,11 +35,11 @@ export function initCallScriptAssistant() {
         top: "70%",
         background: "#5f6368"
     });
-    csaBtn.onmouseenter = () => { 
+    csaBtn.onmouseenter = () => { // Animação
         csaBtn.style.background = "#4a4d50";
         csaBtn.style.transform = "scale(1.1)";
     };
-    csaBtn.onmouseleave = () => { 
+    csaBtn.onmouseleave = () => { // Animação
         csaBtn.style.background = "#5f6368";
         csaBtn.style.transform = "scale(1)";
     };
@@ -120,10 +119,8 @@ export function initCallScriptAssistant() {
     const csaTypeLT = document.createElement("div");
     csaTypeLT.textContent = "LT";
 
-    // CORREÇÃO: Usando os estilos importados
     Object.assign(csaTypeBAU.style, typeBtnStyle);
     Object.assign(csaTypeLT.style, typeBtnStyle);
-    // ===================================
 
     csaTypeContainer.appendChild(csaTypeBAU);
     csaTypeContainer.appendChild(csaTypeLT);
@@ -282,15 +279,21 @@ export function initCallScriptAssistant() {
 
     function setActiveType(type) {
          csaCurrentType = type;
-         // CORREÇÃO: Usando os estilos importados
+         
+         // ===== ATUALIZAÇÃO: Sorteia uma cor nova =====
+         const newActiveStyle = getRandomGoogleStyle();
+         // ===========================================
+         
+         // Reseta ambos para o estilo inativo
          Object.assign(csaTypeBAU.style, typeBtnStyle);
          Object.assign(csaTypeLT.style, typeBtnStyle);
+
+         // Aplica o estilo ATIVO (e aleatório) ao botão correto
          if (type === 'BAU') {
-             Object.assign(csaTypeBAU.style, typeBtnStyleActive);
+             Object.assign(csaTypeBAU.style, newActiveStyle);
          } else {
-             Object.assign(csaTypeLT.style, typeBtnStyleActive);
+             Object.assign(csaTypeLT.style, newActiveStyle);
          }
-         // ===================================
          csaBuildChecklist();
     }
 
@@ -303,6 +306,6 @@ export function initCallScriptAssistant() {
     });
 
     // Carregamento inicial
-    setActiveType(csaCurrentType);
+    setActiveType(csaCurrentType); // Aplica a primeira cor
 
 } // Fim do initCallScriptAssistant()
