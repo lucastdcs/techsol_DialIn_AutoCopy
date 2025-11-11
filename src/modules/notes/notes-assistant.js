@@ -1,6 +1,5 @@
 // src/modules/notes/notes-assistant.js
 
-// CORREÇÃO: Usando caminhos relativos corretos
 import { 
     showToast, 
     makeDraggable,
@@ -13,10 +12,11 @@ import {
     styleFloatingButton,
     stylePopupVersion,
     styleCredit,
-    styleExpandButton
-} from '../../shared/utils.js'; 
+    styleExpandButton,
+    typeBtnStyle,       // <-- NOVO: Importa estilo do botão de tipo
+    typeBtnStyleActive  // <-- NOVO: Importa estilo do botão de tipo
+} from '../shared/utils.js'; 
 
-// CORREÇÃO: Usando caminhos relativos corretos
 import {
     TASKS_DB,
     SUBSTATUS_TEMPLATES,
@@ -26,7 +26,11 @@ import {
 } from './notes-data.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v2.7.9"; 
+    const CURRENT_VERSION = "v2.8.0";
+    
+    // --- ESTADO GLOBAL DO MÓDULO ---
+    let currentCaseType = 'bau'; // 
+    // --------------------------------
 
     function copyHtmlToClipboard(html) {
         const container = document.createElement('div');
@@ -128,7 +132,6 @@ export function initCaseNotesAssistant() {
         isExpanded = !isExpanded;
         const newWidth = isExpanded ? expandedWidth : initialWidth;
         const widthDifference = expandedWidth - initialWidth;
-
         popup.style.width = `${newWidth}px`;
         
         if (popup.style.right && popup.style.right !== 'auto') {
@@ -191,7 +194,8 @@ export function initCaseNotesAssistant() {
     Object.assign(credit.style, styleCredit);
     popup.appendChild(credit);
 
-    // --- CORREÇÃO: Variáveis da UI declaradas UMA VEZ ---
+    // --- Variáveis da UI declaradas UMA VEZ ---
+    const step0Div = document.createElement("div"); // <-- NOVO: Seletor de Tipo
     const step1Div = document.createElement("div");
     const stepSnippetsDiv = document.createElement("div");
     const snippetContainer = document.createElement("div");
@@ -204,7 +208,6 @@ export function initCaseNotesAssistant() {
     const buttonContainer = document.createElement("div");
     const copyButton = document.createElement("button");
     const generateButton = document.createElement("button");
-    // --- FIM DA CORREÇÃO ---
 
     function updateFieldsFromScenarios() {
         const activeScenarioInputs = snippetContainer.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
@@ -314,7 +317,59 @@ export function initCaseNotesAssistant() {
     }
 
     // --- Montagem da UI (continuação) ---
+    
+    // ===== NOVO: ETAPA 0 - Seletor de Tipo (BAU/LM) =====
+    step0Div.id = "step-0-case-type";
+    const typeLabel = document.createElement("label");
+    Object.assign(typeLabel.style, styleLabel);
+    typeLabel.textContent = "Tipo de Caso:";
+    step0Div.appendChild(typeLabel);
+
+    const typeContainer = document.createElement("div");
+    Object.assign(typeContainer.style, { display: 'flex', borderRadius: '8px', border: '1px solid #dadce0', overflow: 'hidden', marginBottom: '16px' });
+    
+    const typeBAU = document.createElement("div");
+    typeBAU.textContent = "BAU";
+    typeBAU.classList.add('no-drag');
+    const typeLM = document.createElement("div");
+    typeLM.textContent = "LM";
+    typeLM.classList.add('no-drag');
+
+    Object.assign(typeBAU.style, typeBtnStyle); // Estilo importado
+    Object.assign(typeLM.style, typeBtnStyle); // Estilo importado
+    
+    function setCaseType(type) {
+        currentCaseType = type; // Atualiza o estado global
+        
+        // Atualiza estilo
+        Object.assign(typeBAU.style, typeBtnStyle);
+        Object.assign(typeLM.style, typeBtnStyle);
+        
+        if (type === 'bau') {
+            Object.assign(typeBAU.style, typeBtnStyleActive);
+        } else {
+            Object.assign(typeLM.style, typeBtnStyleActive);
+        }
+        
+        // Dispara o 'onchange' do substatus para recarregar os cenários
+        if (subStatusSelect.value) {
+            subStatusSelect.dispatchEvent(new Event('change'));
+        }
+    }
+    
+    typeBAU.onclick = () => setCaseType('bau');
+    typeLM.onclick = () => setCaseType('lm');
+    
+    typeContainer.appendChild(typeBAU);
+    typeContainer.appendChild(typeLM);
+    step0Div.appendChild(typeContainer);
+    popupContent.appendChild(step0Div);
+    
+    setCaseType('bau'); // Define BAU como padrão
+    // ===============================================
+
     step1Div.id = "step-1-selection";
+    // (O styleStepBlock não é necessário para o primeiro item)
     const mainStatusLabel = document.createElement("label");
     Object.assign(mainStatusLabel.style, styleLabel);
     mainStatusLabel.textContent = "Status Principal:";
@@ -444,33 +499,46 @@ export function initCaseNotesAssistant() {
             return input;
         };
 
-        // ===== LISTA DE CENÁRIOS ATUALIZADA (NI) =====
+        // ===== LÓGICA DE FILTRO BAU/LM =====
+        const scenariosToShow = [];
+        
         if (selectedSubStatusKey === 'NI_Awaiting_Inputs') {
-            const radioName = "ni-scenario";
-            const scenarios = [
+            const allScenarios = [
                 { id: 'quickfill-ni-inicio-manual', text: 'Início 2/6 (Manual)'},
                 { id: 'quickfill-ni-cms-access', text: 'Início 2/6 (ADV sem acesso ao CMS)' },
-                { id: 'quickfill-ni-followup-bau', text: 'Follow-up 2/6 (BAU)' }, 
+                { id: 'quickfill-ni-followup-bau', text: 'Follow-up 2/6 (BAU)' },
                 { id: 'quickfill-ni-followup-lm', text: 'Follow-up 2/6 (LM)' } 
             ];
-            scenarios.forEach((scenario, index) => {
+            
+            const filteredScenarios = allScenarios.filter(s => {
+                const type = scenarioSnippets[s.id].type;
+                return !type || type === 'all' || type === currentCaseType;
+            });
+
+            filteredScenarios.forEach((scenario, index) => {
                 const radio = addSnippetInput(scenario, 'radio', snippetContainer);
-                radio.name = radioName;
+                radio.name = "ni-scenario";
                 if (index === 0) radio.checked = true;
             });
-            snippetAdded = true;
+            snippetAdded = filteredScenarios.length > 0;
         }
         
         if (selectedSubStatusKey === 'SO_Implementation_Only') {
-            const scenarios = [
+            const allScenarios = [
                 { id: 'quickfill-whatsapp', text: 'Conversão de WhatsApp' },
                 { id: 'quickfill-form', text: 'Conversão de Formulário (Padrão)' },
                 { id: 'quickfill-ecw4-close', text: 'Fechamento ECW4 (Pós 7 dias)' }
             ];
-            scenarios.forEach(scenario => {
+            
+            const filteredScenarios = allScenarios.filter(s => {
+                const type = scenarioSnippets[s.id].type;
+                return !type || type === 'all' || type === currentCaseType;
+            });
+
+            filteredScenarios.forEach(scenario => {
                 addSnippetInput(scenario, 'checkbox', snippetContainer);
             });
-            snippetAdded = true;
+            snippetAdded = filteredScenarios.length > 0;
         }
         
         if (selectedSubStatusKey === 'AS_Assigned') {
@@ -478,38 +546,51 @@ export function initCaseNotesAssistant() {
             reasonTitle.textContent = "Motivos Comuns:";
             Object.assign(reasonTitle.style, styleLabel);
             snippetContainer.appendChild(reasonTitle);
-            const scenarios = [
+            
+            const allScenarios = [
                 { id: 'quickfill-as-no-show', text: 'Anunciante não compareceu (respondeu e-mail)' },
                 { id: 'quickfill-as-insufficient-time', text: 'Tempo insuficiente' },
                 { id: 'quickfill-as-no-access', text: 'Anunciante sem acessos necessários' }
             ];
-            scenarios.forEach(scenario => {
+            
+            const filteredScenarios = allScenarios.filter(s => {
+                const type = scenarioSnippets[s.id].type;
+                return !type || type === 'all' || type === currentCaseType;
+            });
+
+            filteredScenarios.forEach(scenario => {
                 addSnippetInput(scenario, 'checkbox', snippetContainer);
             });
-            snippetAdded = true;
+            snippetAdded = filteredScenarios.length > 0;
         }
         
-       // ===== LISTA DE CENÁRIOS ATUALIZADA (IN) =====
        if (selectedSubStatusKey === 'IN_Inactive') {
              const radioName = "in-scenario";
-             const scenarios = [
+             const allScenarios = [
                 { id: 'quickfill-in-nrp-bau', text: 'NRP (BAU - 3 tentativas)' }, 
                 { id: 'quickfill-in-nrp-lm', text: 'NRP (LM - Sem tentativas)' }, 
                 { id: 'quickfill-in-no-show-bau', text: 'No-Show (BAU - 3 tentativas)' }, 
                 { id: 'quickfill-in-2-6-final', text: 'Finalização 2/6 (Sem Resposta)' },
                 { id: 'quickfill-in-manual', text: 'Outro (Manual)' }
              ];
-             scenarios.forEach((scenario, index) => {
+             
+             const filteredScenarios = allScenarios.filter(s => {
+                const type = scenarioSnippets[s.id].type;
+                return !type || type === 'all' || type === currentCaseType;
+            });
+             
+             filteredScenarios.forEach((scenario, index) => {
                 const radio = addSnippetInput(scenario, 'radio', snippetContainer);
                 radio.name = radioName;
                 if (index === 0) radio.checked = true;
             });
-            snippetAdded = true;
+            snippetAdded = filteredScenarios.length > 0;
         }
 
         if (snippetAdded) {
             stepSnippetsDiv.style.display = 'block';
         }
+        // ===== FIM DA LÓGICA DE FILTRO =====
 
         if (templateData.requiresTasks) {
             taskCheckboxesContainer.innerHTML = '';

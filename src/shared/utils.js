@@ -1,7 +1,6 @@
 // src/modules/shared/utils.js
 
 export function initGlobalStylesAndFont() {
-    // ... (código mantido, incluindo a correção do .csa-li) ...
     if (document.getElementById('google-font-poppins') && document.getElementById('techsol-global-styles')) {
         return;
     }
@@ -10,13 +9,16 @@ export function initGlobalStylesAndFont() {
     link.href = 'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap';
     link.rel = 'stylesheet';
     document.head.appendChild(link);
+
     const style = document.createElement('style');
     style.id = 'techsol-global-styles';
     style.textContent = `
+        /* ... (estilos da scrollbar mantidos) ... */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #555; }
+        
         input:focus, textarea:focus, select:focus {
             outline: none !important;
             border-color: #1a73e8 !important;
@@ -31,7 +33,7 @@ export function initGlobalStylesAndFont() {
         .csa-group-container.csa-group-completed .csa-group-title { color: #34a853; }
         
         .csa-li { 
-            margin: 8px 0 !important; /* Espaçamento aumentado */
+            margin: 8px 0 !important; 
             padding: 8px 10px; border-radius: 6px; border: 2px solid transparent;
             transition: all 0.2s ease; font-size: 14px; cursor: pointer; user-select: none;
             background-color: #f8f9fa; color: #202124; line-height: 1.4;
@@ -69,6 +71,7 @@ export function showToast(message, opts = {}) {
 }
 
 export function makeDraggable(element, handle = null) {
+    // ... (código makeDraggable mantido) ...
     let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
     const dragHandle = handle || element;
     dragHandle.onmousedown = dragMouseDown;
@@ -234,3 +237,20 @@ export const styleExpandButton = {
     lineHeight: "1",
     zIndex: "10"
 };
+
+// ===== NOVO ESTILO COMPARTILHADO (BAU/LT/LM) =====
+export const typeBtnStyle = { 
+    padding: '6px 12px', 
+    cursor: 'pointer', 
+    fontSize: '14px', 
+    fontWeight: '500', 
+    color: '#5f6368', 
+    background: '#f8f9fa', 
+    transition: 'all 0.2s ease' 
+};
+
+export const typeBtnStyleActive = {
+    background: '#e8f0fe',
+    color: '#1967d2'
+};
+// ============================================

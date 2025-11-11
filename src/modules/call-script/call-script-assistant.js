@@ -1,6 +1,6 @@
 // src/modules/call-script/call-script-assistant.js
 
-// CORREÇÃO: Usando caminhos relativos (com ./)
+// CORREÇÃO: Usando caminhos relativos corretos
 import { 
     makeDraggable,
     styleSelect,
@@ -11,16 +11,16 @@ import {
     stylePopupCloseBtn,
     styleFloatingButton,
     stylePopupVersion,
-    styleCredit
-} from '../../shared/utils.js'; // <-- Caminho corrigido
+    styleCredit,
+    typeBtnStyle,       // <-- NOVO: Importa estilo
+    typeBtnStyleActive  // <-- NOVO: Importa estilo
+} from '../shared/utils.js';
 
-// CORREÇÃO: Usando caminhos relativos (com ./)
-import {
-    csaChecklistData
-} from './call-script-data.js'; // <-- Caminho corrigido
+// CORREÇÃO: Usando caminhos relativos corretos
+import { csaChecklistData } from './call-script-data.js';
 
 export function initCallScriptAssistant() {
-    const CURRENT_VERSION = "v1.2.7"; 
+    const CURRENT_VERSION = "v1.2.9"; 
 
     // --- Dados e Estado (Módulo 2) ---
     // (csaChecklistData é importado)
@@ -36,11 +36,11 @@ export function initCallScriptAssistant() {
         top: "70%",
         background: "#5f6368"
     });
-    csaBtn.onmouseenter = () => { // Animação
+    csaBtn.onmouseenter = () => { 
         csaBtn.style.background = "#4a4d50";
         csaBtn.style.transform = "scale(1.1)";
     };
-    csaBtn.onmouseleave = () => { // Animação
+    csaBtn.onmouseleave = () => { 
         csaBtn.style.background = "#5f6368";
         csaBtn.style.transform = "scale(1)";
     };
@@ -120,9 +120,10 @@ export function initCallScriptAssistant() {
     const csaTypeLT = document.createElement("div");
     csaTypeLT.textContent = "LT";
 
-    const typeBtnStyle = { padding: '6px 12px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', color: '#5f6368', background: '#f8f9fa', transition: 'all 0.2s ease' };
+    // CORREÇÃO: Usando os estilos importados
     Object.assign(csaTypeBAU.style, typeBtnStyle);
     Object.assign(csaTypeLT.style, typeBtnStyle);
+    // ===================================
 
     csaTypeContainer.appendChild(csaTypeBAU);
     csaTypeContainer.appendChild(csaTypeLT);
@@ -160,7 +161,6 @@ export function initCallScriptAssistant() {
     // --- Lógica (Módulo 2) ---
     
     function hexToRgba(hex, alpha) {
-        // ... (código mantido) ...
         const clean = hex.replace("#","");
         const r = parseInt(clean.substring(0,2),16);
         const g = parseInt(clean.substring(2,4),16);
@@ -169,7 +169,6 @@ export function initCallScriptAssistant() {
     }
 
     function csaTogglePopup(show) {
-        // ... (código mantido) ...
         if (show) {
             csaPopup.style.opacity = "1";
             csaPopup.style.pointerEvents = "auto";
@@ -182,8 +181,8 @@ export function initCallScriptAssistant() {
     }
 
     function csaSetLiStyle(li, isCompleted, color) {
-        // ... (código mantido) ...
         li.classList.toggle('csa-completed', isCompleted);
+
         if (isCompleted) {
             li.style.borderColor = color;
             li.style.backgroundColor = hexToRgba(color, 0.4);
@@ -196,7 +195,6 @@ export function initCallScriptAssistant() {
     }
 
     function checkGroupCompletion(combinedKey, groupKey, groupDiv) {
-        // ... (código mantido) ...
         const data = csaChecklistData[combinedKey];
         if (!data) return;
         const items = data[groupKey];
@@ -213,26 +211,31 @@ export function initCallScriptAssistant() {
     }
 
     function csaBuildChecklist() {
-        // ... (código mantido) ...
         csaChecklistArea.innerHTML = "";
         const combinedKey = `${csaCurrentLang} ${csaCurrentType}`;
         const data = csaChecklistData[combinedKey];
+
         if (!data) {
             csaChecklistArea.innerHTML = `<div style="padding: 10px; color: #5f6368; font-family: 'Poppins', sans-serif;">Script não disponível para esta combinação.</div>`;
             return;
         }
+
         const color = data.color;
+
         ['inicio', 'fim'].forEach(groupKey => {
             const items = data[groupKey];
             if (!items || items.length === 0) return;
+
             const groupDiv = document.createElement('div');
             groupDiv.className = 'csa-group-container';
             Object.assign(groupDiv.style, { marginBottom: '16px' });
+
             const groupTitle = document.createElement('div');
             groupTitle.className = 'csa-group-title';
             let titleText = groupKey === 'inicio' ? 'Início' : 'Fim';
             if (csaCurrentLang.includes("ES")) titleText = groupKey === 'inicio' ? 'Inicio' : 'Fin';
             if (csaCurrentLang.includes("EN")) titleText = groupKey === 'inicio' ? 'Start' : 'End';
+
             groupTitle.textContent = titleText;
             Object.assign(groupTitle.style, styleLabel, {
                 fontWeight: "600",
@@ -241,15 +244,20 @@ export function initCallScriptAssistant() {
                 marginBottom: "8px"
             });
             groupDiv.appendChild(groupTitle);
+
             const list = document.createElement("ul");
             Object.assign(list.style, { listStyle: 'none', paddingLeft: '0', margin: '0' });
+
             items.forEach((item, index) => {
                 const li = document.createElement("li");
                 li.className = 'csa-li';
                 li.textContent = item;
+
                 const key = `${combinedKey}-${groupKey}-${index}`;
                 const done = !!csaCompletedTasks[key];
+
                 csaSetLiStyle(li, done, color);
+
                 li.addEventListener("click", () => {
                     const newDone = !csaCompletedTasks[key];
                     csaCompletedTasks[key] = newDone;
@@ -260,6 +268,7 @@ export function initCallScriptAssistant() {
             });
             groupDiv.appendChild(list);
             csaChecklistArea.appendChild(groupDiv);
+
             checkGroupCompletion(combinedKey, groupKey, groupDiv);
         });
     }
@@ -273,10 +282,15 @@ export function initCallScriptAssistant() {
 
     function setActiveType(type) {
          csaCurrentType = type;
-         csaTypeBAU.style.background = (type === 'BAU') ? '#e8f0fe' : '#f8f9fa';
-         csaTypeBAU.style.color = (type === 'BAU') ? '#1967d2' : '#5f6368';
-         csaTypeLT.style.background = (type === 'LT') ? '#e8f0fe' : '#f8f9fa';
-         csaTypeLT.style.color = (type === 'LT') ? '#1967d2' : '#5f6368';
+         // CORREÇÃO: Usando os estilos importados
+         Object.assign(csaTypeBAU.style, typeBtnStyle);
+         Object.assign(csaTypeLT.style, typeBtnStyle);
+         if (type === 'BAU') {
+             Object.assign(csaTypeBAU.style, typeBtnStyleActive);
+         } else {
+             Object.assign(csaTypeLT.style, typeBtnStyleActive);
+         }
+         // ===================================
          csaBuildChecklist();
     }
 
