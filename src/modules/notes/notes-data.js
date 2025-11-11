@@ -172,7 +172,7 @@ export const scenarioSnippets = {
     },
     'quickfill-in-nrp-lm': {
         type: 'lm',
-        'field-REASON_COMMENTS': "NRP (LM - Sem tentativas)",
+        'field-REASON_COMMENTS': "Anunciante não compareceu (LM)",
         'field-SPEAKEASY_ID': "N/A",
         'field-ON_CALL': "N/A",
         'field-COMENTARIOS': "• Tentativa de contato via e-mail (sem chamada) para o caso LM, sem resposta.\n• Caso inativado.",
@@ -181,10 +181,10 @@ export const scenarioSnippets = {
     },
     'quickfill-in-no-show-bau': { 
         type: 'bau',
-        'field-REASON_COMMENTS': "Anunciante não compareceu à chamada (No-Show BAU).",
+        'field-REASON_COMMENTS': "Sem resposta ao 2 Day Rule.",
         'field-ON_CALL': "N/A", 
-        'field-COMENTARIOS': "• O caso foi gerado e entrei na chamada no horário agendado.\n• O anunciante não compareceu à reunião.\n• Segui o protocolo de espera (BAU): realizei duas tentativas de ligação, aguardei os 10 minutos, e fiz uma terceira tentativa, sem sucesso.\n• Nenhuma das ligações foi atendida (ex: Caixa Postal).\n• Caso inativado por No-Show.",
-        'field-SCREENSHOTS': "• Tentativa 1 (Caixa Postal) - \n• Tentativa 2 (Caixa Postal) - \n• Tentativa 3 (Chamada desconectada) - ",
+        'field-COMENTARIOS': "• O caso foi gerado e entrei na chamada no horário agendado.\n• O anunciante não compareceu à reunião.\n• Segui o protocolo de espera (BAU): realizei duas tentativas de ligação, aguardei os 10 minutos, e fiz uma terceira tentativa, sem sucesso.\n• Nenhuma das ligações foi atendida (ex: Caixa Postal).\n• Caso inativado após 2 Day Rule.",
+        'field-SCREENSHOTS': "• Tentativa 1 - \n• Tentativa 2  - \n• Tentativa 3 - ",
         'field-GTM_GA4_VERIFICADO': "N/A"
     },
     'quickfill-in-2-6-final': {
