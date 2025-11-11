@@ -13,8 +13,8 @@ import {
     stylePopupVersion,
     styleCredit,
     styleExpandButton,
-    typeBtnStyle,       // <-- NOVO: Importa estilo do botão de tipo
-    typeBtnStyleActive  // <-- NOVO: Importa estilo do botão de tipo
+    typeBtnStyle,           // <-- Importa o estilo INATIVO do botão de tipo
+    getRandomGoogleStyle    // <-- Importa a NOVA FUNÇÃO para pegar um estilo aleatório
 } from '../shared/utils.js'; 
 
 import {
@@ -195,7 +195,7 @@ export function initCaseNotesAssistant() {
     popup.appendChild(credit);
 
     // --- Variáveis da UI declaradas UMA VEZ ---
-    const step0Div = document.createElement("div"); // <-- NOVO: Seletor de Tipo
+    const step0Div = document.createElement("div"); // Seletor de Tipo
     const step1Div = document.createElement("div");
     const stepSnippetsDiv = document.createElement("div");
     const snippetContainer = document.createElement("div");
@@ -318,7 +318,7 @@ export function initCaseNotesAssistant() {
 
     // --- Montagem da UI (continuação) ---
     
-    // ===== NOVO: ETAPA 0 - Seletor de Tipo (BAU/LM) =====
+    // ===== ETAPA 0 - Seletor de Tipo (BAU/LM) =====
     step0Div.id = "step-0-case-type";
     const typeLabel = document.createElement("label");
     Object.assign(typeLabel.style, styleLabel);
@@ -335,20 +335,24 @@ export function initCaseNotesAssistant() {
     typeLM.textContent = "LM";
     typeLM.classList.add('no-drag');
 
-    Object.assign(typeBAU.style, typeBtnStyle); // Estilo importado
-    Object.assign(typeLM.style, typeBtnStyle); // Estilo importado
-    
+    Object.assign(typeBAU.style, typeBtnStyle);
+    Object.assign(typeLM.style, typeBtnStyle);     
     function setCaseType(type) {
         currentCaseType = type; // Atualiza o estado global
         
-        // Atualiza estilo
+        // ===== ATUALIZAÇÃO: Sorteia uma cor nova =====
+        const newActiveStyle = getRandomGoogleStyle();
+        // ===========================================
+        
+        // Reseta ambos para o estilo inativo
         Object.assign(typeBAU.style, typeBtnStyle);
         Object.assign(typeLM.style, typeBtnStyle);
         
+        // Aplica o novo estilo ATIVO (e aleatório) ao botão correto
         if (type === 'bau') {
-            Object.assign(typeBAU.style, typeBtnStyleActive);
+            Object.assign(typeBAU.style, newActiveStyle);
         } else {
-            Object.assign(typeLM.style, typeBtnStyleActive);
+            Object.assign(typeLM.style, newActiveStyle);
         }
         
         // Dispara o 'onchange' do substatus para recarregar os cenários
@@ -365,11 +369,10 @@ export function initCaseNotesAssistant() {
     step0Div.appendChild(typeContainer);
     popupContent.appendChild(step0Div);
     
-    setCaseType('bau'); // Define BAU como padrão
+    setCaseType('bau'); // Define BAU como padrão (e aplica a primeira cor aleatória)
     // ===============================================
 
     step1Div.id = "step-1-selection";
-    // (O styleStepBlock não é necessário para o primeiro item)
     const mainStatusLabel = document.createElement("label");
     Object.assign(mainStatusLabel.style, styleLabel);
     mainStatusLabel.textContent = "Status Principal:";
@@ -500,9 +503,12 @@ export function initCaseNotesAssistant() {
         };
 
         // ===== LÓGICA DE FILTRO BAU/LM =====
-        const scenariosToShow = [];
-        
+        // A lógica aqui é a mesma que você já tem no seu v2.8.0
+        // Eu adicionei o filtro 'type' para garantir que os cenários
+        // corretos sejam exibidos dependendo de currentCaseType ('bau' ou 'lm')
+
         if (selectedSubStatusKey === 'NI_Awaiting_Inputs') {
+            const radioName = "ni-scenario";
             const allScenarios = [
                 { id: 'quickfill-ni-inicio-manual', text: 'Início 2/6 (Manual)'},
                 { id: 'quickfill-ni-cms-access', text: 'Início 2/6 (ADV sem acesso ao CMS)' },
@@ -517,7 +523,7 @@ export function initCaseNotesAssistant() {
 
             filteredScenarios.forEach((scenario, index) => {
                 const radio = addSnippetInput(scenario, 'radio', snippetContainer);
-                radio.name = "ni-scenario";
+                radio.name = radioName;
                 if (index === 0) radio.checked = true;
             });
             snippetAdded = filteredScenarios.length > 0;
