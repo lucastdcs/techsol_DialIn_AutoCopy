@@ -326,7 +326,7 @@ export function initCaseNotesAssistant() {
     step0Div.appendChild(typeLabel);
 
     const typeContainer = document.createElement("div");
-    Object.assign(typeContainer.style, { display: 'flex', borderRadius: '8px', border: '1px solid #dadce0', overflow: 'hidden', marginBottom: '16px' });
+    Object.assign(typeContainer.style, { display: 'flex', border: 'none', overflow: 'hidden', marginBottom: '16px' });
     
     const typeBAU = document.createElement("div");
     typeBAU.textContent = "BAU";
