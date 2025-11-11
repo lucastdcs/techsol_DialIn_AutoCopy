@@ -85,12 +85,15 @@ export const textareaListFields = [
 
 export const textareaParagraphFields = ['CONSIDERACOES', 'COMENTARIOS'];
 
+// ===== ATUALIZAÇÃO: ADICIONADO 'type' (bau, lm, all) =====
 export const scenarioSnippets = {
     // --- Cenários de NI (Exclusivos) ---
     'quickfill-ni-inicio-manual': {
+        type: 'all',
         'field-REASON_COMMENTS': "Aguardando informações por parte do anunciante (Início 2/6)"
     },
     'quickfill-ni-cms-access': {
+        type: 'all',
         'field-REASON_COMMENTS': "Aguardando informações por parte do anunciante (Início 2/6 - Sem Acesso ao CMS)",
         'field-TASKS_SOLICITADAS': "• Instalação do GTM\n• Configuração de Conversões",
         'field-CONTEXTO_CALL': "• Percebi que o(a) anunciante não tinha GTM Instalado.\n• Seguimos com a criação de conta no GTM.\n• Entretanto, a conta de acesso ao painel do site (ex: WordPress) não tinha permissão para instalar plugins ou editar o código.",
@@ -99,6 +102,7 @@ export const scenarioSnippets = {
         'field-SCREENSHOTS': "• Print do painel do CMS mostrando a falta de permissão (opcional)."
     },
     'quickfill-ni-followup-bau': { 
+        type: 'bau',
         'field-REASON_COMMENTS': "Aguardando informações por parte do anunciante (Follow-up BAU 2/6)",
         'field-SPEAKEASY_ID': "N/A",
         'field-ON_CALL': "N/A",
@@ -110,6 +114,7 @@ export const scenarioSnippets = {
         'field-SCREENSHOTS': "• Tentativa 1 -\n• Tentativa 2 -"
     },
     'quickfill-ni-followup-lm': {
+        type: 'lm',
         'field-REASON_COMMENTS': "Aguardando informações por parte do anunciante (Follow-up LM 2/6)",
         'field-SPEAKEASY_ID': "N/A",
         'field-ON_CALL': "N/A",
@@ -123,18 +128,21 @@ export const scenarioSnippets = {
 
     // --- Cenários de SO (Combináveis) ---
     'quickfill-whatsapp': {
+        type: 'all',
         'field-TASKS_SOLICITADAS': "• Criação de conversão para WHATSAPP",
         'field-PASSOS_EXECUTADOS': "• Fizemos a criação da conversão no Ads.\n• Criamos a Tag no GTM usando acionadores de clique (ex: Click URL / Click Text) para os botões de WhatsApp.\n• Realizamos os testes e validamos o funcionamento.",
         'field-RESULTADO': "• Task implementada com sucesso. Fecho o caso sem acompanhamento.",
         linkedTask: 'ads_conversion_tracking'
     },
      'quickfill-form': {
+        type: 'all',
         'field-TASKS_SOLICITADAS': "• Criação de conversão para FORMULÁRIO (padrão, não-otimizada).",
         'field-PASSOS_EXECUTADOS': "• Fizemos a criação da conversão no Ads.\n• Criamos a Tag no GTM usando o acionador de envio de formulário (Form Submission) ou visualização de página de agradecimento (Thank You Page).\n• Realizamos os testes e validamos o funcionamento.",
         'field-RESULTADO': "• Task implementada com sucesso. Fecho o caso sem acompanhamento.",
         linkedTask: 'ads_conversion_tracking'
     },
     'quickfill-ecw4-close': {
+        type: 'all',
         'field-TASKS_SOLICITADAS': "• Acompanhamento da conversão otimizada (ECW4) após 7 dias.",
         'field-PASSOS_EXECUTADOS': "• Após o período de 7 dias de acompanhamento, verifiquei o painel do Ads.\n• A conversão está sendo registrada corretamente.",
         'field-RESULTADO': "• Valido o bom funcionamento da conversão otimizada.\n• Assim, fecho o caso.",
@@ -142,23 +150,28 @@ export const scenarioSnippets = {
     },
     // --- Cenários de AS (Combináveis) ---
     'quickfill-as-no-show': {
+        type: 'all',
         'field-MOTIVO_REAGENDAMENTO': '• Precisamos reagendar o caso, já que o anunciante não compareceu na meet, porém respondeu o e-mail pedindo o reagendamento'
     },
     'quickfill-as-insufficient-time': {
+        type: 'all',
         'field-MOTIVO_REAGENDAMENTO': '• Precisamos reagendar o caso, já que o tempo foi insuficiente para terminar as Tasks\n• Implementamos [descrever o que foi feito]'
     },
     'quickfill-as-no-access': {
+        type: 'all',
          'field-MOTIVO_REAGENDAMENTO': '• Precisamos reagendar o caso, já que o anunciante não tinha os acessos necessários para podermos implementar as tasks'
     },
     
     // --- Cenários de IN (Exclusivos - Rádio) ---
     'quickfill-in-nrp-bau': { 
+        type: 'bau',
         'field-REASON_COMMENTS': "NRP (BAU - 3 tentativas)",
         'field-COMENTARIOS': "• Duas ligações seguidas, e-mail \"Antes dos 10 minutos\" e uma terceira e ultima tentativa de ligação.\n• Não houve resposta às tentativas de ligação ou e-mail, por isso o caso será inativado.",
         'field-SCREENSHOTS': "• Tentativa 1 -\n• Tentativa 2 -\n• Tentativa 3 -",
         'field-GTM_GA4_VERIFICADO': "N/A"
     },
     'quickfill-in-nrp-lm': {
+        type: 'lm',
         'field-REASON_COMMENTS': "NRP (LM - Sem tentativas)",
         'field-SPEAKEASY_ID': "N/A",
         'field-ON_CALL': "N/A",
@@ -167,6 +180,7 @@ export const scenarioSnippets = {
         'field-GTM_GA4_VERIFICADO': "N/A"
     },
     'quickfill-in-no-show-bau': { 
+        type: 'bau',
         'field-REASON_COMMENTS': "Anunciante não compareceu à chamada (No-Show BAU).",
         'field-ON_CALL': "N/A", 
         'field-COMENTARIOS': "• O caso foi gerado e entrei na chamada no horário agendado.\n• O anunciante não compareceu à reunião.\n• Segui o protocolo de espera (BAU): realizei duas tentativas de ligação, aguardei os 10 minutos, e fiz uma terceira tentativa, sem sucesso.\n• Nenhuma das ligações foi atendida (ex: Caixa Postal).\n• Caso inativado por No-Show.",
@@ -174,6 +188,7 @@ export const scenarioSnippets = {
         'field-GTM_GA4_VERIFICADO': "N/A"
     },
     'quickfill-in-2-6-final': {
+        type: 'all',
         'field-REASON_COMMENTS': "Finalização (2/6)",
         'field-SPEAKEASY_ID': "-",
         'field-ON_CALL': "-",
@@ -182,6 +197,7 @@ export const scenarioSnippets = {
         'field-GTM_GA4_VERIFICADO': "N/A"
     },
     'quickfill-in-manual': { 
+        type: 'all',
         'field-REASON_COMMENTS': "Outro (Manual)",
         'field-GTM_GA4_VERIFICADO': "N/A"
     }
