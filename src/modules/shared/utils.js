@@ -246,7 +246,8 @@ export const typeBtnStyle = {
     fontWeight: '500', 
     color: '#5f6368', 
     background: '#f8f9fa', 
-    transition: 'all 0.2s ease' 
+    transition: 'all 0.2s ease' ,
+    width: "100%"
 };
 
 export const typeBtnStyleActive = {
