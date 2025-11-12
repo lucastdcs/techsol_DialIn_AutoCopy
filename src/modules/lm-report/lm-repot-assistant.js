@@ -16,6 +16,7 @@ import {
 // --- URLs dos Formulários ---
 const FORM_URL_1 = 'https://docs.google.com/forms/d/e/1FAIpQLSc6CamPehrREeVr7yCWMyqFETrFYYezNcLb_13W4yZDQkfY6Q/viewform';
 const FORM_URL_2 = 'https://docs.google.com/forms/d/e/1FAIpQLSfE8EMHNJMTKYeA6XM2RZjZ9AQ4LhGk1Dwm_WLu3kcMdKMikA/viewform';
+const FORM_URL_3  = 'https://docs.google.com/forms/d/e/1FAIpQLSfkqRqT2Kbf08IStz31fQPE84MDOtGxk7cetJmc3xzShXIXRA/viewform';
 
 export function initFeedbackAssistant() {
     const CURRENT_VERSION = "v1.0"; // Versão deste módulo
@@ -100,7 +101,7 @@ export function initFeedbackAssistant() {
 
     // Botão para o Formulário 1
     const btn1 = document.createElement('button');
-    btn1.textContent = "Formulário de Feedback 1"; // Você pode mudar este nome
+    btn1.textContent = "Relatório de Ocorrências de Escala"; 
     Object.assign(btn1.style, styleButtonBase, { 
         background: '#4285F4', // Azul Google
         width: '100%',
@@ -113,7 +114,7 @@ export function initFeedbackAssistant() {
 
     // Botão para o Formulário 2
     const btn2 = document.createElement('button');
-    btn2.textContent = "Formulário de Feedback 2"; // Você pode mudar este nome
+    btn2.textContent = "Chamadas Excedidas >50min"; 
     Object.assign(btn2.style, styleButtonBase, { 
         background: '#34A853', // Verde Google
         width: '100%'
@@ -123,6 +124,17 @@ export function initFeedbackAssistant() {
     btn2.onclick = () => window.open(FORM_URL_2, '_blank');
     popupContent.appendChild(btn2);
 
+        // Botão para o Formulário 2
+    const btn3 = document.createElement('button');
+    btn3.textContent = "Relatório de Bugs (LM)"; 
+    Object.assign(btn3.style, styleButtonBase, { 
+        background: '#C5221F', 
+        width: '100%'
+    });
+    btn3.onmouseover = () => btn3.style.backgroundColor = '#1E8E3E';
+    btn3.onmouseout = () => btn3.style.backgroundColor = '#34A853';
+    btn3.onclick = () => window.open(FORM_URL_3, '_blank');
+    popupContent.appendChild(btn3);
     // --- 5. Rodapé (Crédito) ---
     const credit = document.createElement("div");
     credit.textContent = "created by lucaste@";
