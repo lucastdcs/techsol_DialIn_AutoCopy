@@ -750,22 +750,33 @@ export function initCaseNotesAssistant() {
         }
     };
 
-   generateButton.onclick = () => {
+  
+  generateButton.onclick = () => {
         const htmlOutput = generateOutputHtml();
         if (!htmlOutput) {
           showToast("Nenhum substatus selecionado", { error: true });
           return;
         }
+
+        copyHtmlToClipboard(htmlOutput);
+
         const campo = document.querySelector('div[contenteditable="true"]');
 
         if (campo) {
+          // 2. Tenta preencher o campo
           campo.focus();
           if (campo.innerHTML.trim() !== '' && !campo.innerHTML.endsWith('<br><br>')) {
               document.execCommand('insertHTML', false, '<br><br>');
           }
           document.execCommand('insertHTML', false, htmlOutput);
           campo.dispatchEvent(new Event("input", { bubbles: true }));
-          showToast("Texto inserido com sucesso");
+          
+       
+          setTimeout(() => {
+              showToast("Texto também inserido na página");
+          }, 600); 
+
+          // 4. Fecha e reseta
           togglePopup(false);
           resetSteps(1.5);
           mainStatusSelect.value = "";
@@ -773,8 +784,8 @@ export function initCaseNotesAssistant() {
           subStatusSelect.disabled = true;
 
         } else {
-          showToast("Campo de edição não encontrado. Copiando...", { error: true, duration: 2500 });
-          copyHtmlToClipboard(htmlOutput);
+
+          showToast("Campo não encontrado. O texto já foi copiado.", { error: true, duration: 2500 });
         }
     };
 
