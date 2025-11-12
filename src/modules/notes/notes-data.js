@@ -1,35 +1,49 @@
 // src/modules/notes/notes-data.js
 
+// ==================================================================
+//               TASKS_DB (Reorganizado por Categoria)
+// ==================================================================
 export const TASKS_DB = {
+    // --- GTM ---
    'gtm_installation': {
         name: 'GTM Installation',
-        screenshots: { implementation: ['GTM Instalado', 'Vinculador de conversões'], education: [] }
+        screenshots: { 
+            implementation: [
+                'GTM Instalado', 
+                'Vinculador de conversões'
+            ], 
+            education: [] 
+        }
     },
+    
+    // --- Ads ---
     'ads_conversion_tracking': {
         name: 'Ads Conversion Tracking',
         screenshots: {
-            implementation: ['Tag criada', 'Teste GTM', 'Teste Ads', 'Versão Publicada', 'Status Ads'],
-            education: ['Screenshot for TAG assistant of tag working:', 'Screenshot of conversion tracking status in Google Ads:']
+            implementation: [
+                'Tag criada', 
+                'Teste GTM', 
+                'Teste Ads', 
+                'Versão Publicada', 
+                'Status Ads'
+            ],
+            education: [
+                'Screenshot for TAG assistant of tag working:', 
+                'Screenshot of conversion tracking status in Google Ads:'
+            ]
         }
     },
     'ads_enhanced_conversions': {
         name: 'Ads Enhanced Conversions (ECW4)',
         screenshots: {
-            implementation: ['Termos aceitos no Ads', 'Tag implementada', 'Teste GTM', 'Teste Ads', 'Versão Publicada', 'Painel do Ads (após 7 dias)'],
-            education: []
-        }
-    },
-    'ga4_event_tracking': {
-        name: 'Analytics Event Tracking (GA4)',
-        screenshots: {
-            implementation: ['Tag do evento GA4 implementado no GTM', 'Teste GTM (tagassistant.google.com)', 'Teste GA4 (DebugView - tagassistant.google.com)', 'Versão publicada no GTM', '(Se houver parâmetros) Dimensões customizadas criadas no GA4', 'Evento marcado como principal no GA4', 'GA4 e Google Ads vinculados corretamente', 'Evento principal GA4 importado no Google Ads (como secundário)', 'Métricas app & web ativadas no Google Ads', '(Opcional) Teste no Relatório do Tempo Real (GA4)'],
-            education: []
-        }
-    },
-    'upd_for_ga4': {
-        name: 'UPD for GA4 (User-Provided Data)',
-        screenshots: {
-            implementation: ['Validação: Conta GA4 (somente fluxo web, não é setor de saúde)', '"Coleta de dados fornecidos pelo usuário" habilitado no GA4 (Admin > Coleta de Dados)', 'Confirmação de coleta de dados (UI)', 'Tag do evento GA4 otimizado (UPD) implementado no GTM', 'Teste GTM (tagassistant - parâmetro \'em\' sem erro)', 'Teste GA4 (DebugView - tagassistant)', 'Versão publicada no GTM', '(Treinamento) Evento principal importado no Google Ads como secundário'],
+            implementation: [
+                'Termos aceitos no Ads', 
+                'Tag implementada', 
+                'Teste GTM', 
+                'Teste Ads', 
+                'Versão Publicada', 
+                'Painel do Ads (após 7 dias)'
+            ],
             education: []
         }
     },
@@ -45,18 +59,166 @@ export const TASKS_DB = {
             ],
             education: []
         }
+    },
+    'ads_remarketing': {
+        name: 'Ads Remarketing',
+        screenshots: {
+            implementation: [
+                'Tag assistant companion to reflect Remarketing tag firing on all the pages (verify the tags on at least two landing pages)',
+                'Conversion ID from Tag Assistant Companion matching the Conversion ID on Google Ads',
+                'Audiences in Google Ads(All Visitors/All Users or Custom-created lists) populating data.'
+            ],
+            education: [
+                'Tag assistant companion to reflect Remarketing tag firing on all the pages (verify the tags on at least two landing pages)',
+                'Conversion ID from Tag Assistant Companion matching the Conversion ID on Google Ads',
+                'Audiences in Google Ads(All Visitors/All Users or Custom-created lists) populating data.'
+            ]
+        }
+    },
+    'ads_dynamic_remarketing': {
+        name: 'Ads Dynamic Remarketing',
+        screenshots: {
+            implementation: [
+                'Remarketing tag implemented firing on more than 2 pages on the website using Tag Assistant.',
+                'Business vertical chosen in Google Ads.',
+                'Dynamic Remarketing enabled on Merchant center for retail.',
+                'Implementation of Dynamic Remarketing Tags on the website/GTM.',
+                'Validating Dynamic Remarketing Tags using Tag Assistant.',
+                'Validating the product specific data(such as product ID, item ID, etc) from the product/service and cart pages... matching those against the attributes... The IDs/values must match.',
+                'Dynamic Remarketing audiences populating on Google Ads'
+            ],
+            education: [
+                'Validating Dynamic Remarketing Tags using Tag Assistant.',
+                'Validating the product specific data(such as product ID, item ID, etc) from the product/service and cart pages... matching those against the attributes... The IDs/values must match.',
+                'Dynamic Remarketing audiences populating on Google Ads'
+            ]
+        }
+    },
+    
+    // --- Analytics (GA4) ---
+    'ga4_setup': {
+        name: 'Analytics Set Up (GA4)',
+        screenshots: {
+            implementation: [
+                'Implementation of GA4 tag on the Website/GTM',
+                'Tag Assistant to reflect GA4 implemented firing on all the pages - Verify it on at least 2 landing pages via Tag Assistant Companion.',
+                'GA4 and Google Ads Linked.',
+                'GA4 web metrics enabled'
+            ],
+            education: [
+                'Implementation of GA4 tag on the Website/GTM',
+                'Tag Assistant to reflect GA4 implemented firing on all the pages - Verify it on at least 2 landing pages via Tag Assistant Companion.',
+                'GA4 and Google Ads Linked.',
+                'GA4 web metrics enabled'
+            ]
+        }
+    },
+    'ga4_event_tracking': {
+        name: 'Analytics Event Tracking (GA4)',
+        screenshots: {
+            implementation: [
+                'Tag do evento GA4 implementado no GTM', 
+                'Teste GTM (tagassistant.google.com)', 
+                'Teste GA4 (DebugView - tagassistant.google.com)', 
+                'Versão publicada no GTM', 
+                '(Se houver parâmetros) Dimensões customizadas criadas no GA4', 
+                'Evento marcado como principal no GA4', 
+                'GA4 e Google Ads vinculados corretamente', 
+                'Evento principal GA4 importado no Google Ads (como secundário)', 
+                'Métricas app & web ativadas no Google Ads', 
+                '(Opcional) Teste no Relatório do Tempo Real (GA4)'
+            ],
+            education: []
+        }
+    },
+    'upd_for_ga4': {
+        name: 'UPD for GA4 (User-Provided Data)',
+        screenshots: {
+            implementation: [
+                'Validação: Conta GA4 (somente fluxo web, não é setor de saúde)', 
+                '"Coleta de dados fornecidos pelo usuário" habilitado no GA4 (Admin > Coleta de Dados)', 
+                'Confirmação de coleta de dados (UI)', 
+                'Tag do evento GA4 otimizado (UPD) implementado no GTM', 
+                'Teste GTM (tagassistant - parâmetro \'em\' sem erro)', 
+                'Teste GA4 (DebugView - tagassistant)', 
+                'Versão publicada no GTM', 
+                '(Treinamento) Evento principal importado no Google Ads como secundário'
+            ],
+            education: []
+        }
+    },
+    'ga4_standard_remarketing': {
+        name: 'GA4 Standard Remarketing',
+        screenshots: {
+            implementation: [
+                'Google signals in GA4 enabled.',
+                'User data acknowledgement in GA4 checked.',
+                'GA4 linked to the correct Google Ads Account',
+                'Custom Audience(if requested) set up.',
+                'GA4 audience lists imported to Google Ads populating data'
+            ],
+            education: [
+                'Google signals in GA4 enabled.',
+                'User data acknowledgement in GA4 checked.',
+                'GA4 linked to the correct Google Ads Account',
+                'Custom Audience(if requested) set up.',
+                'GA4 audience lists imported to Google Ads populating data'
+            ]
+        }
+    },
+    'ga4_ecommerce_tracking': {
+        name: 'Analytics eCommerce Tracking (GA4)',
+        screenshots: {
+            implementation: [
+                'eCommerce Tag set up using gTag or GTM.',
+                'Tag Assistant to reflect all of the eCommerce parameters passed are extracting right values.',
+                'Monetization reports in GA4 recording purchases.',
+                'Purchase conversion imported to the right Google Ads account.',
+                'Ensuring GA4 web metrics are enabled.'
+            ],
+            education: [
+                'eCommerce Tag set up using gTag or GTM.',
+                'Tag Assistant to reflect all of the eCommerce parameters passed are extracting right values.',
+                'Monetization reports in GA4 recording purchases.',
+                'Purchase conversion imported to the right Google Ads account.',
+                'Ensuring GA4 web metrics are enabled.'
+            ]
+        }
+    },
+    'ga4_cross_domain_tracking': {
+        name: 'Analytics Cross-domain Tracking (GA4)',
+        screenshots: {
+            implementation: [
+                'Tag Assistant to reflect all the domains are tagged with the same GA4.',
+                'Domains added for cross-domain configuration in GA4 UI.',
+                'Adding domains into Unwanted Referrals.',
+                'Validating by checking the _gl parameter on the second domain URL when a certain action on the first domain redirects to the second domain.',
+                'Validating the _ga cookie values are same on both the domains from the application tab in the developer tools.'
+            ],
+            education: [
+                'Tag Assistant to reflect all the domains are tagged with the same GA4.',
+                'Domains added for cross-domain configuration in GA4 UI.',
+                'Adding domains into Unwanted Referrals.',
+                'Validating by checking the _gl parameter on the second domain URL when a certain action on the first domain redirects to the second domain.',
+                'Validating the _ga cookie values are same on both the domains from the application tab in the developer tools.'
+            ]
+        }
     }
 };
 
+// ==================================================================
+//               SUBSTATUS TEMPLATES (Com novos SO)
+// ==================================================================
+
 export const SUBSTATUS_TEMPLATES = {
     // --- AS (Assigned) ---
-    'AS_Reschedule_1': { // Chave atualizada (era AS_Assigned)
+    'AS_Reschedule_1': {
         status: 'AS', 
-        name: 'AS - Reschedule 1', // Nome limpo
+        name: 'AS - Reschedule 1',
         requiresTasks: false,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> AS - Reschedule 1<br><br><b>Reason/comments:</b> Caso Reagendado.<br><br><b>OnCall Comments:</b><br>{MOTIVO_REAGENDAMENTO}<br>Data do reagendamento: {DATA_REAGENDAMENTO}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b> N/A<br><br><b>Multiple CIDs:</b> N/A`
     },
-    'AS_Acceptable_Reschedule': { // NOVO
+    'AS_Acceptable_Reschedule': {
         status: 'AS', 
         name: 'AS - Acceptable Reschedule', 
         requiresTasks: false,
@@ -64,25 +226,25 @@ export const SUBSTATUS_TEMPLATES = {
     },
 
     // --- NI (Need Info) ---
-    'NI_Awaiting_Inputs': { // Existente
+    'NI_Awaiting_Inputs': {
         status: 'NI', 
-        name: 'NI - Awaiting Inputs', // Nome limpo
+        name: 'NI - Awaiting Inputs',
         requiresTasks: false,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> NI - Awaiting Inputs<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>{CONTEXTO_CALL}<br>  <b>Tasks solicitadas pelo AM:</b><br>  {TASKS_SOLICITADAS}<br>  <b>Impedimento / Próximo passo (Anunciante):</b><br>  {IMPEDIMENTO_CLIENTE}<br>  <b>Minha Ação:</b><br>  {MINHA_ACAO}<br>  <b>Considerações adicionais:</b><br>  {CONSIDERACOES}<br>  <b>Dia do Follow-up (se aplicável):</b> {DIA}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
     },
-    'NI_In_Consult': { // NOVO
+    'NI_In_Consult': {
         status: 'NI', 
         name: 'NI - In Consult', 
         requiresTasks: false,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> NI - In Consult<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>{CONTEXTO_CALL}<br>  <b>Tasks solicitadas pelo AM:</b><br>  {TASKS_SOLICITADAS}<br>  <b>Impedimento / Próximo passo (Anunciante):</b><br>  {IMPEDIMENTO_CLIENTE}<br>  <b>Minha Ação:</b><br>  {MINHA_ACAO}<br>  <b>Considerações adicionais:</b><br>  {CONSIDERACOES}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
     },
-    'NI_Awaiting_Validation': { // Chave atualizada (era NI_Awaiting_Validations)
+    'NI_Awaiting_Validation': {
         status: 'NI', 
-        name: 'NI - Awaiting Validation', // Nome limpo
+        name: 'NI - Awaiting Validation',
         requiresTasks: true,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> NI - Awaiting Validation<br><br><b>Reason/comments:</b> Aguardando Validações no Google Ads<br><br><b>OnCall Comments:</b><br><b>Tasks solicitadas pelo AM:</b><br>{TASKS_SOLICITADAS}<br><b>Tasks implementadas na call:</b><br>{TASKS_IMPLEMENTADAS_CALL}<br><b>Seguimos com os passos:</b><br>{PASSOS_EXECUTADOS}<br><b>Próximos passos (Acompanhamento):</b><br>{PROXIMOS_PASSOS}<br><b>Considerações adicionais:</b><br>{CONSIDERACOES}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
     },
-    'NI_Attempted_Contact': { // NOVO
+    'NI_Attempted_Contact': {
         status: 'NI', 
         name: 'NI - Attempted Contact', 
         requiresTasks: false,
@@ -90,49 +252,49 @@ export const SUBSTATUS_TEMPLATES = {
     },
 
     // --- IN (Inactive) ---
-    'IN_Infeasible': { // NOVO
+    'IN_Infeasible': {
         status: 'IN', 
         name: 'IN - Infeasible', 
         requiresTasks: false,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> IN - Infeasible<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>{COMENTARIOS}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
     },
-    'IN_Not_Reachable': { // Chave atualizada (era IN_Inactive)
+    'IN_Not_Reachable': {
         status: 'IN', 
-        name: 'IN - Not Reachable', // Nome limpo
+        name: 'IN - Not Reachable',
         requiresTasks: false,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> IN - Not Reachable<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>{COMENTARIOS}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
     },
-    'IN_Not_Interested': { // NOVO
+    'IN_Not_Interested': {
         status: 'IN', 
         name: 'IN - Not Interested', 
         requiresTasks: false,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> IN - Not Interested<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>{COMENTARIOS}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
     },
-    'IN_Not_Ready': { // NOVO
+    'IN_Not_Ready': {
         status: 'IN', 
         name: 'IN - Not Ready', 
         requiresTasks: false,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> IN - Not Ready<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>{COMENTARIOS}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
     },
-    'IN_Out_of_Scope_Rerouted': { // NOVO
+    'IN_Out_of_Scope_Rerouted': {
         status: 'IN', 
         name: 'IN - Out of Scope - Rerouted to Internal Team', 
         requiresTasks: false,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> IN - Out of Scope - Rerouted to Internal Team<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>{COMENTARIOS}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
     },
-    'IN_Out_of_Scope_Unable_to_Transfer': { // NOVO
+    'IN_Out_of_Scope_Unable_to_Transfer': {
         status: 'IN', 
         name: 'IN - Out of Scope - Unable to Transfer', 
         requiresTasks: false,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> IN - Out of Scope - Unable to Transfer<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>{COMENTARIOS}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
     },
-    'IN_Out_of_Scope_Email_to_Seller': { // NOVO
+    'IN_Out_of_Scope_Email_to_Seller': {
         status: 'IN', 
         name: 'IN - Out of Scope - Email to Seller', 
         requiresTasks: false,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> IN - Out of Scope - Email to Seller<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>{COMENTARIOS}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> N/A<br><br><b>Screenshots:</b><br>{SCREENSHOTS}<br><br><b>Multiple CIDs:</b> {CIDS}`
     },
-    'IN_Troubleshooting_Transferred': { // NOVO
+    'IN_Troubleshooting_Transferred': {
         status: 'IN', 
         name: 'IN - Troubleshooting [Transferred]', 
         requiresTasks: false,
@@ -140,19 +302,19 @@ export const SUBSTATUS_TEMPLATES = {
     },
 
     // --- SO (Solution Offered) ---
-    'SO_Implementation_Only': { // Existente
+    'SO_Implementation_Only': {
         status: 'SO', 
-        name: 'SO - Implementation Only', // Nome limpo
+        name: 'SO - Implementation Only',
         requiresTasks: true,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> SO - Implementation Only<br><br><b>Reason/comments:</b> Task implementada com sucesso<br><br><b>OnCall Comments:</b><br><b>Task(s) solicitada(s):</b><br>{TASKS_SOLICITADAS}<br><b>Seguimos com os passos:</b><br>{PASSOS_EXECUTADOS}<br><b>Resultado:</b><br>{RESULTADO}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
     },
-    'SO_Education_Only': { // Existente
+    'SO_Education_Only': {
         status: 'SO', 
-        name: 'SO - Education Only', // Nome limpo
+        name: 'SO - Education Only',
         requiresTasks: true,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}<br><br><b>Substatus:</b> SO - Education Only<br><br><b>Reason/comments:</b> Consultoria utilizada para tirar dúvidas do anunciante.<br><br><b>OnCall Comments:</b><br><b>Dúvidas do anunciante:</b><br>{DUVIDAS}<br><b>Resoluções/Explicações:</b><br>{RESOLUCOES}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
     },
-    'SO_Troubleshooting_Only': { // Chave atualizada (era SO_Troubleshooting)
+    'SO_Troubleshooting_Only': { // Chave atualizada
         status: 'SO', 
         name: 'SO - Troubleshooting Only', // Nome limpo
         requiresTasks: true,
@@ -163,9 +325,6 @@ export const SUBSTATUS_TEMPLATES = {
 // ==================================================================
 //               NOVO OBJETO DE SHORTCODES (Tarefa 4)
 // ==================================================================
-
-// Este objeto mapeia as chaves do SUBSTATUS_TEMPLATES para os 
-// shortcodes que você forneceu.
 export const SUBSTATUS_SHORTCODES = {
     // AS
     'AS_Reschedule_1': 'ts as resched1',
@@ -186,8 +345,6 @@ export const SUBSTATUS_SHORTCODES = {
     'IN_Troubleshooting_Transferred': null, // Nenhum shortcode fornecido
     // SO
     'SO_Implementation_Only': 'ts so verif',
-    'SO_Verified_No_Recent_Conversion': 'ts so verif nrc',
-    'SO_Unverified': 'ts so unv',
     'SO_Education_Only': 'ts so Edu',
     'SO_Troubleshooting_Only': 'ts so trbl'
 };
@@ -205,6 +362,7 @@ export const textareaListFields = [
 
 export const textareaParagraphFields = ['CONSIDERACOES', 'COMENTARIOS'];
 
+// ===== ATUALIZAÇÃO: ADICIONADO 'type' (bau, lm, all) =====
 export const scenarioSnippets = {
     // --- Cenários de NI (Exclusivos) ---
     'quickfill-ni-inicio-manual': {
