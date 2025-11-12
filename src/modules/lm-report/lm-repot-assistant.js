@@ -131,8 +131,8 @@ export function initFeedbackAssistant() {
         background: '#C5221F', 
         width: '100%'
     });
-    btn3.onmouseover = () => btn3.style.backgroundColor = '#1E8E3E';
-    btn3.onmouseout = () => btn3.style.backgroundColor = '#34A853';
+    btn3.onmouseover = () => btn3.style.backgroundColor = '#e13532ff';
+    btn3.onmouseout = () => btn3.style.backgroundColor = '#C5221F';
     btn3.onclick = () => window.open(FORM_URL_3, '_blank');
     popupContent.appendChild(btn3);
     // --- 5. Rodapé (Crédito) ---
