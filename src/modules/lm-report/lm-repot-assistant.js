@@ -21,10 +21,10 @@ const FORM_URL_3  = 'https://docs.google.com/forms/d/e/1FAIpQLSfkqRqT2Kbf08IStz3
 export function initFeedbackAssistant() {
     const CURRENT_VERSION = "v1.0"; // Versão deste módulo
 
-    // --- 1. Criar o Botão Flutuante ---
+
     const btn = document.createElement("button");
     btn.id = "feedback-floating-btn";
-    btn.textContent = "📝"; // Ícone para "formulários/pesquisa"
+    btn.textContent = "📝"; 
     Object.assign(btn.style, styleFloatingButton, {
         top: "80%", // Posição abaixo dos outros
         background: "#0F9D58", // Verde do Google (Sheets/Forms)
