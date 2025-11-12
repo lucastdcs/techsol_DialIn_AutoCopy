@@ -502,10 +502,6 @@ export function initCaseNotesAssistant() {
             return input;
         };
 
-        // ===== LÓGICA DE FILTRO BAU/LM =====
-        // A lógica aqui é a mesma que você já tem no seu v2.8.0
-        // Eu adicionei o filtro 'type' para garantir que os cenários
-        // corretos sejam exibidos dependendo de currentCaseType ('bau' ou 'lm')
 
         if (selectedSubStatusKey === 'NI_Awaiting_Inputs') {
             const radioName = "ni-scenario";
