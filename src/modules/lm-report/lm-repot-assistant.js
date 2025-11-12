@@ -24,7 +24,7 @@ export function initFeedbackAssistant() {
     // --- 1. Criar o Botão Flutuante ---
     const btn = document.createElement("button");
     btn.id = "feedback-floating-btn";
-    btn.textContent = "📊"; // Ícone para "formulários/pesquisa"
+    btn.textContent = "📝"; // Ícone para "formulários/pesquisa"
     Object.assign(btn.style, styleFloatingButton, {
         top: "80%", // Posição abaixo dos outros
         background: "#0F9D58", // Verde do Google (Sheets/Forms)
@@ -131,8 +131,8 @@ export function initFeedbackAssistant() {
         background: '#C5221F', 
         width: '100%'
     });
-    btn3.onmouseover = () => btn3.style.backgroundColor = '#1E8E3E';
-    btn3.onmouseout = () => btn3.style.backgroundColor = '#34A853';
+    btn3.onmouseover = () => btn3.style.backgroundColor = '#e13532ff';
+    btn3.onmouseout = () => btn3.style.backgroundColor = '#C5221F';
     btn3.onclick = () => window.open(FORM_URL_3, '_blank');
     popupContent.appendChild(btn3);
     // --- 5. Rodapé (Crédito) ---
