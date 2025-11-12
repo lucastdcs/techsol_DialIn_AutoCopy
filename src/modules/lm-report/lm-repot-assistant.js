@@ -19,7 +19,7 @@ const FORM_URL_2 = 'https://docs.google.com/forms/d/e/1FAIpQLSfE8EMHNJMTKYeA6XM2
 const FORM_URL_3  = 'https://docs.google.com/forms/d/e/1FAIpQLSfkqRqT2Kbf08IStz31fQPE84MDOtGxk7cetJmc3xzShXIXRA/viewform';
 
 export function initFeedbackAssistant() {
-    const CURRENT_VERSION = "v1.0"; // Versão deste módulo
+    const CURRENT_VERSION = "v1.3"; // Versão deste módulo
 
 
     const btn = document.createElement("button");
