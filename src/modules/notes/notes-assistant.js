@@ -26,7 +26,7 @@ import {
 } from './notes-data.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v2.9.0";
+    const CURRENT_VERSION = "v2.9.5"
     
     // --- ESTADO GLOBAL DO MÓDULO ---
     let currentCaseType = 'bau'; // 
