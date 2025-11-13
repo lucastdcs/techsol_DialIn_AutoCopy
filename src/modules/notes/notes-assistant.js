@@ -26,7 +26,7 @@ import {
 } from './notes-data.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v2.9.0"; // Nova versão com Stepper
+    const CURRENT_VERSION = "v2.9.5"; // Nova versão com Stepper
     
     let currentCaseType = 'bau';
     
