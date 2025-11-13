@@ -14,22 +14,22 @@ import {
     styleCredit,
     styleExpandButton,
     typeBtnStyle,
-    getRandomGoogleStyle // Importa a função de cor aleatória
+    getRandomGoogleStyle
 } from '../shared/utils.js'; 
 
 import {
     TASKS_DB,
-    SUBSTATUS_TEMPLATES, // Agora usaremos este para os dropdowns
+    SUBSTATUS_TEMPLATES,
     textareaListFields,
     textareaParagraphFields,
     scenarioSnippets
 } from './notes-data.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v2.9.7"; // Nova versão com Stepper
+    const CURRENT_VERSION = "v2.9.6"; // Versão com correção de chaves
     
-    let currentCaseType = 'bau';
-    
+    let currentCaseType = 'bau'; 
+
     function copyHtmlToClipboard(html) {
         const container = document.createElement('div');
         container.style.position = 'fixed';
@@ -43,7 +43,6 @@ export function initCaseNotesAssistant() {
         selection.addRange(range);
         try {
             document.execCommand('copy');
-            // O toast de cópia foi movido para a função generateButton.onclick
         } catch (err) {
             showToast("Falha ao copiar", { error: true });
         }
@@ -130,6 +129,7 @@ export function initCaseNotesAssistant() {
         isExpanded = !isExpanded;
         const newWidth = isExpanded ? expandedWidth : initialWidth;
         const widthDifference = expandedWidth - initialWidth;
+
         popup.style.width = `${newWidth}px`;
         
         if (popup.style.right && popup.style.right !== 'auto') {
@@ -146,46 +146,13 @@ export function initCaseNotesAssistant() {
     
     closeBtn.onclick = () => togglePopup(false);
 
-    // --- Estilos Locais (para o Stepper) ---
-    const styleStepper = {
-        display: 'none', // Começa escondido
-        alignItems: 'center',
-        gap: '5px',
-        marginLeft: 'auto' // Empurra para a direita
-    };
-    const styleStepperBtn = {
-        width: '24px',
-        height: '24px',
-        border: '1px solid #dadce0',
-        borderRadius: '50%',
-        backgroundColor: '#f8f9fa',
-        color: '#3c4043',
-        cursor: 'pointer',
-        padding: '0',
-        fontSize: '16px',
-        lineHeight: '22px',
-        textAlign: 'center',
-        userSelect: 'none'
-    };
-    const styleStepperCount = {
-        fontSize: '14px',
-        fontWeight: '500',
-        color: '#1a73e8',
-        minWidth: '15px',
-        textAlign: 'center'
-    };
-    // --- Fim dos Estilos do Stepper ---
-
-    // Estilos locais do Módulo 1
+    // --- Estilos Locais ---
     const styleInput = {
         width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #dadce0",
         fontSize: "14px", marginBottom: "12px", boxSizing: "border-box", fontFamily: "'Poppins', sans-serif",
         transition: "border-color 0.2s ease, box-shadow 0.2s ease"
     };
     const styleTextarea = { ...styleInput, height: "100px", resize: "vertical" };
-    const styleStepBlock = {
-        borderTop: "1px solid #eee", paddingTop: "12px", marginTop: "12px"
-    };
     const styleH3 = {
         fontSize: "14px", fontWeight: "600", color: "#202124", margin: "0 0 12px 0"
     };
@@ -197,8 +164,7 @@ export function initCaseNotesAssistant() {
         userSelect: "none"
     };
     const styleCheckboxInput = {
-        width: "auto", marginRight: "10px", // Aumentado o espaço
-        marginBottom: "0",
+        width: "auto", marginRight: "10px", marginBottom: "0",
         cursor: "pointer",
         accentColor: "#1a73e8"
     };
@@ -206,6 +172,20 @@ export function initCaseNotesAssistant() {
         flex: "1 1 0", padding: "10px 0", color: "#fff", border: "none",
         borderRadius: "8px", fontSize: "14px", fontWeight: "500",
         cursor: "pointer", marginTop: "16px"
+    };
+    const styleStepper = {
+        display: 'none', alignItems: 'center', gap: '5px', marginLeft: 'auto' 
+    };
+    const styleStepperBtn = {
+        width: '24px', height: '24px', border: '1px solid #dadce0', borderRadius: '50%',
+        backgroundColor: '#f8f9fa', color: '#3c4043', cursor: 'pointer', padding: '0',
+        fontSize: '16px', lineHeight: '22px', textAlign: 'center', userSelect: 'none'
+    };
+    const styleStepperCount = {
+        fontSize: '14px', fontWeight: '500', color: '#1a73e8', minWidth: '15px', textAlign: 'center'
+    };
+    const styleStepBlock = {
+        borderTop: "1px solid #eee", paddingTop: "12px", marginTop: "12px"
     };
 
     // Conteúdo principal do popup
@@ -223,7 +203,7 @@ export function initCaseNotesAssistant() {
     Object.assign(credit.style, styleCredit);
     popup.appendChild(credit);
 
-    // --- Variáveis da UI declaradas UMA VEZ ---
+    // --- Variáveis da UI ---
     const step0Div = document.createElement("div"); 
     const step1Div = document.createElement("div");
     const stepSnippetsDiv = document.createElement("div");
@@ -237,11 +217,10 @@ export function initCaseNotesAssistant() {
     const buttonContainer = document.createElement("div");
     const copyButton = document.createElement("button");
     const generateButton = document.createElement("button");
-    
     const typeBAU = document.createElement("div");
     const typeLM = document.createElement("div");
 
-       function updateFieldsFromScenarios() {
+    function updateFieldsFromScenarios() {
         const activeScenarioInputs = snippetContainer.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
         const targetFieldsContent = {};
         const activeLinkedTasks = new Set();
@@ -251,14 +230,14 @@ export function initCaseNotesAssistant() {
             const snippets = scenarioSnippets[scenarioId];
             if (snippets) {
                 for (const fieldId in snippets) {
-                    if (fieldId !== 'linkedTask') {
+                    if (fieldId !== 'linkedTask' && fieldId !== 'type') { // Ignora 'type' e 'linkedTask'
                         if (!targetFieldsContent[fieldId]) {
                             targetFieldsContent[fieldId] = [];
                         }
                          if (!targetFieldsContent[fieldId].includes(snippets[fieldId])) {
                             targetFieldsContent[fieldId].push(snippets[fieldId]);
                          }
-                    } else {
+                    } else if (fieldId === 'linkedTask') {
                          activeLinkedTasks.add(snippets.linkedTask);
                     }
                 }
@@ -268,7 +247,7 @@ export function initCaseNotesAssistant() {
         const allPossibleTargetFields = new Set();
          Object.values(scenarioSnippets).forEach(snippets => {
              Object.keys(snippets).forEach(key => {
-                 if(key !== 'linkedTask') allPossibleTargetFields.add(key);
+                 if(key !== 'linkedTask' && key !== 'type') allPossibleTargetFields.add(key);
              });
          });
 
@@ -292,6 +271,7 @@ export function initCaseNotesAssistant() {
                      finalValue = combinedTextArray.join('\n\n');
                 }
                 
+                // Preenche
                 if (finalValue.trim() !== '•' && finalValue.trim() !== '') {
                     field.value = finalValue;
                 } else if (textareaListFields.includes(fieldId.replace('field-', ''))) {
@@ -300,8 +280,9 @@ export function initCaseNotesAssistant() {
                     field.value = '';
                 }
 
+                // CORREÇÃO DO BULLET: Sempre ativa se for textarea de lista
                 if (field.tagName === 'TEXTAREA' && textareaListFields.includes(fieldId.replace('field-', ''))) {
-                     if (field.value.trim() === '•' || field.value.trim() === '') enableAutoBullet(field);
+                     enableAutoBullet(field);
                 }
              }
         });
@@ -311,6 +292,8 @@ export function initCaseNotesAssistant() {
             taskCheckbox.checked = false;
             if (activeLinkedTasks.has(taskCheckbox.value)) {
                 taskCheckbox.checked = true;
+                // Dispara change para atualizar o stepper e visual
+                taskCheckbox.dispatchEvent(new Event('change'));
             }
         });
     }
@@ -347,7 +330,6 @@ export function initCaseNotesAssistant() {
             }
         };
     }
-
 
     // --- Montagem da UI (continuação) ---
     
@@ -480,7 +462,6 @@ export function initCaseNotesAssistant() {
         }
     }
 
-    // ===== CORREÇÃO: Dropdown agora usa SUBSTATUS_TEMPLATES (Tarefa 1) =====
     mainStatusSelect.onchange = () => {
         const selectedStatus = mainStatusSelect.value;
         resetSteps(1.5);
@@ -489,20 +470,17 @@ export function initCaseNotesAssistant() {
             subStatusSelect.disabled = true;
             return;
         }
-        
-        // Loop corrigido para usar o objeto de templates
         for (const key in SUBSTATUS_TEMPLATES) {
             const template = SUBSTATUS_TEMPLATES[key];
             if (template.status === selectedStatus) {
                 const option = document.createElement('option');
                 option.value = key;
-                option.textContent = template.name; // Usa o nome limpo
+                option.textContent = template.name;
                 subStatusSelect.appendChild(option);
             }
         }
         subStatusSelect.disabled = false;
     };
-    // =================================================================
 
     subStatusSelect.onchange = () => {
         const selectedSubStatusKey = subStatusSelect.value;
@@ -514,10 +492,26 @@ export function initCaseNotesAssistant() {
         let snippetAdded = false;
 
         const addSnippetInput = (scenario, type, container) => {
-            // ... (código mantido) ...
+            const label = document.createElement('label');
+            Object.assign(label.style, styleCheckboxLabel);
+            label.onmouseover = () => label.style.backgroundColor = '#e8eaed';
+            label.onmouseout = () => label.style.backgroundColor = '#f8f9fa';
+
+            const input = document.createElement('input');
+            input.type = type;
+            input.id = scenario.id;
+            Object.assign(input.style, styleCheckboxInput);
+            label.appendChild(input);
+            label.appendChild(document.createTextNode(` ${scenario.text}`));
+            container.appendChild(label);
+            return input;
         };
 
-        // ===== LÓGICA DE FILTRO BAU/LM (Mantida) =====
+        // ===== LÓGICA DE FILTRO BAU/LM (CORRIGIDA) =====
+        
+        // Verifica se o substatus selecionado existe em SUBSTATUS_TEMPLATES
+        // e usa a chave correta.
+        
         if (selectedSubStatusKey === 'NI_Awaiting_Inputs') {
             const radioName = "ni-scenario";
             const allScenarios = [
@@ -558,7 +552,8 @@ export function initCaseNotesAssistant() {
             snippetAdded = filteredScenarios.length > 0;
         }
         
-        if (selectedSubStatusKey === 'AS_Assigned') {
+        // CORREÇÃO: Usando startsWith para pegar todos os AS
+        if (selectedSubStatusKey.startsWith('AS_')) {
             const reasonTitle = document.createElement('label');
             reasonTitle.textContent = "Motivos Comuns:";
             Object.assign(reasonTitle.style, styleLabel);
@@ -581,7 +576,8 @@ export function initCaseNotesAssistant() {
             snippetAdded = filteredScenarios.length > 0;
         }
         
-       if (selectedSubStatusKey === 'IN_Inactive') {
+       // CORREÇÃO: Usando startsWith para pegar todos os IN
+       if (selectedSubStatusKey.startsWith('IN_')) {
              const radioName = "in-scenario";
              const allScenarios = [
                 { id: 'quickfill-in-nrp-bau', text: 'NRP (BAU - 3 tentativas)' }, 
@@ -609,7 +605,6 @@ export function initCaseNotesAssistant() {
         }
         // ===== FIM DA LÓGICA DE FILTRO =====
 
-        // ===== CORREÇÃO: LÓGICA DO STEPPER (Tarefa 2) =====
         if (templateData.requiresTasks) {
             taskCheckboxesContainer.innerHTML = '';
             for (const taskKey in TASKS_DB) {
@@ -620,19 +615,17 @@ export function initCaseNotesAssistant() {
                 label.onmouseover = () => { if (!checkbox.checked) label.style.backgroundColor = '#e8eaed'; };
                 label.onmouseout = () => { if (!checkbox.checked) label.style.backgroundColor = '#f8f9fa'; };
 
-                // 1. Checkbox
                 const checkbox = document.createElement('input');
                 checkbox.type = 'checkbox';
                 checkbox.value = taskKey;
-                checkbox.className = 'task-checkbox'; // Classe para encontrar
+                checkbox.className = 'task-checkbox'; 
                 Object.assign(checkbox.style, styleCheckboxInput);
                 
-                // 2. Nome da Task
                 const taskName = document.createElement('span');
                 taskName.textContent = task.name;
-                Object.assign(taskName.style, { flexGrow: '1' }); // Faz o nome ocupar o espaço
+                Object.assign(taskName.style, { flexGrow: '1' }); 
 
-                // 3. Stepper (escondido)
+                // Stepper
                 const stepperDiv = document.createElement('div');
                 stepperDiv.className = 'stepper-container';
                 Object.assign(stepperDiv.style, styleStepper);
@@ -658,13 +651,11 @@ export function initCaseNotesAssistant() {
                 stepperDiv.appendChild(countSpan);
                 stepperDiv.appendChild(btnPlus);
 
-                // Adiciona tudo ao label
                 label.appendChild(checkbox);
                 label.appendChild(taskName);
                 label.appendChild(stepperDiv);
                 taskCheckboxesContainer.appendChild(label);
 
-                // --- Lógica do Stepper ---
                 checkbox.onchange = () => {
                     if (checkbox.checked) {
                         stepperDiv.style.display = 'flex';
@@ -678,13 +669,12 @@ export function initCaseNotesAssistant() {
                 };
 
                 btnMinus.onclick = (e) => {
-                    e.preventDefault(); // Impede o label de (des)marcar o checkbox
-                    e.stopPropagation(); // Impede o 'click' de se propagar
+                    e.preventDefault(); 
+                    e.stopPropagation(); 
                     let count = parseInt(countSpan.textContent);
                     if (count > 1) {
                         countSpan.textContent = count - 1;
                     } else {
-                        // Se for 1 e clicar menos, desmarca o checkbox
                         checkbox.checked = false;
                         checkbox.dispatchEvent(new Event('change'));
                     }
@@ -699,13 +689,10 @@ export function initCaseNotesAssistant() {
             }
             step2Div.style.display = 'block';
         }
-        // =================================================
 
         dynamicFormFieldsContainer.innerHTML = '';
         
-        // ===== CORREÇÃO DA REGEX (Permitir números) =====
         const placeholders = templateData.template.match(/{([A-Z0-9_]+)}/g) || [];
-        // ===============================================
         
         const uniquePlaceholders = [...new Set(placeholders)];
         
@@ -730,7 +717,7 @@ export function initCaseNotesAssistant() {
                 field = document.createElement('input');
                 field.type = 'text';
                 Object.assign(field.style, styleInput);
-                 if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey === 'NI_Awaiting_Inputs' || selectedSubStatusKey === 'IN_Inactive')) {
+                 if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey === 'NI_Awaiting_Inputs' || selectedSubStatusKey.startsWith('IN_'))) {
                     Object.assign(label.style, { display: 'none' });
                     Object.assign(field.style, { display: 'none' });
                 }
@@ -761,7 +748,7 @@ export function initCaseNotesAssistant() {
         let outputText = templateData.template.replace(/\n/g, "<br>");
         const ulStyle = "style=\"margin-bottom: 12px; padding-left: 30px;\"";
 
-       if (templateData.requiresTasks) {
+        if (templateData.requiresTasks) {
             const selectedCheckboxes = taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked');
             let tagNames = [];
             let screenshotsText = '';
@@ -771,59 +758,44 @@ export function initCaseNotesAssistant() {
                 const taskKey = checkbox.value;
                 const task = TASKS_DB[taskKey];
                 
-                // Pega o container (label) e encontra o contador
                 const label = checkbox.closest('label');
                 const countSpan = label.querySelector('.stepper-count');
                 const count = parseInt(countSpan.textContent);
 
-                // Adiciona o nome da task com a contagem
                 if (count > 1) {
                     tagNames.push(`${task.name} (x${count})`);
                 } else {
                     tagNames.push(task.name);
                 }
 
-                // ===== INÍCIO DA SUBSTITUIÇÃO =====
-                // Substitua a lógica de screenshots antiga por esta:
-                
-                // Adiciona screenshots (agora em um loop)
                 const screenshotList = task.screenshots[screenshotType] || [];
                 if (screenshotList.length > 0) {
                     
-                    // Loop 'count' vezes (ex: 1 a 3)
                     for (let i = 1; i <= count; i++) {
                         
-                        // Adiciona um título com contador (se count > 1)
                         if (count > 1) {
                             screenshotsText += `<b>${task.name} - Implementação #${i}</b>`;
                         } else {
                             screenshotsText += `<b>${task.name}</b>`;
                         }
                         
-                        // Adiciona a lista de prints
                         const screenItems = screenshotList.map(print => `<li>${print} - </li>`).join('');
                         screenshotsText += `<ul ${ulStyle}>${screenItems}</ul>`;
                     }
                 }
-                // ===== FIM DA SUBSTITUIÇÃO =====
             });
             
             outputText = outputText.replace(/{TAGS_IMPLEMENTED}/g, tagNames.join(', ') || 'N/A');
             outputText = outputText.replace(/{SCREENSHOTS_LIST}/g, screenshotsText ? `${screenshotsText}` : 'N/A');
         }
-        // ========================================================
 
         const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
         inputs.forEach(input => {
             const fieldName = input.id.replace('field-', '');
-            
-            // ===== CORREÇÃO DA REGEX (Permitir números) =====
             const placeholder = new RegExp(`{${fieldName}}`, 'g');
-            // ===============================================
-
             let value = input.value;
             
-            if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey === 'NI_Awaiting_Inputs' || selectedSubStatusKey === 'IN_Inactive')) {
+            if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey === 'NI_Awaiting_Inputs' || selectedSubStatusKey.startsWith('IN_'))) {
                 const checkedRadio = snippetContainer.querySelector('input[type="radio"]:checked');
                 if (checkedRadio && scenarioSnippets[checkedRadio.id] && scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS']) {
                      value = scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS'];
@@ -864,7 +836,7 @@ export function initCaseNotesAssistant() {
         const htmlOutput = generateOutputHtml();
         if (htmlOutput) {
             copyHtmlToClipboard(htmlOutput);
-            showToast("Texto copiado com sucesso"); // Toast de cópia
+            showToast("Texto copiado com sucesso"); 
         } else {
             showToast("Nenhum substatus selecionado", { error: true });
         }
@@ -878,7 +850,6 @@ export function initCaseNotesAssistant() {
           return;
         }
 
-        // 1. Copia primeiro (sem toast)
         copyHtmlToClipboard(htmlOutput); 
 
         const campo = document.querySelector('div[contenteditable="true"]');
@@ -891,7 +862,6 @@ export function initCaseNotesAssistant() {
           document.execCommand('insertHTML', false, htmlOutput);
           campo.dispatchEvent(new Event("input", { bubbles: true }));
           
-          // 2. Mostra toast de sucesso (atrasado)
           setTimeout(() => {
               showToast("Texto inserido e copiado!");
           }, 600); 
@@ -903,8 +873,7 @@ export function initCaseNotesAssistant() {
           subStatusSelect.disabled = true;
 
         } else {
-          // 3. Se falhar, mostra o toast de cópia
-          showToast("Campo não encontrado. Texto copiado.", { error: true, duration: 3000 });
+          showToast("Campo não encontrado. O texto já foi copiado.", { error: true, duration: 3000 });
         }
     };
 
