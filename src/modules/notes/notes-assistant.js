@@ -26,7 +26,7 @@ import {
 } from './notes-data.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v2.9.5"; // Nova versão com Stepper
+    const CURRENT_VERSION = "v2.9.7"; // Nova versão com Stepper
     
     let currentCaseType = 'bau';
     
@@ -241,13 +241,113 @@ export function initCaseNotesAssistant() {
     const typeBAU = document.createElement("div");
     const typeLM = document.createElement("div");
 
-    function updateFieldsFromScenarios() {
-        // ... (código mantido, não precisa de alterações para o stepper) ...
+       function updateFieldsFromScenarios() {
+        const activeScenarioInputs = snippetContainer.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
+        const targetFieldsContent = {};
+        const activeLinkedTasks = new Set();
+
+        activeScenarioInputs.forEach(input => {
+            const scenarioId = input.id;
+            const snippets = scenarioSnippets[scenarioId];
+            if (snippets) {
+                for (const fieldId in snippets) {
+                    if (fieldId !== 'linkedTask') {
+                        if (!targetFieldsContent[fieldId]) {
+                            targetFieldsContent[fieldId] = [];
+                        }
+                         if (!targetFieldsContent[fieldId].includes(snippets[fieldId])) {
+                            targetFieldsContent[fieldId].push(snippets[fieldId]);
+                         }
+                    } else {
+                         activeLinkedTasks.add(snippets.linkedTask);
+                    }
+                }
+            }
+        });
+
+        const allPossibleTargetFields = new Set();
+         Object.values(scenarioSnippets).forEach(snippets => {
+             Object.keys(snippets).forEach(key => {
+                 if(key !== 'linkedTask') allPossibleTargetFields.add(key);
+             });
+         });
+
+        allPossibleTargetFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                const combinedTextArray = targetFieldsContent[fieldId] || [];
+                let finalValue = "";
+
+                if (textareaListFields.includes(fieldId.replace('field-', ''))) {
+                    finalValue = combinedTextArray
+                        .map(line => line.startsWith('• ') ? line : '• ' + line)
+                        .join('\n');
+
+                    if (finalValue === '') {
+                         finalValue = '• ';
+                    } else if (!finalValue.endsWith('\n• ')) {
+                         finalValue += '\n• ';
+                    }
+                } else {
+                     finalValue = combinedTextArray.join('\n\n');
+                }
+                
+                if (finalValue.trim() !== '•' && finalValue.trim() !== '') {
+                    field.value = finalValue;
+                } else if (textareaListFields.includes(fieldId.replace('field-', ''))) {
+                     field.value = '• ';
+                } else {
+                    field.value = '';
+                }
+
+                if (field.tagName === 'TEXTAREA' && textareaListFields.includes(fieldId.replace('field-', ''))) {
+                     if (field.value.trim() === '•' || field.value.trim() === '') enableAutoBullet(field);
+                }
+             }
+        });
+
+        const taskCheckboxes = taskCheckboxesContainer.querySelectorAll('input[type="checkbox"]');
+        taskCheckboxes.forEach(taskCheckbox => {
+            taskCheckbox.checked = false;
+            if (activeLinkedTasks.has(taskCheckbox.value)) {
+                taskCheckbox.checked = true;
+            }
+        });
     }
 
     function enableAutoBullet(textarea) {
-        // ... (código mantido) ...
+        if(textarea.value.trim() === '' || textarea.value.trim() === '•') {
+            textarea.value = '• ';
+        }
+        textarea.onkeydown = function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const start = this.selectionStart, end = this.selectionEnd, value = this.value;
+                const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                const currentLine = value.substring(lineStart, start);
+                const insertText = (currentLine.trim() === '•' || currentLine.trim() === '') ? '\n' : '\n• ';
+
+                this.value = value.substring(0, start) + insertText + value.substring(end);
+                const newPos = start + insertText.length;
+                this.selectionStart = newPos; this.selectionEnd = newPos;
+            } else if (e.key === 'Backspace') {
+                const start = this.selectionStart;
+                if (start === this.selectionEnd && start > 0) {
+                    const textBefore = this.value.substring(0, start);
+                    if (textBefore.endsWith('\n• ')) {
+                        e.preventDefault();
+                        this.value = textBefore.substring(0, start - 3) + this.value.substring(this.selectionEnd);
+                        this.selectionStart = start - 3; this.selectionEnd = start - 3;
+                    } else if (textBefore === '• ') {
+                         e.preventDefault();
+                         this.value = '';
+                         this.selectionStart = 0; this.selectionEnd = 0;
+                    }
+                }
+            }
+        };
     }
+
 
     // --- Montagem da UI (continuação) ---
     
