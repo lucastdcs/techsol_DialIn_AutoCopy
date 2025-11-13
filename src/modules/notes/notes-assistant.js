@@ -661,8 +661,7 @@ export function initCaseNotesAssistant() {
         let outputText = templateData.template.replace(/\n/g, "<br>");
         const ulStyle = "style=\"margin-bottom: 12px; padding-left: 30px;\"";
 
-        // ===== CORREÇÃO: Lógica de Saída do Stepper (Tarefa 2) =====
-        if (templateData.requiresTasks) {
+       if (templateData.requiresTasks) {
             const selectedCheckboxes = taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked');
             let tagNames = [];
             let screenshotsText = '';
@@ -684,13 +683,29 @@ export function initCaseNotesAssistant() {
                     tagNames.push(task.name);
                 }
 
-                // Adiciona screenshots (apenas uma vez, mesmo se count > 1)
+                // ===== INÍCIO DA SUBSTITUIÇÃO =====
+                // Substitua a lógica de screenshots antiga por esta:
+                
+                // Adiciona screenshots (agora em um loop)
                 const screenshotList = task.screenshots[screenshotType] || [];
                 if (screenshotList.length > 0) {
-                    screenshotsText += `<b>${task.name}</b>`;
-                    const screenItems = screenshotList.map(print => `<li>${print} - </li>`).join('');
-                    screenshotsText += `<ul ${ulStyle}>${screenItems}</ul>`;
+                    
+                    // Loop 'count' vezes (ex: 1 a 3)
+                    for (let i = 1; i <= count; i++) {
+                        
+                        // Adiciona um título com contador (se count > 1)
+                        if (count > 1) {
+                            screenshotsText += `<b>${task.name} - Implementação #${i}</b>`;
+                        } else {
+                            screenshotsText += `<b>${task.name}</b>`;
+                        }
+                        
+                        // Adiciona a lista de prints
+                        const screenItems = screenshotList.map(print => `<li>${print} - </li>`).join('');
+                        screenshotsText += `<ul ${ulStyle}>${screenItems}</ul>`;
+                    }
                 }
+                // ===== FIM DA SUBSTITUIÇÃO =====
             });
             
             outputText = outputText.replace(/{TAGS_IMPLEMENTED}/g, tagNames.join(', ') || 'N/A');
