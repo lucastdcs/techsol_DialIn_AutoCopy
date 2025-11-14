@@ -14,24 +14,25 @@ import {
     styleCredit,
     styleExpandButton,
     typeBtnStyle,
-    getRandomGoogleStyle
+    getRandomGoogleStyle // Importa a função de cor aleatória
 } from '../shared/utils.js'; 
 
 import {
     TASKS_DB,
-    SUBSTATUS_TEMPLATES,
+    SUBSTATUS_TEMPLATES, 
     textareaListFields,
     textareaParagraphFields,
     scenarioSnippets,
-    translations // <-- IMPORTANTE: Importando as traduções
+    translations // <-- NOVO: Importa as traduções
 } from './notes-data.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v3.0.0"; // Versão Final Completa
+    const CURRENT_VERSION = "v3.1.0"; // Grande atualização!
     
     // --- ESTADO GLOBAL DO MÓDULO ---
     let currentCaseType = 'bau';
-    let currentLang = 'pt'; // Padrão: Português
+    let currentLang = 'pt'; // 'pt' ou 'es'
+    let isPortugalCase = false; // 'true' ou 'false'
 
     function copyHtmlToClipboard(html) {
         const container = document.createElement('div');
@@ -46,6 +47,7 @@ export function initCaseNotesAssistant() {
         selection.addRange(range);
         try {
             document.execCommand('copy');
+            // Toast movido para a lógica do botão
         } catch (err) {
             showToast("Falha ao copiar", { error: true });
         }
@@ -209,49 +211,63 @@ export function initCaseNotesAssistant() {
     popup.appendChild(credit);
 
     // --- Variáveis da UI ---
-    const langToggleDiv = document.createElement("div"); // Tarefa 1
+    const langToggleDiv = document.createElement("div");
     const langLabel = document.createElement("label");
     const langPT = document.createElement("div");
     const langES = document.createElement("div");
-
-    const step0Div = document.createElement("div"); // Tarefa 1
+    
+    const step0Div = document.createElement("div"); 
     const typeLabel = document.createElement("label");
     const typeBAU = document.createElement("div");
     const typeLM = document.createElement("div");
-
+    
     const step1Div = document.createElement("div");
     const mainStatusLabel = document.createElement("label");
     const subStatusLabel = document.createElement("label");
+    
+    const stepPortugalDiv = document.createElement("div"); // NOVO: "Caso de Portugal?"
+    const portugalLabel = document.createElement("label");
+    const portugalRadioSim = document.createElement("input");
+    const portugalLabelSim = document.createElement("label");
+    const portugalRadioNao = document.createElement("input");
+    const portugalLabelNao = document.createElement("label");
 
-    const stepConsentPT = document.createElement("div"); // Tarefa 3 (Campo Consentimento)
+    const stepConsentDiv = document.createElement("div"); // NOVO: "Consentiu Gravação?"
     const consentLabel = document.createElement("label");
     const consentRadioSim = document.createElement("input");
     const consentLabelSim = document.createElement("label");
     const consentRadioNao = document.createElement("input");
     const consentLabelNao = document.createElement("label");
-
+    
     const stepSnippetsDiv = document.createElement("div");
     const snippetContainer = document.createElement("div");
     const stepSnippetsTitle = document.createElement("h3");
+    
     const step2Div = document.createElement("div");
     const taskCheckboxesContainer = document.createElement("div");
     const step2Title = document.createElement("h3");
+    
     const step3Div = document.createElement("div");
     const dynamicFormFieldsContainer = document.createElement("div");
     const step3Title = document.createElement("h3");
+    
     const mainStatusSelect = document.createElement("select");
     const subStatusSelect = document.createElement("select");
     const buttonContainer = document.createElement("div");
     const copyButton = document.createElement("button");
     const generateButton = document.createElement("button");
 
+    
     // --- Funções de Tradução ---
     function t(key) {
-        // Garante que translations existe antes de acessar
         if (translations && translations[currentLang] && translations[currentLang][key]) {
             return translations[currentLang][key];
         }
-        return key; // Retorna a chave se não encontrar a tradução
+        // Fallback para PT se a chave não existir em ES (ex: "BAU", "LM")
+        if (translations && translations['pt'] && translations['pt'][key]) {
+            return translations['pt'][key];
+        }
+        return key; 
     }
 
     function updateUIText() {
@@ -265,54 +281,56 @@ export function initCaseNotesAssistant() {
         copyButton.textContent = t('copiar');
         generateButton.textContent = t('preencher');
         
-        // Atualiza opções padrão dos selects
-        if (mainStatusSelect.querySelector('option[value=""]'))
-            mainStatusSelect.querySelector('option[value=""]').textContent = t('select_status');
-        
-        if (subStatusSelect.querySelector('option[value=""]'))
-            subStatusSelect.querySelector('option[value=""]').textContent = t('select_substatus');
+        mainStatusSelect.querySelector('option[value=""]').textContent = t('select_status');
+        subStatusSelect.querySelector('option[value=""]').textContent = t('select_substatus');
 
-        // Campo de Consentimento
+        // Novos campos
+        portugalLabel.textContent = t('caso_portugal');
+        portugalLabelSim.textContent = t('sim');
+        portugalLabelNao.textContent = t('nao');
         consentLabel.textContent = t('consentiu_gravacao');
         consentLabelSim.textContent = t('sim');
         consentLabelNao.textContent = t('nao');
         
-        // Atualiza labels dinâmicos
         dynamicFormFieldsContainer.querySelectorAll('label').forEach(label => {
             const fieldName = label.nextElementSibling.id.replace('field-', '');
             const translatedLabel = t(fieldName.toLowerCase());
-            // Se houver tradução, usa. Senão, formata o nome do campo.
-            label.textContent = (translatedLabel !== fieldName.toLowerCase()) ? translatedLabel : (fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) + ':');
+            // Se a tradução for diferente da chave, usa a tradução. Senão, formata o nome.
+            if (translatedLabel !== fieldName.toLowerCase()) {
+                label.textContent = translatedLabel;
+            } else {
+                label.textContent = fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) + ':';
+            }
         });
     }
-
+    
     function setLanguage(lang) {
         currentLang = lang;
         const newActiveStyle = getRandomGoogleStyle();
         
-        // Reseta estilo dos botões de idioma
         Object.assign(langPT.style, typeBtnStyle);
         Object.assign(langES.style, typeBtnStyle);
         
         if (lang === 'pt') {
             Object.assign(langPT.style, newActiveStyle);
-            stepConsentPT.style.display = 'block'; // Mostra consentimento em PT
+            stepPortugalDiv.style.display = 'block'; // Mostra "Caso de Portugal?"
+            // A lógica de 'setPortugalCase' vai decidir se 'stepConsentDiv' aparece
+            setPortugalCase(isPortugalCase); // Reavalia
         } else {
             Object.assign(langES.style, newActiveStyle);
-            stepConsentPT.style.display = 'none'; // Esconde em ES
+            stepPortugalDiv.style.display = 'none'; // Esconde "Caso de Portugal?"
+            stepConsentDiv.style.display = 'none';  // Esconde "Consentimento"
         }
         
         updateUIText();
         
-        // Recarrega os cenários se necessário
         if (subStatusSelect.value) {
             subStatusSelect.dispatchEvent(new Event('change'));
         }
     }
-
+    
     // --- Funções de Lógica dos Campos ---
-
-    function updateFieldsFromScenarios() {
+function updateFieldsFromScenarios() {
         const activeScenarioInputs = snippetContainer.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
         const targetFieldsContent = {};
         const activeLinkedTasks = new Set();
@@ -392,6 +410,7 @@ export function initCaseNotesAssistant() {
     }
 
     function enableAutoBullet(textarea) {
+        // ... (código mantido, com a correção do bug) ...
         if(textarea.value.trim() === '' || textarea.value.trim() === '•') {
             textarea.value = '• ';
         }
@@ -426,10 +445,9 @@ export function initCaseNotesAssistant() {
 
     // --- Montagem da UI (continuação) ---
     
-    // ===== NOVO: ETAPA -1 - Seletor de Idioma =====
+    // ===== ETAPA -1 - Seletor de Idioma (PT/ES) =====
     langToggleDiv.id = "step-lang-type";
     Object.assign(langLabel.style, styleLabel);
-    langLabel.textContent = "Idioma:"; // Será traduzido
     langToggleDiv.appendChild(langLabel);
 
     const langContainer = document.createElement("div");
@@ -454,7 +472,6 @@ export function initCaseNotesAssistant() {
     // ===== ETAPA 0 - Seletor de Tipo (BAU/LM) =====
     step0Div.id = "step-0-case-type";
     Object.assign(typeLabel.style, styleLabel);
-    typeLabel.textContent = "Fluxo:"; // Será traduzido
     step0Div.appendChild(typeLabel);
 
     const typeContainer = document.createElement("div");
@@ -498,13 +515,11 @@ export function initCaseNotesAssistant() {
     // ===== ETAPA 1 - Status/Substatus =====
     step1Div.id = "step-1-selection";
     Object.assign(mainStatusLabel.style, styleLabel);
-    // Texto será setado pelo updateUIText
     mainStatusSelect.id = "main-status";
     mainStatusSelect.innerHTML = `<option value="">-- Selecione --</option><option value="NI">NI - Need Info</option><option value="SO">SO - Solution Offered</option><option value="IN">IN - Inactive</option><option value="AS">AS - Assigned</option>`;
     Object.assign(mainStatusSelect.style, styleSelect);
     
     Object.assign(subStatusLabel.style, styleLabel);
-    // Texto será setado pelo updateUIText
     subStatusSelect.id = "sub-status";
     subStatusSelect.innerHTML = `<option value="">-- Selecione o Status --</option>`;
     Object.assign(subStatusSelect.style, styleSelect);
@@ -515,19 +530,71 @@ export function initCaseNotesAssistant() {
     step1Div.appendChild(subStatusLabel);
     step1Div.appendChild(subStatusSelect);
     popupContent.appendChild(step1Div);
+    
+    // ===== NOVO: ETAPA 1.1 - Caso Portugal? (Tarefa 3) =====
+    stepPortugalDiv.id = "step-1-1-portugal";
+    Object.assign(stepPortugalDiv.style, { ...styleStepBlock, display: 'none' }); // Escondido por padrão
+    
+    Object.assign(portugalLabel.style, styleLabel);
+    stepPortugalDiv.appendChild(portugalLabel);
+    
+    const portugalRadioGroup = document.createElement('div');
+    Object.assign(portugalRadioGroup.style, styleRadioContainer);
+    
+    // Opção SIM (PT)
+    const divPtSim = document.createElement('div');
+    Object.assign(divPtSim.style, { display: 'flex', alignItems: 'center' });
+    portugalRadioSim.type = 'radio';
+    portugalRadioSim.id = 'portugal-sim';
+    portugalRadioSim.name = 'portugal-group';
+    portugalRadioSim.value = 'sim';
+    Object.assign(portugalRadioSim.style, styleCheckboxInput);
+    portugalLabelSim.htmlFor = 'portugal-sim';
+    Object.assign(portugalLabelSim.style, { cursor: 'pointer' });
+    divPtSim.appendChild(portugalRadioSim);
+    divPtSim.appendChild(portugalLabelSim);
+    
+    // Opção NÃO (PT)
+    const divPtNao = document.createElement('div');
+    Object.assign(divPtNao.style, { display: 'flex', alignItems: 'center' });
+    portugalRadioNao.type = 'radio';
+    portugalRadioNao.id = 'portugal-nao';
+    portugalRadioNao.name = 'portugal-group';
+    portugalRadioNao.value = 'nao';
+    portugalRadioNao.checked = true; // Padrão é NÃO (Brasil)
+    Object.assign(portugalRadioNao.style, styleCheckboxInput);
+    portugalLabelNao.htmlFor = 'portugal-nao';
+    Object.assign(portugalLabelNao.style, { cursor: 'pointer' });
+    divPtNao.appendChild(portugalRadioNao);
+    divPtNao.appendChild(portugalLabelNao);
+    
+    portugalRadioGroup.appendChild(divPtSim);
+    portugalRadioGroup.appendChild(divPtNao);
+    stepPortugalDiv.appendChild(portugalRadioGroup);
+    popupContent.appendChild(stepPortugalDiv);
 
-    // ===== NOVO: ETAPA 1.2 - Consentimento (PT Apenas) =====
-    stepConsentPT.id = "step-1-2-consent";
-    Object.assign(stepConsentPT.style, { ...styleStepBlock, display: 'none' });
+    // Lógica condicional para mostrar o campo de consentimento
+    function setPortugalCase(isPT) {
+        isPortugalCase = isPT;
+        if (isPT) {
+            stepConsentDiv.style.display = 'block'; // Mostra "Consentiu Gravação?"
+        } else {
+            stepConsentDiv.style.display = 'none'; // Esconde "Consentiu Gravação?"
+        }
+    }
+    portugalRadioSim.onchange = () => setPortugalCase(true);
+    portugalRadioNao.onchange = () => setPortugalCase(false);
+    
+    // ===== NOVO: ETAPA 1.2 - Consentimento (Escondido) (Tarefa 3) =====
+    stepConsentDiv.id = "step-1-2-consent";
+    Object.assign(stepConsentDiv.style, { ...styleStepBlock, display: 'none' }); // Escondido por padrão
     
     Object.assign(consentLabel.style, styleLabel);
-    // Texto será setado pelo updateUIText
-    stepConsentPT.appendChild(consentLabel);
+    stepConsentDiv.appendChild(consentLabel);
     
     const consentRadioGroup = document.createElement('div');
     Object.assign(consentRadioGroup.style, styleRadioContainer);
     
-    // Opção SIM
     const divSim = document.createElement('div');
     Object.assign(divSim.style, { display: 'flex', alignItems: 'center' });
     consentRadioSim.type = 'radio';
@@ -541,7 +608,6 @@ export function initCaseNotesAssistant() {
     divSim.appendChild(consentRadioSim);
     divSim.appendChild(consentLabelSim);
     
-    // Opção NÃO
     const divNao = document.createElement('div');
     Object.assign(divNao.style, { display: 'flex', alignItems: 'center' });
     consentRadioNao.type = 'radio';
@@ -556,10 +622,11 @@ export function initCaseNotesAssistant() {
     
     consentRadioGroup.appendChild(divSim);
     consentRadioGroup.appendChild(divNao);
-    stepConsentPT.appendChild(consentRadioGroup);
-    popupContent.appendChild(stepConsentPT);
+    stepConsentDiv.appendChild(consentRadioGroup);
+    popupContent.appendChild(stepConsentDiv);
+    // ===============================================
 
-    // ===== Resto da UI (Cenários, Tasks, Form) =====
+    // ===== ETAPA 1.5 - Cenários =====
     stepSnippetsDiv.id = "step-1-5-snippets";
     Object.assign(stepSnippetsDiv.style, { ...styleStepBlock, display: 'none' });
     Object.assign(stepSnippetsTitle.style, styleH3);
@@ -568,6 +635,7 @@ export function initCaseNotesAssistant() {
     stepSnippetsDiv.appendChild(snippetContainer);
     popupContent.appendChild(stepSnippetsDiv);
 
+    // ===== ETAPA 2 - Tasks =====
     step2Div.id = "step-2-tasks";
     Object.assign(step2Div.style, { ...styleStepBlock, display: 'none' });
     Object.assign(step2Title.style, styleH3);
@@ -576,6 +644,7 @@ export function initCaseNotesAssistant() {
     step2Div.appendChild(taskCheckboxesContainer);
     popupContent.appendChild(step2Div);
 
+    // ===== ETAPA 3 - Campos Dinâmicos =====
     step3Div.id = "step-3-form";
     Object.assign(step3Div.style, { ...styleStepBlock, display: 'none' });
     Object.assign(step3Title.style, styleH3);
@@ -600,7 +669,9 @@ export function initCaseNotesAssistant() {
     document.body.appendChild(popup);
 
     // --- Inicializa a Linguagem Padrão ---
-    setLanguage('pt'); // Isso vai chamar updateUIText e traduzir tudo
+    setLanguage('pt'); 
+
+    // --- Lógica de Eventos ---
 
     function resetSteps(startFrom = 1.5) {
         if (startFrom <= 1.5) {
@@ -618,7 +689,6 @@ export function initCaseNotesAssistant() {
         }
     }
 
-    // ... (Os listeners mainStatusSelect.onchange e subStatusSelect.onchange são mantidos como no código anterior) ...
     mainStatusSelect.onchange = () => {
         const selectedStatus = mainStatusSelect.value;
         resetSteps(1.5);
@@ -632,7 +702,7 @@ export function initCaseNotesAssistant() {
             if (template.status === selectedStatus) {
                 const option = document.createElement('option');
                 option.value = key;
-                option.textContent = template.name;
+                option.textContent = template.name; 
                 subStatusSelect.appendChild(option);
             }
         }
@@ -663,84 +733,64 @@ export function initCaseNotesAssistant() {
             container.appendChild(label);
             return input;
         };
+        
+        let scenarios = [];
+        let inputType = 'radio'; 
 
-        // Lógica de filtro BAU/LM (mesma do anterior)
         if (selectedSubStatusKey === 'NI_Awaiting_Inputs') {
-            const radioName = "ni-scenario";
-            const allScenarios = [
+            scenarios = [
                 { id: 'quickfill-ni-inicio-manual', text: 'Início 2/6 (Manual)'},
                 { id: 'quickfill-ni-cms-access', text: 'Início 2/6 (ADV sem acesso ao CMS)' },
                 { id: 'quickfill-ni-followup-bau', text: 'Follow-up 2/6 (BAU)' },
                 { id: 'quickfill-ni-followup-lm', text: 'Follow-up 2/6 (LM)' } 
             ];
-            const filteredScenarios = allScenarios.filter(s => {
-                const type = scenarioSnippets[s.id].type;
-                return !type || type === 'all' || type === currentCaseType;
-            });
-            filteredScenarios.forEach((scenario, index) => {
-                const radio = addSnippetInput(scenario, 'radio', snippetContainer);
-                radio.name = radioName;
-                if (index === 0) radio.checked = true;
-            });
-            snippetAdded = filteredScenarios.length > 0;
-        }
-        
-        if (selectedSubStatusKey === 'SO_Implementation_Only') {
-            const allScenarios = [
+        } else if (selectedSubStatusKey.startsWith('SO_')) {
+            inputType = 'checkbox';
+            scenarios = [
                 { id: 'quickfill-whatsapp', text: 'Conversão de WhatsApp' },
                 { id: 'quickfill-form', text: 'Conversão de Formulário (Padrão)' },
                 { id: 'quickfill-ecw4-close', text: 'Fechamento ECW4 (Pós 7 dias)' }
             ];
-            const filteredScenarios = allScenarios.filter(s => {
-                const type = scenarioSnippets[s.id].type;
-                return !type || type === 'all' || type === currentCaseType;
-            });
-            filteredScenarios.forEach(scenario => {
-                addSnippetInput(scenario, 'checkbox', snippetContainer);
-            });
-            snippetAdded = filteredScenarios.length > 0;
-        }
-        
-        if (selectedSubStatusKey.startsWith('AS_')) {
+        } else if (selectedSubStatusKey.startsWith('AS_')) {
+            inputType = 'checkbox'; 
             const reasonTitle = document.createElement('label');
-            reasonTitle.textContent = "Motivos Comuns:";
+            reasonTitle.textContent = t('cenarios_comuns'); // Traduzido
             Object.assign(reasonTitle.style, styleLabel);
             snippetContainer.appendChild(reasonTitle);
-            const allScenarios = [
+            
+            scenarios = [
                 { id: 'quickfill-as-no-show', text: 'Anunciante não compareceu (respondeu e-mail)' },
                 { id: 'quickfill-as-insufficient-time', text: 'Tempo insuficiente' },
                 { id: 'quickfill-as-no-access', text: 'Anunciante sem acessos necessários' }
             ];
-            const filteredScenarios = allScenarios.filter(s => {
-                const type = scenarioSnippets[s.id].type;
-                return !type || type === 'all' || type === currentCaseType;
-            });
-            filteredScenarios.forEach(scenario => {
-                addSnippetInput(scenario, 'checkbox', snippetContainer);
-            });
-            snippetAdded = filteredScenarios.length > 0;
-        }
-        
-       if (selectedSubStatusKey.startsWith('IN_')) {
-             const radioName = "in-scenario";
-             const allScenarios = [
+        } else if (selectedSubStatusKey.startsWith('IN_')) {
+             scenarios = [
                 { id: 'quickfill-in-nrp-bau', text: 'NRP (BAU - 3 tentativas)' }, 
                 { id: 'quickfill-in-nrp-lm', text: 'NRP (LM - Sem tentativas)' }, 
                 { id: 'quickfill-in-no-show-bau', text: 'No-Show (BAU - 3 tentativas)' }, 
                 { id: 'quickfill-in-2-6-final', text: 'Finalização 2/6 (Sem Resposta)' },
                 { id: 'quickfill-in-manual', text: 'Outro (Manual)' }
              ];
-             const filteredScenarios = allScenarios.filter(s => {
-                const type = scenarioSnippets[s.id].type;
-                return !type || type === 'all' || type === currentCaseType;
-            });
-             filteredScenarios.forEach((scenario, index) => {
-                const radio = addSnippetInput(scenario, 'radio', snippetContainer);
-                radio.name = radioName;
-                if (index === 0) radio.checked = true;
-            });
-            snippetAdded = filteredScenarios.length > 0;
         }
+
+        const filteredScenarios = scenarios.filter(s => {
+            const scenarioData = scenarioSnippets[s.id];
+            if (!scenarioData) {
+                console.warn(`Cenário "${s.id}" não encontrado em scenarioSnippets.`);
+                return false;
+            }
+            return !scenarioData.type || scenarioData.type === 'all' || scenarioData.type === currentCaseType;
+        });
+         
+        filteredScenarios.forEach((scenario, index) => {
+            const input = addSnippetInput(scenario, inputType, snippetContainer);
+            if (inputType === 'radio') {
+                input.name = "scenario-radio-group"; 
+                if (index === 0) input.checked = true;
+            }
+        });
+        
+        snippetAdded = filteredScenarios.length > 0;
 
         if (snippetAdded) {
             stepSnippetsDiv.style.display = 'block';
@@ -751,6 +801,7 @@ export function initCaseNotesAssistant() {
             taskCheckboxesContainer.innerHTML = '';
             for (const taskKey in TASKS_DB) {
                 const task = TASKS_DB[taskKey];
+                
                 const label = document.createElement('label');
                 Object.assign(label.style, styleCheckboxLabel);
                 label.onmouseover = () => { if (!checkbox.checked) label.style.backgroundColor = '#e8eaed'; };
@@ -838,14 +889,14 @@ export function initCaseNotesAssistant() {
         uniquePlaceholders.forEach(placeholder => {
             if (placeholder === '{TAGS_IMPLEMENTED}' || 
                 placeholder === '{SCREENSHOTS_LIST}' || 
-                placeholder === '{CONSENTIU_GRAVACAO}') { // Ignora este aqui
+                placeholder === '{CONSENTIU_GRAVACAO}' ||
+                placeholder === '{CASO_PORTUGAL}') { 
                 return;
             }
             
             const fieldName = placeholder.slice(1, -1);
             const label = document.createElement('label');
             
-            // TRADUÇÃO
             const translatedLabel = t(fieldName.toLowerCase());
             label.textContent = (translatedLabel !== fieldName.toLowerCase()) ? translatedLabel : (fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) + ':');
             
@@ -899,7 +950,7 @@ export function initCaseNotesAssistant() {
             const selectedCheckboxes = taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked');
             let tagNames = [];
             let screenshotsText = '';
-            const screenshotType = (selectedSubStatusKey === 'SO_Education_Only') ? 'education' : 'implementation';
+            const screenshotType = (selectedSubStatusKey.includes('Education')) ? 'education' : 'implementation';
             
             selectedCheckboxes.forEach(checkbox => {
                 const taskKey = checkbox.value;
@@ -933,14 +984,23 @@ export function initCaseNotesAssistant() {
             outputText = outputText.replace(/{SCREENSHOTS_LIST}/g, screenshotsText ? `${screenshotsText}` : 'N/A');
         }
 
-        // Lógica do Consentimento (Saída)
-        if (currentLang === 'pt') {
+        // ===== NOVO: Lógica dos Campos de Portugal (Tarefa 3) =====
+        if (currentLang === 'pt' && isPortugalCase) {
+            // Se for PT e "Sim", adiciona o texto de consentimento
             const consentValue = consentRadioSim.checked ? t('sim') : t('nao');
             const consentHtml = `<br><b>${t('consentiu_gravacao')}</b> ${consentValue}<br><br>`;
             outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, consentHtml);
+            outputText = outputText.replace(/{CASO_PORTUGAL}/g, `<br><b>${t('caso_portugal')}</b> ${t('sim')}<br>`);
+        } else if (currentLang === 'pt' && !isPortugalCase) {
+             // Se for PT e "Não" (Brasil), adiciona só a confirmação
+            outputText = outputText.replace(/{CASO_PORTUGAL}/g, `<br><b>${t('caso_portugal')}</b> ${t('nao')}<br>`);
+            outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, ''); // Remove o placeholder de consentimento
         } else {
+            // Se for ES, remove ambos os placeholders
+            outputText = outputText.replace(/{CASO_PORTUGAL}/g, '');
             outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, '');
         }
+        // =========================================================
 
         const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
         inputs.forEach(input => {
@@ -948,7 +1008,7 @@ export function initCaseNotesAssistant() {
             const placeholder = new RegExp(`{${fieldName}}`, 'g');
             let value = input.value;
             
-            if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey === 'NI_Awaiting_Inputs' || selectedSubStatusKey.startsWith('IN_'))) {
+            if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey.startsWith('NI_') || selectedSubStatusKey.startsWith('IN_'))) {
                 const checkedRadio = snippetContainer.querySelector('input[type="radio"]:checked');
                 if (checkedRadio && scenarioSnippets[checkedRadio.id] && scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS']) {
                      value = scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS'];
