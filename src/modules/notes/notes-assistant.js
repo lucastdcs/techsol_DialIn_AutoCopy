@@ -22,13 +22,16 @@ import {
     SUBSTATUS_TEMPLATES,
     textareaListFields,
     textareaParagraphFields,
-    scenarioSnippets
+    scenarioSnippets,
+    translations // <-- IMPORTANTE: Importando as traduções
 } from './notes-data.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v2.9.6"; // Versão com correção de chaves
+    const CURRENT_VERSION = "v3.0.0"; // Versão Final Completa
     
-    let currentCaseType = 'bau'; 
+    // --- ESTADO GLOBAL DO MÓDULO ---
+    let currentCaseType = 'bau';
+    let currentLang = 'pt'; // Padrão: Português
 
     function copyHtmlToClipboard(html) {
         const container = document.createElement('div');
@@ -129,7 +132,6 @@ export function initCaseNotesAssistant() {
         isExpanded = !isExpanded;
         const newWidth = isExpanded ? expandedWidth : initialWidth;
         const widthDifference = expandedWidth - initialWidth;
-
         popup.style.width = `${newWidth}px`;
         
         if (popup.style.right && popup.style.right !== 'auto') {
@@ -187,6 +189,9 @@ export function initCaseNotesAssistant() {
     const styleStepBlock = {
         borderTop: "1px solid #eee", paddingTop: "12px", marginTop: "12px"
     };
+    const styleRadioContainer = {
+        display: 'flex', gap: '15px', marginBottom: '10px'
+    };
 
     // Conteúdo principal do popup
     const popupContent = document.createElement("div");
@@ -204,21 +209,108 @@ export function initCaseNotesAssistant() {
     popup.appendChild(credit);
 
     // --- Variáveis da UI ---
-    const step0Div = document.createElement("div"); 
+    const langToggleDiv = document.createElement("div"); // Tarefa 1
+    const langLabel = document.createElement("label");
+    const langPT = document.createElement("div");
+    const langES = document.createElement("div");
+
+    const step0Div = document.createElement("div"); // Tarefa 1
+    const typeLabel = document.createElement("label");
+    const typeBAU = document.createElement("div");
+    const typeLM = document.createElement("div");
+
     const step1Div = document.createElement("div");
+    const mainStatusLabel = document.createElement("label");
+    const subStatusLabel = document.createElement("label");
+
+    const stepConsentPT = document.createElement("div"); // Tarefa 3 (Campo Consentimento)
+    const consentLabel = document.createElement("label");
+    const consentRadioSim = document.createElement("input");
+    const consentLabelSim = document.createElement("label");
+    const consentRadioNao = document.createElement("input");
+    const consentLabelNao = document.createElement("label");
+
     const stepSnippetsDiv = document.createElement("div");
     const snippetContainer = document.createElement("div");
+    const stepSnippetsTitle = document.createElement("h3");
     const step2Div = document.createElement("div");
     const taskCheckboxesContainer = document.createElement("div");
+    const step2Title = document.createElement("h3");
     const step3Div = document.createElement("div");
     const dynamicFormFieldsContainer = document.createElement("div");
+    const step3Title = document.createElement("h3");
     const mainStatusSelect = document.createElement("select");
     const subStatusSelect = document.createElement("select");
     const buttonContainer = document.createElement("div");
     const copyButton = document.createElement("button");
     const generateButton = document.createElement("button");
-    const typeBAU = document.createElement("div");
-    const typeLM = document.createElement("div");
+
+    // --- Funções de Tradução ---
+    function t(key) {
+        // Garante que translations existe antes de acessar
+        if (translations && translations[currentLang] && translations[currentLang][key]) {
+            return translations[currentLang][key];
+        }
+        return key; // Retorna a chave se não encontrar a tradução
+    }
+
+    function updateUIText() {
+        langLabel.textContent = t('idioma');
+        typeLabel.textContent = t('fluxo');
+        mainStatusLabel.textContent = t('status_principal');
+        subStatusLabel.textContent = t('substatus');
+        stepSnippetsTitle.textContent = t('cenarios_comuns');
+        step2Title.textContent = t('selecione_tasks');
+        step3Title.textContent = t('preencha_detalhes');
+        copyButton.textContent = t('copiar');
+        generateButton.textContent = t('preencher');
+        
+        // Atualiza opções padrão dos selects
+        if (mainStatusSelect.querySelector('option[value=""]'))
+            mainStatusSelect.querySelector('option[value=""]').textContent = t('select_status');
+        
+        if (subStatusSelect.querySelector('option[value=""]'))
+            subStatusSelect.querySelector('option[value=""]').textContent = t('select_substatus');
+
+        // Campo de Consentimento
+        consentLabel.textContent = t('consentiu_gravacao');
+        consentLabelSim.textContent = t('sim');
+        consentLabelNao.textContent = t('nao');
+        
+        // Atualiza labels dinâmicos
+        dynamicFormFieldsContainer.querySelectorAll('label').forEach(label => {
+            const fieldName = label.nextElementSibling.id.replace('field-', '');
+            const translatedLabel = t(fieldName.toLowerCase());
+            // Se houver tradução, usa. Senão, formata o nome do campo.
+            label.textContent = (translatedLabel !== fieldName.toLowerCase()) ? translatedLabel : (fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) + ':');
+        });
+    }
+
+    function setLanguage(lang) {
+        currentLang = lang;
+        const newActiveStyle = getRandomGoogleStyle();
+        
+        // Reseta estilo dos botões de idioma
+        Object.assign(langPT.style, typeBtnStyle);
+        Object.assign(langES.style, typeBtnStyle);
+        
+        if (lang === 'pt') {
+            Object.assign(langPT.style, newActiveStyle);
+            stepConsentPT.style.display = 'block'; // Mostra consentimento em PT
+        } else {
+            Object.assign(langES.style, newActiveStyle);
+            stepConsentPT.style.display = 'none'; // Esconde em ES
+        }
+        
+        updateUIText();
+        
+        // Recarrega os cenários se necessário
+        if (subStatusSelect.value) {
+            subStatusSelect.dispatchEvent(new Event('change'));
+        }
+    }
+
+    // --- Funções de Lógica dos Campos ---
 
     function updateFieldsFromScenarios() {
         const activeScenarioInputs = snippetContainer.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
@@ -230,7 +322,7 @@ export function initCaseNotesAssistant() {
             const snippets = scenarioSnippets[scenarioId];
             if (snippets) {
                 for (const fieldId in snippets) {
-                    if (fieldId !== 'linkedTask' && fieldId !== 'type') { // Ignora 'type' e 'linkedTask'
+                    if (fieldId !== 'linkedTask' && fieldId !== 'type') {
                         if (!targetFieldsContent[fieldId]) {
                             targetFieldsContent[fieldId] = [];
                         }
@@ -287,13 +379,14 @@ export function initCaseNotesAssistant() {
              }
         });
 
-        const taskCheckboxes = taskCheckboxesContainer.querySelectorAll('input[type="checkbox"]');
+        const taskCheckboxes = taskCheckboxesContainer.querySelectorAll('.task-checkbox');
         taskCheckboxes.forEach(taskCheckbox => {
             taskCheckbox.checked = false;
+            taskCheckbox.dispatchEvent(new Event('change')); // Reseta stepper
+            
             if (activeLinkedTasks.has(taskCheckbox.value)) {
                 taskCheckbox.checked = true;
-                // Dispara change para atualizar o stepper e visual
-                taskCheckbox.dispatchEvent(new Event('change'));
+                taskCheckbox.dispatchEvent(new Event('change')); // Mostra stepper
             }
         });
     }
@@ -333,10 +426,35 @@ export function initCaseNotesAssistant() {
 
     // --- Montagem da UI (continuação) ---
     
+    // ===== NOVO: ETAPA -1 - Seletor de Idioma =====
+    langToggleDiv.id = "step-lang-type";
+    Object.assign(langLabel.style, styleLabel);
+    langLabel.textContent = "Idioma:"; // Será traduzido
+    langToggleDiv.appendChild(langLabel);
+
+    const langContainer = document.createElement("div");
+    Object.assign(langContainer.style, { display: 'flex', borderRadius: '8px', border: '1px solid #dadce0', overflow: 'hidden', marginBottom: '16px' });
+    
+    langPT.textContent = "Português";
+    langPT.classList.add('no-drag');
+    langES.textContent = "Español";
+    langES.classList.add('no-drag');
+
+    Object.assign(langPT.style, typeBtnStyle); 
+    Object.assign(langES.style, typeBtnStyle);  
+    
+    langPT.onclick = () => setLanguage('pt');
+    langES.onclick = () => setLanguage('es');
+    
+    langContainer.appendChild(langPT);
+    langContainer.appendChild(langES);
+    langToggleDiv.appendChild(langContainer);
+    popupContent.appendChild(langToggleDiv);
+
+    // ===== ETAPA 0 - Seletor de Tipo (BAU/LM) =====
     step0Div.id = "step-0-case-type";
-    const typeLabel = document.createElement("label");
     Object.assign(typeLabel.style, styleLabel);
-    typeLabel.textContent = "Fluxo:";
+    typeLabel.textContent = "Fluxo:"; // Será traduzido
     step0Div.appendChild(typeLabel);
 
     const typeContainer = document.createElement("div");
@@ -377,30 +495,73 @@ export function initCaseNotesAssistant() {
     
     setCaseType('bau'); 
     
+    // ===== ETAPA 1 - Status/Substatus =====
     step1Div.id = "step-1-selection";
-    const mainStatusLabel = document.createElement("label");
     Object.assign(mainStatusLabel.style, styleLabel);
-    mainStatusLabel.textContent = "Status Principal:";
+    // Texto será setado pelo updateUIText
     mainStatusSelect.id = "main-status";
     mainStatusSelect.innerHTML = `<option value="">-- Selecione --</option><option value="NI">NI - Need Info</option><option value="SO">SO - Solution Offered</option><option value="IN">IN - Inactive</option><option value="AS">AS - Assigned</option>`;
     Object.assign(mainStatusSelect.style, styleSelect);
-    const subStatusLabel = document.createElement("label");
+    
     Object.assign(subStatusLabel.style, styleLabel);
-    subStatusLabel.textContent = "Substatus:";
+    // Texto será setado pelo updateUIText
     subStatusSelect.id = "sub-status";
     subStatusSelect.innerHTML = `<option value="">-- Selecione o Status --</option>`;
     Object.assign(subStatusSelect.style, styleSelect);
     subStatusSelect.disabled = true;
+    
     step1Div.appendChild(mainStatusLabel);
     step1Div.appendChild(mainStatusSelect);
     step1Div.appendChild(subStatusLabel);
     step1Div.appendChild(subStatusSelect);
     popupContent.appendChild(step1Div);
 
+    // ===== NOVO: ETAPA 1.2 - Consentimento (PT Apenas) =====
+    stepConsentPT.id = "step-1-2-consent";
+    Object.assign(stepConsentPT.style, { ...styleStepBlock, display: 'none' });
+    
+    Object.assign(consentLabel.style, styleLabel);
+    // Texto será setado pelo updateUIText
+    stepConsentPT.appendChild(consentLabel);
+    
+    const consentRadioGroup = document.createElement('div');
+    Object.assign(consentRadioGroup.style, styleRadioContainer);
+    
+    // Opção SIM
+    const divSim = document.createElement('div');
+    Object.assign(divSim.style, { display: 'flex', alignItems: 'center' });
+    consentRadioSim.type = 'radio';
+    consentRadioSim.id = 'consent-sim';
+    consentRadioSim.name = 'consent-group';
+    consentRadioSim.value = 'Sim';
+    consentRadioSim.checked = true;
+    Object.assign(consentRadioSim.style, styleCheckboxInput);
+    consentLabelSim.htmlFor = 'consent-sim';
+    Object.assign(consentLabelSim.style, { cursor: 'pointer' });
+    divSim.appendChild(consentRadioSim);
+    divSim.appendChild(consentLabelSim);
+    
+    // Opção NÃO
+    const divNao = document.createElement('div');
+    Object.assign(divNao.style, { display: 'flex', alignItems: 'center' });
+    consentRadioNao.type = 'radio';
+    consentRadioNao.id = 'consent-nao';
+    consentRadioNao.name = 'consent-group';
+    consentRadioNao.value = 'Não';
+    Object.assign(consentRadioNao.style, styleCheckboxInput);
+    consentLabelNao.htmlFor = 'consent-nao';
+    Object.assign(consentLabelNao.style, { cursor: 'pointer' });
+    divNao.appendChild(consentRadioNao);
+    divNao.appendChild(consentLabelNao);
+    
+    consentRadioGroup.appendChild(divSim);
+    consentRadioGroup.appendChild(divNao);
+    stepConsentPT.appendChild(consentRadioGroup);
+    popupContent.appendChild(stepConsentPT);
+
+    // ===== Resto da UI (Cenários, Tasks, Form) =====
     stepSnippetsDiv.id = "step-1-5-snippets";
     Object.assign(stepSnippetsDiv.style, { ...styleStepBlock, display: 'none' });
-    const stepSnippetsTitle = document.createElement("h3");
-    stepSnippetsTitle.textContent = "Cenários Comuns";
     Object.assign(stepSnippetsTitle.style, styleH3);
     snippetContainer.id = "snippet-container";
     stepSnippetsDiv.appendChild(stepSnippetsTitle);
@@ -409,8 +570,6 @@ export function initCaseNotesAssistant() {
 
     step2Div.id = "step-2-tasks";
     Object.assign(step2Div.style, { ...styleStepBlock, display: 'none' });
-    const step2Title = document.createElement("h3");
-    step2Title.textContent = "Selecione as Tasks";
     Object.assign(step2Title.style, styleH3);
     taskCheckboxesContainer.id = "task-checkboxes-container";
     step2Div.appendChild(step2Title);
@@ -419,8 +578,6 @@ export function initCaseNotesAssistant() {
 
     step3Div.id = "step-3-form";
     Object.assign(step3Div.style, { ...styleStepBlock, display: 'none' });
-    const step3Title = document.createElement("h3");
-    step3Title.textContent = "Preencha os Detalhes";
     Object.assign(step3Title.style, styleH3);
     dynamicFormFieldsContainer.id = "dynamic-form-fields-container";
     step3Div.appendChild(step3Title);
@@ -430,13 +587,11 @@ export function initCaseNotesAssistant() {
     Object.assign(buttonContainer.style, { display: "none", gap: "8px", padding: "0" });
     popupContent.appendChild(buttonContainer);
 
-    copyButton.textContent = "Copiar";
     Object.assign(copyButton.style, { ...styleButtonBase, backgroundColor: "#5f6368" });
     copyButton.onmouseover = () => (copyButton.style.backgroundColor = "#4a4d50");
     copyButton.onmouseout = () => (copyButton.style.backgroundColor = "#5f6368");
     buttonContainer.appendChild(copyButton);
 
-    generateButton.textContent = "Preencher";
     Object.assign(generateButton.style, { ...styleButtonBase, backgroundColor: "#1a73e8" });
     generateButton.onmouseover = () => (generateButton.style.backgroundColor = "#1765c0");
     generateButton.onmouseout = () => (generateButton.style.backgroundColor = "#1a73e8");
@@ -444,7 +599,8 @@ export function initCaseNotesAssistant() {
 
     document.body.appendChild(popup);
 
-    // --- Lógica (Módulo 1) ---
+    // --- Inicializa a Linguagem Padrão ---
+    setLanguage('pt'); // Isso vai chamar updateUIText e traduzir tudo
 
     function resetSteps(startFrom = 1.5) {
         if (startFrom <= 1.5) {
@@ -462,10 +618,11 @@ export function initCaseNotesAssistant() {
         }
     }
 
+    // ... (Os listeners mainStatusSelect.onchange e subStatusSelect.onchange são mantidos como no código anterior) ...
     mainStatusSelect.onchange = () => {
         const selectedStatus = mainStatusSelect.value;
         resetSteps(1.5);
-        subStatusSelect.innerHTML = '<option value="">-- Selecione o Substatus --</option>';
+        subStatusSelect.innerHTML = `<option value="">${t('select_substatus')}</option>`;
         if (!selectedStatus) {
             subStatusSelect.disabled = true;
             return;
@@ -507,11 +664,7 @@ export function initCaseNotesAssistant() {
             return input;
         };
 
-        // ===== LÓGICA DE FILTRO BAU/LM (CORRIGIDA) =====
-        
-        // Verifica se o substatus selecionado existe em SUBSTATUS_TEMPLATES
-        // e usa a chave correta.
-        
+        // Lógica de filtro BAU/LM (mesma do anterior)
         if (selectedSubStatusKey === 'NI_Awaiting_Inputs') {
             const radioName = "ni-scenario";
             const allScenarios = [
@@ -520,12 +673,10 @@ export function initCaseNotesAssistant() {
                 { id: 'quickfill-ni-followup-bau', text: 'Follow-up 2/6 (BAU)' },
                 { id: 'quickfill-ni-followup-lm', text: 'Follow-up 2/6 (LM)' } 
             ];
-            
             const filteredScenarios = allScenarios.filter(s => {
                 const type = scenarioSnippets[s.id].type;
                 return !type || type === 'all' || type === currentCaseType;
             });
-
             filteredScenarios.forEach((scenario, index) => {
                 const radio = addSnippetInput(scenario, 'radio', snippetContainer);
                 radio.name = radioName;
@@ -540,43 +691,36 @@ export function initCaseNotesAssistant() {
                 { id: 'quickfill-form', text: 'Conversão de Formulário (Padrão)' },
                 { id: 'quickfill-ecw4-close', text: 'Fechamento ECW4 (Pós 7 dias)' }
             ];
-            
             const filteredScenarios = allScenarios.filter(s => {
                 const type = scenarioSnippets[s.id].type;
                 return !type || type === 'all' || type === currentCaseType;
             });
-
             filteredScenarios.forEach(scenario => {
                 addSnippetInput(scenario, 'checkbox', snippetContainer);
             });
             snippetAdded = filteredScenarios.length > 0;
         }
         
-        // CORREÇÃO: Usando startsWith para pegar todos os AS
         if (selectedSubStatusKey.startsWith('AS_')) {
             const reasonTitle = document.createElement('label');
             reasonTitle.textContent = "Motivos Comuns:";
             Object.assign(reasonTitle.style, styleLabel);
             snippetContainer.appendChild(reasonTitle);
-            
             const allScenarios = [
                 { id: 'quickfill-as-no-show', text: 'Anunciante não compareceu (respondeu e-mail)' },
                 { id: 'quickfill-as-insufficient-time', text: 'Tempo insuficiente' },
                 { id: 'quickfill-as-no-access', text: 'Anunciante sem acessos necessários' }
             ];
-            
             const filteredScenarios = allScenarios.filter(s => {
                 const type = scenarioSnippets[s.id].type;
                 return !type || type === 'all' || type === currentCaseType;
             });
-
             filteredScenarios.forEach(scenario => {
                 addSnippetInput(scenario, 'checkbox', snippetContainer);
             });
             snippetAdded = filteredScenarios.length > 0;
         }
         
-       // CORREÇÃO: Usando startsWith para pegar todos os IN
        if (selectedSubStatusKey.startsWith('IN_')) {
              const radioName = "in-scenario";
              const allScenarios = [
@@ -586,12 +730,10 @@ export function initCaseNotesAssistant() {
                 { id: 'quickfill-in-2-6-final', text: 'Finalização 2/6 (Sem Resposta)' },
                 { id: 'quickfill-in-manual', text: 'Outro (Manual)' }
              ];
-             
              const filteredScenarios = allScenarios.filter(s => {
                 const type = scenarioSnippets[s.id].type;
                 return !type || type === 'all' || type === currentCaseType;
             });
-             
              filteredScenarios.forEach((scenario, index) => {
                 const radio = addSnippetInput(scenario, 'radio', snippetContainer);
                 radio.name = radioName;
@@ -603,13 +745,12 @@ export function initCaseNotesAssistant() {
         if (snippetAdded) {
             stepSnippetsDiv.style.display = 'block';
         }
-        // ===== FIM DA LÓGICA DE FILTRO =====
 
+        // Lógica do Stepper (Criação)
         if (templateData.requiresTasks) {
             taskCheckboxesContainer.innerHTML = '';
             for (const taskKey in TASKS_DB) {
                 const task = TASKS_DB[taskKey];
-                
                 const label = document.createElement('label');
                 Object.assign(label.style, styleCheckboxLabel);
                 label.onmouseover = () => { if (!checkbox.checked) label.style.backgroundColor = '#e8eaed'; };
@@ -625,7 +766,6 @@ export function initCaseNotesAssistant() {
                 taskName.textContent = task.name;
                 Object.assign(taskName.style, { flexGrow: '1' }); 
 
-                // Stepper
                 const stepperDiv = document.createElement('div');
                 stepperDiv.className = 'stepper-container';
                 Object.assign(stepperDiv.style, styleStepper);
@@ -690,19 +830,25 @@ export function initCaseNotesAssistant() {
             step2Div.style.display = 'block';
         }
 
+        // Campos Dinâmicos
         dynamicFormFieldsContainer.innerHTML = '';
-        
         const placeholders = templateData.template.match(/{([A-Z0-9_]+)}/g) || [];
-        
         const uniquePlaceholders = [...new Set(placeholders)];
         
         uniquePlaceholders.forEach(placeholder => {
-            if (placeholder === '{TAGS_IMPLEMENTED}' || placeholder === '{SCREENSHOTS_LIST}') {
+            if (placeholder === '{TAGS_IMPLEMENTED}' || 
+                placeholder === '{SCREENSHOTS_LIST}' || 
+                placeholder === '{CONSENTIU_GRAVACAO}') { // Ignora este aqui
                 return;
             }
+            
             const fieldName = placeholder.slice(1, -1);
             const label = document.createElement('label');
-            label.textContent = fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) + ':';
+            
+            // TRADUÇÃO
+            const translatedLabel = t(fieldName.toLowerCase());
+            label.textContent = (translatedLabel !== fieldName.toLowerCase()) ? translatedLabel : (fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) + ':');
+            
             Object.assign(label.style, styleLabel);
             let field;
             if (textareaListFields.includes(fieldName)) {
@@ -748,6 +894,7 @@ export function initCaseNotesAssistant() {
         let outputText = templateData.template.replace(/\n/g, "<br>");
         const ulStyle = "style=\"margin-bottom: 12px; padding-left: 30px;\"";
 
+        // Lógica do Stepper (Saída)
         if (templateData.requiresTasks) {
             const selectedCheckboxes = taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked');
             let tagNames = [];
@@ -770,15 +917,12 @@ export function initCaseNotesAssistant() {
 
                 const screenshotList = task.screenshots[screenshotType] || [];
                 if (screenshotList.length > 0) {
-                    
                     for (let i = 1; i <= count; i++) {
-                        
                         if (count > 1) {
                             screenshotsText += `<b>${task.name} - Implementação #${i}</b>`;
                         } else {
                             screenshotsText += `<b>${task.name}</b>`;
                         }
-                        
                         const screenItems = screenshotList.map(print => `<li>${print} - </li>`).join('');
                         screenshotsText += `<ul ${ulStyle}>${screenItems}</ul>`;
                     }
@@ -787,6 +931,15 @@ export function initCaseNotesAssistant() {
             
             outputText = outputText.replace(/{TAGS_IMPLEMENTED}/g, tagNames.join(', ') || 'N/A');
             outputText = outputText.replace(/{SCREENSHOTS_LIST}/g, screenshotsText ? `${screenshotsText}` : 'N/A');
+        }
+
+        // Lógica do Consentimento (Saída)
+        if (currentLang === 'pt') {
+            const consentValue = consentRadioSim.checked ? t('sim') : t('nao');
+            const consentHtml = `<br><b>${t('consentiu_gravacao')}</b> ${consentValue}<br><br>`;
+            outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, consentHtml);
+        } else {
+            outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, '');
         }
 
         const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
@@ -836,9 +989,9 @@ export function initCaseNotesAssistant() {
         const htmlOutput = generateOutputHtml();
         if (htmlOutput) {
             copyHtmlToClipboard(htmlOutput);
-            showToast("Texto copiado com sucesso"); 
+            showToast(t('copiado_sucesso')); 
         } else {
-            showToast("Nenhum substatus selecionado", { error: true });
+            showToast(t('selecione_substatus'), { error: true }); 
         }
     };
 
@@ -846,7 +999,7 @@ export function initCaseNotesAssistant() {
     generateButton.onclick = () => {
         const htmlOutput = generateOutputHtml();
         if (!htmlOutput) {
-          showToast("Nenhum substatus selecionado", { error: true });
+          showToast(t('selecione_substatus'), { error: true });
           return;
         }
 
@@ -863,17 +1016,17 @@ export function initCaseNotesAssistant() {
           campo.dispatchEvent(new Event("input", { bubbles: true }));
           
           setTimeout(() => {
-              showToast("Texto inserido e copiado!");
+              showToast(t('inserido_copiado')); 
           }, 600); 
 
           togglePopup(false);
           resetSteps(1.5);
           mainStatusSelect.value = "";
-          subStatusSelect.innerHTML = '<option value="">-- Selecione o Status --</option>';
+          subStatusSelect.innerHTML = `<option value="">${t('select_substatus')}</option>`;
           subStatusSelect.disabled = true;
 
         } else {
-          showToast("Campo não encontrado. O texto já foi copiado.", { error: true, duration: 3000 });
+          showToast(t('campo_nao_encontrado'), { error: true, duration: 3000 }); 
         }
     };
 
@@ -901,4 +1054,7 @@ export function initCaseNotesAssistant() {
         visible = !visible;
         togglePopup(visible);
     };
+    
+    // Inicia a UI com o idioma padrão
+    setLanguage(currentLang);
 }
