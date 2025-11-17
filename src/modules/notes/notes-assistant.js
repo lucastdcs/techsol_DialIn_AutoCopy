@@ -747,6 +747,7 @@ function updateFieldsFromScenarios() {
         } else if (selectedSubStatusKey.startsWith('SO_')) {
             inputType = 'checkbox';
             scenarios = [
+                { id: 'quickfill-gtm-install', text: 'Instalação do GTM' },
                 { id: 'quickfill-whatsapp', text: 'Conversão de WhatsApp' },
                 { id: 'quickfill-form', text: 'Conversão de Formulário (Padrão)' },
                 { id: 'quickfill-ecw4-close', text: 'Fechamento ECW4 (Pós 7 dias)' }
@@ -765,9 +766,9 @@ function updateFieldsFromScenarios() {
             ];
         } else if (selectedSubStatusKey.startsWith('IN_')) {
              scenarios = [
-                { id: 'quickfill-in-nrp-bau', text: 'NRP (BAU - 3 tentativas)' }, 
-                { id: 'quickfill-in-nrp-lm', text: 'NRP (LM - Sem tentativas)' }, 
-                { id: 'quickfill-in-no-show-bau', text: 'No-Show (BAU - 3 tentativas)' }, 
+                { id: 'quickfill-in-nrp-bau', text: 'NRP (BAU)' }, 
+                { id: 'quickfill-in-nrp-lm', text: 'No Show (LM)' }, 
+                { id: 'quickfill-in-no-show-bau', text: 'Finalização 2 Day Rule (BAU)' }, 
                 { id: 'quickfill-in-2-6-final', text: 'Finalização 2/6 (Sem Resposta)' },
                 { id: 'quickfill-in-manual', text: 'Outro (Manual)' }
              ];
