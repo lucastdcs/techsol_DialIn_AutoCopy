@@ -112,14 +112,14 @@ export const TASKS_DB = {
         name: 'Ads Enhanced Conversions (ECW4)',
         screenshots: {
             implementation: ['Termos aceitos no Ads', 'Tag implementada', 'Teste GTM', 'Teste Ads', 'Versão Publicada', 'Painel do Ads (após 7 dias)'],
-            education: []
+            education: ['Termos aceitos no Ads', 'Tag implementada', 'Teste GTM', 'Teste Ads', 'Versão Publicada', 'Painel do Ads (após 7 dias)']
         }
     },
     'ga4_event_tracking': {
         name: 'Analytics Event Tracking (GA4)',
         screenshots: {
             implementation: ['Tag do evento GA4 implementado no GTM', 'Teste GTM (tagassistant.google.com)', 'Teste GA4 (DebugView - tagassistant.google.com)', 'Versão publicada no GTM', '(Se houver parâmetros) Dimensões customizadas criadas no GA4', 'Evento marcado como principal no GA4', 'GA4 e Google Ads vinculados corretamente', 'Evento principal GA4 importado no Google Ads (como secundário)', 'Métricas app & web ativadas no Google Ads', '(Opcional) Teste no Relatório do Tempo Real (GA4)'],
-            education: []
+            education: ['Tag do evento GA4 implementado no GTM', 'Teste GTM (tagassistant.google.com)', 'Teste GA4 (DebugView - tagassistant.google.com)', 'Versão publicada no GTM', '(Se houver parâmetros) Dimensões customizadas criadas no GA4', 'Evento marcado como principal no GA4', 'GA4 e Google Ads vinculados corretamente', 'Evento principal GA4 importado no Google Ads (como secundário)', 'Métricas app & web ativadas no Google Ads', '(Opcional) Teste no Relatório do Tempo Real (GA4)']
         }
     },
     'upd_for_ga4': {
@@ -355,18 +355,6 @@ export const SUBSTATUS_TEMPLATES = {
         requiresTasks: true,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}{CASO_PORTUGAL}{CONSENTIU_GRAVACAO}<b>Substatus:</b> SO - Implementation Only<br><br><b>Reason/comments:</b> Task implementada com sucesso<br><br><b>OnCall Comments:</b><br><b>Task(s) solicitada(s):</b><br>{TASKS_SOLICITADAS}<br><b>Seguimos com os passos:</b><br>{PASSOS_EXECUTADOS}<br><b>Resultado:</b><br>{RESULTADO}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
     },
-    'SO_Verified_No_Recent_Conversion': {
-        status: 'SO', 
-        name: 'SO - Verified No Recent Conversion', 
-        requiresTasks: true,
-        template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}{CASO_PORTUGAL}{CONSENTIU_GRAVACAO}<b>Substatus:</b> SO - Verified No Recent Conversion<br><br><b>Reason/comments:</b> Task implementada, verificada, mas sem conversões recentes.<br><br><b>OnCall Comments:</b><br><b>Task(s) solicitada(s):</b><br>{TASKS_SOLICITADAS}<br><b>Seguimos com os passos:</b><br>{PASSOS_EXECUTADOS}<br><b>Resultado:</b><br>{RESULTADO}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
-    },
-    'SO_Unverified': {
-        status: 'SO', 
-        name: 'SO - Unverified', 
-        requiresTasks: true,
-        template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}{CASO_PORTUGAL}{CONSENTIU_GRAVACAO}<b>Substatus:</b> SO - Unverified<br><br><b>Reason/comments:</b> Task implementada, porém não verificada.<br><br><b>OnCall Comments:</b><br><b>Task(s) solicitada(s):</b><br>{TASKS_SOLICITADAS}<br><b>Seguimos com os passos:</b><br>{PASSOS_EXECUTADOS}<br><b>Resultado:</b><br>{RESULTADO}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
-    },
     'SO_Education_Only': {
         status: 'SO', 
         name: 'SO - Education Only',
@@ -457,6 +445,13 @@ export const scenarioSnippets = {
     },
 
     // --- Cenários de SO (Combináveis) ---
+    'quickfill-gtm-install': {
+        type: 'all',
+        'field-TASKS_SOLICITADAS': "• Instalação do GTM",
+        'field-PASSOS_EXECUTADOS': "• Criamos a conta dentro do GTM\n• Instalamos dentro do CMS/Hospedagem.\n• Criamos o Vinculador de Conversões.",
+        'field-RESULTADO': "• Validei a instalação.",
+        linkedTask: 'gtm_installation' // Vai marcar o checkbox da task automaticamente
+    },
     'quickfill-whatsapp': {
         type: 'all',
         'field-TASKS_SOLICITADAS': "• Criação de conversão para WHATSAPP",
