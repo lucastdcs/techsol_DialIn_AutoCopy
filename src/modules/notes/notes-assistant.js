@@ -1120,18 +1120,41 @@ export function initCaseNotesAssistant() {
         }
 
         // ===== DISPARO DO EMAIL AUTOMÁTICO (Condicional) =====
-        const selectedSubStatusKey = subStatusSelect.value;
+       const selectedSubStatusKey = subStatusSelect.value;
         
-        // Verifica se o substatus tem shortcode E se o checkbox está marcado
-        if (selectedSubStatusKey && SUBSTATUS_SHORTCODES[selectedSubStatusKey] && emailCheckbox.checked) {
-            const emailCode = SUBSTATUS_SHORTCODES[selectedSubStatusKey];
+        console.log("--- DIAGNÓSTICO DE EMAIL ---");
+        console.log("Substatus Selecionado:", selectedSubStatusKey);
+        
+        // Verifica se o substatus existe
+        if (selectedSubStatusKey) {
             
-            setTimeout(() => {
-                runEmailAutomation(emailCode);
-            }, 1000);
+            // Verifica se existe um shortcode para ele
+            const emailCode = SUBSTATUS_SHORTCODES[selectedSubStatusKey];
+            console.log("Código de Email (Shortcode):", emailCode);
+            
+            // Verifica o estado do checkbox
+            const isEmailEnabled = emailCheckbox.checked;
+            console.log("Checkbox 'Preencher Email' marcado?", isEmailEnabled);
+
+            if (emailCode && isEmailEnabled) {
+                console.log("✅ Condições atendidas. Disparando automação em 1s...");
+                
+                // Chama a função do novo módulo com um pequeno delay
+                setTimeout(() => {
+                    runEmailAutomation(emailCode);
+                }, 1000);
+            } else {
+                console.warn("⚠️ Automação de email cancelada. Motivo: " + 
+                    (!emailCode ? "Sem código de email definido." : "Checkbox desmarcado.")
+                );
+            }
+        } else {
+            console.error("❌ Erro: Nenhuma chave de substatus selecionada.");
         }
         // =====================================================
     };
+        // =====================================================
+    
 
     function togglePopup(show) {
         if (show) {
