@@ -139,11 +139,21 @@ export async function runEmailAutomation(cannedResponseText) {
                         await esperar(500);
                         tentativas++;
                         const opcoes = Array.from(document.querySelectorAll('material-select-dropdown-item'));
+                        
                         if (opcoes.length > 0) {
+                             // 1. Tenta encontrar pela string exata (o que já fazíamos)
                              opcaoAlvo = opcoes.find(opt => 
                                 opt.innerText.toLowerCase().includes(cannedResponseText.toLowerCase())
                             );
-                            if (opcaoAlvo) break;
+
+                            // 2. FALLBACK INTELIGENTE:
+                            // Se não achou pelo texto exato, mas só tem 1 opção na lista, é ela!
+                            if (!opcaoAlvo && opcoes.length === 1) {
+                                console.log("⚠️ Match exato não encontrado, mas apenas 1 opção disponível. Selecionando-a.");
+                                opcaoAlvo = opcoes[0];
+                            }
+
+                            if (opcaoAlvo) break; // Sai do loop se encontrou
                         }
                     }
 
