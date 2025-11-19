@@ -14,25 +14,29 @@ import {
     styleCredit,
     styleExpandButton,
     typeBtnStyle,
-    getRandomGoogleStyle // Importa a função de cor aleatória
+    getRandomGoogleStyle
 } from '../shared/utils.js'; 
 
 import {
     TASKS_DB,
-    SUBSTATUS_TEMPLATES, 
+    SUBSTATUS_TEMPLATES,
+    SUBSTATUS_SHORTCODES, // Importa o mapa de shortcodes de email
     textareaListFields,
     textareaParagraphFields,
     scenarioSnippets,
-    translations // <-- NOVO: Importa as traduções
+    translations
 } from './notes-data.js';
 
+// Importa a automação de email
+import { runEmailAutomation } from '../email/email-automation.js'; 
+
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v3.1.0"; // Grande atualização!
+    const CURRENT_VERSION = "v3.2.0"; // Versão com Email Checkbox
     
     // --- ESTADO GLOBAL DO MÓDULO ---
     let currentCaseType = 'bau';
-    let currentLang = 'pt'; // 'pt' ou 'es'
-    let isPortugalCase = false; // 'true' ou 'false'
+    let currentLang = 'pt'; 
+    let isPortugalCase = false;
 
     function copyHtmlToClipboard(html) {
         const container = document.createElement('div');
@@ -47,7 +51,6 @@ export function initCaseNotesAssistant() {
         selection.addRange(range);
         try {
             document.execCommand('copy');
-            // Toast movido para a lógica do botão
         } catch (err) {
             showToast("Falha ao copiar", { error: true });
         }
@@ -225,14 +228,14 @@ export function initCaseNotesAssistant() {
     const mainStatusLabel = document.createElement("label");
     const subStatusLabel = document.createElement("label");
     
-    const stepPortugalDiv = document.createElement("div"); // NOVO: "Caso de Portugal?"
+    const stepPortugalDiv = document.createElement("div");
     const portugalLabel = document.createElement("label");
     const portugalRadioSim = document.createElement("input");
     const portugalLabelSim = document.createElement("label");
     const portugalRadioNao = document.createElement("input");
     const portugalLabelNao = document.createElement("label");
 
-    const stepConsentDiv = document.createElement("div"); // NOVO: "Consentiu Gravação?"
+    const stepConsentDiv = document.createElement("div");
     const consentLabel = document.createElement("label");
     const consentRadioSim = document.createElement("input");
     const consentLabelSim = document.createElement("label");
@@ -253,17 +256,22 @@ export function initCaseNotesAssistant() {
     
     const mainStatusSelect = document.createElement("select");
     const subStatusSelect = document.createElement("select");
+    
+    // ===== NOVO: Container para o Checkbox de Email (Final) =====
+    const emailAutomationDiv = document.createElement("div");
+    const emailLabel = document.createElement("label");
+    const emailCheckbox = document.createElement("input");
+    // ============================================================
+    
     const buttonContainer = document.createElement("div");
     const copyButton = document.createElement("button");
     const generateButton = document.createElement("button");
 
-    
     // --- Funções de Tradução ---
     function t(key) {
         if (translations && translations[currentLang] && translations[currentLang][key]) {
             return translations[currentLang][key];
         }
-        // Fallback para PT se a chave não existir em ES (ex: "BAU", "LM")
         if (translations && translations['pt'] && translations['pt'][key]) {
             return translations['pt'][key];
         }
@@ -281,10 +289,12 @@ export function initCaseNotesAssistant() {
         copyButton.textContent = t('copiar');
         generateButton.textContent = t('preencher');
         
-        mainStatusSelect.querySelector('option[value=""]').textContent = t('select_status');
-        subStatusSelect.querySelector('option[value=""]').textContent = t('select_substatus');
+        if (mainStatusSelect.querySelector('option[value=""]'))
+            mainStatusSelect.querySelector('option[value=""]').textContent = t('select_status');
+        
+        if (subStatusSelect.querySelector('option[value=""]'))
+            subStatusSelect.querySelector('option[value=""]').textContent = t('select_substatus');
 
-        // Novos campos
         portugalLabel.textContent = t('caso_portugal');
         portugalLabelSim.textContent = t('sim');
         portugalLabelNao.textContent = t('nao');
@@ -295,7 +305,6 @@ export function initCaseNotesAssistant() {
         dynamicFormFieldsContainer.querySelectorAll('label').forEach(label => {
             const fieldName = label.nextElementSibling.id.replace('field-', '');
             const translatedLabel = t(fieldName.toLowerCase());
-            // Se a tradução for diferente da chave, usa a tradução. Senão, formata o nome.
             if (translatedLabel !== fieldName.toLowerCase()) {
                 label.textContent = translatedLabel;
             } else {
@@ -313,13 +322,12 @@ export function initCaseNotesAssistant() {
         
         if (lang === 'pt') {
             Object.assign(langPT.style, newActiveStyle);
-            stepPortugalDiv.style.display = 'block'; // Mostra "Caso de Portugal?"
-            // A lógica de 'setPortugalCase' vai decidir se 'stepConsentDiv' aparece
-            setPortugalCase(isPortugalCase); // Reavalia
+            stepPortugalDiv.style.display = 'block'; 
+            setPortugalCase(isPortugalCase); 
         } else {
             Object.assign(langES.style, newActiveStyle);
-            stepPortugalDiv.style.display = 'none'; // Esconde "Caso de Portugal?"
-            stepConsentDiv.style.display = 'none';  // Esconde "Consentimento"
+            stepPortugalDiv.style.display = 'none'; 
+            stepConsentDiv.style.display = 'none';  
         }
         
         updateUIText();
@@ -330,7 +338,8 @@ export function initCaseNotesAssistant() {
     }
     
     // --- Funções de Lógica dos Campos ---
-function updateFieldsFromScenarios() {
+    function updateFieldsFromScenarios() {
+        // ... (código mantido, sem alterações na lógica)
         const activeScenarioInputs = snippetContainer.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
         const targetFieldsContent = {};
         const activeLinkedTasks = new Set();
@@ -371,7 +380,6 @@ function updateFieldsFromScenarios() {
                     finalValue = combinedTextArray
                         .map(line => line.startsWith('• ') ? line : '• ' + line)
                         .join('\n');
-
                     if (finalValue === '') {
                          finalValue = '• ';
                     } else if (!finalValue.endsWith('\n• ')) {
@@ -381,7 +389,6 @@ function updateFieldsFromScenarios() {
                      finalValue = combinedTextArray.join('\n\n');
                 }
                 
-                // Preenche
                 if (finalValue.trim() !== '•' && finalValue.trim() !== '') {
                     field.value = finalValue;
                 } else if (textareaListFields.includes(fieldId.replace('field-', ''))) {
@@ -390,7 +397,6 @@ function updateFieldsFromScenarios() {
                     field.value = '';
                 }
 
-                // CORREÇÃO DO BULLET: Sempre ativa se for textarea de lista
                 if (field.tagName === 'TEXTAREA' && textareaListFields.includes(fieldId.replace('field-', ''))) {
                      enableAutoBullet(field);
                 }
@@ -400,17 +406,15 @@ function updateFieldsFromScenarios() {
         const taskCheckboxes = taskCheckboxesContainer.querySelectorAll('.task-checkbox');
         taskCheckboxes.forEach(taskCheckbox => {
             taskCheckbox.checked = false;
-            taskCheckbox.dispatchEvent(new Event('change')); // Reseta stepper
-            
+            taskCheckbox.dispatchEvent(new Event('change')); 
             if (activeLinkedTasks.has(taskCheckbox.value)) {
                 taskCheckbox.checked = true;
-                taskCheckbox.dispatchEvent(new Event('change')); // Mostra stepper
+                taskCheckbox.dispatchEvent(new Event('change')); 
             }
         });
     }
 
     function enableAutoBullet(textarea) {
-        // ... (código mantido, com a correção do bug) ...
         if(textarea.value.trim() === '' || textarea.value.trim() === '•') {
             textarea.value = '• ';
         }
@@ -421,7 +425,6 @@ function updateFieldsFromScenarios() {
                 const lineStart = value.lastIndexOf('\n', start - 1) + 1;
                 const currentLine = value.substring(lineStart, start);
                 const insertText = (currentLine.trim() === '•' || currentLine.trim() === '') ? '\n' : '\n• ';
-
                 this.value = value.substring(0, start) + insertText + value.substring(end);
                 const newPos = start + insertText.length;
                 this.selectionStart = newPos; this.selectionEnd = newPos;
@@ -531,9 +534,9 @@ function updateFieldsFromScenarios() {
     step1Div.appendChild(subStatusSelect);
     popupContent.appendChild(step1Div);
     
-    // ===== NOVO: ETAPA 1.1 - Caso Portugal? (Tarefa 3) =====
+    // ===== ETAPA 1.1 - Caso Portugal? =====
     stepPortugalDiv.id = "step-1-1-portugal";
-    Object.assign(stepPortugalDiv.style, { ...styleStepBlock, display: 'none' }); // Escondido por padrão
+    Object.assign(stepPortugalDiv.style, { ...styleStepBlock, display: 'none' });
     
     Object.assign(portugalLabel.style, styleLabel);
     stepPortugalDiv.appendChild(portugalLabel);
@@ -541,7 +544,6 @@ function updateFieldsFromScenarios() {
     const portugalRadioGroup = document.createElement('div');
     Object.assign(portugalRadioGroup.style, styleRadioContainer);
     
-    // Opção SIM (PT)
     const divPtSim = document.createElement('div');
     Object.assign(divPtSim.style, { display: 'flex', alignItems: 'center' });
     portugalRadioSim.type = 'radio';
@@ -554,14 +556,13 @@ function updateFieldsFromScenarios() {
     divPtSim.appendChild(portugalRadioSim);
     divPtSim.appendChild(portugalLabelSim);
     
-    // Opção NÃO (PT)
     const divPtNao = document.createElement('div');
     Object.assign(divPtNao.style, { display: 'flex', alignItems: 'center' });
     portugalRadioNao.type = 'radio';
     portugalRadioNao.id = 'portugal-nao';
     portugalRadioNao.name = 'portugal-group';
     portugalRadioNao.value = 'nao';
-    portugalRadioNao.checked = true; // Padrão é NÃO (Brasil)
+    portugalRadioNao.checked = true; 
     Object.assign(portugalRadioNao.style, styleCheckboxInput);
     portugalLabelNao.htmlFor = 'portugal-nao';
     Object.assign(portugalLabelNao.style, { cursor: 'pointer' });
@@ -573,21 +574,20 @@ function updateFieldsFromScenarios() {
     stepPortugalDiv.appendChild(portugalRadioGroup);
     popupContent.appendChild(stepPortugalDiv);
 
-    // Lógica condicional para mostrar o campo de consentimento
     function setPortugalCase(isPT) {
         isPortugalCase = isPT;
         if (isPT) {
-            stepConsentDiv.style.display = 'block'; // Mostra "Consentiu Gravação?"
+            stepConsentDiv.style.display = 'block'; 
         } else {
-            stepConsentDiv.style.display = 'none'; // Esconde "Consentiu Gravação?"
+            stepConsentDiv.style.display = 'none'; 
         }
     }
     portugalRadioSim.onchange = () => setPortugalCase(true);
     portugalRadioNao.onchange = () => setPortugalCase(false);
     
-    // ===== NOVO: ETAPA 1.2 - Consentimento (Escondido) (Tarefa 3) =====
+    // ===== ETAPA 1.2 - Consentimento =====
     stepConsentDiv.id = "step-1-2-consent";
-    Object.assign(stepConsentDiv.style, { ...styleStepBlock, display: 'none' }); // Escondido por padrão
+    Object.assign(stepConsentDiv.style, { ...styleStepBlock, display: 'none' }); 
     
     Object.assign(consentLabel.style, styleLabel);
     stepConsentDiv.appendChild(consentLabel);
@@ -624,7 +624,6 @@ function updateFieldsFromScenarios() {
     consentRadioGroup.appendChild(divNao);
     stepConsentDiv.appendChild(consentRadioGroup);
     popupContent.appendChild(stepConsentDiv);
-    // ===============================================
 
     // ===== ETAPA 1.5 - Cenários =====
     stepSnippetsDiv.id = "step-1-5-snippets";
@@ -652,6 +651,30 @@ function updateFieldsFromScenarios() {
     step3Div.appendChild(step3Title);
     step3Div.appendChild(dynamicFormFieldsContainer);
     popupContent.appendChild(step3Div);
+
+    // ===== NOVO: CHECKBOX DE EMAIL (Segurança) =====
+    emailAutomationDiv.id = "step-4-email";
+    Object.assign(emailAutomationDiv.style, { 
+        display: "none", // Escondido por padrão, só mostra se tiver template
+        marginTop: "16px", 
+        paddingTop: "12px", 
+        borderTop: "1px solid #eee" 
+    });
+    
+    emailLabel.style.display = "flex";
+    emailLabel.style.alignItems = "center";
+    emailLabel.style.cursor = "pointer";
+    emailLabel.style.fontSize = "14px";
+    
+    emailCheckbox.type = "checkbox";
+    emailCheckbox.checked = true; // Padrão marcado
+    Object.assign(emailCheckbox.style, styleCheckboxInput);
+    
+    emailLabel.appendChild(emailCheckbox);
+    emailLabel.appendChild(document.createTextNode("Preencher email automaticamente?"));
+    emailAutomationDiv.appendChild(emailLabel);
+    popupContent.appendChild(emailAutomationDiv);
+    // ==============================================
 
     Object.assign(buttonContainer.style, { display: "none", gap: "8px", padding: "0" });
     popupContent.appendChild(buttonContainer);
@@ -686,6 +709,7 @@ function updateFieldsFromScenarios() {
             step3Div.style.display = 'none';
             dynamicFormFieldsContainer.innerHTML = '';
             buttonContainer.style.display = 'none';
+            emailAutomationDiv.style.display = 'none'; // Reseta email
         }
     }
 
@@ -766,9 +790,9 @@ function updateFieldsFromScenarios() {
             ];
         } else if (selectedSubStatusKey.startsWith('IN_')) {
              scenarios = [
-                { id: 'quickfill-in-nrp-bau', text: 'NRP (BAU)' }, 
-                { id: 'quickfill-in-nrp-lm', text: 'No Show (LM)' }, 
-                { id: 'quickfill-in-no-show-bau', text: 'Finalização 2 Day Rule (BAU)' }, 
+                { id: 'quickfill-in-nrp-bau', text: 'NRP (BAU - 3 tentativas)' }, 
+                { id: 'quickfill-in-nrp-lm', text: 'NRP (LM - Sem tentativas)' }, 
+                { id: 'quickfill-in-no-show-bau', text: 'No-Show (BAU - 3 tentativas)' }, 
                 { id: 'quickfill-in-2-6-final', text: 'Finalização 2/6 (Sem Resposta)' },
                 { id: 'quickfill-in-manual', text: 'Outro (Manual)' }
              ];
@@ -935,6 +959,15 @@ function updateFieldsFromScenarios() {
         }
 
         step3Div.style.display = 'block';
+        
+        // ===== NOVO: MOSTRA CHECKBOX DE EMAIL SE TIVER SHORTCODE =====
+        if (SUBSTATUS_SHORTCODES[selectedSubStatusKey]) {
+            emailAutomationDiv.style.display = 'block';
+        } else {
+            emailAutomationDiv.style.display = 'none';
+        }
+        // ============================================================
+
         buttonContainer.style.display = 'flex';
     };
 
@@ -985,23 +1018,19 @@ function updateFieldsFromScenarios() {
             outputText = outputText.replace(/{SCREENSHOTS_LIST}/g, screenshotsText ? `${screenshotsText}` : 'N/A');
         }
 
-        // ===== NOVO: Lógica dos Campos de Portugal (Tarefa 3) =====
+        // ===== Lógica dos Campos de Portugal =====
         if (currentLang === 'pt' && isPortugalCase) {
-            // Se for PT e "Sim", adiciona o texto de consentimento
             const consentValue = consentRadioSim.checked ? t('sim') : t('nao');
             const consentHtml = `<br><b>${t('consentiu_gravacao')}</b> ${consentValue}<br><br>`;
             outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, consentHtml);
             outputText = outputText.replace(/{CASO_PORTUGAL}/g, `<br><b>${t('caso_portugal')}</b> ${t('sim')}<br>`);
         } else if (currentLang === 'pt' && !isPortugalCase) {
-             // Se for PT e "Não" (Brasil), adiciona só a confirmação
             outputText = outputText.replace(/{CASO_PORTUGAL}/g, `<br><b>${t('caso_portugal')}</b> ${t('nao')}<br>`);
-            outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, ''); // Remove o placeholder de consentimento
+            outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, ''); 
         } else {
-            // Se for ES, remove ambos os placeholders
             outputText = outputText.replace(/{CASO_PORTUGAL}/g, '');
             outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, '');
         }
-        // =========================================================
 
         const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
         inputs.forEach(input => {
@@ -1089,6 +1118,19 @@ function updateFieldsFromScenarios() {
         } else {
           showToast(t('campo_nao_encontrado'), { error: true, duration: 3000 }); 
         }
+
+        // ===== DISPARO DO EMAIL AUTOMÁTICO (Condicional) =====
+        const selectedSubStatusKey = subStatusSelect.value;
+        
+        // Verifica se o substatus tem shortcode E se o checkbox está marcado
+        if (selectedSubStatusKey && SUBSTATUS_SHORTCODES[selectedSubStatusKey] && emailCheckbox.checked) {
+            const emailCode = SUBSTATUS_SHORTCODES[selectedSubStatusKey];
+            
+            setTimeout(() => {
+                runEmailAutomation(emailCode);
+            }, 1000);
+        }
+        // =====================================================
     };
 
     function togglePopup(show) {
