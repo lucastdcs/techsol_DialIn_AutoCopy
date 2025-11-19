@@ -31,7 +31,7 @@ import {
 import { runEmailAutomation } from '../email/email-automation.js'; 
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v3.2.1"; // Versão com Email Checkbox
+    const CURRENT_VERSION = "v3.2.2"; // Versão com Email Checkbox
     
     // --- ESTADO GLOBAL DO MÓDULO ---
     let currentCaseType = 'bau';
@@ -1086,8 +1086,12 @@ export function initCaseNotesAssistant() {
     };
 
   
-    generateButton.onclick = () => {
+generateButton.onclick = () => {
+        // 1. Captura o valor AGORA, antes de qualquer reset
+        const selectedSubStatusKey = subStatusSelect.value;
+
         const htmlOutput = generateOutputHtml();
+        
         if (!htmlOutput) {
           showToast(t('selecione_substatus'), { error: true });
           return;
@@ -1109,6 +1113,23 @@ export function initCaseNotesAssistant() {
               showToast(t('inserido_copiado')); 
           }, 600); 
 
+          // --- LÓGICA DE EMAIL (Movi para cá, antes do reset) ---
+          console.log("--- DIAGNÓSTICO DE EMAIL ---");
+          console.log("Substatus Capturado:", selectedSubStatusKey);
+          
+          if (selectedSubStatusKey && SUBSTATUS_SHORTCODES[selectedSubStatusKey] && emailCheckbox.checked) {
+              const emailCode = SUBSTATUS_SHORTCODES[selectedSubStatusKey];
+              console.log("Código de Email:", emailCode);
+              
+              setTimeout(() => {
+                  runEmailAutomation(emailCode);
+              }, 1000);
+          } else {
+              console.log("Email não disparado (Sem código ou checkbox desmarcado).");
+          }
+          // -------------------------------------------------------
+
+          // 4. AGORA SIM, Fecha e Reseta
           togglePopup(false);
           resetSteps(1.5);
           mainStatusSelect.value = "";
@@ -1118,42 +1139,7 @@ export function initCaseNotesAssistant() {
         } else {
           showToast(t('campo_nao_encontrado'), { error: true, duration: 3000 }); 
         }
-
-        // ===== DISPARO DO EMAIL AUTOMÁTICO (Condicional) =====
-       const selectedSubStatusKey = subStatusSelect.value;
-        
-        console.log("--- DIAGNÓSTICO DE EMAIL ---");
-        console.log("Substatus Selecionado:", selectedSubStatusKey);
-        
-        // Verifica se o substatus existe
-        if (selectedSubStatusKey) {
-            
-            // Verifica se existe um shortcode para ele
-            const emailCode = SUBSTATUS_SHORTCODES[selectedSubStatusKey];
-            console.log("Código de Email (Shortcode):", emailCode);
-            
-            // Verifica o estado do checkbox
-            const isEmailEnabled = emailCheckbox.checked;
-            console.log("Checkbox 'Preencher Email' marcado?", isEmailEnabled);
-
-            if (emailCode && isEmailEnabled) {
-                console.log("✅ Condições atendidas. Disparando automação em 1s...");
-                
-                // Chama a função do novo módulo com um pequeno delay
-                setTimeout(() => {
-                    runEmailAutomation(emailCode);
-                }, 1000);
-            } else {
-                console.warn("⚠️ Automação de email cancelada. Motivo: " + 
-                    (!emailCode ? "Sem código de email definido." : "Checkbox desmarcado.")
-                );
-            }
-        } else {
-            console.error("❌ Erro: Nenhuma chave de substatus selecionada.");
-        }
-        // =====================================================
     };
-        // =====================================================
     
 
     function togglePopup(show) {
