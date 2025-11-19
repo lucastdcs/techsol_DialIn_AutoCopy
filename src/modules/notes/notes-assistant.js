@@ -31,7 +31,7 @@ import {
 import { runEmailAutomation } from '../email/email-automation.js'; 
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v3.2.0"; // Versão com Email Checkbox
+    const CURRENT_VERSION = "v3.2.1"; // Versão com Email Checkbox
     
     // --- ESTADO GLOBAL DO MÓDULO ---
     let currentCaseType = 'bau';
