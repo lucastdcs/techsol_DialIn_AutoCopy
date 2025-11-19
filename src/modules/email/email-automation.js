@@ -17,24 +17,15 @@ export async function runEmailAutomation(cannedResponseText) {
     console.log(`🚀 Iniciando automação: ${cannedResponseText}`);
     showToast(`Iniciando automação de email...`, { duration: 3000 });
 
-    // --- PASSO 0: CAPTURAR NOME (Estratégia Múltipla) ---
-    let nomeCliente = "Cliente"; // Valor padrão
-    
-    // Estratégia 1: Tenta pegar do "Given name" na tela de detalhes
+    // --- PASSO 0: CAPTURAR NOME ---
+    let nomeCliente = "Cliente";
     try {
         const xpath = "//div[contains(text(), 'Given name')]";
         const labelNode = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
         if (labelNode && labelNode.nextElementSibling) {
-            const nome = labelNode.nextElementSibling.innerText.trim();
-            if (nome) {
-                nomeCliente = nome;
-                console.log(`✅ Nome capturado (Given name): "${nomeCliente}"`);
-            }
+            nomeCliente = labelNode.nextElementSibling.innerText.trim();
         }
-    } catch (e) { console.warn("Falha ao capturar Given name", e); }
-
-    // Estratégia 2: Se falhar, tenta pegar do título do caso (se houver) ou do chip de email depois
-    // (A estratégia do chip de email será tentada no passo 7 se esta falhar)
+    } catch (e) {}
 
     // --- PASSO 1 e 2: ABRIR EMAIL ---
     const speedDial = document.querySelector('material-fab-speed-dial');
@@ -75,30 +66,26 @@ export async function runEmailAutomation(cannedResponseText) {
     if (btnDiscardDraft) {
         console.log("⚠️ Sugestão de rascunho detectada. Descartando...");
         simularCliqueReal(btnDiscardDraft);
+        
+        // Espera o modal de confirmação aparecer
         await esperar(1000);
+        
         const btnConfirm = document.querySelector('material-button[debug-id="confirm-button"]');
         if (btnConfirm) {
+            console.log("✅ Confirmando descarte...");
             simularCliqueReal(btnConfirm);
+            // Espera o editor real carregar após o descarte
             await esperar(2000);
         }
     }
+    // ====================================================================
 
     // --- PASSO 3: LIMPEZA E FOCO ---
+    // Agora sim buscamos o editor, pois a sugestão já foi removida se existia
     const divConteudoTexto = document.getElementById('email-body-content-top-content');
     const editorPai = document.getElementById('email-body-content-top-content'); 
 
     if (divConteudoTexto && editorPai) {
-        // Se ainda não temos um nome válido, tentamos pegar do campo "To" agora que a janela abriu
-        if (nomeCliente === "Cliente") {
-             const chipTo = document.querySelector('email-address-chip user-chip span.address, email-address-chip span.name');
-             if (chipTo) {
-                 // Pega o primeiro nome ou o texto antes do @
-                 const rawName = chipTo.innerText.trim();
-                 nomeCliente = rawName.split(' ')[0].split('@')[0];
-                 console.log(`✅ Nome capturado (Chip To): "${nomeCliente}"`);
-             }
-        }
-
         const ancestral = editorPai.closest('[aria-hidden="true"]');
         if (ancestral) ancestral.removeAttribute('aria-hidden');
         
@@ -109,6 +96,7 @@ export async function runEmailAutomation(cannedResponseText) {
         const elementoSagrado = document.getElementById('cases-body-field');
 
         if (elementoSagrado) {
+            // Limpa vizinhos
             while (elementoSagrado.nextSibling) elementoSagrado.nextSibling.remove();
             while (elementoSagrado.previousSibling) elementoSagrado.previousSibling.remove();
 
@@ -144,6 +132,7 @@ export async function runEmailAutomation(cannedResponseText) {
                     document.execCommand('insertText', false, cannedResponseText);
                     searchInput.dispatchEvent(new Event('input', { bubbles: true }));
                     
+                    // Espera Ativa
                     let opcaoAlvo = null;
                     let tentativas = 0;
                     while (tentativas < 20) { 
@@ -187,7 +176,6 @@ export async function runEmailAutomation(cannedResponseText) {
                             }
                         }
 
-                        // Fallback: Procura em todo o elemento sagrado se não achar nos fields
                         if (!noAlvo && elSagradoAtualizado) {
                              noAlvo = encontrarNoDeTexto(elSagradoAtualizado, '{%ADVERTISER_NAME%}');
                         }
@@ -203,9 +191,8 @@ export async function runEmailAutomation(cannedResponseText) {
                             selection.removeAllRanges();
                             selection.addRange(rangeToken);
                             
-                            console.log(`📝 Substituindo por: ${nomeCliente}`); // DEBUG
                             document.execCommand('insertText', false, nomeCliente);
-                            showToast(`Email pronto! (Cliente: ${nomeCliente})`);
+                            showToast("Email preenchido e personalizado!");
                         } else {
                             showToast("Email preenchido, mas nome não substituído.", { error: true });
                         }
