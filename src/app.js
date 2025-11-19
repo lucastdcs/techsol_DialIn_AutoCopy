@@ -4,6 +4,7 @@ import { initGlobalStylesAndFont } from './modules/shared/utils.js';
 import { initCaseNotesAssistant } from './modules/notes/notes-assistant.js';
 import { initCallScriptAssistant } from './modules/call-script/call-script-assistant.js';
 import { initFeedbackAssistant } from './modules/lm-report/lm-repot-assistant.js';
+import { initQuickEmailAssistant } from './modules/quick-email/quick-email-assistant.js';
 // --- 1. VERIFICAÇÕES GLOBAIS ---
 if (document.getElementById("autofill-floating-btn") || document.getElementById("call-script-floating-btn")) {
     console.log("Assistentes já carregados.");
@@ -18,4 +19,6 @@ if (document.getElementById("autofill-floating-btn") || document.getElementById(
     initCallScriptAssistant();
 
     initFeedbackAssistant();
+
+    initQuickEmailAssistant();
 }
