@@ -58,7 +58,7 @@ export async function runEmailAutomation(cannedResponseText) {
     }
 
     // Aguarda o carregamento inicial da janela
-    await esperar(3000); 
+    await esperar(4000); 
 
     // ===== NOVO: VERIFICAÇÃO DE RASCUNHO/SUGESTÃO (Pre-write Draft) =====
     const btnDiscardDraft = document.querySelector('material-button[debug-id="discard-prewrite-draft-button"]');
