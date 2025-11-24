@@ -151,25 +151,25 @@ export function initFeedbackAssistant() {
     const ORANGE = { bg: '#FBBC04', hover: '#E3A800' }; // Nova cor para Analytics/Geral se quiser, ou use Blue
 
     // === SEÇÃO: FORMS (LM) ===
-    popupContent.appendChild(createSectionTitle('LM (Lead Management)'));
+    popupContent.appendChild(createSectionTitle('LM'));
     popupContent.appendChild(createLinkBtn('Relatório de Ocorrências', URL_LM_OCORRENCIAS, BLUE));
     popupContent.appendChild(createLinkBtn('Chamadas Excedidas (>50min)', URL_LM_CHAMADAS, GREEN));
     popupContent.appendChild(createLinkBtn('Relatório de Bugs', URL_LM_BUGS, RED));
 
     // === SEÇÃO: FORMS (QA) ===
-    popupContent.appendChild(createSectionTitle('QA (Quality Assurance)'));
-    popupContent.appendChild(createLinkBtn('Elogios (Kudos)', URL_QA_ELOGIOS, BLUE));
+    popupContent.appendChild(createSectionTitle('QA'));
+    popupContent.appendChild(createLinkBtn('Elogios', URL_QA_ELOGIOS, BLUE));
     popupContent.appendChild(createLinkBtn('Casos Complexos', URL_QA_COMPLEXOS, GREEN));
 
     // === SEÇÃO: FORMS (Outros) ===
     popupContent.appendChild(createSectionTitle('Outros'));
-    popupContent.appendChild(createLinkBtn('Solicitar Gravação (SAR)', URL_GRAVACAO, GREY));
+    popupContent.appendChild(createLinkBtn('Solicitar Gravação', URL_GRAVACAO, GREY));
 
     // === SEÇÃO: SUPORTE (NOVO) ===
     popupContent.appendChild(createSectionTitle('Suporte'));
     popupContent.appendChild(createLinkBtn('Suporte Google Ads', URL_SUPORTE_ADS, BLUE));
-    popupContent.appendChild(createLinkBtn('Suporte GA4', URL_SUPORTE_GA4, BLUE));
-    popupContent.appendChild(createLinkBtn('Suporte Merchant Center', URL_SUPORTE_MERCHANT, BLUE));
+    popupContent.appendChild(createLinkBtn('Suporte GA4', URL_SUPORTE_GA4, GREEN));
+    popupContent.appendChild(createLinkBtn('Suporte Merchant Center', URL_SUPORTE_MERCHANT, GREY));
 
 
     // --- 5. Rodapé ---
