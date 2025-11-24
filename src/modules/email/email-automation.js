@@ -1,5 +1,6 @@
 // src/modules/email/email-automation.js
 import { showToast } from '../shared/utils.js';
+import { getPageData } from '../shared/page-data.js'; // <-- NOVO IMPORT
 
 const esperar = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -14,80 +15,57 @@ function simularCliqueReal(elemento) {
 export async function runEmailAutomation(cannedResponseText) {
     if (!cannedResponseText) return;
 
-    console.log(`🚀 Iniciando automação rápida: ${cannedResponseText}`);
-    showToast(`Preparando email...`, { duration: 3000 });
+    console.log(`🚀 Iniciando automação: ${cannedResponseText}`);
+    showToast(`Iniciando automação de email...`, { duration: 3000 });
 
-    // --- PASSO 0: CAPTURAR NOME ---
-    let nomeCliente = "Cliente";
-    try {
-        const xpath = "//div[contains(text(), 'Given name')]";
-        const labelNode = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-        if (labelNode && labelNode.nextElementSibling) {
-            nomeCliente = labelNode.nextElementSibling.innerText.trim();
-        }
-    } catch (e) {}
+    // --- PASSO 0: CAPTURAR DADOS (Centralizado) ---
+    const pageData = getPageData(); // <-- Usa o novo arquivo
+    console.log("Dados capturados:", pageData);
 
-    // --- PASSO 1: ABRIR EMAIL (ESTRATÉGIA SNIPER / DIRETA) ---
-    // Tenta achar o botão de email imediatamente, sem abrir o menu (+)
-    
-    // 1. Busca ícone de email em todo o DOM
-    const todosIcones = Array.from(document.querySelectorAll('i.material-icons-extended'));
-    const iconeEmail = todosIcones.find(el => el.innerText.trim() === 'email');
-    
-    let emailAberto = false;
+    // --- PASSO 1 e 2: ABRIR EMAIL ---
+    const speedDial = document.querySelector('material-fab-speed-dial');
+    if (speedDial) {
+        const triggerBtn = speedDial.querySelector('.trigger');
+        if (triggerBtn) {
+            triggerBtn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+            simularCliqueReal(triggerBtn);
+            await esperar(1000);
+            
+            if (!document.getElementById('email-body-content-top-content')) {
+                const icones = Array.from(document.querySelectorAll('i.material-icons-extended'))
+                    .filter(el => el.offsetParent !== null);
+                const emailBtn = icones.find(el => el.innerText.trim() === 'email');
 
-    if (iconeEmail) {
-        console.log("⚡ Modo Rápido: Ícone de email encontrado. Clicando direto...");
-        // Tenta achar o botão pai para clicar nele (mais seguro)
-        const botaoAlvo = iconeEmail.closest('material-button') || iconeEmail.closest('material-fab') || iconeEmail;
-        
-        // Força visibilidade caso esteja oculto (hack para Angular)
-        if (botaoAlvo.style) {
-            botaoAlvo.style.display = 'block';
-            botaoAlvo.style.visibility = 'visible';
-        }
-        
-        simularCliqueReal(botaoAlvo);
-        emailAberto = true;
-    } else {
-        console.log("⚠️ Modo Rápido falhou. Tentando via Menu (+)...");
-        // Fallback: Método antigo (Abrir menu +)
-        const speedDial = document.querySelector('material-fab-speed-dial');
-        if (speedDial) {
-            const triggerBtn = speedDial.querySelector('.trigger');
-            if (triggerBtn) {
-                triggerBtn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-                simularCliqueReal(triggerBtn);
-                await esperar(1000);
-                
-                // Tenta achar de novo agora que o menu abriu
-                const iconesNovos = Array.from(document.querySelectorAll('i.material-icons-extended'));
-                const emailBtnNovo = iconesNovos.find(el => el.innerText.trim() === 'email');
-                if (emailBtnNovo) {
-                    simularCliqueReal(emailBtnNovo);
-                    emailAberto = true;
+                if (emailBtn) {
+                    const botaoClicavel = emailBtn.closest('material-button') || emailBtn;
+                    simularCliqueReal(botaoClicavel);
+                } else {
+                    console.error("❌ Erro: Ícone 'email' não apareceu.");
+                    return;
                 }
             }
+        } else {
+             speedDial.click();
         }
-    }
-
-    if (!emailAberto && !document.getElementById('email-body-content-top-content')) {
-        console.error("❌ Não foi possível abrir o email.");
-        showToast("Erro ao abrir email.", { error: true });
+    } else {
+        console.error("❌ Erro: Botão (+) não encontrado.");
         return;
     }
 
-    // Aguarda carregamento
+    // Aguarda o carregamento inicial da janela
     await esperar(3000); 
 
-    // --- PASSO 2: DESCARTAR RASCUNHO (ESTRATÉGIA DIRETA) ---
+    // ===== VERIFICAÇÃO DE RASCUNHO =====
     const btnDiscardDraft = document.querySelector('material-button[debug-id="discard-prewrite-draft-button"]');
+    
     if (btnDiscardDraft) {
-        console.log("🗑️ Descartando rascunho...");
+        console.log("⚠️ Sugestão de rascunho detectada. Descartando...");
         simularCliqueReal(btnDiscardDraft);
         await esperar(1000);
+        
         const btnConfirm = document.querySelector('material-button[debug-id="confirm-button"]');
         if (btnConfirm) {
+            console.log("✅ Confirmando descarte...");
             simularCliqueReal(btnConfirm);
             await esperar(2000);
         }
@@ -95,20 +73,16 @@ export async function runEmailAutomation(cannedResponseText) {
 
     // --- PASSO 3: LIMPEZA E FOCO ---
     const divConteudoTexto = document.getElementById('email-body-content-top-content');
-    // Seletor corrigido para o ID exato que o Angular usa para o wrapper
-    const editorPai = document.querySelector('div[contenteditable="true"][aria-label="Email body"]') || document.getElementById('email-body-content-top-content');
+    const editorPai = document.getElementById('email-body-content-top-content'); 
 
     if (divConteudoTexto && editorPai) {
-        // Destrava acessibilidade
         const ancestral = editorPai.closest('[aria-hidden="true"]');
         if (ancestral) ancestral.removeAttribute('aria-hidden');
         
         editorPai.focus();
-        // Clica dentro para garantir o cursor
-        simularCliqueReal(divConteudoTexto);
+        simularCliqueReal(document.getElementById('email-body-content-top-content'));
         await esperar(500); 
 
-        // Limpeza usando Elemento Sagrado
         const elementoSagrado = document.getElementById('cases-body-field');
 
         if (elementoSagrado) {
@@ -116,13 +90,11 @@ export async function runEmailAutomation(cannedResponseText) {
             while (elementoSagrado.nextSibling) elementoSagrado.nextSibling.remove();
             while (elementoSagrado.previousSibling) elementoSagrado.previousSibling.remove();
 
-            // Limpa vizinhos externos
             const avo = divConteudoTexto.parentElement; 
             Array.from(avo.childNodes).forEach(tio => {
                 if (tio !== divConteudoTexto) avo.removeChild(tio);
             });
 
-            // Limpa conteúdo do sagrado
             const selection = window.getSelection();
             const range = document.createRange();
             range.selectNodeContents(elementoSagrado);
@@ -130,25 +102,23 @@ export async function runEmailAutomation(cannedResponseText) {
             selection.addRange(range);
             document.execCommand('delete', false, null);
 
-            // --- PASSO 4: CANNED RESPONSE (CLIQUE DIRETO) ---
+            // --- PASSO 4: CANNED RESPONSE ---
             await esperar(500);
             const btnCanned = document.querySelector('material-button[debug-id="canned_response_button"]');
             
             if (btnCanned) {
-                // Não precisamos de scroll se usarmos clique direto simulado, mas ajuda a trazer para a viewport
                 btnCanned.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 await esperar(200); 
                 simularCliqueReal(btnCanned);
                 
                 // --- PASSO 5: PESQUISAR ---
-                await esperar(1500); // Tempo reduzido pois o menu costuma ser rápido
+                await esperar(2000); 
                 const searchInput = document.querySelector('material-auto-suggest-input input');
                 
                 if (searchInput) {
                     simularCliqueReal(searchInput);
                     await esperar(200);
                     
-                    // Digita o código
                     document.execCommand('insertText', false, cannedResponseText);
                     searchInput.dispatchEvent(new Event('input', { bubbles: true }));
                     
@@ -159,18 +129,16 @@ export async function runEmailAutomation(cannedResponseText) {
                         await esperar(500);
                         tentativas++;
                         const opcoes = Array.from(document.querySelectorAll('material-select-dropdown-item'));
-                        
                         if (opcoes.length > 0) {
-                             // 1. Tenta encontrar pela string exata
                              opcaoAlvo = opcoes.find(opt => 
                                 opt.innerText.toLowerCase().includes(cannedResponseText.toLowerCase())
                             );
-
-                            // 2. Fallback: Se só tem 1 opção, usa ela
+                            
+                            // Fallback de opção única
                             if (!opcaoAlvo && opcoes.length === 1) {
                                 opcaoAlvo = opcoes[0];
                             }
-
+                            
                             if (opcaoAlvo) break;
                         }
                     }
@@ -192,7 +160,6 @@ export async function runEmailAutomation(cannedResponseText) {
                             return null;
                         }
 
-                        // Busca o elemento atualizado
                         const elSagradoAtualizado = document.getElementById('cases-body-field');
                         const spansFields = elSagradoAtualizado ? elSagradoAtualizado.querySelectorAll('span.field') : [];
                         let noAlvo = null;
@@ -220,19 +187,22 @@ export async function runEmailAutomation(cannedResponseText) {
                             selection.removeAllRanges();
                             selection.addRange(rangeToken);
                             
-                            document.execCommand('insertText', false, nomeCliente);
-                            showToast("Email pronto! ✨");
+                            // Substitui usando o dado capturado
+                            document.execCommand('insertText', false, pageData.advertiserName);
+                            showToast("Email preenchido e personalizado!");
                         } else {
-                             // Às vezes o template não tem nome, tudo bem.
-                             showToast("Email inserido.");
+                            showToast("Email preenchido, mas nome não substituído.", { error: true });
                         }
+
                     } else {
                         showToast(`Template '${cannedResponseText}' não encontrado.`, { error: true });
                     }
                 }
             }
         } else {
-             showToast("Erro no ID do corpo do email.", { error: true });
+             showToast("Botão de Canned Response não encontrado.", { error: true });
         }
+    } else {
+        showToast("Editor de email não encontrado.", { error: true });
     }
 }
