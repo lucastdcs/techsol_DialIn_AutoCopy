@@ -1,6 +1,5 @@
 // src/modules/feedback/feedback-assistant.js
 
-// Importa as funções e estilos compartilhados
 import { 
     makeDraggable,
     stylePopup,
@@ -10,29 +9,37 @@ import {
     styleFloatingButton,
     stylePopupVersion,
     styleCredit,
-    styleButtonBase // Vamos usar este para os nossos botões de link
+    styleButtonBase,
+    styleLabel // Importando styleLabel para os subtítulos
 } from '../shared/utils.js';
 
 // --- URLs dos Formulários ---
-const FORM_URL_1 = 'https://docs.google.com/forms/d/e/1FAIpQLSc6CamPehrREeVr7yCWMyqFETrFYYezNcLb_13W4yZDQkfY6Q/viewform';
-const FORM_URL_2 = 'https://docs.google.com/forms/d/e/1FAIpQLSfE8EMHNJMTKYeA6XM2RZjZ9AQ4LhGk1Dwm_WLu3kcMdKMikA/viewform';
-const FORM_URL_3  = 'https://docs.google.com/forms/d/e/1FAIpQLSfkqRqT2Kbf08IStz31fQPE84MDOtGxk7cetJmc3xzShXIXRA/viewform';
+// LM
+const URL_LM_OCORRENCIAS = 'https://docs.google.com/forms/d/e/1FAIpQLSc6CamPehrREeVr7yCWMyqFETrFYYezNcLb_13W4yZDQkfY6Q/viewform';
+const URL_LM_CHAMADAS = 'https://docs.google.com/forms/d/e/1FAIpQLSfE8EMHNJMTKYeA6XM2RZjZ9AQ4LhGk1Dwm_WLu3kcMdKMikA/viewform';
+const URL_LM_BUGS = 'https://docs.google.com/forms/d/e/1FAIpQLSfkqRqT2Kbf08IStz31fQPE84MDOtGxk7cetJmc3xzShXIXRA/viewform';
+
+// QA
+const URL_QA_ELOGIOS = 'https://docs.google.com/forms/d/e/1FAIpQLSezY5K-trQDv0LkL5IoTlV0Tl0oOqGTEszylmgcbMRXcC9Weg/viewform';
+const URL_QA_COMPLEXOS = 'https://docs.google.com/forms/d/e/1FAIpQLSe26q1LEloFNRfOAVZtA7DCOQTqdu1BAEeWuxtK6oPwZhLp-A/viewform?resourcekey=0-c1N4h8gntza2gQowqYAqMw';
+
+// Outros
+const URL_GRAVACAO = 'https://support.google.com/policies/contact/sar';
 
 export function initFeedbackAssistant() {
-    const CURRENT_VERSION = "v1.3"; // Versão deste módulo
+    const CURRENT_VERSION = "v1.4"; 
 
-
+    // --- 1. Botão Flutuante ---
     const btn = document.createElement("button");
     btn.id = "feedback-floating-btn";
     btn.textContent = "📝"; 
     Object.assign(btn.style, styleFloatingButton, {
-        top: "80%", // Posição abaixo dos outros
-        background: "#0F9D58", // Verde do Google (Sheets/Forms)
+        top: "80%",
+        background: "#0F9D58",
         color: "white"
     });
-    // Animações
     btn.onmouseenter = () => {
-        btn.style.background = "#0A854A"; // Verde mais escuro
+        btn.style.background = "#0A854A";
         btn.style.transform = "scale(1.1)";
     };
     btn.onmouseleave = () => {
@@ -42,13 +49,12 @@ export function initFeedbackAssistant() {
     document.body.appendChild(btn);
     makeDraggable(btn);
 
-    // --- 2. Criar o Popup ---
+    // --- 2. Popup ---
     const popup = document.createElement("div");
     popup.id = "feedback-popup";
-    // Um pouco mais estreito que os outros
     Object.assign(popup.style, stylePopup, { right: "120px", width: "300px" }); 
 
-    // --- 3. Criar o Header ---
+    // --- 3. Header ---
     const header = document.createElement("div");
     Object.assign(header.style, stylePopupHeader);
     makeDraggable(popup, header);
@@ -63,7 +69,7 @@ export function initFeedbackAssistant() {
     const titleContainer = document.createElement("div");
     Object.assign(titleContainer.style, { display: 'flex', flexDirection: 'column' });
     const title = document.createElement("div");
-    title.textContent = "Links Rápidos";
+    title.textContent = "Links Úteis";
     Object.assign(title.style, stylePopupTitle);
     const versionDisplay = document.createElement("div");
     versionDisplay.textContent = CURRENT_VERSION;
@@ -90,52 +96,72 @@ export function initFeedbackAssistant() {
     header.appendChild(headerLeft);
     header.appendChild(headerRight);
 
-    // --- 4. Criar o Conteúdo (Botões de Link) ---
+    // --- 4. Conteúdo (Lista Categorizada) ---
     const popupContent = document.createElement("div");
     Object.assign(popupContent.style, {
         padding: "16px", 
         overflowY: "auto",
-        flexGrow: "1"
+        flexGrow: "1",
+        maxHeight: "450px"
     });
     popup.appendChild(popupContent);
 
-    // Botão para o Formulário 1
-    const btn1 = document.createElement('button');
-    btn1.textContent = "Relatório de Ocorrências de Escala"; 
-    Object.assign(btn1.style, styleButtonBase, { 
-        background: '#4285F4', // Azul Google
-        width: '100%',
-        marginTop: '0' // Remove a margem do topo
-    });
-    btn1.onmouseover = () => btn1.style.backgroundColor = '#1a73e8';
-    btn1.onmouseout = () => btn1.style.backgroundColor = '#4285F4';
-    btn1.onclick = () => window.open(FORM_URL_1, '_blank');
-    popupContent.appendChild(btn1);
+    // Função auxiliar para criar botões
+    function createLinkBtn(text, url, colorObj) {
+        const btn = document.createElement('button');
+        btn.textContent = text;
+        Object.assign(btn.style, styleButtonBase, { 
+            background: colorObj.bg,
+            color: 'white',
+            width: '100%',
+            marginTop: '8px', // Espaço menor entre botões
+            fontSize: '13px'
+        });
+        btn.onmouseover = () => btn.style.backgroundColor = colorObj.hover;
+        btn.onmouseout = () => btn.style.backgroundColor = colorObj.bg;
+        btn.onclick = () => window.open(url, '_blank');
+        return btn;
+    }
 
-    // Botão para o Formulário 2
-    const btn2 = document.createElement('button');
-    btn2.textContent = "Chamadas Excedidas >50min"; 
-    Object.assign(btn2.style, styleButtonBase, { 
-        background: '#34A853', // Verde Google
-        width: '100%'
-    });
-    btn2.onmouseover = () => btn2.style.backgroundColor = '#1E8E3E';
-    btn2.onmouseout = () => btn2.style.backgroundColor = '#34A853';
-    btn2.onclick = () => window.open(FORM_URL_2, '_blank');
-    popupContent.appendChild(btn2);
+    // Função auxiliar para criar títulos de seção
+    function createSectionTitle(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        Object.assign(div.style, styleLabel, {
+            color: '#5f6368',
+            borderBottom: '1px solid #eee',
+            paddingBottom: '4px',
+            marginTop: '16px',
+            marginBottom: '4px'
+        });
+        // Remove margem do primeiro título
+        if (popupContent.children.length === 0) div.style.marginTop = '0';
+        return div;
+    }
 
-        // Botão para o Formulário 2
-    const btn3 = document.createElement('button');
-    btn3.textContent = "Relatório de Bugs (LM)"; 
-    Object.assign(btn3.style, styleButtonBase, { 
-        background: '#C5221F', 
-        width: '100%'
-    });
-    btn3.onmouseover = () => btn3.style.backgroundColor = '#e13532ff';
-    btn3.onmouseout = () => btn3.style.backgroundColor = '#C5221F';
-    btn3.onclick = () => window.open(FORM_URL_3, '_blank');
-    popupContent.appendChild(btn3);
-    // --- 5. Rodapé (Crédito) ---
+    // Cores
+    const BLUE = { bg: '#4285F4', hover: '#3367D6' };
+    const GREEN = { bg: '#34A853', hover: '#2D8F47' };
+    const RED = { bg: '#EA4335', hover: '#C5221F' };
+    const GREY = { bg: '#5f6368', hover: '#494c50' };
+
+    // === SEÇÃO LM ===
+    popupContent.appendChild(createSectionTitle('LM)'));
+    popupContent.appendChild(createLinkBtn('Relatório de Ocorrências', URL_LM_OCORRENCIAS, BLUE));
+    popupContent.appendChild(createLinkBtn('Chamadas Excedidas (>50min)', URL_LM_CHAMADAS, GREEN));
+    popupContent.appendChild(createLinkBtn('Relatório de Bugs', URL_LM_BUGS, RED));
+
+    // === SEÇÃO QA ===
+    popupContent.appendChild(createSectionTitle('QA'));
+    popupContent.appendChild(createLinkBtn('Elogios', URL_QA_ELOGIOS, BLUE));
+    popupContent.appendChild(createLinkBtn('Casos Complexos', URL_QA_COMPLEXOS, GREEN));
+
+    // === SEÇÃO OUTROS ===
+    popupContent.appendChild(createSectionTitle('Outros'));
+    popupContent.appendChild(createLinkBtn('Solicitar Gravação', URL_GRAVACAO, GREY));
+
+
+    // --- 5. Rodapé ---
     const credit = document.createElement("div");
     credit.textContent = "created by lucaste@";
     Object.assign(credit.style, styleCredit);
@@ -143,7 +169,7 @@ export function initFeedbackAssistant() {
 
     document.body.appendChild(popup);
 
-    // --- 6. Lógica de Abrir/Fechar ---
+    // --- 6. Lógica ---
     function togglePopup(show) {
         if (show) {
             popup.style.opacity = "1";
