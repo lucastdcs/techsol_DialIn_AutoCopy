@@ -254,7 +254,7 @@ export function initQuickEmailAssistant() {
                 color: "#3c4043",
                 border: "1px solid #dadce0",
                 textAlign: "left",
-                paddingLeft: "12px"
+                padding: "8px"
             });
             
             emailBtn.onmouseover = () => emailBtn.style.background = "#e8eaed";
