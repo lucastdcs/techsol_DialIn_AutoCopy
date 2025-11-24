@@ -17,7 +17,7 @@ import {
 import { QUICK_EMAILS } from './quick-email-data.js';
 
 export function initQuickEmailAssistant() {
-    const CURRENT_VERSION = "v1.1";
+    const CURRENT_VERSION = "v1.5";
 
     const esperar = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
