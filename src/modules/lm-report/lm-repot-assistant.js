@@ -10,7 +10,7 @@ import {
     stylePopupVersion,
     styleCredit,
     styleButtonBase,
-    styleLabel // Importando styleLabel para os subtítulos
+    styleLabel 
 } from '../shared/utils.js';
 
 // --- URLs dos Formulários ---
@@ -23,11 +23,16 @@ const URL_LM_BUGS = 'https://docs.google.com/forms/d/e/1FAIpQLSfkqRqT2Kbf08IStz3
 const URL_QA_ELOGIOS = 'https://docs.google.com/forms/d/e/1FAIpQLSezY5K-trQDv0LkL5IoTlV0Tl0oOqGTEszylmgcbMRXcC9Weg/viewform';
 const URL_QA_COMPLEXOS = 'https://docs.google.com/forms/d/e/1FAIpQLSe26q1LEloFNRfOAVZtA7DCOQTqdu1BAEeWuxtK6oPwZhLp-A/viewform?resourcekey=0-c1N4h8gntza2gQowqYAqMw';
 
-// Outros
+// Outros (Forms)
 const URL_GRAVACAO = 'https://support.google.com/policies/contact/sar';
 
+// Suporte (Links Diretos) - NOVO
+const URL_SUPORTE_ADS = 'https://support.google.com/google-ads/';
+const URL_SUPORTE_GA4 = 'https://support.google.com/analytics/';
+const URL_SUPORTE_MERCHANT = 'https://support.google.com/merchants/gethelp';
+
 export function initFeedbackAssistant() {
-    const CURRENT_VERSION = "v1.4"; 
+    const CURRENT_VERSION = "v1.5"; // Atualizado com Links de Suporte
 
     // --- 1. Botão Flutuante ---
     const btn = document.createElement("button");
@@ -114,7 +119,7 @@ export function initFeedbackAssistant() {
             background: colorObj.bg,
             color: 'white',
             width: '100%',
-            marginTop: '8px', // Espaço menor entre botões
+            marginTop: '8px',
             fontSize: '13px'
         });
         btn.onmouseover = () => btn.style.backgroundColor = colorObj.hover;
@@ -134,7 +139,6 @@ export function initFeedbackAssistant() {
             marginTop: '16px',
             marginBottom: '4px'
         });
-        // Remove margem do primeiro título
         if (popupContent.children.length === 0) div.style.marginTop = '0';
         return div;
     }
@@ -144,21 +148,28 @@ export function initFeedbackAssistant() {
     const GREEN = { bg: '#34A853', hover: '#2D8F47' };
     const RED = { bg: '#EA4335', hover: '#C5221F' };
     const GREY = { bg: '#5f6368', hover: '#494c50' };
+    const ORANGE = { bg: '#FBBC04', hover: '#E3A800' }; // Nova cor para Analytics/Geral se quiser, ou use Blue
 
-    // === SEÇÃO LM ===
-    popupContent.appendChild(createSectionTitle('LM)'));
+    // === SEÇÃO: FORMS (LM) ===
+    popupContent.appendChild(createSectionTitle('LM (Lead Management)'));
     popupContent.appendChild(createLinkBtn('Relatório de Ocorrências', URL_LM_OCORRENCIAS, BLUE));
     popupContent.appendChild(createLinkBtn('Chamadas Excedidas (>50min)', URL_LM_CHAMADAS, GREEN));
     popupContent.appendChild(createLinkBtn('Relatório de Bugs', URL_LM_BUGS, RED));
 
-    // === SEÇÃO QA ===
-    popupContent.appendChild(createSectionTitle('QA'));
-    popupContent.appendChild(createLinkBtn('Elogios', URL_QA_ELOGIOS, BLUE));
+    // === SEÇÃO: FORMS (QA) ===
+    popupContent.appendChild(createSectionTitle('QA (Quality Assurance)'));
+    popupContent.appendChild(createLinkBtn('Elogios (Kudos)', URL_QA_ELOGIOS, BLUE));
     popupContent.appendChild(createLinkBtn('Casos Complexos', URL_QA_COMPLEXOS, GREEN));
 
-    // === SEÇÃO OUTROS ===
+    // === SEÇÃO: FORMS (Outros) ===
     popupContent.appendChild(createSectionTitle('Outros'));
-    popupContent.appendChild(createLinkBtn('Solicitar Gravação', URL_GRAVACAO, GREY));
+    popupContent.appendChild(createLinkBtn('Solicitar Gravação (SAR)', URL_GRAVACAO, GREY));
+
+    // === SEÇÃO: SUPORTE (NOVO) ===
+    popupContent.appendChild(createSectionTitle('Suporte'));
+    popupContent.appendChild(createLinkBtn('Suporte Google Ads', URL_SUPORTE_ADS, BLUE));
+    popupContent.appendChild(createLinkBtn('Suporte GA4', URL_SUPORTE_GA4, BLUE));
+    popupContent.appendChild(createLinkBtn('Suporte Merchant Center', URL_SUPORTE_MERCHANT, BLUE));
 
 
     // --- 5. Rodapé ---
