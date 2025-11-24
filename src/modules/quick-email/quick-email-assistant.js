@@ -15,10 +15,10 @@ import {
 } from '../shared/utils.js';
 
 import { QUICK_EMAILS } from './quick-email-data.js';
-import { getPageData } from '../shared/page-data.js'; // <-- NOVO IMPORT
+import { getPageData } from '../shared/page-data.js';
 
 export function initQuickEmailAssistant() {
-    const CURRENT_VERSION = "v1.7"; // Atualizado com captura de dados
+    const CURRENT_VERSION = "v1.8"; // Versão com Lógica Sniper
 
     const esperar = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -36,43 +36,81 @@ export function initQuickEmailAssistant() {
         // 0. Captura Dados
         const pageData = getPageData();
         
-        // 1. ABRIR EMAIL
-        const speedDial = document.querySelector('material-fab-speed-dial');
-        if (speedDial) {
-            const triggerBtn = speedDial.querySelector('.trigger');
-            if (triggerBtn) {
-                triggerBtn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-                simularCliqueReal(triggerBtn);
-                await esperar(1000);
-                
-                if (!document.getElementById('email-body-content-top-content')) {
-                    const icones = Array.from(document.querySelectorAll('i.material-icons-extended'))
-                        .filter(el => el.offsetParent !== null);
-                    const emailBtn = icones.find(el => el.innerText.trim() === 'email');
-                    if (emailBtn) {
-                        const clickTarget = emailBtn.closest('material-button') || emailBtn;
-                        simularCliqueReal(clickTarget);
+        // --- PASSO 1: ABRIR EMAIL (Lógica Sniper / Direta) ---
+        let emailAberto = false;
+        
+        // 1. Busca ícone de email em todo o DOM (mesmo se o menu estiver fechado)
+        const todosIcones = Array.from(document.querySelectorAll('i.material-icons-extended'));
+        const iconeEmail = todosIcones.find(el => el.innerText.trim() === 'email');
+
+        if (iconeEmail) {
+            console.log("⚡ Modo Rápido: Ícone de email encontrado. Clicando direto...");
+            // Tenta achar o botão pai para clicar nele (mais seguro para o Angular)
+            const botaoAlvo = iconeEmail.closest('material-button') || iconeEmail.closest('material-fab') || iconeEmail;
+            
+            // Hack: Força visibilidade caso esteja oculto pelo menu fechado
+            if (botaoAlvo.style) {
+                botaoAlvo.style.display = 'block';
+                botaoAlvo.style.visibility = 'visible';
+            }
+            
+            simularCliqueReal(botaoAlvo);
+            emailAberto = true;
+        } else {
+            console.log("⚠️ Modo Rápido falhou (botão não achado). Tentando via Menu (+)...");
+            
+            // Fallback: Lógica antiga (Abrir menu +)
+            const speedDial = document.querySelector('material-fab-speed-dial');
+            if (speedDial) {
+                const triggerBtn = speedDial.querySelector('.trigger');
+                if (triggerBtn) {
+                    triggerBtn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+                    simularCliqueReal(triggerBtn);
+                    await esperar(1000);
+                    
+                    // Tenta achar de novo agora que o menu abriu
+                    const iconesNovos = Array.from(document.querySelectorAll('i.material-icons-extended'));
+                    const emailBtnNovo = iconesNovos.find(el => el.innerText.trim() === 'email');
+                    if (emailBtnNovo) {
+                        simularCliqueReal(emailBtnNovo);
+                        emailAberto = true;
                     }
+                } else {
+                    speedDial.click();
                 }
             }
         }
 
+        if (!emailAberto && !document.getElementById('email-body-content-top-content')) {
+             // Se não achou botão e o email não tá aberto, tenta esperar um pouco mais ou falha
+             await esperar(1000);
+             if (!document.getElementById('email-body-content-top-content')) {
+                showToast("Erro ao abrir email.", { error: true });
+                return;
+             }
+        }
+
         await esperar(3000); 
 
-        // VERIFICAÇÃO DE RASCUNHO
+        // ===== VERIFICAÇÃO DE RASCUNHO (Pre-write Draft) =====
         const btnDiscardDraft = document.querySelector('material-button[debug-id="discard-prewrite-draft-button"]');
+        
         if (btnDiscardDraft) {
+            console.log("⚠️ Sugestão de rascunho detectada. Descartando...");
             simularCliqueReal(btnDiscardDraft);
             await esperar(1000);
+            
             const btnConfirm = document.querySelector('material-button[debug-id="confirm-button"]');
             if (btnConfirm) {
                 simularCliqueReal(btnConfirm);
                 await esperar(2000);
             }
         }
+        // ============================================================
 
         // 2. LIMPEZA E FOCO
         const divConteudoTexto = document.getElementById('email-body-content-top-content');
+        // Seletor corrigido para o ID exato do wrapper
         const editorPai = document.querySelector('div[contenteditable="true"][aria-label="Email body"]') || document.getElementById('email-body-content-top-content');
 
         if (divConteudoTexto && editorPai) {
@@ -80,9 +118,10 @@ export function initQuickEmailAssistant() {
             if (ancestral) ancestral.removeAttribute('aria-hidden');
             
             editorPai.focus();
-            simularCliqueReal(divConteudoTexto);
+            simularCliqueReal(divConteudoTexto); // Garante foco interno
             await esperar(500); 
 
+            // Limpeza usando a técnica de isolamento de ID
             const elementoSagrado = document.getElementById('cases-body-field');
             if (elementoSagrado) {
                 while (elementoSagrado.nextSibling) elementoSagrado.nextSibling.remove();
@@ -100,20 +139,16 @@ export function initQuickEmailAssistant() {
                 selection.addRange(range);
                 document.execCommand('delete', false, null);
 
-                // 3. PREPARAR E INSERIR CONTEÚDO
+                // 3. INSERÇÃO DO CONTEÚDO
                 const subjectInput = document.querySelector('input[aria-label="Subject"]');
                 if (subjectInput && template.subject) {
                     subjectInput.value = template.subject;
                     subjectInput.dispatchEvent(new Event('input', { bubbles: true }));
                 }
 
-                // AQUI ESTÁ A MÁGICA: Substitui os placeholders pelos dados reais
+                // Substitui os placeholders pelos dados reais
                 let finalBody = template.body;
-                
-                // Substitui [Nome do Cliente]
                 finalBody = finalBody.replace(/\[Nome do Cliente\]/g, pageData.advertiserName);
-                
-                // Substitui [INSERIR URL] (se existir no template)
                 finalBody = finalBody.replace(/\[INSERIR URL\]/g, pageData.websiteUrl);
 
                 document.execCommand('insertHTML', false, finalBody);
@@ -148,6 +183,7 @@ export function initQuickEmailAssistant() {
     popup.id = "quick-email-popup";
     Object.assign(popup.style, stylePopup, { right: "160px" }); 
 
+    // HEADER COMPLETO
     const header = document.createElement("div");
     Object.assign(header.style, stylePopupHeader);
     makeDraggable(popup, header);
@@ -187,8 +223,14 @@ export function initQuickEmailAssistant() {
     popup.appendChild(header);
 
     const content = document.createElement("div");
-    Object.assign(content.style, { padding: "16px", overflowY: "auto", maxHeight: "400px" });
+    Object.assign(content.style, { padding: "16px", overflowY: "auto", maxHeight: "400px", flexGrow: "1" });
     popup.appendChild(content);
+
+    // RODAPÉ
+    const credit = document.createElement("div");
+    credit.textContent = "created by lucaste@";
+    Object.assign(credit.style, styleCredit);
+    popup.appendChild(credit);
 
     for (const categoryKey in QUICK_EMAILS) {
         const category = QUICK_EMAILS[categoryKey];
