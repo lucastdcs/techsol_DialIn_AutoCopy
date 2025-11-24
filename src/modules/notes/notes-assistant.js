@@ -31,7 +31,7 @@ import {
 import { runEmailAutomation } from '../email/email-automation.js'; 
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v3.2.4"; // Versão com Email Checkbox
+    const CURRENT_VERSION = "v3.2.7"; // Versão com Email Checkbox
     
     // --- ESTADO GLOBAL DO MÓDULO ---
     let currentCaseType = 'bau';
@@ -277,7 +277,77 @@ export function initCaseNotesAssistant() {
         }
         return key; 
     }
+function renderScreenshotInputs() {
+        screenshotsListDiv.innerHTML = ''; // Limpa inputs anteriores
+        const selectedCheckboxes = taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked');
+        const selectedSubStatusKey = subStatusSelect.value;
+        
+        // Define se é educação ou implementação
+        const isEducation = selectedSubStatusKey && selectedSubStatusKey.includes('Education');
+        const screenshotType = isEducation ? 'education' : 'implementation';
+        
+        let hasScreenshots = false;
 
+        selectedCheckboxes.forEach(checkbox => {
+            const taskKey = checkbox.value;
+            const task = TASKS_DB[taskKey];
+            const label = checkbox.closest('label');
+            
+            // Pega a contagem do Stepper
+            const countSpan = label.querySelector('.stepper-count');
+            const count = countSpan ? parseInt(countSpan.textContent) : 1;
+            
+            const screenshotList = task.screenshots ? (task.screenshots[screenshotType] || []) : [];
+
+            if (screenshotList.length > 0) {
+                hasScreenshots = true;
+                
+                // Cria um bloco para a Task
+                const taskBlock = document.createElement('div');
+                Object.assign(taskBlock.style, { marginBottom: '12px', background: '#f1f3f4', padding: '8px', borderRadius: '6px' });
+                
+                const taskHeader = document.createElement('div');
+                taskHeader.innerHTML = `<strong>${task.name}</strong> <small>(${count}x)</small>`;
+                taskHeader.style.marginBottom = "8px";
+                taskBlock.appendChild(taskHeader);
+
+                // Loop pela quantidade do stepper (Ex: Tag disparada 2 vezes)
+                for (let i = 1; i <= count; i++) {
+                    const suffix = count > 1 ? ` #${i}` : '';
+                    
+                    // Loop pelos prints requeridos daquela task (Ex: Disparo, Datalayer, Request)
+                    screenshotList.forEach((reqPrint, index) => {
+                        const row = document.createElement('div');
+                        Object.assign(row.style, { display: 'flex', flexDirection: 'column', marginBottom: '8px' });
+
+                        const printLabel = document.createElement('label');
+                        printLabel.textContent = `${reqPrint}${suffix}:`;
+                        Object.assign(printLabel.style, { fontSize: '12px', color: '#5f6368', marginBottom: '4px' });
+
+                        const printInput = document.createElement('input');
+                        printInput.type = 'text';
+                        printInput.placeholder = "Cole o link ou descreva...";
+                        // ID único para recuperar depois: taskKey + indice_stepper + indice_print
+                        printInput.id = `screen-${taskKey}-${i}-${index}`; 
+                        printInput.className = 'screenshot-input-field'; // Marcador de classe
+                        // Guarda metadados para facilitar a busca
+                        printInput.dataset.printName = reqPrint; 
+                        
+                        Object.assign(printInput.style, styleInput);
+                        printInput.style.marginBottom = "4px";
+
+                        row.appendChild(printLabel);
+                        row.appendChild(printInput);
+                        taskBlock.appendChild(row);
+                    });
+                }
+                screenshotsListDiv.appendChild(taskBlock);
+            }
+        });
+
+        // Mostra ou esconde a seção inteira
+        screenshotsContainer.style.display = hasScreenshots ? 'block' : 'none';
+    }
     function updateUIText() {
         langLabel.textContent = t('idioma');
         typeLabel.textContent = t('fluxo');
@@ -650,6 +720,27 @@ export function initCaseNotesAssistant() {
     dynamicFormFieldsContainer.id = "dynamic-form-fields-container";
     step3Div.appendChild(step3Title);
     step3Div.appendChild(dynamicFormFieldsContainer);
+    // --- NOVO: Container para Inputs de Screenshots ---
+    const screenshotsContainer = document.createElement("div");
+    screenshotsContainer.id = "screenshots-input-container";
+    Object.assign(screenshotsContainer.style, { 
+        marginTop: "16px", 
+        borderTop: "1px dashed #ccc", 
+        paddingTop: "12px",
+        display: "none" // Oculto por padrão
+    });
+    
+    const screenshotsTitle = document.createElement("h4");
+    screenshotsTitle.textContent = "Evidências / Screenshots";
+    Object.assign(screenshotsTitle.style, styleH3);
+    
+    screenshotsContainer.appendChild(screenshotsTitle);
+    const screenshotsListDiv = document.createElement("div"); // Onde os inputs ficarão
+    screenshotsContainer.appendChild(screenshotsListDiv);
+    
+    step3Div.appendChild(screenshotsContainer);
+    // --------------------------------------------------
+
     popupContent.appendChild(step3Div);
 
     // ===== NOVO: CHECKBOX DE EMAIL (Segurança) =====
@@ -696,7 +787,7 @@ export function initCaseNotesAssistant() {
 
     // --- Lógica de Eventos ---
 
-    function resetSteps(startFrom = 1.5) {
+   function resetSteps(startFrom = 1.5) {
         if (startFrom <= 1.5) {
             stepSnippetsDiv.style.display = 'none';
             snippetContainer.innerHTML = '';
@@ -708,8 +799,16 @@ export function initCaseNotesAssistant() {
         if (startFrom <= 3) {
             step3Div.style.display = 'none';
             dynamicFormFieldsContainer.innerHTML = '';
+            
+            // --- ADICIONE ESTAS LINHAS AQUI ---
+            if (typeof screenshotsContainer !== 'undefined') {
+                screenshotsContainer.style.display = 'none';
+                screenshotsListDiv.innerHTML = ''; 
+            }
+            // ----------------------------------
+
             buttonContainer.style.display = 'none';
-            emailAutomationDiv.style.display = 'none'; // Reseta email
+            emailAutomationDiv.style.display = 'none'; 
         }
     }
 
@@ -882,6 +981,7 @@ export function initCaseNotesAssistant() {
                         countSpan.textContent = '0';
                         Object.assign(label.style, { background: '#f8f9fa' });
                     }
+                    renderScreenshotInputs(); // <--- ADICIONE ISSO
                 };
 
                 btnMinus.onclick = (e) => {
@@ -894,6 +994,7 @@ export function initCaseNotesAssistant() {
                         checkbox.checked = false;
                         checkbox.dispatchEvent(new Event('change'));
                     }
+                    renderScreenshotInputs(); // <--- ADICIONE ISSO
                 };
                 
                 btnPlus.onclick = (e) => {
@@ -901,6 +1002,7 @@ export function initCaseNotesAssistant() {
                     e.stopPropagation();
                     let count = parseInt(countSpan.textContent);
                     countSpan.textContent = count + 1;
+                    renderScreenshotInputs(); // <--- ADICIONE ISSO
                 };
             }
             step2Div.style.display = 'block';
@@ -984,7 +1086,9 @@ export function initCaseNotesAssistant() {
             const selectedCheckboxes = taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked');
             let tagNames = [];
             let screenshotsText = '';
-            const screenshotType = (selectedSubStatusKey.includes('Education')) ? 'education' : 'implementation';
+            // Detecta se é Education ou Implementation baseada no nome do substatus (ajuste conforme sua lógica real)
+            const isEducation = selectedSubStatusKey.includes('Education'); 
+            const screenshotType = isEducation ? 'education' : 'implementation';
             
             selectedCheckboxes.forEach(checkbox => {
                 const taskKey = checkbox.value;
@@ -1000,7 +1104,8 @@ export function initCaseNotesAssistant() {
                     tagNames.push(task.name);
                 }
 
-                const screenshotList = task.screenshots[screenshotType] || [];
+                const screenshotList = task.screenshots ? (task.screenshots[screenshotType] || []) : [];
+                
                 if (screenshotList.length > 0) {
                     for (let i = 1; i <= count; i++) {
                         if (count > 1) {
@@ -1008,8 +1113,21 @@ export function initCaseNotesAssistant() {
                         } else {
                             screenshotsText += `<b>${task.name}</b>`;
                         }
-                        const screenItems = screenshotList.map(print => `<li>${print} - </li>`).join('');
-                        screenshotsText += `<ul ${ulStyle}>${screenItems}</ul>`;
+                        
+                        let itemsHtml = '';
+                        screenshotList.forEach((reqPrint, index) => {
+                            // Tenta achar o input correspondente criado no Step 3
+                            const inputId = `screen-${taskKey}-${i}-${index}`;
+                            const inputEl = document.getElementById(inputId);
+                            const userValue = inputEl ? inputEl.value.trim() : '';
+                            
+                            // Se tiver valor, coloca ele; se não, deixa espaço em branco ou " - "
+                            const displayValue = userValue ? ` ${userValue}` : '';
+                            
+                            itemsHtml += `<li>${reqPrint} -${displayValue}</li>`;
+                        });
+                        
+                        screenshotsText += `<ul ${ulStyle}>${itemsHtml}</ul>`;
                     }
                 }
             });
