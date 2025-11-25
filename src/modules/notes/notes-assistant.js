@@ -1202,62 +1202,121 @@ function renderScreenshotInputs() {
             showToast(t('selecione_substatus'), { error: true }); 
         }
     };
+// Função para verificar se existe uma aba de caso ativa
+function isCaseTabActive() {
+    // Procura por qualquer tab com aria-selected="true"
+    // O seletor baseia-se no snippet <tab ... aria-selected="true">
+    const activeTab = document.querySelector('tab[aria-selected="true"]');
+    return !!activeTab; // Retorna true se encontrar, false se não
+}
 
+// Função robusta para encontrar o editor CORRETO
+function getVisibleEditor() {
+    // 1. Procura o Card que está no topo da pilha (visível)
+    // O HTML mostra: <card class="... is-top ...">
+    const activeCard = document.querySelector('card.write-card.is-top');
+    
+    if (!activeCard) {
+        console.warn("Nenhum card ativo ('is-top') encontrado.");
+        return null;
+    }
+
+    // 2. Dentro do card ativo, busca o editor contenteditable
+    return activeCard.querySelector('div[contenteditable="true"]');
+}
+
+// Função para disparar eventos que "enganam" o Angular/React para salvar
+function triggerInputEvents(element) {
+    const events = ['input', 'change', 'keydown', 'keyup'];
+    events.forEach(eventType => {
+        const event = new Event(eventType, { bubbles: true, cancelable: true });
+        element.dispatchEvent(event);
+    });
+}
   
 generateButton.onclick = () => {
-        // 1. Captura o valor AGORA, antes de qualquer reset
+        // 1. Verificações de Segurança (Aba e Substatus)
         const selectedSubStatusKey = subStatusSelect.value;
-
         const htmlOutput = generateOutputHtml();
-        
+
         if (!htmlOutput) {
-          showToast(t('selecione_substatus'), { error: true });
-          return;
+            showToast(t('selecione_substatus'), { error: true });
+            return;
         }
 
-        copyHtmlToClipboard(htmlOutput); 
+        // Verifica se a aba do caso está ativa
+        if (!isCaseTabActive()) {
+            showToast("Atenção: Nenhuma aba de caso ativa detectada.", { error: true });
+            // Opcional: return; (Se quiser impedir o preenchimento se a aba não estiver ativa)
+        }
 
-        const campo = document.querySelector('div[contenteditable="true"]');
+        // 2. Copia para a área de transferência (Backup de segurança)
+        copyHtmlToClipboard(htmlOutput);
+
+        // 3. Busca o editor VISÍVEL (usando a classe is-top)
+        const campo = getVisibleEditor();
 
         if (campo) {
-          campo.focus();
-          if (campo.innerHTML.trim() !== '' && !campo.innerHTML.endsWith('<br><br>')) {
-              document.execCommand('insertHTML', false, '<br><br>');
-          }
-          document.execCommand('insertHTML', false, htmlOutput);
-          campo.dispatchEvent(new Event("input", { bubbles: true }));
-          
-          setTimeout(() => {
-              showToast(t('inserido_copiado')); 
-          }, 600); 
+            try {
+                // Foca no campo para garantir que o comando de inserção vá para o lugar certo
+                campo.focus();
 
-          // --- LÓGICA DE EMAIL (Movi para cá, antes do reset) ---
-          console.log("--- DIAGNÓSTICO DE EMAIL ---");
-          console.log("Substatus Capturado:", selectedSubStatusKey);
-          
-          if (selectedSubStatusKey && SUBSTATUS_SHORTCODES[selectedSubStatusKey] && emailCheckbox.checked) {
-              const emailCode = SUBSTATUS_SHORTCODES[selectedSubStatusKey];
-              console.log("Código de Email:", emailCode);
-              
-              setTimeout(() => {
-                  runEmailAutomation(emailCode);
-              }, 1000);
-          } else {
-              console.log("Email não disparado (Sem código ou checkbox desmarcado).");
-          }
-          // -------------------------------------------------------
+                // Limpeza inteligente: Se tiver apenas <br> ou <p><br></p>, limpa antes de colar
+                if (campo.innerHTML.trim() === '<p><br></p>' || campo.innerHTML.trim() === '<br>') {
+                    document.execCommand('selectAll', false, null);
+                    document.execCommand('delete', false, null);
+                } else {
+                    // Se já tiver texto, adiciona quebras de linha antes
+                     if (campo.innerHTML.trim() !== '' && !campo.innerHTML.endsWith('<br><br>')) {
+                        document.execCommand('insertHTML', false, '<br><br>');
+                    }
+                }
 
-          // 4. AGORA SIM, Fecha e Reseta
-          togglePopup(false);
-          resetSteps(1.5);
-          mainStatusSelect.value = "";
-          subStatusSelect.innerHTML = `<option value="">${t('select_substatus')}</option>`;
-          subStatusSelect.disabled = true;
+                // INSERÇÃO DO CONTEÚDO
+                // execCommand é o método mais confiável para preservar o histórico de desfazer (Ctrl+Z)
+                const success = document.execCommand('insertHTML', false, htmlOutput);
+                
+                if (!success) {
+                    // Fallback se execCommand falhar (raro, mas possível)
+                    campo.innerHTML += htmlOutput;
+                }
 
+                // 4. FORÇA O REGISTRO DA MUDANÇA (A mágica acontece aqui)
+                // Dispara eventos para o framework perceber que o texto mudou
+                triggerInputEvents(campo);
+                
+                setTimeout(() => {
+                    showToast(t('inserido_copiado'));
+                }, 600);
+
+                // --- LÓGICA DE EMAIL ---
+                console.log("--- DIAGNÓSTICO DE EMAIL ---");
+                if (selectedSubStatusKey && SUBSTATUS_SHORTCODES[selectedSubStatusKey] && emailCheckbox.checked) {
+                    const emailCode = SUBSTATUS_SHORTCODES[selectedSubStatusKey];
+                    console.log("Disparando email:", emailCode);
+                    setTimeout(() => {
+                        runEmailAutomation(emailCode);
+                    }, 1000);
+                }
+                // -----------------------
+
+                // 5. Fecha e Reseta
+                togglePopup(false);
+                resetSteps(1.5);
+                mainStatusSelect.value = "";
+                subStatusSelect.innerHTML = `<option value="">${t('select_substatus')}</option>`;
+                subStatusSelect.disabled = true;
+
+            } catch (err) {
+                console.error("Erro ao inserir texto:", err);
+                showToast("Erro ao inserir. O texto foi copiado para o clipboard.", { error: true });
+            }
         } else {
-          showToast(t('campo_nao_encontrado'), { error: true, duration: 3000 }); 
+            // Se não achou o campo VISÍVEL
+            showToast("Nota não encontrada. Certifique-se que o card 'Case Note' está aberto.", { error: true, duration: 4000 });
         }
     };
+
     
 
     function togglePopup(show) {
