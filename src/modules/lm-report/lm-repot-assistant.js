@@ -49,7 +49,7 @@ const LINKS_DB = {
 };
 
 export function initFeedbackAssistant() {
-    const CURRENT_VERSION = "v2.2.1";
+    const CURRENT_VERSION = "v2.2.7";
 
     let activeTab = 'lm'; 
     let searchTerm = "";
