@@ -205,7 +205,7 @@ export function initQuickEmailAssistant() {
     
     // CORREÇÃO: Largura aumentada para 420px
     Object.assign(popup.style, stylePopup, { 
-        right: "100px", width: "420px", borderRadius: "12px",
+        right: "100px", width: "max-content", borderRadius: "12px",
         display: "flex", flexDirection: "column", maxHeight: "600px"
     });
 

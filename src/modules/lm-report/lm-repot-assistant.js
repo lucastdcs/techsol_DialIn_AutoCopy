@@ -25,7 +25,7 @@ const LINKS_DB = {
         ]
     },
     qa: {
-        label: "QA & Quality",
+        label: "QA",
         links: [
             { name: "Elogios", url: "https://docs.google.com/forms/d/e/1FAIpQLSezY5K-trQDv0LkL5IoTlV0Tl0oOqGTEszylmgcbMRXcC9Weg/viewform", desc: "Feedback positivo" },
             { name: "Casos Complexos", url: "https://docs.google.com/forms/d/e/1FAIpQLSe26q1LEloFNRfOAVZtA7DCOQTqdu1BAEeWuxtK6oPwZhLp-A/viewform?resourcekey=0-c1N4h8gntza2gQowqYAqMw", desc: "Escalonamento técnico" }
@@ -48,14 +48,14 @@ const LINKS_DB = {
 };
 
 export function initFeedbackAssistant() {
-    const CURRENT_VERSION = "v2.2";
+    const CURRENT_VERSION = "v2.2.1";
 
     let activeTab = 'lm'; 
     let searchTerm = "";
 
     const styleSearchInput = {
         width: "100%", padding: "10px 12px 10px 36px",
-        borderRadius: "8px", border: "1px solid #f1f3f4", background: "#f8f9fa",
+        borderRadius: "8px", border: "1px solid #dadce0", background: "#f8f9fa",
         fontSize: "14px", boxSizing: "border-box", outline: "none",
         color: "#3c4043", transition: "background 0.2s, border-color 0.2s"
     };
@@ -131,7 +131,7 @@ export function initFeedbackAssistant() {
     popup.id = "feedback-popup";
     // CORREÇÃO: Largura aumentada para 420px
     Object.assign(popup.style, stylePopup, { 
-        right: "100px", width: "420px", maxHeight: "550px",
+        right: "100px", width: "max-content", maxHeight: "600px",
         display: "flex", flexDirection: "column", borderRadius: "12px"
     }); 
 
