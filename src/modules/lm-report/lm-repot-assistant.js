@@ -21,7 +21,8 @@ const LINKS_DB = {
         links: [
             { name: "Relatório de Ocorrências", url: "https://docs.google.com/forms/d/e/1FAIpQLSc6CamPehrREeVr7yCWMyqFETrFYYezNcLb_13W4yZDQkfY6Q/viewform", desc: "Reportar problemas operacionais" },
             { name: "Chamadas Excedidas (>50min)", url: "https://docs.google.com/forms/d/e/1FAIpQLSfE8EMHNJMTKYeA6XM2RZjZ9AQ4LhGk1Dwm_WLu3kcMdKMikA/viewform", desc: "Registro de chamadas longas" },
-            { name: "Relatório de Bugs", url: "https://docs.google.com/forms/d/e/1FAIpQLSfkqRqT2Kbf08IStz31fQPE84MDOtGxk7cetJmc3xzShXIXRA/viewform", desc: "Erros de sistema/ferramenta" }
+            { name: "Relatório de Bugs", url: "https://docs.google.com/forms/d/e/1FAIpQLSfkqRqT2Kbf08IStz31fQPE84MDOtGxk7cetJmc3xzShXIXRA/viewform", desc: "Erros de sistema/ferramenta" },
+             { name: "Suporte LM", url: "https://script.google.com/a/macros/google.com/s/AKfycbxYMlFCMZvqgHMIImeS_u-lNZPiertXmem-5m9Fox3jvZaq0ZOQDoc5ma96ltSvWHY/exec", desc: "Enviar casos para BAU/Solicitar Descarte/Abrir Monitoria para AMs" }
         ]
     },
     qa: {
@@ -48,7 +49,7 @@ const LINKS_DB = {
 };
 
 export function initFeedbackAssistant() {
-    const CURRENT_VERSION = "v2.2.1";
+    const CURRENT_VERSION = "v2.2.7";
 
     let activeTab = 'lm'; 
     let searchTerm = "";
