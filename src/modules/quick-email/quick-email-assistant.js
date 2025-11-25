@@ -166,21 +166,49 @@ export function initQuickEmailAssistant() {
 
     // --- MONTAGEM DA UI ---
     
-    // Botão Flutuante (Estilo Gmail)
-    const btn = document.createElement("button");
-    btn.id = "quick-email-floating-btn";
-    btn.innerHTML = `<svg style="width:24px;height:24px" viewBox="0 0 24 24"><path fill="currentColor" d="M20,8L12,13L4,8V6L12,11L20,6M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4Z" /></svg>`;
-    Object.assign(btn.style, styleFloatingButton, {
-        top: "50%", background: "#db4437", color: "white",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        boxShadow: "0 4px 8px rgba(0,0,0,0.2)"
+  // --- UI: Botão Flutuante (Material Design Pro) ---
+    const btnContainer = document.createElement("div");
+    Object.assign(btnContainer.style, {
+        position: "fixed", top: "25%", right: "24px", zIndex: "9999",
+        display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px"
     });
-    // Efeito hover
-    btn.onmouseenter = () => btn.style.boxShadow = "0 6px 12px rgba(0,0,0,0.3)";
-    btn.onmouseleave = () => btn.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)";
-    
-    document.body.appendChild(btn);
-    makeDraggable(btn);
+
+    const btn = document.createElement("button");
+    btn.id = "email-floating-btn";
+    // Ícone SVG: Zap/Email
+    btn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4M20,8L12,13L4,8V6L12,11L20,6V8Z"/></svg>`;
+
+    Object.assign(btn.style, {
+        width: "48px", height: "48px", borderRadius: "50%",
+        background: "#ea4335", color: "white", border: "none", cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: "0 4px 12px rgba(234, 67, 53, 0.4)", // Sombra avermelhada
+        transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s"
+    });
+
+    const tooltip = document.createElement("span");
+    tooltip.textContent = "Quick Email";
+    Object.assign(tooltip.style, {
+        background: "rgba(0,0,0,0.7)", color: "white", padding: "4px 8px",
+        borderRadius: "4px", fontSize: "12px", opacity: "0", pointerEvents: "none",
+        transition: "opacity 0.2s", whiteSpace: "nowrap", fontWeight: "500"
+    });
+
+    btn.onmouseenter = () => {
+        btn.style.transform = "scale(1.1)";
+        btn.style.boxShadow = "0 6px 16px rgba(234, 67, 53, 0.5)";
+        tooltip.style.opacity = "1";
+    };
+    btn.onmouseleave = () => {
+        btn.style.transform = "scale(1)";
+        btn.style.boxShadow = "0 4px 12px rgba(234, 67, 53, 0.4)";
+        tooltip.style.opacity = "0";
+    };
+
+    btnContainer.appendChild(btn);
+    btnContainer.appendChild(tooltip);
+    document.body.appendChild(btnContainer);
+    makeDraggable(btn, btnContainer);
 
     // Popup Container
     const popup = document.createElement("div");

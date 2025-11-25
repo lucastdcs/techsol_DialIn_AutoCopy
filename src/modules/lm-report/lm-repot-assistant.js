@@ -50,7 +50,7 @@ const LINKS_DB = {
 };
 
 export function initFeedbackAssistant() {
-    const CURRENT_VERSION = "v2.0 (Scalable)";
+    const CURRENT_VERSION = "v2.0 ";
 
     // --- ESTADO ---
     let activeTab = 'lm'; // Tab inicial
@@ -89,23 +89,49 @@ export function initFeedbackAssistant() {
 
     // --- UI PRINCIPAL ---
     
-    // 1. Botão Flutuante
+    // --- UI: Botão Flutuante (Material Design Pro) ---
+    const btnContainer = document.createElement("div");
+    Object.assign(btnContainer.style, {
+        position: "fixed", top: "35%", right: "24px", zIndex: "9999",
+        display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px"
+    });
+
     const btn = document.createElement("button");
     btn.id = "feedback-floating-btn";
-    // Ícone SVG de "Links" ou "Bookmarks"
-    btn.innerHTML = `<svg style="width:24px;height:24px" viewBox="0 0 24 24"><path fill="currentColor" d="M3.9,12C3.9,10.29 5.29,8.9 7,8.9H11V7H7A5,5 0 0,0 2,12A5,5 0 0,0 7,17H11V15.1H7C5.29,15.1 3.9,13.71 3.9,12M8,13H16V11H8V13M17,7H13V8.9H17C18.71,8.9 20.1,10.29 20.1,12C20.1,13.71 18.71,15.1 17,15.1H13V17H17A5,5 0 0,0 22,12A5,5 0 0,0 17,7Z" /></svg>`;
-    Object.assign(btn.style, styleFloatingButton, {
-        top: "70%", // Ajustado para não colidir com outros botões
-        background: "#0F9D58", // Verde Google Forms/Sheets
-        color: "white",
-        display: "flex", alignItems: "center", justifyContent: "center"
+    // Ícone SVG: Bookmarks
+    btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M19 18l2 1V3c0-1.1-.9-2-2-2H8.99C7.89 1 7 1.9 7 3h10c1.1 0 2 .9 2 2v13zM15 5H5c-1.1 0-2 .9-2 2v16l7-3 7 3V7c0-1.1-.9-2-2-2z"/></svg>`;
+
+    Object.assign(btn.style, {
+        width: "48px", height: "48px", borderRadius: "50%",
+        background: "#34a853", color: "white", border: "none", cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: "0 4px 12px rgba(52, 168, 83, 0.4)", // Sombra esverdeada
+        transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s"
     });
-    // Efeitos Hover
-    btn.onmouseenter = () => { btn.style.transform = "scale(1.1)"; btn.style.boxShadow = "0 6px 12px rgba(0,0,0,0.3)"; };
-    btn.onmouseleave = () => { btn.style.transform = "scale(1)"; btn.style.boxShadow = "0 4px 8px rgba(0,0,0,0.2)"; };
-    
-    document.body.appendChild(btn);
-    makeDraggable(btn);
+
+    const tooltip = document.createElement("span");
+    tooltip.textContent = "Links & Forms";
+    Object.assign(tooltip.style, {
+        background: "rgba(0,0,0,0.7)", color: "white", padding: "4px 8px",
+        borderRadius: "4px", fontSize: "12px", opacity: "0", pointerEvents: "none",
+        transition: "opacity 0.2s", whiteSpace: "nowrap", fontWeight: "500"
+    });
+
+    btn.onmouseenter = () => {
+        btn.style.transform = "scale(1.1)";
+        btn.style.boxShadow = "0 6px 16px rgba(52, 168, 83, 0.5)";
+        tooltip.style.opacity = "1";
+    };
+    btn.onmouseleave = () => {
+        btn.style.transform = "scale(1)";
+        btn.style.boxShadow = "0 4px 12px rgba(52, 168, 83, 0.4)";
+        tooltip.style.opacity = "0";
+    };
+
+    btnContainer.appendChild(btn);
+    btnContainer.appendChild(tooltip);
+    document.body.appendChild(btnContainer);
+    makeDraggable(btn, btnContainer);
 
     // 2. Popup Container
     const popup = document.createElement("div");
