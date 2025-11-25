@@ -28,24 +28,53 @@ export function initCallScriptAssistant() {
     let csaCurrentType = "BAU";
 
     // --- UI (Módulo 2) ---
-    const csaBtn = document.createElement("button");
-    csaBtn.id = "call-script-floating-btn";
-    csaBtn.textContent = "📋";
-    Object.assign(csaBtn.style, styleFloatingButton, {
-        top: "70%",
-        background: "#5f6368"
+   // --- UI: Botão Flutuante (Material Design Pro) ---
+    const btnContainer = document.createElement("div");
+    Object.assign(btnContainer.style, {
+        position: "fixed", top: "45%", right: "24px", zIndex: "9999",
+        display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px"
     });
-    csaBtn.onmouseenter = () => { // Animação
-        csaBtn.style.background = "#4a4d50";
-        csaBtn.style.transform = "scale(1.1)";
-    };
-    csaBtn.onmouseleave = () => { // Animação
-        csaBtn.style.background = "#5f6368";
-        csaBtn.style.transform = "scale(1)";
-    };
-    document.body.appendChild(csaBtn);
-    makeDraggable(csaBtn);
 
+    const btn = document.createElement("button");
+    btn.id = "script-floating-btn";
+    // Ícone SVG: Support Agent / Headset
+    btn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M21,12.22C21,6.73,16.74,2.2,11.5,2.2C6.4,2.2,2.3,6.49,2.3,11.77C2.3,13.82,2.95,15.73,4.06,17.3L3,21L7.08,19.5C8.45,20.02,9.95,20.32,11.5,20.32C16.74,20.32,21,15.81,21,12.22M15,12H16.5C16.5,13.38,15.38,14.5,14,14.5V16H18V12H15V12M9,12H10V16H9V12M13,12V16H11V12H13M13,9.5C13,8.67,12.33,8,11.5,8C10.67,8,10,8.67,10,9.5H8.5C8.5,7.84,9.84,6.5,11.5,6.5C13.16,6.5,14.5,7.84,14.5,9.5H13Z"/></svg>`;
+
+    Object.assign(btn.style, {
+        width: "48px", height: "48px", borderRadius: "50%",
+        background: "#9c27b0", color: "white", border: "none", cursor: "pointer", // Roxo Material
+        display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: "0 4px 12px rgba(156, 39, 176, 0.4)", // Sombra Roxa
+        transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s"
+    });
+
+    // Tooltip
+    const tooltip = document.createElement("span");
+    tooltip.textContent = "Call Scripts";
+    Object.assign(tooltip.style, {
+        background: "rgba(0,0,0,0.7)", color: "white", padding: "4px 8px",
+        borderRadius: "4px", fontSize: "12px", opacity: "0", pointerEvents: "none",
+        transition: "opacity 0.2s", whiteSpace: "nowrap", fontWeight: "500"
+    });
+
+    // Eventos
+    btn.onmouseenter = () => {
+        btn.style.transform = "scale(1.1)";
+        btn.style.boxShadow = "0 6px 16px rgba(156, 39, 176, 0.5)";
+        tooltip.style.opacity = "1";
+    };
+    btn.onmouseleave = () => {
+        btn.style.transform = "scale(1)";
+        btn.style.boxShadow = "0 4px 12px rgba(156, 39, 176, 0.4)";
+        tooltip.style.opacity = "0";
+    };
+
+    btnContainer.appendChild(btn);
+    btnContainer.appendChild(tooltip);
+    document.body.appendChild(btnContainer);
+    
+    // Lembre-se de passar o container para o drag se sua função suportar, ou passar (btn, btnContainer)
+    makeDraggable(btn, btnContainer);
     const csaPopup = document.createElement("div");
     csaPopup.id = "call-script-popup";
     Object.assign(csaPopup.style, stylePopup, { right: "80px" });

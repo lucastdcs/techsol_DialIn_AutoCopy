@@ -58,21 +58,54 @@ export function initCaseNotesAssistant() {
         document.body.removeChild(container);
     };
 
-    // --- UI (Módulo 1) ---
+   // --- UI: Botão Flutuante (Material Design Pro) ---
+    const btnContainer = document.createElement("div"); // Container para botão + tooltip
+    Object.assign(btnContainer.style, {
+        position: "fixed", top: "15%", right: "24px", zIndex: "9999",
+        display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px"
+    });
+
     const btn = document.createElement("button");
-    btn.id = "autofill-floating-btn";
-    btn.textContent = "✎";
-    Object.assign(btn.style, styleFloatingButton, { top: "60%" });
+    btn.id = "notes-floating-btn";
+    // Ícone SVG: Edit Document
+    btn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+    
+    Object.assign(btn.style, {
+        width: "48px", height: "48px", borderRadius: "50%",
+        background: "#1a73e8", color: "white", border: "none", cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: "0 4px 12px rgba(26, 115, 232, 0.4)", // Sombra azulada suave
+        transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s"
+    });
+
+    // Tooltip (Etiqueta que aparece no hover)
+    const tooltip = document.createElement("span");
+    tooltip.textContent = "Case Note";
+    Object.assign(tooltip.style, {
+        background: "rgba(0,0,0,0.7)", color: "white", padding: "4px 8px",
+        borderRadius: "4px", fontSize: "12px", opacity: "0", pointerEvents: "none",
+        transition: "opacity 0.2s", whiteSpace: "nowrap", fontWeight: "500"
+    });
+
+    // Eventos de UX
     btn.onmouseenter = () => {
-        btn.style.background = "#1765c0";
         btn.style.transform = "scale(1.1)";
+        btn.style.boxShadow = "0 6px 16px rgba(26, 115, 232, 0.5)";
+        tooltip.style.opacity = "1";
     };
     btn.onmouseleave = () => {
-        btn.style.background = "#1a73e8";
         btn.style.transform = "scale(1)";
+        btn.style.boxShadow = "0 4px 12px rgba(26, 115, 232, 0.4)";
+        tooltip.style.opacity = "0";
     };
-    document.body.appendChild(btn);
-    makeDraggable(btn);
+
+    // Montagem
+    btnContainer.appendChild(btn);
+    btnContainer.appendChild(tooltip);
+    document.body.appendChild(btnContainer);
+    
+    // Torna o container arrastável (pegando pelo botão)
+    makeDraggable(btn, btnContainer); // *Nota: Talvez precise ajustar sua função makeDraggable para aceitar (handle, target)*
 
     const popup = document.createElement("div");
     popup.id = "autofill-popup";
