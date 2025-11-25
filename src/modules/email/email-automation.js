@@ -14,7 +14,7 @@ function simularCliqueReal(elemento) {
 // --- FUNÇÃO COMPARTILHADA: ABRIR E LIMPAR ---
 // Esta função é usada tanto pelas Notas quanto pelo Quick Email
 async function openAndClearEmail() {
-    // 1. ABRIR EMAIL
+    // 1. ABRIR EMAIL (Lógica Sniper mantida)
     let emailAberto = false;
     const todosIcones = Array.from(document.querySelectorAll('i.material-icons-extended'));
     const iconeEmail = todosIcones.find(el => el.innerText.trim() === 'email');
@@ -48,19 +48,21 @@ async function openAndClearEmail() {
         }
     }
 
-    // Verifica abertura
+    // Verifica abertura do EDITOR (Espera até 7.5s no total)
     let tentativas = 0;
     while (!document.getElementById('email-body-content-top-content') && tentativas < 15) {
         await esperar(500);
         tentativas++;
     }
 
-    if (!document.getElementById('email-body-content-top-content')) {
+    const divConteudoTexto = document.getElementById('email-body-content-top-content');
+
+    if (!divConteudoTexto) {
         showToast("Erro: Editor de email não abriu.", { error: true });
         return false;
     }
 
-    // 2. DESCARTAR RASCUNHO
+    // 2. DESCARTAR RASCUNHO (Mantido)
     const btnDiscardDraft = document.querySelector('material-button[debug-id="discard-prewrite-draft-button"]');
     if (btnDiscardDraft) {
         simularCliqueReal(btnDiscardDraft);
@@ -72,8 +74,7 @@ async function openAndClearEmail() {
         }
     }
 
-    // 3. LIMPEZA E FOCO
-    const divConteudoTexto = document.getElementById('email-body-content-top-content');
+    // 3. LIMPEZA E FOCO (AQUI ESTÁ A CORREÇÃO)
     const editorPai = document.querySelector('div[contenteditable="true"][aria-label="Email body"]') || divConteudoTexto;
 
     if (divConteudoTexto && editorPai) {
@@ -82,18 +83,35 @@ async function openAndClearEmail() {
         
         editorPai.focus();
         simularCliqueReal(divConteudoTexto);
-        await esperar(300); 
+        await esperar(500); 
 
-        const elementoSagrado = document.getElementById('cases-body-field');
+        // === MUDANÇA: Espera Ativa pelo Elemento Sagrado ===
+        console.log("⏳ Procurando 'cases-body-field'...");
+        let elementoSagrado = document.getElementById('cases-body-field');
+        let checks = 0;
+        
+        // Tenta achar o elemento por mais 2 segundos antes de desistir
+        while (!elementoSagrado && checks < 10) {
+            await esperar(200);
+            elementoSagrado = document.getElementById('cases-body-field');
+            checks++;
+        }
+        // ===================================================
+
         if (elementoSagrado) {
+            console.log("✅ Elemento encontrado. Limpando vizinhos.");
+            
+            // Limpa vizinhos internos
             while (elementoSagrado.nextSibling) elementoSagrado.nextSibling.remove();
             while (elementoSagrado.previousSibling) elementoSagrado.previousSibling.remove();
             
+            // Limpa vizinhos externos
             const avo = divConteudoTexto.parentElement; 
             Array.from(avo.childNodes).forEach(tio => {
                 if (tio !== divConteudoTexto) avo.removeChild(tio);
             });
 
+            // Limpa conteúdo do sagrado
             const selection = window.getSelection();
             const range = document.createRange();
             range.selectNodeContents(elementoSagrado);
@@ -101,10 +119,23 @@ async function openAndClearEmail() {
             selection.addRange(range);
             document.execCommand('delete', false, null);
             
-            return true; // Sucesso
+            return true; // Sucesso (Modo Ideal)
+        } else {
+            // === FALLBACK: Se o elemento sagrado não apareceu, limpa tudo na força bruta ===
+            console.warn("⚠️ 'cases-body-field' não encontrado. Executando limpeza total de fallback.");
+            
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(divConteudoTexto); // Seleciona a div inteira
+            selection.removeAllRanges();
+            selection.addRange(range);
+            document.execCommand('delete', false, null);
+            
+            return true; // Sucesso (Modo Fallback)
         }
     }
-    showToast("Erro ao limpar editor.", { error: true });
+    
+    showToast("Erro fatal ao acessar editor.", { error: true });
     return false;
 }
 
