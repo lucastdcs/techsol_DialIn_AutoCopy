@@ -14,7 +14,7 @@ function simularCliqueReal(elemento) {
 
 // --- FUNÇÃO COMPARTILHADA: ABRIR E LIMPAR ---
 async function openAndClearEmail() {
-    // 1. ABRIR EMAIL
+    // 1. ABRIR EMAIL (Lógica Sniper)
     let emailAberto = false;
     const todosIcones = Array.from(document.querySelectorAll('i.material-icons-extended'));
     const iconeEmail = todosIcones.find(el => el.innerText.trim() === 'email');
@@ -28,6 +28,7 @@ async function openAndClearEmail() {
         simularCliqueReal(botaoAlvo);
         emailAberto = true;
     } else {
+        // Fallback Menu
         const speedDial = document.querySelector('material-fab-speed-dial');
         if (speedDial) {
             const triggerBtn = speedDial.querySelector('.trigger');
@@ -71,40 +72,51 @@ async function openAndClearEmail() {
         }
     }
 
-    // 3. LIMPEZA RADICAL (TOP LEVEL)
-    const containerTopo = document.getElementById('email-body-content-top');
-    const editorPai = document.querySelector('div[contenteditable="true"][aria-label="Email body"]');
+    // 3. LIMPEZA E FOCO
+    const divConteudoTexto = document.getElementById('email-body-content-top-content');
+    const editorPai = document.querySelector('div[contenteditable="true"][aria-label="Email body"]') || divConteudoTexto;
 
-    if (containerTopo && editorPai) {
+    if (divConteudoTexto && editorPai) {
         const ancestral = editorPai.closest('[aria-hidden="true"]');
         if (ancestral) ancestral.removeAttribute('aria-hidden');
         
         editorPai.focus();
-        await esperar(300);
+        simularCliqueReal(divConteudoTexto); // Garante foco interno
+        await esperar(500); 
 
-        // === AQUI ESTÁ A CORREÇÃO ===
-        // Substituímos todo o conteúdo do container 'top'. 
-        // Isso apaga o texto, a assinatura antiga, o espaçador E o aviso de ID.
-        // Recriamos a estrutura interna limpa e com o span sagrado.
-        containerTopo.innerHTML = `
-            <div id="email-body-content-top-content" style="font:normal 13px/17px Roboto,sans-serif;display:block">
-                <span id="cases-body-field"><br></span>
-            </div>
-        `;
-        
-        // Agora colocamos o cursor DENTRO desse novo span
-        // (Precisamos buscar o elemento de novo pois ele foi recriado)
-        const novoElementoSagrado = document.getElementById('cases-body-field');
-        if (novoElementoSagrado) {
+        // Limpa usando o ID sagrado se existir
+        const elementoSagrado = document.getElementById('cases-body-field');
+        if (elementoSagrado) {
+            while (elementoSagrado.nextSibling) elementoSagrado.nextSibling.remove();
+            while (elementoSagrado.previousSibling) elementoSagrado.previousSibling.remove();
+            
+            const avo = divConteudoTexto.parentElement; 
+            Array.from(avo.childNodes).forEach(tio => {
+                if (tio !== divConteudoTexto) avo.removeChild(tio);
+            });
+
+            const selection = window.getSelection();
             const range = document.createRange();
-            range.selectNodeContents(novoElementoSagrado);
-            range.collapse(true); // Cursor no início
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
+            range.selectNodeContents(elementoSagrado);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            document.execCommand('delete', false, null);
+            
+            return true; 
+        } else {
+            // Limpeza segura do container (sem apagar header/footer)
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(divConteudoTexto);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            document.execCommand('delete', false, null);
+            
+            if (divConteudoTexto.innerHTML.trim() === "") {
+                document.execCommand('insertHTML', false, '<br>');
+            }
+            return true;
         }
-        
-        return true; // Sucesso
     }
     
     showToast("Erro ao acessar editor.", { error: true });
@@ -119,9 +131,24 @@ export async function runEmailAutomation(cannedResponseText) {
     showToast(`Preparando email...`, { duration: 3000 });
 
     const pageData = getPageData();
-    // Chama a limpeza radical.
     const emailPronto = await openAndClearEmail();
     if (!emailPronto) return;
+
+    // Recria span se necessário
+    const divConteudoTexto = document.getElementById('email-body-content-top-content');
+    if (divConteudoTexto && !document.getElementById('cases-body-field')) {
+        divConteudoTexto.innerHTML = '<span id="cases-body-field"><br></span>';
+    }
+    
+    // Foca no span
+    const elementoSagrado = document.getElementById('cases-body-field');
+    if (elementoSagrado) {
+        const range = document.createRange();
+        range.selectNodeContents(elementoSagrado);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
 
     // --- LÓGICA CANNED RESPONSE ---
     await esperar(500);
@@ -132,6 +159,7 @@ export async function runEmailAutomation(cannedResponseText) {
         await esperar(200); 
         simularCliqueReal(btnCanned);
         
+        // Espera o input aparecer
         await esperar(1500); 
         const searchInput = document.querySelector('material-auto-suggest-input input');
         
@@ -142,20 +170,33 @@ export async function runEmailAutomation(cannedResponseText) {
             document.execCommand('insertText', false, cannedResponseText);
             searchInput.dispatchEvent(new Event('input', { bubbles: true }));
             
+            // ===== MUDANÇA: ESPERA ATIVA PELA LISTA (Polling) =====
+            console.log("⏳ Aguardando opções da lista...");
             let opcaoAlvo = null;
             let tentativas = 0;
-            while (tentativas < 20) { 
+            const maxTentativas = 20; // 20 * 500ms = 10 segundos
+
+            while (tentativas < maxTentativas) {
                 await esperar(500);
                 tentativas++;
+                
                 const opcoes = Array.from(document.querySelectorAll('material-select-dropdown-item'));
+                
                 if (opcoes.length > 0) {
+                     // 1. Busca pelo texto exato
                      opcaoAlvo = opcoes.find(opt => 
                         opt.innerText.toLowerCase().includes(cannedResponseText.toLowerCase())
                     );
-                    if (!opcaoAlvo && opcoes.length === 1) opcaoAlvo = opcoes[0];
-                    if (opcaoAlvo) break;
+                    
+                    // 2. Fallback: Se só tem 1 opção, usa ela (assumindo que o filtro funcionou)
+                    if (!opcaoAlvo && opcoes.length === 1) {
+                        opcaoAlvo = opcoes[0];
+                    }
+
+                    if (opcaoAlvo) break; // Sai do loop se encontrou
                 }
             }
+            // ======================================================
 
             if (opcaoAlvo) {
                 simularCliqueReal(opcaoAlvo);
@@ -172,19 +213,25 @@ export async function runEmailAutomation(cannedResponseText) {
                     return null;
                 }
 
-                // Busca elemento atualizado no DOM
-                const containerTopo = document.getElementById('email-body-content-top');
-                let noAlvo = encontrarNoDeTexto(containerTopo, '{%ADVERTISER_NAME%}');
+                const elSagradoAtualizado = document.getElementById('cases-body-field');
+                const spansFields = elSagradoAtualizado ? elSagradoAtualizado.querySelectorAll('span.field') : [];
+                let noAlvo = null;
+
+                for (let span of spansFields) {
+                    const res = encontrarNoDeTexto(span, '{%ADVERTISER_NAME%}');
+                    if (res) { noAlvo = res; break; }
+                }
+                
+                if (!noAlvo && elSagradoAtualizado) noAlvo = encontrarNoDeTexto(elSagradoAtualizado, '{%ADVERTISER_NAME%}');
 
                 if (noAlvo) {
-                    const rangeToken = document.createRange();
+                    const range = document.createRange();
                     const start = noAlvo.nodeValue.indexOf('{%ADVERTISER_NAME%}');
-                    rangeToken.setStart(noAlvo, start);
-                    rangeToken.setEnd(noAlvo, start + '{%ADVERTISER_NAME%}'.length);
-                    
+                    range.setStart(noAlvo, start);
+                    range.setEnd(noAlvo, start + '{%ADVERTISER_NAME%}'.length);
                     const sel = window.getSelection();
                     sel.removeAllRanges();
-                    sel.addRange(rangeToken);
+                    sel.addRange(range);
                     
                     document.execCommand('insertText', false, pageData.advertiserName);
                     showToast("Email preenchido!");
@@ -208,7 +255,7 @@ export async function runQuickEmail(template) {
     showToast(`Preparando email...`, { duration: 3000 });
 
     const pageData = getPageData(); 
-    const emailPronto = await openAndClearEmail(); // Limpa tudo (incluindo ID e assinatura)
+    const emailPronto = await openAndClearEmail(); 
     
     if (!emailPronto) return;
 
@@ -223,22 +270,28 @@ export async function runQuickEmail(template) {
     }
 
     // 2. Inserir Corpo
-    const editorPai = document.querySelector('div[contenteditable="true"][aria-label="Email body"]');
+    const divConteudoTexto = document.getElementById('email-body-content-top-content');
+    const editorPai = document.querySelector('div[contenteditable="true"][aria-label="Email body"]') || divConteudoTexto;
     
-    if (editorPai) {
+    if (editorPai && divConteudoTexto) {
         editorPai.focus();
         
-        // O cursor já está posicionado dentro do span limpo pelo openAndClearEmail.
-        // Apenas inserimos o HTML.
+        // Garante seleção interna
+        const range = document.createRange();
+        range.selectNodeContents(divConteudoTexto);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
 
+        // Substituição de Placeholders
         let finalBody = template.body;
         finalBody = finalBody.replace(/\[Nome do Cliente\]/g, pageData.advertiserName || "Cliente");
         finalBody = finalBody.replace(/\[INSERIR URL\]/g, pageData.websiteUrl || "seu site");
         finalBody = finalBody.replace(/\[Seu Nome\]/g, "Agente Google"); 
 
+        // Insere
         document.execCommand('insertHTML', false, finalBody);
         
-        // Dispara eventos para o Angular
         editorPai.dispatchEvent(new Event('input', { bubbles: true }));
         editorPai.dispatchEvent(new Event('change', { bubbles: true }));
         
