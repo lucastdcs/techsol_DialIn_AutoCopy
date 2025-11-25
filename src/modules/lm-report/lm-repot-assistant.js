@@ -53,24 +53,31 @@ export function initFeedbackAssistant() {
     let activeTab = 'lm'; 
     let searchTerm = "";
 
+   // --- ESTILOS LOCAIS ---
     const styleSearchInput = {
         width: "100%", padding: "10px 12px 10px 36px",
-        borderRadius: "8px", border: "1px solid #dadce0", background: "#f8f9fa",
+        borderRadius: "8px", border: "1px solid #f1f3f4", background: "#f8f9fa",
         fontSize: "14px", boxSizing: "border-box", outline: "none",
         color: "#3c4043", transition: "background 0.2s, border-color 0.2s"
     };
 
+    // CORREÇÃO: Adicionado flexWrap e removido overflowX
     const styleTabContainer = {
-        display: "flex", gap: "8px", overflowX: "auto", 
-        paddingBottom: "8px", marginTop: "12px",
-        borderBottom: "1px solid #dadce0", scrollbarWidth: "none"
+        display: "flex", 
+        flexWrap: "wrap", // <--- Isso faz os botões caírem para a linha de baixo
+        gap: "8px", 
+        paddingBottom: "8px", 
+        marginTop: "12px",
+        borderBottom: "1px solid #dadce0"
+        // Removido: overflowX: "auto" e scrollbarWidth: "none"
     };
 
     const styleTabButton = {
         padding: "6px 16px", borderRadius: "16px", border: "1px solid #dadce0",
         background: "transparent", color: "#5f6368", fontSize: "13px",
         fontWeight: "500", cursor: "pointer", whiteSpace: "nowrap",
-        transition: "all 0.2s ease"
+        transition: "all 0.2s ease",
+        marginBottom: "4px" // <--- Adicionado para dar espaço vertical quando quebrar linha
     };
 
     const styleActiveTab = {
@@ -82,7 +89,6 @@ export function initFeedbackAssistant() {
         borderRadius: "8px", cursor: "pointer", border: "1px solid transparent",
         marginBottom: "4px", transition: "background 0.1s"
     };
-
     // --- UI: Botão Flutuante ---
     const btnContainer = document.createElement("div");
     Object.assign(btnContainer.style, {
