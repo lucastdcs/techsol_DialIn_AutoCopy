@@ -105,7 +105,7 @@ export function initCaseNotesAssistant() {
     document.body.appendChild(btnContainer);
     
     // Torna o container arrastável (pegando pelo botão)
-    makeDraggable(btn, btnContainer); // *Nota: Talvez precise ajustar sua função makeDraggable para aceitar (handle, target)*
+    makeDraggable(btnContainer); // *Nota: Talvez precise ajustar sua função makeDraggable para aceitar (handle, target)*
 
     const popup = document.createElement("div");
     popup.id = "autofill-popup";
