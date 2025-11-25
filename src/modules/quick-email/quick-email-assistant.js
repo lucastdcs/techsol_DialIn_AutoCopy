@@ -18,7 +18,7 @@ import { QUICK_EMAILS } from './quick-email-data.js';
 import { getPageData } from '../shared/page-data.js';
 
 export function initQuickEmailAssistant() {
-    const CURRENT_VERSION = "v2.1"; 
+    const CURRENT_VERSION = "v2.2"; // Versão Corrigida e Consolidada
 
     // --- ESTADO DO MÓDULO ---
     let activeCategory = Object.keys(QUICK_EMAILS)[0]; 
@@ -34,24 +34,21 @@ export function initQuickEmailAssistant() {
         );
     }
 
-    // --- LÓGICA DE APLICAÇÃO ---
+    // --- LÓGICA DE APLICAÇÃO (EMAIL) ---
     async function applyEmailTemplate(template) {
         showToast(`Carregando: ${template.name}...`);
         
-        // CORREÇÃO 1: Captura os dados da página ANTES de tudo
-        const pageData = getPageData(); 
-        console.log("Dados capturados:", pageData);
-
+        // 0. Captura dados da página
+        const pageData = getPageData();
         let emailAberto = false;
         
-        // 1. Tenta achar ícone de email
+        // 1. Lógica Sniper (Tenta clicar direto no ícone de email)
         const todosIcones = Array.from(document.querySelectorAll('i.material-icons-extended'));
         const iconeEmail = todosIcones.find(el => el.innerText.trim() === 'email');
 
         if (iconeEmail) {
-            console.log("⚡ Modo Rápido: Ícone encontrado.");
             const botaoAlvo = iconeEmail.closest('material-button') || iconeEmail.closest('material-fab') || iconeEmail;
-            
+            // Hack para Angular: força visibilidade se estiver oculto
             if (botaoAlvo.style) {
                 botaoAlvo.style.display = 'block';
                 botaoAlvo.style.visibility = 'visible';
@@ -59,7 +56,7 @@ export function initQuickEmailAssistant() {
             simularCliqueReal(botaoAlvo);
             emailAberto = true;
         } else {
-            console.log("⚠️ Modo Menu: Tentando abrir SpeedDial.");
+            // Fallback: Tenta abrir via Menu (+)
             const speedDial = document.querySelector('material-fab-speed-dial');
             if (speedDial) {
                 const triggerBtn = speedDial.querySelector('.trigger');
@@ -68,6 +65,7 @@ export function initQuickEmailAssistant() {
                     simularCliqueReal(triggerBtn);
                     await esperar(800);
                     
+                    // Tenta achar de novo agora que o menu abriu
                     const iconesNovos = Array.from(document.querySelectorAll('i.material-icons-extended'));
                     const emailBtnNovo = iconesNovos.find(el => el.innerText.trim() === 'email');
                     if (emailBtnNovo) {
@@ -80,6 +78,7 @@ export function initQuickEmailAssistant() {
             }
         }
 
+        // Espera editor abrir
         let tentativas = 0;
         while (!document.getElementById('email-body-content-top-content') && tentativas < 15) {
             await esperar(500);
@@ -91,6 +90,7 @@ export function initQuickEmailAssistant() {
              return;
         }
 
+        // Verificação de Rascunho (Pre-write Draft)
         const btnDiscardDraft = document.querySelector('material-button[debug-id="discard-prewrite-draft-button"]');
         if (btnDiscardDraft) {
             simularCliqueReal(btnDiscardDraft);
@@ -102,22 +102,23 @@ export function initQuickEmailAssistant() {
             }
         }
 
+        // Limpeza e Inserção
         const divConteudoTexto = document.getElementById('email-body-content-top-content');
         const editorPai = document.querySelector('div[contenteditable="true"][aria-label="Email body"]') || divConteudoTexto;
 
         if (divConteudoTexto && editorPai) {
-            // Destrava
             const ancestral = editorPai.closest('[aria-hidden="true"]');
             if (ancestral) ancestral.removeAttribute('aria-hidden');
 
             editorPai.focus();
             simularCliqueReal(divConteudoTexto);
             await esperar(300); 
-
-            // Limpeza Segura (via Select All)
+            
+            // Limpeza Segura (Select All -> Delete)
             document.execCommand('selectAll', false, null);
             document.execCommand('delete', false, null);
 
+            // Preenche Assunto
             const subjectInput = document.querySelector('input[aria-label="Subject"]');
             if (subjectInput && template.subject) {
                 subjectInput.value = template.subject;
@@ -126,36 +127,38 @@ export function initQuickEmailAssistant() {
 
             // Substituição de Placeholders
             let finalBody = template.body;
-            // Usa dados capturados (com fallback)
             finalBody = finalBody.replace(/\[Nome do Cliente\]/g, pageData.advertiserName || "Cliente");
             finalBody = finalBody.replace(/\[INSERIR URL\]/g, pageData.websiteUrl || "seu site");
 
             document.execCommand('insertHTML', false, finalBody);
-            
             showToast("Email preenchido com sucesso!", { duration: 2000 });
         }
     }
 
-    // --- ESTILOS EXTRAS ---
+    // --- ESTILOS LOCAIS ---
     const styleSearchInput = {
         width: "100%", padding: "10px 12px 10px 36px",
-        borderRadius: "8px", border: "1px solid #f1f3f4", background: "#f8f9fa",
+        borderRadius: "8px", border: "1px solid #dadce0", background: "#f8f9fa",
         fontSize: "14px", boxSizing: "border-box", outline: "none",
         color: "#3c4043", transition: "background 0.2s, border-color 0.2s",
         marginBottom: "8px"
     };
 
     const styleTabContainer = {
-        display: "flex", gap: "8px", overflowX: "auto", 
-        paddingBottom: "8px", marginTop: "0",
-        borderBottom: "1px solid #dadce0", scrollbarWidth: "none"
+        display: "flex", 
+        flexWrap: "wrap", // Permite quebrar linha se tiver muitas categorias
+        gap: "8px", 
+        paddingBottom: "8px", 
+        marginTop: "0",
+        borderBottom: "1px solid #dadce0"
     };
 
     const styleTabButton = {
         padding: "6px 12px", borderRadius: "16px", border: "1px solid #dadce0",
         background: "transparent", color: "#5f6368", fontSize: "12px",
         fontWeight: "500", cursor: "pointer", whiteSpace: "nowrap",
-        transition: "all 0.2s ease"
+        transition: "all 0.2s ease",
+        marginBottom: "4px"
     };
 
     const styleActiveTab = {
@@ -164,7 +167,7 @@ export function initQuickEmailAssistant() {
 
     const styleEmailItem = {
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "10px 12px", borderRadius: "8px", cursor: "pointer",
+        padding: "12px", borderRadius: "8px", cursor: "pointer",
         transition: "background 0.1s", marginBottom: "4px",
         border: "none", background: "transparent", width: "100%", textAlign: "left"
     };
@@ -172,50 +175,30 @@ export function initQuickEmailAssistant() {
     // --- UI: Botão Flutuante ---
     const btnContainer = document.createElement("div");
     Object.assign(btnContainer.style, {
-        position: "fixed", top: "25%", right: "24px", zIndex: "9999",
+        position: "fixed", top: "50%", right: "24px", zIndex: "9999",
         display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px"
     });
 
     const btn = document.createElement("button");
     btn.id = "email-floating-btn";
     btn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4M20,8L12,13L4,8V6L12,11L20,6V8Z"/></svg>`;
-
     Object.assign(btn.style, {
         width: "48px", height: "48px", borderRadius: "50%",
         background: "#ea4335", color: "white", border: "none", cursor: "pointer",
         display: "flex", alignItems: "center", justifyContent: "center",
-        boxShadow: "0 4px 12px rgba(234, 67, 53, 0.4)",
-        transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s"
+        boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
     });
 
-    const tooltip = document.createElement("span");
-    tooltip.textContent = "Quick Email";
-    Object.assign(tooltip.style, {
-        background: "rgba(0,0,0,0.7)", color: "white", padding: "4px 8px",
-        borderRadius: "4px", fontSize: "12px", opacity: "0", pointerEvents: "none",
-        transition: "opacity 0.2s", whiteSpace: "nowrap", fontWeight: "500"
-    });
-
-    btn.onmouseenter = () => {
-        btn.style.transform = "scale(1.1)";
-        btn.style.boxShadow = "0 6px 16px rgba(234, 67, 53, 0.5)";
-        tooltip.style.opacity = "1";
-    };
-    btn.onmouseleave = () => {
-        btn.style.transform = "scale(1)";
-        btn.style.boxShadow = "0 4px 12px rgba(234, 67, 53, 0.4)";
-        tooltip.style.opacity = "0";
-    };
+    btn.onmouseenter = () => { btn.style.transform = "scale(1.1)"; };
+    btn.onmouseleave = () => { btn.style.transform = "scale(1)"; };
 
     btnContainer.appendChild(btn);
-    btnContainer.appendChild(tooltip);
     document.body.appendChild(btnContainer);
     makeDraggable(btnContainer);
 
     // --- POPUP ---
     const popup = document.createElement("div");
     popup.id = "quick-email-popup";
-    // CORREÇÃO 2: Largura fixa para evitar problemas visuais
     Object.assign(popup.style, stylePopup, { 
         right: "100px", width: "420px", borderRadius: "12px",
         display: "flex", flexDirection: "column", maxHeight: "600px"
@@ -228,34 +211,31 @@ export function initQuickEmailAssistant() {
 
     // Linha 1: Logo/Titulo
     const headerTopRow = document.createElement("div");
-    Object.assign(headerTopRow.style, { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" });
+    Object.assign(headerTopRow.style, { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" });
     
     const headerLeft = document.createElement("div");
-    Object.assign(headerLeft.style, { display: "flex", alignItems: "center", gap: "12px" });
-
+    Object.assign(headerLeft.style, { display: "flex", alignItems: "center", gap: "10px" });
     const logo = document.createElement("img");
     logo.src = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
     Object.assign(logo.style, { width: "24px", height: "24px" });
-
-    const titleContainer = document.createElement("div");
-    Object.assign(titleContainer.style, { display: 'flex', flexDirection: 'column' });
-    const title = document.createElement("div");
-    title.textContent = "Emails Rápidos";
-    Object.assign(title.style, stylePopupTitle, { fontSize: "16px", lineHeight: "1.2" });
-    const versionDisplay = document.createElement("div");
-    versionDisplay.textContent = CURRENT_VERSION;
-    Object.assign(versionDisplay.style, stylePopupVersion);
-    
-    titleContainer.appendChild(title);
-    titleContainer.appendChild(versionDisplay);
+    const titleDiv = document.createElement("div");
+    Object.assign(titleDiv.style, { display: 'flex', flexDirection: 'column' });
+    const titleText = document.createElement("span");
+    titleText.textContent = "Emails Rápidos";
+    Object.assign(titleText.style, stylePopupTitle);
+    const verText = document.createElement("span");
+    verText.textContent = CURRENT_VERSION;
+    Object.assign(verText.style, stylePopupVersion);
+    titleDiv.appendChild(titleText);
+    titleDiv.appendChild(verText);
     headerLeft.appendChild(logo);
-    headerLeft.appendChild(titleContainer);
+    headerLeft.appendChild(titleDiv);
 
     const closeBtn = document.createElement("div");
     closeBtn.textContent = "✕";
-    Object.assign(closeBtn.style, stylePopupCloseBtn, { fontSize: "14px", color: "#5f6368" });
+    Object.assign(closeBtn.style, stylePopupCloseBtn);
     closeBtn.onclick = () => togglePopup(false);
-
+    
     headerTopRow.appendChild(headerLeft);
     headerTopRow.appendChild(closeBtn);
     header.appendChild(headerTopRow);
@@ -266,17 +246,19 @@ export function initQuickEmailAssistant() {
     Object.assign(searchInput.style, styleSearchInput);
     header.appendChild(searchInput);
 
-    // Linha 3: Abas
+    // Linha 3: Abas (Categorias)
     const tabsContainer = document.createElement("div");
     Object.assign(tabsContainer.style, styleTabContainer);
     header.appendChild(tabsContainer);
 
     popup.appendChild(header);
 
-    const content = document.createElement("div");
-    Object.assign(content.style, { padding: "16px", overflowY: "auto", maxHeight: "400px", flexGrow: "1" });
-    popup.appendChild(content);
+    // Conteúdo (AQUI ESTAVA O ERRO ANTERIOR)
+    const contentArea = document.createElement("div");
+    Object.assign(contentArea.style, { padding: "16px", overflowY: "auto", maxHeight: "400px", flexGrow: "1" });
+    popup.appendChild(contentArea);
 
+    // Footer
     const footer = document.createElement("div");
     Object.assign(footer.style, { 
         padding: "8px 16px", borderTop: "1px solid #eee", 
@@ -287,37 +269,43 @@ export function initQuickEmailAssistant() {
 
     document.body.appendChild(popup);
 
+    // --- LÓGICA DE RENDERIZAÇÃO ---
+
     function renderTabs() {
         tabsContainer.innerHTML = "";
         Object.keys(QUICK_EMAILS).forEach(catKey => {
             const catData = QUICK_EMAILS[catKey];
-            const btn = document.createElement("button");
-            btn.textContent = catData.title;
-            Object.assign(btn.style, styleTabButton);
+            const tabBtn = document.createElement("button");
+            tabBtn.textContent = catData.title;
+            Object.assign(tabBtn.style, styleTabButton);
+            
             if (activeCategory === catKey && searchTerm === "") {
-                Object.assign(btn.style, styleActiveTab);
+                Object.assign(tabBtn.style, styleActiveTab);
             }
-            btn.onclick = () => {
+            
+            tabBtn.onclick = () => {
                 activeCategory = catKey;
                 searchTerm = ""; 
                 searchInput.value = "";
                 renderTabs(); 
                 renderEmailList();
             };
-            tabsContainer.appendChild(btn);
+            tabsContainer.appendChild(tabBtn);
         });
     }
 
     function renderEmailList() {
-        content.innerHTML = ""; // CORREÇÃO: Usando 'content' em vez de 'contentArea'
+        contentArea.innerHTML = ""; // Limpa a área correta
         let emailsToShow = [];
 
         if (searchTerm.trim() !== "") {
+            // Busca em todas as categorias
             Object.values(QUICK_EMAILS).forEach(cat => {
                 const found = cat.emails.filter(e => e.name.toLowerCase().includes(searchTerm.toLowerCase()));
                 emailsToShow = [...emailsToShow, ...found];
             });
         } else {
+            // Mostra categoria ativa
             if (QUICK_EMAILS[activeCategory]) {
                 emailsToShow = QUICK_EMAILS[activeCategory].emails;
             }
@@ -325,11 +313,11 @@ export function initQuickEmailAssistant() {
 
         if (emailsToShow.length === 0) {
             const emptyState = document.createElement("div");
-            emptyState.textContent = "Nenhum template encontrado.";
+            emptyState.textContent = "Nenhum email encontrado.";
             Object.assign(emptyState.style, { 
                 textAlign: "center", padding: "20px", color: "#9aa0a6", fontSize: "13px" 
             });
-            content.appendChild(emptyState);
+            contentArea.appendChild(emptyState);
             return;
         }
 
@@ -358,13 +346,14 @@ export function initQuickEmailAssistant() {
             };
             btn.onclick = () => applyEmailTemplate(email);
 
-            content.appendChild(btn);
+            contentArea.appendChild(btn);
         });
     }
 
     searchInput.addEventListener("input", (e) => {
         searchTerm = e.target.value;
         if (searchTerm !== "") {
+            // Remove destaque das abas durante busca
             Array.from(tabsContainer.children).forEach(child => {
                 child.style.background = "transparent";
                 child.style.color = "#5f6368";
