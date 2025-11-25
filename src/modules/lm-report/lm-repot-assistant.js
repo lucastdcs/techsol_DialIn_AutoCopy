@@ -11,7 +11,10 @@ import {
     styleFloatingButton
 } from '../shared/utils.js';
 
-// --- BANCO DE DADOS DE LINKS (Organizado por Abas) ---
+// ... (código do LINKS_DB mantido igual) ...
+// (Mantenha o seu LINKS_DB aqui)
+
+// --- BANCO DE DADOS DE LINKS ---
 const LINKS_DB = {
     lm: {
         label: "LM Forms",
@@ -22,7 +25,7 @@ const LINKS_DB = {
         ]
     },
     qa: {
-        label: "QA",
+        label: "QA & Quality",
         links: [
             { name: "Elogios", url: "https://docs.google.com/forms/d/e/1FAIpQLSezY5K-trQDv0LkL5IoTlV0Tl0oOqGTEszylmgcbMRXcC9Weg/viewform", desc: "Feedback positivo" },
             { name: "Casos Complexos", url: "https://docs.google.com/forms/d/e/1FAIpQLSe26q1LEloFNRfOAVZtA7DCOQTqdu1BAEeWuxtK6oPwZhLp-A/viewform?resourcekey=0-c1N4h8gntza2gQowqYAqMw", desc: "Escalonamento técnico" }
@@ -45,13 +48,11 @@ const LINKS_DB = {
 };
 
 export function initFeedbackAssistant() {
-    const CURRENT_VERSION = "v2.7";
+    const CURRENT_VERSION = "v2.2";
 
-    // --- ESTADO ---
     let activeTab = 'lm'; 
     let searchTerm = "";
 
-    // --- ESTILOS LOCAIS ---
     const styleSearchInput = {
         width: "100%", padding: "10px 12px 10px 36px",
         borderRadius: "8px", border: "1px solid #f1f3f4", background: "#f8f9fa",
@@ -91,14 +92,13 @@ export function initFeedbackAssistant() {
 
     const btn = document.createElement("button");
     btn.id = "feedback-floating-btn";
-    // Ícone SVG de Links/Bookmark
     btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M19 18l2 1V3c0-1.1-.9-2-2-2H8.99C7.89 1 7 1.9 7 3h10c1.1 0 2 .9 2 2v13zM15 5H5c-1.1 0-2 .9-2 2v16l7-3 7 3V7c0-1.1-.9-2-2-2z"/></svg>`;
 
     Object.assign(btn.style, {
         width: "48px", height: "48px", borderRadius: "50%",
         background: "#34a853", color: "white", border: "none", cursor: "pointer",
         display: "flex", alignItems: "center", justifyContent: "center",
-        boxShadow: "0 4px 12px rgba(52, 168, 83, 0.4)", // Verde
+        boxShadow: "0 4px 12px rgba(52, 168, 83, 0.4)", 
         transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s"
     });
 
@@ -129,13 +129,13 @@ export function initFeedbackAssistant() {
     // --- POPUP ---
     const popup = document.createElement("div");
     popup.id = "feedback-popup";
-    // Largura 360px
+    // CORREÇÃO: Largura aumentada para 420px
     Object.assign(popup.style, stylePopup, { 
-        right: "100px", width: "360px", maxHeight: "550px",
+        right: "100px", width: "420px", maxHeight: "550px",
         display: "flex", flexDirection: "column", borderRadius: "12px"
     }); 
 
-    // Header Principal (Coluna)
+    // Header Principal
     const header = document.createElement("div");
     Object.assign(header.style, stylePopupHeader, { 
         padding: "16px", 
@@ -194,7 +194,7 @@ export function initFeedbackAssistant() {
     searchInput.placeholder = "Buscar link, form ou ajuda...";
     Object.assign(searchInput.style, styleSearchInput);
     
-    searchInput.onfocus = () => searchInput.style.borderColor = "#34a853"; // Verde no foco
+    searchInput.onfocus = () => searchInput.style.borderColor = "#34a853"; 
     searchInput.onblur = () => searchInput.style.borderColor = "#f1f3f4";
 
     searchContainer.appendChild(searchIcon);
