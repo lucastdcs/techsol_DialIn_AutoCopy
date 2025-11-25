@@ -22,7 +22,7 @@ const LINKS_DB = {
         ]
     },
     qa: {
-        label: "QA & Quality",
+        label: "QA",
         links: [
             { name: "Elogios", url: "https://docs.google.com/forms/d/e/1FAIpQLSezY5K-trQDv0LkL5IoTlV0Tl0oOqGTEszylmgcbMRXcC9Weg/viewform", desc: "Feedback positivo" },
             { name: "Casos Complexos", url: "https://docs.google.com/forms/d/e/1FAIpQLSe26q1LEloFNRfOAVZtA7DCOQTqdu1BAEeWuxtK6oPwZhLp-A/viewform?resourcekey=0-c1N4h8gntza2gQowqYAqMw", desc: "Escalonamento técnico" }
@@ -45,7 +45,7 @@ const LINKS_DB = {
 };
 
 export function initFeedbackAssistant() {
-    const CURRENT_VERSION = "v2.1";
+    const CURRENT_VERSION = "v2.7";
 
     // --- ESTADO ---
     let activeTab = 'lm'; 
