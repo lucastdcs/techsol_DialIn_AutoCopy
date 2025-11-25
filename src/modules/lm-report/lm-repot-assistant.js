@@ -7,16 +7,14 @@ import {
     stylePopupTitle,
     stylePopupCloseBtn,
     styleFloatingButton,
-    stylePopupVersion,
-    styleCredit,
     showToast 
 } from '../shared/utils.js';
 
-// --- BANCO DE DADOS DE LINKS (Escalável) ---
+// --- BANCO DE DADOS DE LINKS ---
 const LINKS_DB = {
     lm: {
         label: "LM Forms",
-        icon: "📊", // Pode substituir por SVG
+        icon: "📊", 
         links: [
             { name: "Relatório de Ocorrências", url: "https://docs.google.com/forms/d/e/1FAIpQLSc6CamPehrREeVr7yCWMyqFETrFYYezNcLb_13W4yZDQkfY6Q/viewform", desc: "Reportar problemas operacionais" },
             { name: "Chamadas Excedidas (>50min)", url: "https://docs.google.com/forms/d/e/1FAIpQLSfE8EMHNJMTKYeA6XM2RZjZ9AQ4LhGk1Dwm_WLu3kcMdKMikA/viewform", desc: "Registro de chamadas longas" },
@@ -50,13 +48,13 @@ const LINKS_DB = {
 };
 
 export function initFeedbackAssistant() {
-    const CURRENT_VERSION = "v2.0 ";
+    const CURRENT_VERSION = "v2.0";
 
     // --- ESTADO ---
-    let activeTab = 'lm'; // Tab inicial
+    let activeTab = 'lm'; 
     let searchTerm = "";
 
-    // --- ESTILOS LOCAIS (Material Design) ---
+    // --- ESTILOS LOCAIS ---
     const styleSearchInput = {
         width: "100%", padding: "10px 12px 10px 36px",
         borderRadius: "8px", border: "none", background: "#f1f3f4",
@@ -87,9 +85,7 @@ export function initFeedbackAssistant() {
         marginBottom: "4px", transition: "background 0.1s"
     };
 
-    // --- UI PRINCIPAL ---
-    
-    // --- UI: Botão Flutuante (Material Design Pro) ---
+    // --- UI: Botão Flutuante ---
     const btnContainer = document.createElement("div");
     Object.assign(btnContainer.style, {
         position: "fixed", top: "35%", right: "24px", zIndex: "9999",
@@ -98,14 +94,13 @@ export function initFeedbackAssistant() {
 
     const btn = document.createElement("button");
     btn.id = "feedback-floating-btn";
-    // Ícone SVG: Bookmarks
     btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M19 18l2 1V3c0-1.1-.9-2-2-2H8.99C7.89 1 7 1.9 7 3h10c1.1 0 2 .9 2 2v13zM15 5H5c-1.1 0-2 .9-2 2v16l7-3 7 3V7c0-1.1-.9-2-2-2z"/></svg>`;
 
     Object.assign(btn.style, {
         width: "48px", height: "48px", borderRadius: "50%",
         background: "#34a853", color: "white", border: "none", cursor: "pointer",
         display: "flex", alignItems: "center", justifyContent: "center",
-        boxShadow: "0 4px 12px rgba(52, 168, 83, 0.4)", // Sombra esverdeada
+        boxShadow: "0 4px 12px rgba(52, 168, 83, 0.4)", // Verde
         transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s"
     });
 
@@ -131,9 +126,11 @@ export function initFeedbackAssistant() {
     btnContainer.appendChild(btn);
     btnContainer.appendChild(tooltip);
     document.body.appendChild(btnContainer);
-    makeDraggable(btn, btnContainer);
+    
+    // CORREÇÃO: Arrastar o container inteiro
+    makeDraggable(btnContainer);
 
-    // 2. Popup Container
+    // --- POPUP ---
     const popup = document.createElement("div");
     popup.id = "feedback-popup";
     Object.assign(popup.style, stylePopup, { 
@@ -141,12 +138,10 @@ export function initFeedbackAssistant() {
         display: "flex", flexDirection: "column", borderRadius: "12px"
     }); 
 
-    // 3. Header
     const header = document.createElement("div");
     Object.assign(header.style, stylePopupHeader, { padding: "16px 16px 0 16px", borderBottom: "none", flexDirection: "column", alignItems: "flex-start" });
     makeDraggable(popup, header);
 
-    // Top Header (Logo + Title + Close)
     const headerTop = document.createElement("div");
     Object.assign(headerTop.style, { display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", marginBottom: "12px" });
 
@@ -172,7 +167,6 @@ export function initFeedbackAssistant() {
     headerTop.appendChild(closeBtn);
     header.appendChild(headerTop);
 
-    // Search Bar
     const searchContainer = document.createElement("div");
     Object.assign(searchContainer.style, { position: "relative", width: "100%" });
     const searchIcon = document.createElement("span");
@@ -187,14 +181,12 @@ export function initFeedbackAssistant() {
     searchContainer.appendChild(searchInput);
     header.appendChild(searchContainer);
 
-    // Tabs Container
     const tabsContainer = document.createElement("div");
     Object.assign(tabsContainer.style, styleTabContainer);
     header.appendChild(tabsContainer);
 
     popup.appendChild(header);
 
-    // 4. Content Area
     const contentArea = document.createElement("div");
     Object.assign(contentArea.style, {
         padding: "0 8px 8px 8px", 
@@ -203,7 +195,6 @@ export function initFeedbackAssistant() {
     });
     popup.appendChild(contentArea);
 
-    // 5. Footer
     const footer = document.createElement("div");
     Object.assign(footer.style, { 
         padding: "8px 16px", borderTop: "1px solid #eee", 
@@ -216,7 +207,6 @@ export function initFeedbackAssistant() {
     document.body.appendChild(popup);
 
     // --- LÓGICA DE RENDERIZAÇÃO ---
-
     function renderTabs() {
         tabsContainer.innerHTML = '';
         Object.keys(LINKS_DB).forEach(key => {
@@ -224,11 +214,9 @@ export function initFeedbackAssistant() {
             const btn = document.createElement('button');
             btn.textContent = cat.label;
             Object.assign(btn.style, styleTabButton);
-
             if (activeTab === key && searchTerm === "") {
                 Object.assign(btn.style, styleActiveTab);
             }
-
             btn.onclick = () => {
                 activeTab = key;
                 searchTerm = "";
@@ -245,18 +233,15 @@ export function initFeedbackAssistant() {
         let linksToShow = [];
 
         if (searchTerm.trim() !== "") {
-            // Busca Global
             Object.values(LINKS_DB).forEach(cat => {
                 const filtered = cat.links.filter(l => 
                     l.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                     l.desc.toLowerCase().includes(searchTerm.toLowerCase())
                 );
-                // Adiciona o nome da categoria para contexto
                 filtered.forEach(item => item._categoryName = cat.label);
                 linksToShow = [...linksToShow, ...filtered];
             });
         } else {
-            // Busca por Categoria Ativa
             linksToShow = LINKS_DB[activeTab].links;
         }
 
@@ -269,7 +254,6 @@ export function initFeedbackAssistant() {
             const item = document.createElement('div');
             Object.assign(item.style, styleListItem);
 
-            // Título
             const titleRow = document.createElement('div');
             Object.assign(titleRow.style, { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' });
             
@@ -277,15 +261,13 @@ export function initFeedbackAssistant() {
             nameSpan.textContent = link.name;
             Object.assign(nameSpan.style, { fontSize: '14px', color: '#202124', fontWeight: '500' });
 
-            // Ícone "External Link"
             const iconSpan = document.createElement('span');
-            iconSpan.innerHTML = '&#8599;'; // Seta NE
+            iconSpan.innerHTML = '&#8599;'; 
             Object.assign(iconSpan.style, { fontSize: '14px', color: '#dadce0' });
 
             titleRow.appendChild(nameSpan);
             titleRow.appendChild(iconSpan);
 
-            // Descrição
             const descSpan = document.createElement('span');
             descSpan.textContent = link.desc + (link._categoryName ? ` • ${link._categoryName}` : '');
             Object.assign(descSpan.style, { fontSize: '11px', color: '#5f6368' });
@@ -293,7 +275,6 @@ export function initFeedbackAssistant() {
             item.appendChild(titleRow);
             item.appendChild(descSpan);
 
-            // Interações
             item.onmouseenter = () => {
                 item.style.backgroundColor = '#f1f3f4';
                 iconSpan.style.color = '#1a73e8';
@@ -302,22 +283,15 @@ export function initFeedbackAssistant() {
                 item.style.backgroundColor = 'transparent';
                 iconSpan.style.color = '#dadce0';
             };
-            
-            item.onclick = () => {
-                window.open(link.url, '_blank');
-                // Opcional: fechar popup ao clicar?
-                // togglePopup(false); 
-            };
+            item.onclick = () => window.open(link.url, '_blank');
 
             contentArea.appendChild(item);
         });
     }
 
-    // --- EVENTOS ---
     searchInput.addEventListener('input', (e) => {
         searchTerm = e.target.value;
         if (searchTerm !== "") {
-            // Visualmente desmarca abas durante a busca
             Array.from(tabsContainer.children).forEach(c => {
                 c.style.backgroundColor = 'transparent';
                 c.style.color = '#5f6368';
@@ -348,7 +322,6 @@ export function initFeedbackAssistant() {
         togglePopup(visible);
     };
 
-    // INICIALIZAÇÃO
     renderTabs();
     renderList();
 }
