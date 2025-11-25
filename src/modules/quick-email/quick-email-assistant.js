@@ -9,6 +9,8 @@ import {
     styleFloatingButton,
     stylePopupVersion,
     styleCredit,
+    styleButtonBase,
+    styleLabel,
     showToast
 } from '../shared/utils.js';
 
@@ -16,13 +18,12 @@ import { QUICK_EMAILS } from './quick-email-data.js';
 import { getPageData } from '../shared/page-data.js';
 
 export function initQuickEmailAssistant() {
-    const CURRENT_VERSION = "v2.8"; // Versão Consolidada
+    const CURRENT_VERSION = "v1.8"; // Versão com UI Ajustada e Lógica Sniper
 
     // --- ESTADO DO MÓDULO ---
     let activeCategory = Object.keys(QUICK_EMAILS)[0]; 
     let searchTerm = "";
 
-    // --- UTILITÁRIOS DE APLICAÇÃO ---
     const esperar = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
     function simularCliqueReal(elemento) {
@@ -107,24 +108,39 @@ export function initQuickEmailAssistant() {
             simularCliqueReal(divConteudoTexto);
             await esperar(300); 
             
-            // Limpeza Segura (via Select All)
-            document.execCommand('selectAll', false, null);
-            document.execCommand('delete', false, null);
+            // Limpeza usando a técnica de isolamento de ID
+            const elementoSagrado = document.getElementById('cases-body-field');
+            if (elementoSagrado) {
+                while (elementoSagrado.nextSibling) elementoSagrado.nextSibling.remove();
+                while (elementoSagrado.previousSibling) elementoSagrado.previousSibling.remove();
+                
+                const avo = divConteudoTexto.parentElement; 
+                Array.from(avo.childNodes).forEach(tio => {
+                    if (tio !== divConteudoTexto) avo.removeChild(tio);
+                });
 
-            // Assunto
-            const subjectInput = document.querySelector('input[aria-label="Subject"]');
-            if (subjectInput && template.subject) {
-                subjectInput.value = template.subject;
-                subjectInput.dispatchEvent(new Event('input', { bubbles: true }));
+                const selection = window.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(elementoSagrado);
+                selection.removeAllRanges();
+                selection.addRange(range);
+                document.execCommand('delete', false, null);
+
+                // Assunto
+                const subjectInput = document.querySelector('input[aria-label="Subject"]');
+                if (subjectInput && template.subject) {
+                    subjectInput.value = template.subject;
+                    subjectInput.dispatchEvent(new Event('input', { bubbles: true }));
+                }
+
+                // Substituição de Placeholders
+                let finalBody = template.body;
+                finalBody = finalBody.replace(/\[Nome do Cliente\]/g, pageData.advertiserName || "Cliente");
+                finalBody = finalBody.replace(/\[INSERIR URL\]/g, pageData.websiteUrl || "seu site");
+
+                document.execCommand('insertHTML', false, finalBody);
+                showToast("Email preenchido com sucesso!", { duration: 2000 });
             }
-
-            // Substituição de Placeholders e Inserção
-            let finalBody = template.body;
-            finalBody = finalBody.replace(/\[Nome do Cliente\]/g, pageData.advertiserName || "Cliente");
-            finalBody = finalBody.replace(/\[INSERIR URL\]/g, pageData.websiteUrl || "seu site");
-
-            document.execCommand('insertHTML', false, finalBody);
-            showToast("Email preenchido com sucesso!", { duration: 2000 });
         }
     }
 
@@ -170,19 +186,15 @@ export function initQuickEmailAssistant() {
 
     const btn = document.createElement("button");
     btn.id = "email-floating-btn";
-    // Ícone SVG de carta
     btn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4M20,8L12,13L4,8V6L12,11L20,6V8Z"/></svg>`;
-
     Object.assign(btn.style, {
         width: "48px", height: "48px", borderRadius: "50%",
         background: "#ea4335", color: "white", border: "none", cursor: "pointer",
         display: "flex", alignItems: "center", justifyContent: "center",
         boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
     });
-
     btn.onmouseenter = () => { btn.style.transform = "scale(1.1)"; };
     btn.onmouseleave = () => { btn.style.transform = "scale(1)"; };
-
     btnContainer.appendChild(btn);
     document.body.appendChild(btnContainer);
     makeDraggable(btnContainer);
@@ -190,8 +202,10 @@ export function initQuickEmailAssistant() {
     // --- POPUP ---
     const popup = document.createElement("div");
     popup.id = "quick-email-popup";
+    
+    // CORREÇÃO: Largura aumentada para 420px
     Object.assign(popup.style, stylePopup, { 
-        right: "100px", width: "380px", borderRadius: "12px",
+        right: "100px", width: "420px", borderRadius: "12px",
         display: "flex", flexDirection: "column", maxHeight: "600px"
     });
 
@@ -210,20 +224,20 @@ export function initQuickEmailAssistant() {
     const logo = document.createElement("img");
     logo.src = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
     Object.assign(logo.style, { width: "24px", height: "24px" });
-    
-    const titleDiv = document.createElement("div");
-    Object.assign(titleDiv.style, { display: 'flex', flexDirection: 'column' });
-    const titleText = document.createElement("span");
-    titleText.textContent = "Emails Rápidos";
-    Object.assign(titleText.style, stylePopupTitle);
-    const verText = document.createElement("span");
-    verText.textContent = CURRENT_VERSION;
-    Object.assign(verText.style, stylePopupVersion);
-    titleDiv.appendChild(titleText);
-    titleDiv.appendChild(verText);
+
+    const titleContainer = document.createElement("div");
+    Object.assign(titleContainer.style, { display: 'flex', flexDirection: 'column', flexGrow: '1' });
+    const title = document.createElement("div");
+    title.textContent = "Emails Rápidos";
+    Object.assign(title.style, stylePopupTitle);
+    const versionDisplay = document.createElement("div");
+    versionDisplay.textContent = CURRENT_VERSION;
+    Object.assign(versionDisplay.style, stylePopupVersion);
+    titleContainer.appendChild(title);
+    titleContainer.appendChild(versionDisplay);
     
     headerLeft.appendChild(logo);
-    headerLeft.appendChild(titleDiv);
+    headerLeft.appendChild(titleContainer);
 
     const closeBtn = document.createElement("div");
     closeBtn.textContent = "✕";
@@ -264,7 +278,6 @@ export function initQuickEmailAssistant() {
     document.body.appendChild(popup);
 
     // --- RENDERIZAÇÃO ---
-
     function renderTabs() {
         tabsContainer.innerHTML = "";
         Object.keys(QUICK_EMAILS).forEach(catKey => {
@@ -273,7 +286,6 @@ export function initQuickEmailAssistant() {
             tabBtn.textContent = catData.title;
             Object.assign(tabBtn.style, styleTabButton);
             
-            // Se tiver busca ativa, desativa o estilo de aba selecionada
             if (activeCategory === catKey && searchTerm === "") {
                 Object.assign(tabBtn.style, styleActiveTab);
             }
@@ -294,13 +306,11 @@ export function initQuickEmailAssistant() {
         let emailsToShow = [];
 
         if (searchTerm.trim() !== "") {
-            // Se tem busca, varre todas as categorias
             Object.values(QUICK_EMAILS).forEach(cat => {
                 const found = cat.emails.filter(e => e.name.toLowerCase().includes(searchTerm.toLowerCase()));
                 emailsToShow = [...emailsToShow, ...found];
             });
         } else {
-            // Se não, mostra só a categoria ativa
             if (QUICK_EMAILS[activeCategory]) {
                 emailsToShow = QUICK_EMAILS[activeCategory].emails;
             }
@@ -346,7 +356,6 @@ export function initQuickEmailAssistant() {
 
     searchInput.addEventListener("input", (e) => {
         searchTerm = e.target.value;
-        // Atualiza visual das abas (nenhuma ativa se estiver buscando)
         renderTabs();
         renderEmailList();
     });
@@ -370,7 +379,6 @@ export function initQuickEmailAssistant() {
         togglePopup(visible);
     };
 
-    // Inicia
     renderTabs();
     renderEmailList();
 }
