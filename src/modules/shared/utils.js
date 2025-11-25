@@ -1,4 +1,5 @@
-// src/modules/shared/utils.js
+
+let highestZIndex = 10000; 
 
 export function initGlobalStylesAndFont() {
     if (document.getElementById('google-font-poppins') && document.getElementById('techsol-global-styles')) {
@@ -13,7 +14,6 @@ export function initGlobalStylesAndFont() {
     const style = document.createElement('style');
     style.id = 'techsol-global-styles';
     style.textContent = `
-        /* ... (estilos da scrollbar mantidos) ... */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
@@ -46,7 +46,6 @@ export function initGlobalStylesAndFont() {
 }
 
 export function showToast(message, opts = {}) {
-    // ... (código showToast mantido) ...
     const toast = document.createElement("div");
     Object.assign(toast.style, {
         position: "fixed", bottom: "24px", left: "50%",
@@ -71,11 +70,14 @@ export function showToast(message, opts = {}) {
 }
 
 export function makeDraggable(element, handle = null) {
-    // ... (código makeDraggable mantido) ...
     let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
     const dragHandle = handle || element;
+    
+    // Adiciona evento para trazer para frente ao clicar (mousedown)
     dragHandle.onmousedown = dragMouseDown;
+
     function dragMouseDown(e) {
+        // Evita drag em inputs
         if (e.target.tagName === 'INPUT' || 
             e.target.tagName === 'TEXTAREA' || 
             e.target.tagName === 'SELECT' || 
@@ -83,6 +85,12 @@ export function makeDraggable(element, handle = null) {
             e.target.classList.contains('no-drag')) {
             return; 
         }
+
+        // === AQUI ESTÁ A MUDANÇA (Trazer para frente) ===
+        highestZIndex++;
+        element.style.zIndex = highestZIndex;
+        // ===============================================
+        
         e = e || window.event;
         e.preventDefault();
         pos3 = e.clientX;
@@ -90,6 +98,7 @@ export function makeDraggable(element, handle = null) {
         document.onmouseup = closeDragElement;
         document.onmousemove = elementDrag;
     }
+
     function elementDrag(e) {
         e = e || window.event;
         e.preventDefault();
@@ -100,6 +109,7 @@ export function makeDraggable(element, handle = null) {
         element.style.top = (element.offsetTop - pos2) + "px";
         element.style.left = (element.offsetLeft - pos1) + "px";
     }
+
     function closeDragElement() {
         document.onmouseup = null;
         document.onmousemove = null;
@@ -107,8 +117,9 @@ export function makeDraggable(element, handle = null) {
 }
 
 // =========================================================
-//           ESTILOS PADRÃO (Com atualizações)
+//           ESTILOS PADRÃO
 // =========================================================
+
 export const styleFloatingButton = {
     position: "fixed",
     right: "20px",
@@ -129,6 +140,7 @@ export const styleFloatingButton = {
     transform: 'scale(1)', 
     fontFamily: "'Poppins', sans-serif"
 };
+
 export const stylePopup = {
     position: "fixed",
     top: "calc(50% - 250px)",
@@ -147,6 +159,7 @@ export const stylePopup = {
     pointerEvents: "none",
     fontFamily: "'Poppins', sans-serif"
 };
+
 export const stylePopupHeader = {
     display: "flex",
     alignItems: "center",
@@ -158,18 +171,21 @@ export const stylePopupHeader = {
     userSelect: "none",
     gap: "10px"
 };
+
 export const stylePopupTitle = {
     fontSize: "18px",
     fontWeight: "600",
     color: "#202124",
     flexGrow: "1"
 };
+
 export const stylePopupVersion = {
     fontSize: "12px",
     fontWeight: "400",
     color: "#70757a",
     marginTop: "4px",
 };
+
 export const stylePopupCloseBtn = {
     fontSize: "20px",
     color: "#5f6368",
@@ -181,6 +197,7 @@ export const stylePopupCloseBtn = {
     zIndex: "10",
     marginLeft: "8px"
 };
+
 export const styleLabel = {
     display: "block",
     fontSize: "14px",
@@ -189,6 +206,7 @@ export const styleLabel = {
     marginBottom: "8px",
     marginTop: "16px"
 };
+
 export const styleSelect = {
     width: "100%",
     padding: "10px 36px 10px 12px", 
@@ -206,6 +224,7 @@ export const styleSelect = {
     transition: "border-color 0.2s ease, box-shadow 0.2s ease",
     fontFamily: "'Poppins', sans-serif"
 };
+
 export const styleButtonBase = {
     flex: "1 1 0",
     padding: "10px 0",
@@ -219,6 +238,7 @@ export const styleButtonBase = {
     transition: "background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease",
     boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
 };
+
 export const styleCredit = {
     fontSize: "10px",
     color: "#9aa0a6",
@@ -227,6 +247,7 @@ export const styleCredit = {
     borderTop: "1px solid #eee",
     marginTop: "16px"
 };
+
 export const styleExpandButton = {
     fontSize: "18px",
     color: "#5f6368",
@@ -238,7 +259,7 @@ export const styleExpandButton = {
     zIndex: "10"
 };
 
-// ===== NOVO ESTILO COMPARTILHADO (BAU/LT/LM) =====
+// ===== ESTILO COMPARTILHADO (BAU/LT/LM/PT/ES) =====
 export const typeBtnStyle = { 
     padding: '6px 12px', 
     cursor: 'pointer', 
@@ -251,6 +272,7 @@ export const typeBtnStyle = {
     textAlign: "center"
 };
 
+// ===== CORES DO GOOGLE (Para sorteio) =====
 const GOOGLE_COLORS_LIST = [
     { background: '#E8F0FE', color: '#1967D2' }, // Azul
     { background: '#FCE8E6', color: '#C5221F' }, // Vermelho
@@ -260,11 +282,9 @@ const GOOGLE_COLORS_LIST = [
 
 let lastColorIndex = -1;
 
-
 export function getRandomGoogleStyle() {
     let newIndex = Math.floor(Math.random() * GOOGLE_COLORS_LIST.length);
     
-
     if (newIndex === lastColorIndex) {
         newIndex = (newIndex + 1) % GOOGLE_COLORS_LIST.length;
     }
