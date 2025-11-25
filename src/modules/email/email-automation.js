@@ -71,8 +71,50 @@ async function openAndClearEmail() {
         }
     }
 
-    // 3. PREPARAÇÃO (Não limpa ainda, deixa para a função específica decidir)
-    return true;
+    // 3. LIMPEZA INICIAL E FOCO
+    const divConteudoTexto = document.getElementById('email-body-content-top-content');
+    const editorPai = document.querySelector('div[contenteditable="true"][aria-label="Email body"]') || divConteudoTexto;
+
+    if (divConteudoTexto && editorPai) {
+        const ancestral = editorPai.closest('[aria-hidden="true"]');
+        if (ancestral) ancestral.removeAttribute('aria-hidden');
+        
+        editorPai.focus();
+        simularCliqueReal(divConteudoTexto);
+        await esperar(500); 
+
+        const elementoSagrado = document.getElementById('cases-body-field');
+        if (elementoSagrado) {
+            // Limpeza Cirúrgica (para Canned Response)
+            while (elementoSagrado.nextSibling) elementoSagrado.nextSibling.remove();
+            while (elementoSagrado.previousSibling) elementoSagrado.previousSibling.remove();
+            
+            const avo = divConteudoTexto.parentElement; 
+            Array.from(avo.childNodes).forEach(tio => {
+                if (tio !== divConteudoTexto) avo.removeChild(tio);
+            });
+
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(elementoSagrado);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            document.execCommand('delete', false, null);
+            
+            return true; 
+        } else {
+            // Limpeza Total (Fallback)
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(divConteudoTexto);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            document.execCommand('delete', false, null);
+            return true;
+        }
+    }
+    showToast("Erro ao limpar editor.", { error: true });
+    return false;
 }
 
 // ============================================================
@@ -87,43 +129,6 @@ export async function runEmailAutomation(cannedResponseText) {
     const emailPronto = await openAndClearEmail();
     if (!emailPronto) return;
 
-    // Lógica de limpeza específica para Canned Response (Precisa do ID)
-    const divConteudoTexto = document.getElementById('email-body-content-top-content');
-    const editorPai = document.querySelector('div[contenteditable="true"][aria-label="Email body"]') || divConteudoTexto;
-    
-    if (divConteudoTexto && editorPai) {
-        const ancestral = editorPai.closest('[aria-hidden="true"]');
-        if (ancestral) ancestral.removeAttribute('aria-hidden');
-        
-        editorPai.focus();
-        simularCliqueReal(divConteudoTexto);
-        await esperar(500);
-
-        const elementoSagrado = document.getElementById('cases-body-field');
-        if (elementoSagrado) {
-            // Limpa vizinhos
-            while (elementoSagrado.nextSibling) elementoSagrado.nextSibling.remove();
-            while (elementoSagrado.previousSibling) elementoSagrado.previousSibling.remove();
-            const avo = divConteudoTexto.parentElement; 
-            Array.from(avo.childNodes).forEach(tio => {
-                if (tio !== divConteudoTexto) avo.removeChild(tio);
-            });
-            
-            // Esvazia o sagrado
-            const sel = window.getSelection();
-            const range = document.createRange();
-            range.selectNodeContents(elementoSagrado);
-            sel.removeAllRanges();
-            sel.addRange(range);
-            document.execCommand('delete', false, null);
-        } else {
-            // Fallback se não achar o ID
-            document.execCommand('selectAll', false, null);
-            document.execCommand('delete', false, null);
-        }
-    }
-
-    // --- LÓGICA CANNED RESPONSE ---
     await esperar(500);
     const btnCanned = document.querySelector('material-button[debug-id="canned_response_button"]');
     
@@ -142,7 +147,6 @@ export async function runEmailAutomation(cannedResponseText) {
             document.execCommand('insertText', false, cannedResponseText);
             searchInput.dispatchEvent(new Event('input', { bubbles: true }));
             
-            // Espera Ativa
             let opcaoAlvo = null;
             let tentativas = 0;
             while (tentativas < 20) { 
@@ -162,7 +166,6 @@ export async function runEmailAutomation(cannedResponseText) {
                 simularCliqueReal(opcaoAlvo);
                 await esperar(2000); 
 
-                // Substituir Nome
                 function encontrarNoDeTexto(elemento, textoParaAchar) {
                     if (elemento.nodeType === 3 && elemento.nodeValue.includes(textoParaAchar)) return elemento;
                     if (!elemento.childNodes) return null;
@@ -207,73 +210,62 @@ export async function runEmailAutomation(cannedResponseText) {
 }
 
 // ============================================================
-// FUNÇÃO 2: PARA QUICK EMAIL (HTML DIRETO) - CORRIGIDA
+// FUNÇÃO 2: PARA QUICK EMAIL (HTML DIRETO)
 // ============================================================
 export async function runQuickEmail(template) {
     console.log(`🚀 Iniciando automação (Quick): ${template.name}`);
     showToast(`Preparando email...`, { duration: 3000 });
 
     const pageData = getPageData(); 
-    const emailPronto = await openAndClearEmail(); // Apenas abre
+    const emailPronto = await openAndClearEmail(); // Já limpa o conteúdo
     
     if (!emailPronto) return;
 
-    // --- CORREÇÃO DA ORDEM ---
-    
-    // 1. PREENCHE ASSUNTO PRIMEIRO (Para tirar o foco do caminho)
-    const subjectInput = document.querySelector('input[aria-label="Subject"]');
-    if (subjectInput && template.subject) {
-        console.log("📝 Preenchendo assunto...");
-        subjectInput.value = template.subject;
-        subjectInput.dispatchEvent(new Event('input', { bubbles: true }));
-        await esperar(200);
+    // 1. Preencher Assunto (Se houver)
+    if (template.subject) {
+        const subjectInput = document.querySelector('input[aria-label="Subject"]');
+        if (subjectInput) {
+            // Foca explicitamente no assunto para garantir que o insertHTML não vá para lá
+            subjectInput.focus();
+            subjectInput.value = template.subject;
+            subjectInput.dispatchEvent(new Event('input', { bubbles: true }));
+            await esperar(200);
+        }
     }
 
-    // 2. DEPOIS FOCA NO CORPO E LIMPA/INSERE
+    // 2. Focar no Corpo para Inserção
     const divConteudoTexto = document.getElementById('email-body-content-top-content');
     const editorPai = document.querySelector('div[contenteditable="true"][aria-label="Email body"]') || divConteudoTexto;
     
-    if (editorPai) {
-        console.log("📝 Preenchendo corpo...");
+    if (editorPai && divConteudoTexto) {
         
-        // Destrava e Foca
-        const ancestral = editorPai.closest('[aria-hidden="true"]');
-        if (ancestral) ancestral.removeAttribute('aria-hidden');
+        // Garante foco no editor
         editorPai.focus();
-        
-        // Clica para garantir
-        if (divConteudoTexto) simularCliqueReal(divConteudoTexto);
-        
+        simularCliqueReal(divConteudoTexto);
         await esperar(300);
+
+        // SELEÇÃO SEGURA (CORREÇÃO)
+        // Em vez de 'selectAll' (que pode pegar a página toda), usamos Range no conteúdo
+        const selection = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(divConteudoTexto); // Seleciona tudo DENTRO do texto
+        selection.removeAllRanges();
+        selection.addRange(range);
 
         // Substituição de Placeholders
         let finalBody = template.body;
         finalBody = finalBody.replace(/\[Nome do Cliente\]/g, pageData.advertiserName || "Cliente");
         finalBody = finalBody.replace(/\[INSERIR URL\]/g, pageData.websiteUrl || "seu site");
-        // Substitui seu nome
-        finalBody = finalBody.replace(/\[Seu Nome\]/g, "Agente Google"); // Você pode pegar isso de algum lugar se quiser
+        finalBody = finalBody.replace(/\[Seu Nome\]/g, "Agente Google"); 
 
-        // ESTRATÉGIA DE SOBRESCRITA: Selecionar Tudo -> Inserir HTML (Atomicamente)
-        document.execCommand('selectAll', false, null);
-        await esperar(50); // Breve pausa
-        
-        // Se o selectAll falhar (as vezes falha em divs vazias), usamos range
-        const selection = window.getSelection();
-        if (selection.rangeCount === 0 || selection.toString().length === 0) {
-            const range = document.createRange();
-            range.selectNodeContents(editorPai);
-            selection.removeAllRanges();
-            selection.addRange(range);
-        }
-
-        // Insere por cima de tudo
+        // Insere por cima da seleção
         document.execCommand('insertHTML', false, finalBody);
         
-        // Dispara evento para garantir que o Angular viu
+        // Atualiza o Angular
         editorPai.dispatchEvent(new Event('input', { bubbles: true }));
         
         showToast("Email preenchido com sucesso!", { duration: 2000 });
     } else {
-        showToast("Erro ao focar no editor.", { error: true });
+        showToast("Erro ao focar no editor para inserção.", { error: true });
     }
 }
