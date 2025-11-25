@@ -15,7 +15,7 @@ import { QUICK_EMAILS } from './quick-email-data.js';
 import { getPageData } from '../shared/page-data.js';
 
 export function initQuickEmailAssistant() {
-    const CURRENT_VERSION = "v2.0 (Material)"; 
+    const CURRENT_VERSION = "v2.1"; 
 
     // --- ESTADO DO MÓDULO ---
     let activeCategory = Object.keys(QUICK_EMAILS)[0]; 
@@ -126,14 +126,14 @@ export function initQuickEmailAssistant() {
     // --- ESTILOS EXTRAS ---
     const styleSearchInput = {
         width: "100%", padding: "10px 12px 10px 36px",
-        borderRadius: "8px", border: "none", background: "#f1f3f4",
+        borderRadius: "8px", border: "1px solid #f1f3f4", background: "#f8f9fa",
         fontSize: "14px", boxSizing: "border-box", outline: "none",
-        color: "#3c4043", marginBottom: "12px", transition: "background 0.2s"
+        color: "#3c4043", transition: "background 0.2s, border-color 0.2s"
     };
 
     const styleTabContainer = {
         display: "flex", gap: "8px", overflowX: "auto", 
-        paddingBottom: "8px", marginBottom: "8px",
+        paddingBottom: "8px", marginTop: "12px",
         borderBottom: "1px solid #dadce0", scrollbarWidth: "none"
     };
 
@@ -196,55 +196,74 @@ export function initQuickEmailAssistant() {
     btnContainer.appendChild(btn);
     btnContainer.appendChild(tooltip);
     document.body.appendChild(btnContainer);
-    
-    // CORREÇÃO: Arrastar o container inteiro
     makeDraggable(btnContainer);
 
     // --- POPUP ---
     const popup = document.createElement("div");
     popup.id = "quick-email-popup";
+    // Aumentado para 380px para caber melhor os títulos
     Object.assign(popup.style, stylePopup, { 
-        right: "100px", width: "340px", borderRadius: "12px",
-        display: "flex", flexDirection: "column", maxHeight: "550px"
+        right: "100px", width: "380px", borderRadius: "12px",
+        display: "flex", flexDirection: "column", maxHeight: "600px"
     });
 
+    // Header Principal
     const header = document.createElement("div");
-    Object.assign(header.style, stylePopupHeader, { padding: "16px 16px 8px 16px", borderBottom: "none" });
+    Object.assign(header.style, stylePopupHeader, { 
+        padding: "16px", 
+        borderBottom: "none", 
+        flexDirection: "column", // Muda para coluna para empilhar Topo, Busca e Abas
+        alignItems: "stretch",
+        height: "auto"
+    });
     makeDraggable(popup, header);
 
-    const headerTop = document.createElement("div");
-    Object.assign(headerTop.style, { display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", marginBottom: "12px" });
+    // Linha 1: Logo, Título/Versão, Fechar
+    const headerTopRow = document.createElement("div");
+    Object.assign(headerTopRow.style, { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" });
     
-    const titleGroup = document.createElement("div");
-    Object.assign(titleGroup.style, { display: "flex", alignItems: "center", gap: "8px" });
-    
+    const headerLeft = document.createElement("div");
+    Object.assign(headerLeft.style, { display: "flex", alignItems: "center", gap: "12px" });
+
     const logo = document.createElement("img");
     logo.src = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
-    Object.assign(logo.style, { width: "20px", height: "20px" });
+    Object.assign(logo.style, { width: "24px", height: "24px" });
+
+    const titleContainer = document.createElement("div");
+    Object.assign(titleContainer.style, { display: 'flex', flexDirection: 'column' });
     
     const titleText = document.createElement("span");
     titleText.textContent = "Quick Email";
-    Object.assign(titleText.style, stylePopupTitle, { fontSize: "16px" });
+    Object.assign(titleText.style, stylePopupTitle, { fontSize: "16px", lineHeight: "1.2" });
+    
+    const versionDisplay = document.createElement("div");
+    versionDisplay.textContent = CURRENT_VERSION;
+    Object.assign(versionDisplay.style, stylePopupVersion);
+
+    titleContainer.appendChild(titleText);
+    titleContainer.appendChild(versionDisplay);
+    
+    headerLeft.appendChild(logo);
+    headerLeft.appendChild(titleContainer);
 
     const closeIcon = document.createElement("div");
     closeIcon.textContent = "✕";
     Object.assign(closeIcon.style, stylePopupCloseBtn, { fontSize: "14px", color: "#5f6368" });
     closeIcon.onclick = () => togglePopup(false);
 
-    titleGroup.appendChild(logo);
-    titleGroup.appendChild(titleText);
-    headerTop.appendChild(titleGroup);
-    headerTop.appendChild(closeIcon);
-    header.appendChild(headerTop);
+    headerTopRow.appendChild(headerLeft);
+    headerTopRow.appendChild(closeIcon);
+    header.appendChild(headerTopRow);
 
+    // Linha 2: Busca (Separada para não quebrar layout)
     const searchContainer = document.createElement("div");
     Object.assign(searchContainer.style, { position: "relative", width: "100%" });
     
     const searchIcon = document.createElement("span");
     searchIcon.innerHTML = "🔍"; 
     Object.assign(searchIcon.style, { 
-        position: "absolute", left: "10px", top: "50%", transform: "translateY(-50%)", 
-        fontSize: "12px", opacity: "0.5", pointerEvents: "none"
+        position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", 
+        fontSize: "14px", opacity: "0.5", pointerEvents: "none"
     });
 
     const searchInput = document.createElement("input");
@@ -252,20 +271,27 @@ export function initQuickEmailAssistant() {
     searchInput.placeholder = "Buscar template...";
     Object.assign(searchInput.style, styleSearchInput);
     
+    // Foco na busca (efeito visual)
+    searchInput.onfocus = () => searchInput.style.borderColor = "#1a73e8";
+    searchInput.onblur = () => searchInput.style.borderColor = "#f1f3f4";
+
     searchContainer.appendChild(searchIcon);
     searchContainer.appendChild(searchInput);
     header.appendChild(searchContainer);
 
+    // Linha 3: Abas
     const tabsContainer = document.createElement("div");
     Object.assign(tabsContainer.style, styleTabContainer);
     
+    // Esconde scrollbar
     const styleSheet = document.createElement("style");
     styleSheet.textContent = `#quick-email-popup ::-webkit-scrollbar { display: none; }`;
     popup.appendChild(styleSheet);
+    
     header.appendChild(tabsContainer);
-
     popup.appendChild(header);
 
+    // Conteúdo
     const contentArea = document.createElement("div");
     Object.assign(contentArea.style, { 
         padding: "0 8px 8px 8px", 
@@ -274,18 +300,20 @@ export function initQuickEmailAssistant() {
     });
     popup.appendChild(contentArea);
 
+    // Footer
     const footer = document.createElement("div");
     Object.assign(footer.style, { 
         padding: "8px 16px", borderTop: "1px solid #eee", 
         display: "flex", justifyContent: "space-between", alignItems: "center",
         fontSize: "10px", color: "#9aa0a6"
     });
-    footer.innerHTML = `<span>${CURRENT_VERSION}</span><span>by lucaste@</span>`;
+    footer.innerHTML = `<span>by lucaste@</span>`;
     popup.appendChild(footer);
 
     document.body.appendChild(popup);
 
-    // --- FUNÇÕES DE RENDERIZAÇÃO ---
+    // --- RENDERIZAÇÃO ---
+
     function renderTabs() {
         tabsContainer.innerHTML = "";
         Object.keys(QUICK_EMAILS).forEach(catKey => {
