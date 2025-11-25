@@ -5,6 +5,7 @@ import { getPageData } from '../shared/page-data.js';
 const esperar = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 function simularCliqueReal(elemento) {
+    if (!elemento) return;
     const opts = { bubbles: true, cancelable: true, view: window };
     ['mouseover', 'mousedown', 'mouseup', 'click'].forEach(evt => 
         elemento.dispatchEvent(new MouseEvent(evt, opts))
@@ -70,47 +71,32 @@ async function openAndClearEmail() {
         }
     }
 
-    // 3. LIMPEZA E FOCO
+    // 3. LIMPEZA RADICAL E FOCO
     const divConteudoTexto = document.getElementById('email-body-content-top-content');
-    const editorPai = document.querySelector('div[contenteditable="true"][aria-label="Email body"]') || divConteudoTexto;
+    const editorPai = document.querySelector('div[contenteditable="true"][aria-label="Email body"]');
 
     if (divConteudoTexto && editorPai) {
         const ancestral = editorPai.closest('[aria-hidden="true"]');
         if (ancestral) ancestral.removeAttribute('aria-hidden');
         
         editorPai.focus();
-        simularCliqueReal(divConteudoTexto);
-        await esperar(500); 
+        await esperar(300);
 
+        // --- LIMPEZA VIA INNERHTML ---
+        // Esvazia o HTML e recria o span obrigatório (para Canned Responses)
+        // Para Quick Email, vamos escrever sobre isso, então não atrapalha.
+        divConteudoTexto.innerHTML = '<span id="cases-body-field"><br></span>';
+        
+        // Coloca o cursor DENTRO do span
         const elementoSagrado = document.getElementById('cases-body-field');
-        if (elementoSagrado) {
-            // Limpeza Cirúrgica
-            while (elementoSagrado.nextSibling) elementoSagrado.nextSibling.remove();
-            while (elementoSagrado.previousSibling) elementoSagrado.previousSibling.remove();
-            
-            const avo = divConteudoTexto.parentElement; 
-            Array.from(avo.childNodes).forEach(tio => {
-                if (tio !== divConteudoTexto) avo.removeChild(tio);
-            });
-
-            const selection = window.getSelection();
-            const range = document.createRange();
-            range.selectNodeContents(elementoSagrado);
-            selection.removeAllRanges();
-            selection.addRange(range);
-            document.execCommand('delete', false, null);
-            
-            return true; 
-        } else {
-            // Limpeza Total (Fallback)
-            const selection = window.getSelection();
-            const range = document.createRange();
-            range.selectNodeContents(divConteudoTexto);
-            selection.removeAllRanges();
-            selection.addRange(range);
-            document.execCommand('delete', false, null);
-            return true;
-        }
+        const range = document.createRange();
+        range.selectNodeContents(elementoSagrado);
+        range.collapse(true); 
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+        
+        return true; // Sucesso
     }
     
     showToast("Erro ao acessar editor.", { error: true });
@@ -127,22 +113,6 @@ export async function runEmailAutomation(cannedResponseText) {
     const pageData = getPageData();
     const emailPronto = await openAndClearEmail();
     if (!emailPronto) return;
-
-    // Recria span se necessário (garante lugar para o Canned Response)
-    const divConteudoTexto = document.getElementById('email-body-content-top-content');
-    if (divConteudoTexto && !document.getElementById('cases-body-field')) {
-        divConteudoTexto.innerHTML = '<span id="cases-body-field"><br></span>';
-    }
-    
-    // Foca no span
-    const elementoSagrado = document.getElementById('cases-body-field');
-    if (elementoSagrado) {
-        const range = document.createRange();
-        range.selectNodeContents(elementoSagrado);
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-    }
 
     // --- LÓGICA CANNED RESPONSE ---
     await esperar(500);
@@ -182,6 +152,7 @@ export async function runEmailAutomation(cannedResponseText) {
                 simularCliqueReal(opcaoAlvo);
                 await esperar(2000); 
 
+                // Substituir Nome
                 function encontrarNoDeTexto(elemento, textoParaAchar) {
                     if (elemento.nodeType === 3 && elemento.nodeValue.includes(textoParaAchar)) return elemento;
                     if (!elemento.childNodes) return null;
@@ -193,24 +164,19 @@ export async function runEmailAutomation(cannedResponseText) {
                 }
 
                 const elSagradoAtualizado = document.getElementById('cases-body-field');
-                const spansFields = elSagradoAtualizado ? elSagradoAtualizado.querySelectorAll('span.field') : [];
-                let noAlvo = null;
-
-                for (let span of spansFields) {
-                    const res = encontrarNoDeTexto(span, '{%ADVERTISER_NAME%}');
-                    if (res) { noAlvo = res; break; }
-                }
+                const containerBusca = elSagradoAtualizado || document.getElementById('email-body-content-top-content');
                 
-                if (!noAlvo && elSagradoAtualizado) noAlvo = encontrarNoDeTexto(elSagradoAtualizado, '{%ADVERTISER_NAME%}');
+                let noAlvo = encontrarNoDeTexto(containerBusca, '{%ADVERTISER_NAME%}');
 
                 if (noAlvo) {
-                    const range = document.createRange();
+                    const rangeToken = document.createRange();
                     const start = noAlvo.nodeValue.indexOf('{%ADVERTISER_NAME%}');
-                    range.setStart(noAlvo, start);
-                    range.setEnd(noAlvo, start + '{%ADVERTISER_NAME%}'.length);
+                    rangeToken.setStart(noAlvo, start);
+                    rangeToken.setEnd(noAlvo, start + '{%ADVERTISER_NAME%}'.length);
+                    
                     const sel = window.getSelection();
                     sel.removeAllRanges();
-                    sel.addRange(range);
+                    sel.addRange(rangeToken);
                     
                     document.execCommand('insertText', false, pageData.advertiserName);
                     showToast("Email preenchido!");
@@ -248,37 +214,29 @@ export async function runQuickEmail(template) {
         await esperar(300);
     }
 
-    // 2. Preparar Corpo (IGUAL AO CANNED: Garante o span sagrado)
+    // 2. Inserir Corpo
     const divConteudoTexto = document.getElementById('email-body-content-top-content');
     const editorPai = document.querySelector('div[contenteditable="true"][aria-label="Email body"]') || divConteudoTexto;
     
-    if (editorPai && divConteudoTexto) {
+    if (editorPai) {
         editorPai.focus();
-
-        // MUDANÇA AQUI: Se não tiver o span sagrado, CRIAMOS ele.
-        // Isso garante que estamos escrevendo "dentro da caixa" correta e apagando o resto.
-        if (!document.getElementById('cases-body-field')) {
-            divConteudoTexto.innerHTML = '<span id="cases-body-field"><br></span>';
-        }
-
-        // Agora selecionamos o interior desse span
-        const elementoSagrado = document.getElementById('cases-body-field');
-        const range = document.createRange();
-        range.selectNodeContents(elementoSagrado);
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(range);
-
+        
         // Substituição de Placeholders
         let finalBody = template.body;
         finalBody = finalBody.replace(/\[Nome do Cliente\]/g, pageData.advertiserName || "Cliente");
         finalBody = finalBody.replace(/\[INSERIR URL\]/g, pageData.websiteUrl || "seu site");
+        // Substitui seu nome
         finalBody = finalBody.replace(/\[Seu Nome\]/g, "Agente Google"); 
 
-        // Insere
+        // CORREÇÃO: Inserção Simples
+        // Como openAndClearEmail já deixou o cursor no lugar certo (dentro do span vazio),
+        // basta inserir o HTML.
         document.execCommand('insertHTML', false, finalBody);
         
+        // Dispara eventos para o Angular registrar a mudança
         editorPai.dispatchEvent(new Event('input', { bubbles: true }));
+        editorPai.dispatchEvent(new Event('change', { bubbles: true }));
+        
         showToast("Email preenchido com sucesso!", { duration: 2000 });
     } else {
         showToast("Erro ao focar no editor.", { error: true });
