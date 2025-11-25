@@ -6,46 +6,29 @@ const esperar = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 function simularCliqueReal(elemento) {
     const opts = { bubbles: true, cancelable: true, view: window };
-    elemento.dispatchEvent(new MouseEvent('mouseover', opts));
-    elemento.dispatchEvent(new MouseEvent('mousedown', opts));
-    elemento.dispatchEvent(new MouseEvent('mouseup', opts));
-    elemento.dispatchEvent(new MouseEvent('click', opts));
+    ['mouseover', 'mousedown', 'mouseup', 'click'].forEach(evt => 
+        elemento.dispatchEvent(new MouseEvent(evt, opts))
+    );
 }
 
-export async function runEmailAutomation(cannedResponseText) {
-    if (!cannedResponseText) return;
-
-    console.log(`🚀 Iniciando automação: ${cannedResponseText}`);
-    showToast(`Iniciando automação de email...`, { duration: 3000 });
-
-    // --- PASSO 0: CAPTURAR DADOS ---
-    const pageData = getPageData();
-    console.log("Dados capturados:", pageData);
-
-    // --- PASSO 1: ABRIR EMAIL (LÓGICA SNIPER / DIRETA) ---
+// --- FUNÇÃO COMPARTILHADA: ABRIR E LIMPAR ---
+// Esta função é usada tanto pelas Notas quanto pelo Quick Email
+async function openAndClearEmail() {
+    // 1. ABRIR EMAIL
     let emailAberto = false;
-
-    // 1. Busca ícone de email em todo o DOM (mesmo oculto no menu)
     const todosIcones = Array.from(document.querySelectorAll('i.material-icons-extended'));
     const iconeEmail = todosIcones.find(el => el.innerText.trim() === 'email');
 
     if (iconeEmail) {
-        console.log("⚡ Modo Rápido: Ícone de email encontrado. Clicando direto...");
-        // Tenta achar o botão pai para clicar nele (mais seguro para o Angular)
+        console.log("⚡ Modo Rápido: Ícone encontrado.");
         const botaoAlvo = iconeEmail.closest('material-button') || iconeEmail.closest('material-fab') || iconeEmail;
-        
-        // Hack: Força visibilidade caso esteja oculto pelo menu fechado
         if (botaoAlvo.style) {
             botaoAlvo.style.display = 'block';
             botaoAlvo.style.visibility = 'visible';
         }
-        
         simularCliqueReal(botaoAlvo);
         emailAberto = true;
     } else {
-        console.log("⚠️ Modo Rápido falhou (botão não achado). Tentando via Menu (+)...");
-        
-        // Fallback: Lógica antiga (Abrir menu +)
         const speedDial = document.querySelector('material-fab-speed-dial');
         if (speedDial) {
             const triggerBtn = speedDial.querySelector('.trigger');
@@ -53,8 +36,6 @@ export async function runEmailAutomation(cannedResponseText) {
                 triggerBtn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
                 simularCliqueReal(triggerBtn);
                 await esperar(1000);
-                
-                // Tenta achar de novo agora que o menu abriu
                 const iconesNovos = Array.from(document.querySelectorAll('i.material-icons-extended'));
                 const emailBtnNovo = iconesNovos.find(el => el.innerText.trim() === 'email');
                 if (emailBtnNovo) {
@@ -67,173 +48,193 @@ export async function runEmailAutomation(cannedResponseText) {
         }
     }
 
-    // Verifica se abriu, senão tenta esperar um pouco mais
-    if (!emailAberto && !document.getElementById('email-body-content-top-content')) {
-         await esperar(1000);
-         if (!document.getElementById('email-body-content-top-content')) {
-            // Se falhar aqui, não paramos totalmente, pois o email pode já estar aberto
-            console.warn("⚠️ Email não detectado imediatamente. Tentando seguir...");
-         }
+    // Verifica abertura
+    let tentativas = 0;
+    while (!document.getElementById('email-body-content-top-content') && tentativas < 15) {
+        await esperar(500);
+        tentativas++;
     }
 
-    // Aguarda o carregamento da janela
-    await esperar(3000); 
+    if (!document.getElementById('email-body-content-top-content')) {
+        showToast("Erro: Editor de email não abriu.", { error: true });
+        return false;
+    }
 
-    // ===== PASSO 2: VERIFICAÇÃO DE RASCUNHO =====
+    // 2. DESCARTAR RASCUNHO
     const btnDiscardDraft = document.querySelector('material-button[debug-id="discard-prewrite-draft-button"]');
-    
     if (btnDiscardDraft) {
-        console.log("⚠️ Sugestão de rascunho detectada. Descartando...");
         simularCliqueReal(btnDiscardDraft);
-        await esperar(1000);
-        
+        await esperar(800);
         const btnConfirm = document.querySelector('material-button[debug-id="confirm-button"]');
         if (btnConfirm) {
-            console.log("✅ Confirmando descarte...");
             simularCliqueReal(btnConfirm);
-            await esperar(2000);
+            await esperar(1500);
         }
     }
 
-    // --- PASSO 3: LIMPEZA E FOCO ---
+    // 3. LIMPEZA E FOCO
     const divConteudoTexto = document.getElementById('email-body-content-top-content');
-    // Seletor robusto para o editor
-    const editorPai = document.querySelector('div[contenteditable="true"][aria-label="Email body"]') || document.getElementById('email-body-content-top-content');
+    const editorPai = document.querySelector('div[contenteditable="true"][aria-label="Email body"]') || divConteudoTexto;
 
     if (divConteudoTexto && editorPai) {
-        // Destrava acessibilidade
         const ancestral = editorPai.closest('[aria-hidden="true"]');
         if (ancestral) ancestral.removeAttribute('aria-hidden');
         
         editorPai.focus();
-        simularCliqueReal(divConteudoTexto); // Garante o cursor dentro
-        await esperar(500); 
+        simularCliqueReal(divConteudoTexto);
+        await esperar(300); 
 
         const elementoSagrado = document.getElementById('cases-body-field');
-
         if (elementoSagrado) {
-            // Limpa vizinhos internos (Olá, Atentamente)
             while (elementoSagrado.nextSibling) elementoSagrado.nextSibling.remove();
             while (elementoSagrado.previousSibling) elementoSagrado.previousSibling.remove();
-
-            // Limpa vizinhos externos (gTech, ID)
+            
             const avo = divConteudoTexto.parentElement; 
             Array.from(avo.childNodes).forEach(tio => {
                 if (tio !== divConteudoTexto) avo.removeChild(tio);
             });
 
-            // Limpa DENTRO do sagrado (Placeholder)
             const selection = window.getSelection();
             const range = document.createRange();
             range.selectNodeContents(elementoSagrado);
             selection.removeAllRanges();
             selection.addRange(range);
             document.execCommand('delete', false, null);
-
-            // --- PASSO 4: CANNED RESPONSE ---
-            await esperar(500);
-            const btnCanned = document.querySelector('material-button[debug-id="canned_response_button"]');
             
-            if (btnCanned) {
-                btnCanned.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                await esperar(200); 
-                simularCliqueReal(btnCanned);
-                
-                // --- PASSO 5: PESQUISAR ---
-                await esperar(2000); 
-                const searchInput = document.querySelector('material-auto-suggest-input input');
-                
-                if (searchInput) {
-                    simularCliqueReal(searchInput);
-                    await esperar(200);
-                    
-                    document.execCommand('insertText', false, cannedResponseText);
-                    searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-                    
-                    // Espera Ativa pela Lista
-                    let opcaoAlvo = null;
-                    let tentativas = 0;
-                    while (tentativas < 20) { 
-                        await esperar(500);
-                        tentativas++;
-                        const opcoes = Array.from(document.querySelectorAll('material-select-dropdown-item'));
-                        if (opcoes.length > 0) {
-                             // Busca pelo texto
-                             opcaoAlvo = opcoes.find(opt => 
-                                opt.innerText.toLowerCase().includes(cannedResponseText.toLowerCase())
-                            );
-                            
-                            // Fallback de opção única
-                            if (!opcaoAlvo && opcoes.length === 1) {
-                                opcaoAlvo = opcoes[0];
-                            }
-                            
-                            if (opcaoAlvo) break;
-                        }
-                    }
+            return true; // Sucesso
+        }
+    }
+    showToast("Erro ao limpar editor.", { error: true });
+    return false;
+}
 
-                    if (opcaoAlvo) {
-                        simularCliqueReal(opcaoAlvo);
-                        await esperar(2000); 
+// ============================================================
+// FUNÇÃO 1: PARA NOTAS (CANNED RESPONSE)
+// ============================================================
+export async function runEmailAutomation(cannedResponseText) {
+    if (!cannedResponseText) return;
+    console.log(`🚀 Iniciando automação (Canned): ${cannedResponseText}`);
+    showToast(`Preparando email...`, { duration: 3000 });
 
-                        // --- PASSO 7: SUBSTITUIR NOME ---
-                        function encontrarNoDeTexto(elemento, textoParaAchar) {
-                            if (elemento.nodeType === 3) { 
-                                if (elemento.nodeValue.includes(textoParaAchar)) return elemento;
-                            }
-                            if (!elemento.childNodes) return null;
-                            for (let child of elemento.childNodes) {
-                                const achou = encontrarNoDeTexto(child, textoParaAchar);
-                                if (achou) return achou;
-                            }
-                            return null;
-                        }
+    const pageData = getPageData(); // Captura dados
 
-                        const elSagradoAtualizado = document.getElementById('cases-body-field');
-                        // Pega todos os spans field (pois o template pode criar vários)
-                        const spansFields = elSagradoAtualizado ? elSagradoAtualizado.querySelectorAll('span.field') : [];
-                        let noAlvo = null;
+    // Chama a função compartilhada de abertura/limpeza
+    const emailPronto = await openAndClearEmail();
+    if (!emailPronto) return;
 
-                        for (let span of spansFields) {
-                            const resultado = encontrarNoDeTexto(span, '{%ADVERTISER_NAME%}');
-                            if (resultado) {
-                                noAlvo = resultado;
-                                break;
-                            }
-                        }
-
-                        // Fallback: busca no elemento inteiro se não achar nos fields
-                        if (!noAlvo && elSagradoAtualizado) {
-                             noAlvo = encontrarNoDeTexto(elSagradoAtualizado, '{%ADVERTISER_NAME%}');
-                        }
-
-                        if (noAlvo) {
-                            const rangeToken = document.createRange();
-                            const startOffset = noAlvo.nodeValue.indexOf('{%ADVERTISER_NAME%}');
-                            const endOffset = startOffset + '{%ADVERTISER_NAME%}'.length;
-                            
-                            rangeToken.setStart(noAlvo, startOffset);
-                            rangeToken.setEnd(noAlvo, endOffset);
-                            
-                            selection.removeAllRanges();
-                            selection.addRange(rangeToken);
-                            
-                            // Substitui pelo nome capturado no Passo 0
-                            document.execCommand('insertText', false, pageData.advertiserName);
-                            showToast("Email preenchido e personalizado!");
-                        } else {
-                            showToast("Email preenchido, mas nome não substituído.", { error: true });
-                        }
-
-                    } else {
-                        showToast(`Template '${cannedResponseText}' não encontrado.`, { error: true });
-                    }
+    // --- LÓGICA ESPECÍFICA DE CANNED RESPONSE ---
+    await esperar(500);
+    const btnCanned = document.querySelector('material-button[debug-id="canned_response_button"]');
+    
+    if (btnCanned) {
+        btnCanned.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        await esperar(200); 
+        simularCliqueReal(btnCanned);
+        
+        await esperar(1500); 
+        const searchInput = document.querySelector('material-auto-suggest-input input');
+        
+        if (searchInput) {
+            simularCliqueReal(searchInput);
+            await esperar(200);
+            
+            document.execCommand('insertText', false, cannedResponseText);
+            searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+            
+            // Espera Ativa
+            let opcaoAlvo = null;
+            let tentativas = 0;
+            while (tentativas < 20) { 
+                await esperar(500);
+                tentativas++;
+                const opcoes = Array.from(document.querySelectorAll('material-select-dropdown-item'));
+                if (opcoes.length > 0) {
+                        opcaoAlvo = opcoes.find(opt => 
+                        opt.innerText.toLowerCase().includes(cannedResponseText.toLowerCase())
+                    );
+                    if (!opcaoAlvo && opcoes.length === 1) opcaoAlvo = opcoes[0];
+                    if (opcaoAlvo) break;
                 }
             }
-        } else {
-             showToast("Botão de Canned Response não encontrado.", { error: true });
+
+            if (opcaoAlvo) {
+                simularCliqueReal(opcaoAlvo);
+                await esperar(2000); 
+
+                // Substituir Nome (Lógica específica do Canned Response)
+                function encontrarNoDeTexto(elemento, textoParaAchar) {
+                    if (elemento.nodeType === 3 && elemento.nodeValue.includes(textoParaAchar)) return elemento;
+                    if (!elemento.childNodes) return null;
+                    for (let child of elemento.childNodes) {
+                        const achou = encontrarNoDeTexto(child, textoParaAchar);
+                        if (achou) return achou;
+                    }
+                    return null;
+                }
+
+                const elSagrado = document.getElementById('cases-body-field');
+                const spansFields = elSagrado ? elSagrado.querySelectorAll('span.field') : [];
+                let noAlvo = null;
+
+                for (let span of spansFields) {
+                    const res = encontrarNoDeTexto(span, '{%ADVERTISER_NAME%}');
+                    if (res) { noAlvo = res; break; }
+                }
+                if (!noAlvo && elSagrado) noAlvo = encontrarNoDeTexto(elSagrado, '{%ADVERTISER_NAME%}');
+
+                if (noAlvo) {
+                    const range = document.createRange();
+                    const start = noAlvo.nodeValue.indexOf('{%ADVERTISER_NAME%}');
+                    range.setStart(noAlvo, start);
+                    range.setEnd(noAlvo, start + '{%ADVERTISER_NAME%}'.length);
+                    const sel = window.getSelection();
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                    
+                    document.execCommand('insertText', false, pageData.advertiserName);
+                    showToast("Email preenchido!");
+                } else {
+                    showToast("Email inserido (Nome não substituído).");
+                }
+            } else {
+                showToast(`Template '${cannedResponseText}' não encontrado.`, { error: true });
+            }
         }
     } else {
-        showToast("Editor de email não encontrado.", { error: true });
+        showToast("Botão Canned Response não achado.", { error: true });
     }
+}
+
+// ============================================================
+// FUNÇÃO 2: PARA QUICK EMAIL (HTML DIRETO)
+// ============================================================
+export async function runQuickEmail(template) {
+    console.log(`🚀 Iniciando automação (Quick): ${template.name}`);
+    showToast(`Preparando email...`, { duration: 3000 });
+
+    const pageData = getPageData(); // Captura dados
+
+    // Chama a função compartilhada de abertura/limpeza
+    const emailPronto = await openAndClearEmail();
+    if (!emailPronto) return;
+
+    // --- LÓGICA ESPECÍFICA DE HTML ---
+    
+    // Preencher Assunto
+    const subjectInput = document.querySelector('input[aria-label="Subject"]');
+    if (subjectInput && template.subject) {
+        subjectInput.value = template.subject;
+        subjectInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    // Substituição de Placeholders nos dados brutos
+    let finalBody = template.body;
+    finalBody = finalBody.replace(/\[Nome do Cliente\]/g, pageData.advertiserName || "Cliente");
+    finalBody = finalBody.replace(/\[INSERIR URL\]/g, pageData.websiteUrl || "seu site");
+    // Pode adicionar outros replaces aqui se necessário
+
+    // Inserção
+    document.execCommand('insertHTML', false, finalBody);
+    
+    showToast("Email preenchido com sucesso!", { duration: 2000 });
 }
