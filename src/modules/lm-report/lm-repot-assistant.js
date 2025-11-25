@@ -8,14 +8,13 @@ import {
     stylePopupCloseBtn,
     stylePopupVersion,
     styleCredit,
-    showToast 
+    styleFloatingButton
 } from '../shared/utils.js';
 
-// --- BANCO DE DADOS DE LINKS ---
+// --- BANCO DE DADOS DE LINKS (Organizado por Abas) ---
 const LINKS_DB = {
     lm: {
         label: "LM Forms",
-        icon: "📊", 
         links: [
             { name: "Relatório de Ocorrências", url: "https://docs.google.com/forms/d/e/1FAIpQLSc6CamPehrREeVr7yCWMyqFETrFYYezNcLb_13W4yZDQkfY6Q/viewform", desc: "Reportar problemas operacionais" },
             { name: "Chamadas Excedidas (>50min)", url: "https://docs.google.com/forms/d/e/1FAIpQLSfE8EMHNJMTKYeA6XM2RZjZ9AQ4LhGk1Dwm_WLu3kcMdKMikA/viewform", desc: "Registro de chamadas longas" },
@@ -23,8 +22,7 @@ const LINKS_DB = {
         ]
     },
     qa: {
-        label: "QA & Quality",
-        icon: "✅",
+        label: "QA",
         links: [
             { name: "Elogios", url: "https://docs.google.com/forms/d/e/1FAIpQLSezY5K-trQDv0LkL5IoTlV0Tl0oOqGTEszylmgcbMRXcC9Weg/viewform", desc: "Feedback positivo" },
             { name: "Casos Complexos", url: "https://docs.google.com/forms/d/e/1FAIpQLSe26q1LEloFNRfOAVZtA7DCOQTqdu1BAEeWuxtK6oPwZhLp-A/viewform?resourcekey=0-c1N4h8gntza2gQowqYAqMw", desc: "Escalonamento técnico" }
@@ -32,7 +30,6 @@ const LINKS_DB = {
     },
     suporte: {
         label: "Central de Ajuda",
-        icon: "🔧",
         links: [
             { name: "Suporte Google Ads", url: "https://support.google.com/google-ads/", desc: "Help Center Oficial" },
             { name: "Suporte GA4", url: "https://support.google.com/analytics/", desc: "Documentação do Analytics" },
@@ -41,7 +38,6 @@ const LINKS_DB = {
     },
     outros: {
         label: "Diversos",
-        icon: "📂",
         links: [
             { name: "Solicitar Gravação", url: "https://support.google.com/policies/contact/sar", desc: "SAR Request" }
         ]
@@ -49,7 +45,7 @@ const LINKS_DB = {
 };
 
 export function initFeedbackAssistant() {
-    const CURRENT_VERSION = "v2.1";
+    const CURRENT_VERSION = "v2.7";
 
     // --- ESTADO ---
     let activeTab = 'lm'; 
@@ -95,6 +91,7 @@ export function initFeedbackAssistant() {
 
     const btn = document.createElement("button");
     btn.id = "feedback-floating-btn";
+    // Ícone SVG de Links/Bookmark
     btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M19 18l2 1V3c0-1.1-.9-2-2-2H8.99C7.89 1 7 1.9 7 3h10c1.1 0 2 .9 2 2v13zM15 5H5c-1.1 0-2 .9-2 2v16l7-3 7 3V7c0-1.1-.9-2-2-2z"/></svg>`;
 
     Object.assign(btn.style, {

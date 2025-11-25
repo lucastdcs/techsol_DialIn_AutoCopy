@@ -16,7 +16,7 @@ import { QUICK_EMAILS } from './quick-email-data.js';
 import { getPageData } from '../shared/page-data.js';
 
 export function initQuickEmailAssistant() {
-    const CURRENT_VERSION = "v2.2"; // Versão Consolidada
+    const CURRENT_VERSION = "v2.8"; // Versão Consolidada
 
     // --- ESTADO DO MÓDULO ---
     let activeCategory = Object.keys(QUICK_EMAILS)[0]; 
