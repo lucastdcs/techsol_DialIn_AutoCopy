@@ -1268,7 +1268,6 @@ function triggerInputEvents(element) {
 }
   
 generateButton.onclick = () => {
-        // 1. Verificações de Segurança
         const selectedSubStatusKey = subStatusSelect.value;
         const htmlOutput = generateOutputHtml();
 
@@ -1277,75 +1276,49 @@ generateButton.onclick = () => {
             return;
         }
 
-        // 2. Copia para a área de transferência
         copyHtmlToClipboard(htmlOutput);
 
-        // 3. Busca o editor VISÍVEL
-        const campo = getVisibleEditor();
+        const campo = getVisibleEditor(); // Função definida abaixo
 
         if (campo) {
             try {
                 campo.focus();
                 
-                // ===== CORREÇÃO AQUI: SELEÇÃO SEGURA =====
-                // Em vez de 'selectAll' (que é perigoso), usamos Range.
-                // Isso garante que a ação fique presa DENTRO do campo, nunca vazando para a página.
-                
+                // SELEÇÃO SEGURA (Range)
                 const isEmpty = campo.innerHTML.trim() === '<p><br></p>' || campo.innerHTML.trim() === '<br>' || campo.innerText.trim() === '';
 
                 if (isEmpty) {
-                    // Se estiver "vazio" (apenas tags de formatação), limpa tudo com segurança
                     const selection = window.getSelection();
                     const range = document.createRange();
-                    range.selectNodeContents(campo); // Seleciona APENAS o conteúdo deste campo
+                    range.selectNodeContents(campo);
                     selection.removeAllRanges();
                     selection.addRange(range);
                     document.execCommand('delete', false, null);
                 } else {
-                    // Se já tiver texto, adiciona quebras de linha no final
-                    // Verifica se já não tem os <br> para não duplicar
                     if (!campo.innerHTML.endsWith('<br><br>')) {
-                         // Move o cursor para o final antes de inserir
                          const selection = window.getSelection();
                          const range = document.createRange();
                          range.selectNodeContents(campo);
-                         range.collapse(false); // false = ir para o final
+                         range.collapse(false);
                          selection.removeAllRanges();
                          selection.addRange(range);
-                         
                          document.execCommand('insertHTML', false, '<br><br>');
                     }
                 }
-                // ========================================
 
-                // INSERÇÃO DO CONTEÚDO
                 const success = document.execCommand('insertHTML', false, htmlOutput);
-                
-                if (!success) {
-                    // Fallback seguro
-                    campo.innerHTML += htmlOutput;
-                }
+                if (!success) campo.innerHTML += htmlOutput;
 
-                // 4. FORÇA O REGISTRO DA MUDANÇA
-                triggerInputEvents(campo);
+                triggerInputEvents(campo); // Função definida abaixo
                 
-                setTimeout(() => {
-                    showToast(t('inserido_copiado'));
-                }, 600);
+                setTimeout(() => { showToast(t('inserido_copiado')); }, 600);
 
-                // --- LÓGICA DE EMAIL ---
-                console.log("--- DIAGNÓSTICO DE EMAIL ---");
-                // Verifica se o checkbox existe antes de checar o valor (segurança)
+                // Email Automation
                 const emailEnabled = typeof emailCheckbox !== 'undefined' && emailCheckbox ? emailCheckbox.checked : true;
-
                 if (selectedSubStatusKey && SUBSTATUS_SHORTCODES[selectedSubStatusKey] && emailEnabled) {
                     const emailCode = SUBSTATUS_SHORTCODES[selectedSubStatusKey];
-                    console.log("Disparando email:", emailCode);
-                    setTimeout(() => {
-                        runEmailAutomation(emailCode);
-                    }, 1000);
+                    setTimeout(() => { runEmailAutomation(emailCode); }, 1000);
                 }
-                // -----------------------
 
                 togglePopup(false);
                 resetSteps(1.5);
@@ -1360,6 +1333,22 @@ generateButton.onclick = () => {
         } else {
             showToast(t('campo_nao_encontrado'), { error: true, duration: 4000 });
         }
-}
+    };
 
+    // --- HELPERS FINAIS ---
+    function getVisibleEditor() {
+        const activeCard = document.querySelector('card.write-card.is-top');
+        if (!activeCard) return null;
+        return activeCard.querySelector('div[contenteditable="true"]');
+    }
+
+    function triggerInputEvents(element) {
+        const events = ['input', 'change', 'keydown', 'keyup'];
+        events.forEach(eventType => {
+            const event = new Event(eventType, { bubbles: true, cancelable: true });
+            element.dispatchEvent(event);
+        });
+    }
+
+    setLanguage(currentLang);
 }
