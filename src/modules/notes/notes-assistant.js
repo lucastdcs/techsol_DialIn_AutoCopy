@@ -302,72 +302,64 @@ export function initCaseNotesAssistant() {
     const copyButton = document.createElement("button");
     const generateButton = document.createElement("button");
 
-    async function ensureNoteCardIsOpen() {
-        // 1. Verifica se já está aberta (Modo Sniper)
-        const editorJaAberto = document.querySelector('card.write-card.is-top div[contenteditable="true"]');
-        if (editorJaAberto && editorJaAberto.offsetParent !== null) {
-            console.log("✅ Nota já está aberta! Focando nela...");
-            return editorJaAberto;
-        }
+   async function ensureNoteCardIsOpen() {
+        // 1. Verifica se já está aberta
+        let editor = getVisibleEditor();
+        if (editor) return editor;
 
-        console.log("ℹ️ Nota fechada. Buscando botão direto...");
+        console.log("Nota fechada. Buscando botão 'description'...");
 
-        // 2. BUSCAR O BOTÃO 'DESCRIPTION' (Mesmo escondido)
-        const todosIcones = Array.from(document.querySelectorAll('i.material-icons-extended'));
-        const iconeNota = todosIcones.find(el => el.innerText.trim() === 'description');
+        // 2. BUSCA PELO ÍCONE (Universal, funciona em qualquer idioma)
+        const icones = Array.from(document.querySelectorAll('i.material-icons-extended'));
+        const iconeNota = icones.find(el => el.innerText.trim() === 'description');
 
         if (iconeNota) {
-            console.log("🎯 Ícone 'description' encontrado no DOM.");
-            
-            // 3. Pega o botão pai (material-fab ou material-button)
-            const btnAlvo = iconeNota.closest('material-fab') || iconeNota.closest('material-button');
+            // Sobe na árvore até achar o botão redondo (material-fab)
+            const btnAlvo = iconeNota.closest('material-fab');
             
             if (btnAlvo) {
-                console.log("⚡ Clicando direto no botão de Nota...");
+                console.log("🎯 Botão encontrado. Forçando visibilidade e clicando...");
                 
-                // Hack de Visibilidade: Força o botão a ficar clicável mesmo se o menu estiver fechado
-                if (btnAlvo.style) {
-                    btnAlvo.style.display = 'block';
-                    btnAlvo.style.visibility = 'visible';
-                }
+                btnAlvo.classList.remove('hidden'); 
+                btnAlvo.style.display = 'block';
+                btnAlvo.style.visibility = 'visible';
+                btnAlvo.style.pointerEvents = 'auto'; // Garante que recebe clique
+
                 simularCliqueReal(btnAlvo);
             } else {
-                console.warn("⚠️ Ícone achado, mas botão pai não. Clicando no ícone...");
+                // Se não achou o pai, clica no ícone mesmo (às vezes funciona)
                 simularCliqueReal(iconeNota);
             }
-
         } else {
-            // Fallback: Se não achou o 'description', tenta abrir o menu (+)
-            console.warn("⚠️ Botão direto não encontrado. Tentando via Menu (+)...");
+            // Fallback de emergência: Tenta abrir via Menu (+)
+            // Só entra aqui se o ícone 'description' não existir no DOM
+            console.warn("⚠️ Ícone 'description' não achado. Tentando via Menu (+)...");
             const speedDial = document.querySelector('material-fab-speed-dial');
             if (speedDial) {
                 const trigger = speedDial.querySelector('.trigger');
-                if(trigger) simularCliqueReal(trigger);
-                else speedDial.click();
-                
-                await esperar(1000);
-                // Tenta achar de novo com o menu aberto
+                if(trigger) {
+                    trigger.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+                    simularCliqueReal(trigger);
+                } else {
+                    speedDial.click();
+                }
+                await esperar(800);
+                // Tenta achar de novo
                 const iconesAgora = Array.from(document.querySelectorAll('i.material-icons-extended'));
                 const btnAgora = iconesAgora.find(el => el.innerText.trim() === 'description');
                 if(btnAgora) simularCliqueReal(btnAgora);
             }
         }
 
-        // 3. AGUARDAR O EDITOR
-        console.log("⏳ Aguardando editor aparecer...");
+        // 3. Aguarda o editor aparecer
         let tentativas = 0;
-        let novoEditor = null;
-        
-        while (!novoEditor && tentativas < 20) {
-            await esperar(250);
-            const cardAtivo = document.querySelector('card.write-card.is-top');
-            if (cardAtivo) {
-                novoEditor = cardAtivo.querySelector('div[contenteditable="true"]');
-            }
+        while (!editor && tentativas < 20) { // Aumentei para 20 tentativas (10s)
+            await esperar(500);
+            editor = getVisibleEditor();
             tentativas++;
         }
         
-        return novoEditor;
+        return editor;
     }
 
     // --- Funções de Tradução ---
