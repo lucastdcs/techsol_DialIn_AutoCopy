@@ -12,11 +12,23 @@ function simularCliqueReal(elemento) {
     );
 }
 
-// --- FUNÇÃO AUXILIAR: ENCONTRAR CONTAINER VISÍVEL ---
-// Resolve o problema de múltiplas abas (IDs duplicados no DOM)
-function getVisibleEmailContainer() {
-    const todosTops = Array.from(document.querySelectorAll('[id="email-body-content-top"]'));
-    return todosTops.find(el => el.offsetParent !== null);
+// --- FUNÇÃO AUXILIAR: ENCONTRAR EDITOR VISÍVEL E EDITÁVEL ---
+function getVisibleEditor() {
+    // Pega todos os candidatos a corpo de email
+    const todos = Array.from(document.querySelectorAll('[id="email-body-content-top-content"]'));
+    
+    // FILTRO DE SEGURANÇA:
+    // 1. Deve estar visível (offsetParent !== null)
+    // 2. NÃO pode estar dentro de um 'case-message-view' (email enviado/leitura)
+    // 3. DEVE estar dentro de um 'editor' ou 'write-card' (email sendo escrito)
+    
+    return todos.find(el => {
+        const isVisible = el.offsetParent !== null;
+        const isReadOnly = el.closest('case-message-view') !== null;
+        const isEditable = el.closest('.editor') !== null || el.closest('write-card') !== null;
+        
+        return isVisible && !isReadOnly && isEditable;
+    });
 }
 
 // --- FUNÇÃO COMPARTILHADA: ABRIR E LIMPAR ---
@@ -26,10 +38,9 @@ async function openAndClearEmail() {
     const todosIcones = Array.from(document.querySelectorAll('i.material-icons-extended'));
     const iconeEmail = todosIcones.find(el => el.innerText.trim() === 'email');
 
-    // Tenta achar botão de email VISÍVEL e clicar
+    // Tenta achar botão de email VISÍVEL
     if (iconeEmail && iconeEmail.offsetParent !== null) {
         const botaoAlvo = iconeEmail.closest('material-button') || iconeEmail.closest('material-fab') || iconeEmail;
-        // Hack de visibilidade para o Angular
         if (botaoAlvo.style) {
             botaoAlvo.style.display = 'block';
             botaoAlvo.style.visibility = 'visible';
@@ -46,7 +57,6 @@ async function openAndClearEmail() {
                 simularCliqueReal(triggerBtn);
                 await esperar(1000);
                 
-                // Busca novamente após abrir menu
                 const iconesNovos = Array.from(document.querySelectorAll('i.material-icons-extended'));
                 const emailBtnNovo = iconesNovos.find(el => el.innerText.trim() === 'email');
                 if (emailBtnNovo) {
@@ -59,19 +69,20 @@ async function openAndClearEmail() {
         }
     }
 
-    // === ESPERA PELO EDITOR VISÍVEL ===
+    // === ESPERA PELO EDITOR VISÍVEL E VÁLIDO ===
     let tentativas = 0;
-    let containerVisivel = getVisibleEmailContainer();
+    let editorVisivel = getVisibleEditor(); // Usa a nova função filtrada
 
-    // Espera até 15s (o carregamento pode ser lento)
-    while (!containerVisivel && tentativas < 30) {
+    console.log("⏳ Aguardando editor EDITÁVEL...");
+    
+    while (!editorVisivel && tentativas < 30) {
         await esperar(500);
-        containerVisivel = getVisibleEmailContainer();
+        editorVisivel = getVisibleEditor();
         tentativas++;
     }
 
-    if (!containerVisivel) {
-        showToast("Erro: Editor de email não apareceu na tela.", { error: true });
+    if (!editorVisivel) {
+        showToast("Erro: Editor de email não apareceu.", { error: true });
         return false;
     }
 
@@ -84,62 +95,59 @@ async function openAndClearEmail() {
         if (btnConfirm) {
             simularCliqueReal(btnConfirm);
             await esperar(1500);
-            // Atualiza referência após descarte (DOM mudou)
-            containerVisivel = getVisibleEmailContainer();
+            editorVisivel = getVisibleEditor(); // Recaptura após refresh
         }
     }
 
-    // 3. LIMPEZA NUCLEAR (NO CONTAINER VISÍVEL)
-    if (containerVisivel) {
-        // Tenta achar o editor pai para garantir o foco
-        // Usamos closest a partir do container visível para não pegar de outra aba
-        const wrapperGeral = containerVisivel.closest('.email-body-content') || document.body;
+    // 3. LIMPEZA NUCLEAR NO EDITOR CORRETO
+    if (editorVisivel) {
+        const containerTopo = editorVisivel.closest('[id="email-body-content-top"]');
+        const wrapperGeral = editorVisivel.closest('.email-body-content') || document.body;
         const editorPai = wrapperGeral.querySelector('div[contenteditable="true"][aria-label="Email body"]');
 
-        if (editorPai) {
-            const ancestral = editorPai.closest('[aria-hidden="true"]');
-            if (ancestral) ancestral.removeAttribute('aria-hidden');
-            editorPai.focus();
-        }
-        
-        await esperar(300);
+        if (containerTopo) {
+            if (editorPai) {
+                const ancestral = editorPai.closest('[aria-hidden="true"]');
+                if (ancestral) ancestral.removeAttribute('aria-hidden');
+                editorPai.focus();
+            }
+            
+            await esperar(300);
 
-        // === A LIMPEZA PERFEITA ===
-        // Substitui todo o HTML do container 'top'.
-        // Remove texto antigo, assinaturas, espaçadores e avisos de ID.
-        containerVisivel.innerHTML = `
-            <div id="email-body-content-top-content" style="font:normal 13px/17px Roboto,sans-serif;display:block">
-                <span id="cases-body-field"><br></span>
-            </div>
-        `;
-        
-        // REPOSICIONA CURSOR (Dentro do novo span)
-        const novoElementoSagrado = containerVisivel.querySelector('#cases-body-field');
-        if (novoElementoSagrado) {
-            const range = document.createRange();
-            range.selectNodeContents(novoElementoSagrado);
-            range.collapse(true); 
-            const sel = window.getSelection();
-            sel.removeAllRanges();
-            sel.addRange(range);
+            // LIMPEZA
+            containerTopo.innerHTML = `
+                <div id="email-body-content-top-content" style="font:normal 13px/17px Roboto,sans-serif;display:block">
+                    <span id="cases-body-field"><br></span>
+                </div>
+            `;
+            
+            // REPOSICIONA CURSOR
+            const novoElementoSagrado = containerTopo.querySelector('#cases-body-field');
+            if (novoElementoSagrado) {
+                const range = document.createRange();
+                range.selectNodeContents(novoElementoSagrado);
+                range.collapse(true); 
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+            
+            return true; // Sucesso
         }
-        
-        return true; // Sucesso
     }
     
-    showToast("Erro ao acessar estrutura do editor.", { error: true });
+    showToast("Erro crítico ao acessar editor.", { error: true });
     return false;
 }
 
 // ============================================================
-// FUNÇÃO 1: PARA NOTAS (CANNED RESPONSE)
+// FUNÇÃO 1: CANNED RESPONSE
 // ============================================================
 export async function runEmailAutomation(cannedResponseText) {
     if (!cannedResponseText) return;
     showToast(`Preparando email...`, { duration: 3000 });
 
     const pageData = getPageData();
-    // Chama a limpeza perfeita
     const emailPronto = await openAndClearEmail();
     if (!emailPronto) return;
 
@@ -152,7 +160,6 @@ export async function runEmailAutomation(cannedResponseText) {
         await esperar(200); 
         simularCliqueReal(btnCanned);
         
-        // Espera o input de busca
         await esperar(1500); 
         const searchInput = document.querySelector('material-auto-suggest-input input');
         
@@ -160,12 +167,9 @@ export async function runEmailAutomation(cannedResponseText) {
             simularCliqueReal(searchInput);
             await esperar(200);
             
-            // === INSERÇÃO ROBUSTA DO TEXTO ===
-            // Usa execCommand para simular digitação humana (Angular detecta isso)
             document.execCommand('insertText', false, cannedResponseText);
             searchInput.dispatchEvent(new Event('input', { bubbles: true }));
             
-            // Espera Ativa pela Lista (Polling)
             let opcaoAlvo = null;
             let tentativas = 0;
             while (tentativas < 20) { 
@@ -173,11 +177,9 @@ export async function runEmailAutomation(cannedResponseText) {
                 tentativas++;
                 const opcoes = Array.from(document.querySelectorAll('material-select-dropdown-item'));
                 if (opcoes.length > 0) {
-                     // 1. Busca exata
                      opcaoAlvo = opcoes.find(opt => 
                         opt.innerText.toLowerCase().includes(cannedResponseText.toLowerCase())
                     );
-                    // 2. Fallback: Se só tem 1 opção, usa ela
                     if (!opcaoAlvo && opcoes.length === 1) opcaoAlvo = opcoes[0];
                     if (opcaoAlvo) break;
                 }
@@ -185,9 +187,9 @@ export async function runEmailAutomation(cannedResponseText) {
 
             if (opcaoAlvo) {
                 simularCliqueReal(opcaoAlvo);
-                await esperar(2000); // Espera template carregar
+                await esperar(2000); 
 
-                // --- SUBSTITUIR NOME ---
+                // Substituir Nome
                 function encontrarNoDeTexto(elemento, textoParaAchar) {
                     if (elemento.nodeType === 3 && elemento.nodeValue.includes(textoParaAchar)) return elemento;
                     if (!elemento.childNodes) return null;
@@ -198,9 +200,11 @@ export async function runEmailAutomation(cannedResponseText) {
                     return null;
                 }
 
-                // Busca o elemento VISÍVEL atualizado
-                const containerVisivel = getVisibleEmailContainer();
-                let noAlvo = encontrarNoDeTexto(containerVisivel, '{%ADVERTISER_NAME%}');
+                // Busca no container visível
+                const editorVisivel = getVisibleEditor();
+                const containerTopo = editorVisivel ? editorVisivel.closest('[id="email-body-content-top"]') : document.body;
+                
+                let noAlvo = encontrarNoDeTexto(containerTopo, '{%ADVERTISER_NAME%}');
 
                 if (noAlvo) {
                     const rangeToken = document.createRange();
@@ -227,19 +231,18 @@ export async function runEmailAutomation(cannedResponseText) {
 }
 
 // ============================================================
-// FUNÇÃO 2: PARA QUICK EMAIL (HTML DIRETO)
+// FUNÇÃO 2: QUICK EMAIL
 // ============================================================
 export async function runQuickEmail(template) {
     console.log(`🚀 Iniciando automação (Quick): ${template.name}`);
     showToast(`Preparando email...`, { duration: 3000 });
 
     const pageData = getPageData(); 
-    // Chama a limpeza perfeita. O cursor já volta posicionado no lugar certo.
     const emailPronto = await openAndClearEmail(); 
     
     if (!emailPronto) return;
 
-    // 1. Preencher Assunto
+    // 1. Assunto
     const subjectInput = document.querySelector('input[aria-label="Subject"]');
     if (subjectInput && template.subject) {
         subjectInput.focus();
@@ -249,27 +252,28 @@ export async function runQuickEmail(template) {
         await esperar(300);
     }
 
-    // 2. Inserir Corpo
-    // Precisamos apenas focar no editor, o cursor já está no span limpo
-    const containerVisivel = getVisibleEmailContainer();
-    const wrapperGeral = containerVisivel.closest('.email-body-content') || document.body;
-    const editorPai = wrapperGeral.querySelector('div[contenteditable="true"][aria-label="Email body"]');
+    // 2. Corpo
+    const editorVisivel = getVisibleEditor();
     
-    if (editorPai) {
-        editorPai.focus();
+    if (editorVisivel) {
+         const wrapperGeral = editorVisivel.closest('.email-body-content') || document.body;
+         const editorPai = wrapperGeral.querySelector('div[contenteditable="true"][aria-label="Email body"]');
+         if (editorPai) {
+             editorPai.focus();
+             editorPai.dispatchEvent(new Event('input', { bubbles: true }));
+         }
 
-        // Substituição de Placeholders
         let finalBody = template.body;
         finalBody = finalBody.replace(/\[Nome do Cliente\]/g, pageData.advertiserName || "Cliente");
         finalBody = finalBody.replace(/\[INSERIR URL\]/g, pageData.websiteUrl || "seu site");
         finalBody = finalBody.replace(/\[Seu Nome\]/g, "Agente Google"); 
 
-        // INSERÇÃO
         document.execCommand('insertHTML', false, finalBody);
         
-        // Dispara eventos para garantir persistência
-        editorPai.dispatchEvent(new Event('input', { bubbles: true }));
-        editorPai.dispatchEvent(new Event('change', { bubbles: true }));
+        if (editorPai) {
+            editorPai.dispatchEvent(new Event('input', { bubbles: true }));
+            editorPai.dispatchEvent(new Event('change', { bubbles: true }));
+        }
         
         showToast("Email preenchido com sucesso!", { duration: 2000 });
     } else {
