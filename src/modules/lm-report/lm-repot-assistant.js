@@ -37,7 +37,12 @@ const LINKS_DB = {
         links: [
             { name: "Suporte Google Ads", url: "https://support.google.com/google-ads/", desc: "Oficial" },
             { name: "Suporte GA4", url: "https://support.google.com/analytics/", desc: "Oficial" },
-            { name: "Suporte Merchant Center", url: "https://support.google.com/merchants/gethelp", desc: "Oficial" }
+            { name: "Suporte Merchant Center", url: "https://support.google.com/merchants/gethelp", desc: "Oficial" },
+            { name: "Doc. CSP", url: "https://developers.google.com/tag-platform/tag-manager/web/csp?hl=pt-br.", desc: "Doc. oficial sobre CSP" },
+            { name: "Doc. Enhanced Conversion", url: "https://support.google.com/google-ads/answer/9888656?hl=pt-BR", desc: "Como funcionam as conversões otimizadas?" },
+            { name: "Doc. CoMo", url: "https://developers.google.com/tag-platform/security/concepts/consent-mode?hl=pt-br", desc: "Doc. oficial sobre Consent Mode" },
+
+  
         ]
     },
     outros: {
