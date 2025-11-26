@@ -7,10 +7,10 @@ export const csaChecklistData = {
             "Apresentação (Nome e Time)",
             "Aviso de Gravação e Política de Privacidade",
             "Confirmação de CID e Email",
+            "(Opcional) Validar autenticação da conta via link",
             "Confirmação da Task e do AM",
             "Informar tempo da ligação (30-45 min)",
             "Pedir para fechar conteúdo sensível (antes de compartilhar)",
-            "(Opcional) Validar autenticação da conta via link",
             "Validar Backup e Acessos Admin"
         ],
         fim: [
