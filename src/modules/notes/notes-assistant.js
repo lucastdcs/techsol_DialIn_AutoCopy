@@ -231,6 +231,8 @@ export function initCaseNotesAssistant() {
         display: 'flex', gap: '15px', marginBottom: '10px'
     };
 
+    
+
     // Conteúdo principal do popup
     const popupContent = document.createElement("div");
     Object.assign(popupContent.style, {
@@ -299,6 +301,74 @@ export function initCaseNotesAssistant() {
     const buttonContainer = document.createElement("div");
     const copyButton = document.createElement("button");
     const generateButton = document.createElement("button");
+
+    async function ensureNoteCardIsOpen() {
+        // 1. Verifica se já está aberta (Modo Sniper)
+        const editorJaAberto = document.querySelector('card.write-card.is-top div[contenteditable="true"]');
+        if (editorJaAberto && editorJaAberto.offsetParent !== null) {
+            console.log("✅ Nota já está aberta! Focando nela...");
+            return editorJaAberto;
+        }
+
+        console.log("ℹ️ Nota fechada. Buscando botão direto...");
+
+        // 2. BUSCAR O BOTÃO 'DESCRIPTION' (Mesmo escondido)
+        const todosIcones = Array.from(document.querySelectorAll('i.material-icons-extended'));
+        const iconeNota = todosIcones.find(el => el.innerText.trim() === 'description');
+
+        if (iconeNota) {
+            console.log("🎯 Ícone 'description' encontrado no DOM.");
+            
+            // 3. Pega o botão pai (material-fab ou material-button)
+            const btnAlvo = iconeNota.closest('material-fab') || iconeNota.closest('material-button');
+            
+            if (btnAlvo) {
+                console.log("⚡ Clicando direto no botão de Nota...");
+                
+                // Hack de Visibilidade: Força o botão a ficar clicável mesmo se o menu estiver fechado
+                if (btnAlvo.style) {
+                    btnAlvo.style.display = 'block';
+                    btnAlvo.style.visibility = 'visible';
+                }
+                simularCliqueReal(btnAlvo);
+            } else {
+                console.warn("⚠️ Ícone achado, mas botão pai não. Clicando no ícone...");
+                simularCliqueReal(iconeNota);
+            }
+
+        } else {
+            // Fallback: Se não achou o 'description', tenta abrir o menu (+)
+            console.warn("⚠️ Botão direto não encontrado. Tentando via Menu (+)...");
+            const speedDial = document.querySelector('material-fab-speed-dial');
+            if (speedDial) {
+                const trigger = speedDial.querySelector('.trigger');
+                if(trigger) simularCliqueReal(trigger);
+                else speedDial.click();
+                
+                await esperar(1000);
+                // Tenta achar de novo com o menu aberto
+                const iconesAgora = Array.from(document.querySelectorAll('i.material-icons-extended'));
+                const btnAgora = iconesAgora.find(el => el.innerText.trim() === 'description');
+                if(btnAgora) simularCliqueReal(btnAgora);
+            }
+        }
+
+        // 3. AGUARDAR O EDITOR
+        console.log("⏳ Aguardando editor aparecer...");
+        let tentativas = 0;
+        let novoEditor = null;
+        
+        while (!novoEditor && tentativas < 20) {
+            await esperar(250);
+            const cardAtivo = document.querySelector('card.write-card.is-top');
+            if (cardAtivo) {
+                novoEditor = cardAtivo.querySelector('div[contenteditable="true"]');
+            }
+            tentativas++;
+        }
+        
+        return novoEditor;
+    }
 
     // --- Funções de Tradução ---
     function t(key) {
@@ -1267,6 +1337,8 @@ function triggerInputEvents(element) {
     });
 }
   
+// === BOTÃO AÇÃO PRINCIPAL (Com abertura automática) ===
+// === BOTÃO AÇÃO PRINCIPAL (Com abertura automática e inserção segura) ===
     generateButton.onclick = async () => {
         // 1. Verificações Iniciais
         const selectedSubStatusKey = subStatusSelect.value;
@@ -1277,115 +1349,68 @@ function triggerInputEvents(element) {
             return;
         }
 
-        // 2. Copia para segurança
+        // 2. Copia para o clipboard por segurança
         copyHtmlToClipboard(htmlOutput);
-
-        // 3. FORÇA ABERTURA DE NOVA NOTA (Lógica Sniper)
-        console.log("Forçando abertura de nova nota...");
         
-        // Busca todos os ícones para achar o 'description' (ícone de nota)
-        const icones = Array.from(document.querySelectorAll('i.material-icons-extended'));
-        const iconeNota = icones.find(el => el.innerText.trim() === 'description');
+        // 3. ABERTURA AUTOMÁTICA (Espera a nota abrir e retorna o elemento)
+        const campo = await ensureNoteCardIsOpen(); 
 
-        if (iconeNota) {
-            // Se achou o ícone, clica no botão pai
-            const btnAlvo = iconeNota.closest('material-fab') || iconeNota.closest('material-button');
-            
-            if (btnAlvo) {
-                // Hack: Força visibilidade caso esteja oculto dentro do menu fechado
-                if (btnAlvo.style) {
-                    btnAlvo.style.display = 'block';
-                    btnAlvo.style.visibility = 'visible';
-                }
-                simularCliqueReal(btnAlvo);
-            } else {
-                simularCliqueReal(iconeNota);
-            }
-        } else {
-            // Fallback: Se não achou direto, tenta abrir o Menu (+)
-            const speedDial = document.querySelector('material-fab-speed-dial');
-            if (speedDial) {
-                const trigger = speedDial.querySelector('.trigger');
-                if(trigger) {
-                    trigger.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-                    simularCliqueReal(trigger);
-                } else {
-                    speedDial.click();
-                }
-                
-                await esperar(800); // Espera o menu abrir
-                
-                // Tenta achar o botão de nota agora que o menu abriu
-                const iconesAgora = Array.from(document.querySelectorAll('i.material-icons-extended'));
-                const btnAgora = iconesAgora.find(el => el.innerText.trim() === 'description');
-                if(btnAgora) simularCliqueReal(btnAgora);
-            }
-        }
-
-        // 4. AGUARDA O EDITOR APARECER (Polling)
-        // Espera até que o editor esteja renderizado na tela
-        let campo = null;
-        let tentativas = 0;
-        
-        while (!campo && tentativas < 20) {
-            await esperar(300);
-            campo = getVisibleEditor(); // Tenta pegar o editor ativo
-            tentativas++;
-        }
-
-        // 5. PREENCHIMENTO
         if (campo) {
             try {
                 campo.focus();
                 
-                // Seleção Segura para limpeza (Range)
+                // 4. LÓGICA DE SELEÇÃO E LIMPEZA SEGURA (Range)
+                // Isso evita usar 'selectAll' que poderia selecionar a página inteira
+                
                 const isEmpty = campo.innerHTML.trim() === '<p><br></p>' || campo.innerHTML.trim() === '<br>' || campo.innerText.trim() === '';
 
                 if (isEmpty) {
+                    // Se estiver vazio, seleciona o conteúdo interno e deleta para garantir o estado limpo
                     const selection = window.getSelection();
                     const range = document.createRange();
-                    range.selectNodeContents(campo);
+                    range.selectNodeContents(campo); // Seleciona APENAS dentro da div da nota
                     selection.removeAllRanges();
                     selection.addRange(range);
                     document.execCommand('delete', false, null);
                 } else {
-                    // Se tiver lixo (ex: assinatura automática na nota), limpa também ou adiciona quebra
+                    // Se já tiver texto, vamos adicionar ao final (Append)
+                    // Verifica se já não tem os <br> para não duplicar espaços
                     if (!campo.innerHTML.endsWith('<br><br>')) {
                          const selection = window.getSelection();
                          const range = document.createRange();
                          range.selectNodeContents(campo);
-                         range.collapse(false);
+                         range.collapse(false); // false = colapsar para o FINAL do texto
                          selection.removeAllRanges();
                          selection.addRange(range);
                          document.execCommand('insertHTML', false, '<br><br>');
                     }
                 }
 
-                // Insere o HTML
+                // 5. INSERÇÃO DO CONTEÚDO
                 const success = document.execCommand('insertHTML', false, htmlOutput);
+                
+                // Fallback se o comando falhar
                 if (!success) {
                     campo.innerHTML += htmlOutput;
                 }
 
-                // Dispara eventos para o Angular salvar
+                // 6. ATUALIZAÇÃO DO ANGULAR (Dispara eventos)
                 triggerInputEvents(campo);
                 
-                setTimeout(() => {
-                    showToast(t('inserido_copiado'));
-                }, 600);
+                setTimeout(() => { showToast(t('inserido_copiado')); }, 600);
 
-                // --- LÓGICA DE EMAIL ---
+                // 7. AUTOMAÇÃO DE EMAIL (Se habilitado e tiver shortcode)
                 const emailEnabled = typeof emailCheckbox !== 'undefined' && emailCheckbox ? emailCheckbox.checked : true;
-
+                
                 if (selectedSubStatusKey && SUBSTATUS_SHORTCODES[selectedSubStatusKey] && emailEnabled) {
                     const emailCode = SUBSTATUS_SHORTCODES[selectedSubStatusKey];
-                    // Pequeno delay para garantir que a nota salvou antes de mudar de tela
-                    setTimeout(() => {
-                        runEmailAutomation(emailCode);
+                    // Delay de 1s para garantir que a nota salvou/processou antes de mudar o foco para o email
+                    setTimeout(() => { 
+                        runEmailAutomation(emailCode); 
                     }, 1000);
                 }
-                // -----------------------
 
+                // 8. RESET FINAL
                 togglePopup(false);
                 resetSteps(1.5);
                 mainStatusSelect.value = "";
@@ -1400,7 +1425,6 @@ function triggerInputEvents(element) {
             showToast(t('campo_nao_encontrado'), { error: true, duration: 4000 });
         }
     };
-
     
 
     function togglePopup(show) {
