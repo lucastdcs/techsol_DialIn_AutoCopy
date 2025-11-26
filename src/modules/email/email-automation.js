@@ -12,6 +12,14 @@ function simularCliqueReal(elemento) {
     );
 }
 
+// --- FUNÇÃO AUXILIAR: ENCONTRAR EDITOR VISÍVEL ---
+function getVisibleEditor() {
+    // Pega todos os candidatos a corpo de email
+    const todos = Array.from(document.querySelectorAll('[id="email-body-content-top-content"]'));
+    // Retorna apenas aquele que tem dimensão na tela (está visível)
+    return todos.find(el => el.offsetParent !== null);
+}
+
 // --- FUNÇÃO COMPARTILHADA: ABRIR E LIMPAR ---
 async function openAndClearEmail() {
     // 1. ABRIR EMAIL
@@ -19,16 +27,13 @@ async function openAndClearEmail() {
     const todosIcones = Array.from(document.querySelectorAll('i.material-icons-extended'));
     const iconeEmail = todosIcones.find(el => el.innerText.trim() === 'email');
 
-    if (iconeEmail) {
+    // Tenta achar botão de email VISÍVEL
+    if (iconeEmail && iconeEmail.offsetParent !== null) {
         const botaoAlvo = iconeEmail.closest('material-button') || iconeEmail.closest('material-fab') || iconeEmail;
-        if (botaoAlvo.style) {
-            botaoAlvo.style.display = 'block';
-            botaoAlvo.style.visibility = 'visible';
-        }
         simularCliqueReal(botaoAlvo);
         emailAberto = true;
     } else {
-        // Fallback Menu
+        // Fallback Menu (+)
         const speedDial = document.querySelector('material-fab-speed-dial');
         if (speedDial) {
             const triggerBtn = speedDial.querySelector('.trigger');
@@ -36,6 +41,8 @@ async function openAndClearEmail() {
                 triggerBtn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
                 simularCliqueReal(triggerBtn);
                 await esperar(1000);
+                
+                // Busca novamente após abrir menu
                 const iconesNovos = Array.from(document.querySelectorAll('i.material-icons-extended'));
                 const emailBtnNovo = iconesNovos.find(el => el.innerText.trim() === 'email');
                 if (emailBtnNovo) {
@@ -48,77 +55,80 @@ async function openAndClearEmail() {
         }
     }
 
-    // Verifica abertura (Aumentado para tolerância)
+    // === CORREÇÃO CRÍTICA: ESPERAR PELO VISÍVEL ===
     let tentativas = 0;
-    while (!document.getElementById('email-body-content-top-content') && tentativas < 20) {
+    let editorVisivel = getVisibleEditor();
+
+    console.log("⏳ Aguardando editor VISÍVEL...");
+    
+    while (!editorVisivel && tentativas < 30) { // Espera até 15s
         await esperar(500);
+        editorVisivel = getVisibleEditor();
         tentativas++;
     }
 
-    if (!document.getElementById('email-body-content-top-content')) {
-        showToast("Erro: Editor de email não abriu.", { error: true });
+    if (!editorVisivel) {
+        showToast("Erro: Editor de email não apareceu na tela.", { error: true });
         return false;
     }
+    // ==============================================
 
     // 2. DESCARTAR RASCUNHO
     const btnDiscardDraft = document.querySelector('material-button[debug-id="discard-prewrite-draft-button"]');
-    if (btnDiscardDraft) {
+    if (btnDiscardDraft && btnDiscardDraft.offsetParent !== null) {
         simularCliqueReal(btnDiscardDraft);
         await esperar(800);
         const btnConfirm = document.querySelector('material-button[debug-id="confirm-button"]');
         if (btnConfirm) {
             simularCliqueReal(btnConfirm);
             await esperar(1500);
+            // Atualiza referência após descarte (o DOM pode ter mudado)
+            editorVisivel = getVisibleEditor();
         }
     }
-        await esperar(300);
 
-    // ============================================================
-    // 3. LIMPEZA INTELIGENTE (Lógica V53 - Focar no Visível)
-    // ============================================================
-    
-    // Pega TODOS os containers de topo possíveis
-    const todosTops = Array.from(document.querySelectorAll('[id="email-body-content-top"]'));
-    
-    // Filtra apenas o que está VISÍVEL na tela (ignora abas ocultas)
-    const containerVisivel = todosTops.find(el => el.offsetParent !== null);
-
-    if (containerVisivel) {
-        // Tenta achar o editor pai desse container específico para destravar acessibilidade
-        const editorPai = containerVisivel.closest('div[contenteditable="true"]');
+    // 3. LIMPEZA RADICAL (TOP LEVEL) NO ELEMENTO VISÍVEL
+    if (editorVisivel) {
+        // Sobe para o container pai ('top') para limpar assinaturas
+        const containerTopo = editorVisivel.closest('[id="email-body-content-top"]');
         
-        if (editorPai) {
-            const ancestral = editorPai.closest('[aria-hidden="true"]');
-            if (ancestral) ancestral.removeAttribute('aria-hidden');
-            editorPai.focus();
+        // Tenta achar o contenteditable correspondente a este editor visível
+        // Usamos .closest para garantir que estamos no contexto certo
+        const wrapperGeral = editorVisivel.closest('.email-body-content') || document.body;
+        const editorPai = wrapperGeral.querySelector('div[contenteditable="true"][aria-label="Email body"]');
+
+        if (containerTopo) {
+            if (editorPai) {
+                const ancestral = editorPai.closest('[aria-hidden="true"]');
+                if (ancestral) ancestral.removeAttribute('aria-hidden');
+                editorPai.focus();
+            }
+            
+            await esperar(300);
+
+            // LIMPEZA
+            containerTopo.innerHTML = `
+                <div id="email-body-content-top-content" style="font:normal 13px/17px Roboto,sans-serif;display:block">
+                    <span id="cases-body-field"><br></span>
+                </div>
+            `;
+            
+            // REPOSICIONA CURSOR (No elemento visível)
+            const novoElementoSagrado = containerTopo.querySelector('#cases-body-field');
+            if (novoElementoSagrado) {
+                const range = document.createRange();
+                range.selectNodeContents(novoElementoSagrado);
+                range.collapse(true); 
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+            
+            return true; // Sucesso
         }
-        
-        await esperar(300);
-
-        // LIMPEZA NUCLEAR VIA DOM (Não falha)
-        // Removemos o conteúdo antigo e recriamos a estrutura limpa com o span sagrado
-        containerVisivel.innerHTML = `
-            <div id="email-body-content-top-content" style="font:normal 13px/17px Roboto,sans-serif;display:block">
-                <span id="cases-body-field"><br></span>
-            </div>
-        `;
-
-        // REPOSICIONA O CURSOR
-        // Precisamos buscar o novo span criado DENTRO do container visível
-        const novoSpan = containerVisivel.querySelector('#cases-body-field');
-        if (novoSpan) {
-            const range = document.createRange();
-            const sel = window.getSelection();
-            range.selectNodeContents(novoSpan);
-            range.collapse(true); // Cursor no início
-            sel.removeAllRanges();
-            sel.addRange(range);
-        }
-        
-        return true; // Sucesso
     }
     
-    showToast("Erro: Nenhum editor de email visível encontrado.", { error: true });
+    showToast("Erro ao acessar estrutura do editor.", { error: true });
     return false;
 }
 
@@ -152,7 +162,6 @@ export async function runEmailAutomation(cannedResponseText) {
             document.execCommand('insertText', false, cannedResponseText);
             searchInput.dispatchEvent(new Event('input', { bubbles: true }));
             
-            // Espera Ativa
             let opcaoAlvo = null;
             let tentativas = 0;
             while (tentativas < 20) { 
@@ -172,7 +181,7 @@ export async function runEmailAutomation(cannedResponseText) {
                 simularCliqueReal(opcaoAlvo);
                 await esperar(2000); 
 
-                // Substituir Nome
+                // Substituir Nome - Busca apenas no container VISÍVEL
                 function encontrarNoDeTexto(elemento, textoParaAchar) {
                     if (elemento.nodeType === 3 && elemento.nodeValue.includes(textoParaAchar)) return elemento;
                     if (!elemento.childNodes) return null;
@@ -183,17 +192,10 @@ export async function runEmailAutomation(cannedResponseText) {
                     return null;
                 }
 
-                // Busca elemento atualizado no DOM (agora temos certeza que é o visível)
-                // Como usamos ID, querySelector pega o primeiro, mas como limpamos o visível, deve ser ele.
-                // Para garantir, podemos buscar o visível de novo, mas IDs deveriam ser únicos.
-                const elSagradoAtualizado = document.getElementById('cases-body-field');
-                const containerBusca = elSagradoAtualizado || document.getElementById('email-body-content-top-content');
+                const editorVisivel = getVisibleEditor();
+                const containerTopo = editorVisivel ? editorVisivel.closest('[id="email-body-content-top"]') : document.body;
                 
-                // Força busca no container visível se possível
-                const todosTops = Array.from(document.querySelectorAll('[id="email-body-content-top"]'));
-                const topVisivel = todosTops.find(el => el.offsetParent !== null) || containerBusca;
-
-                let noAlvo = encontrarNoDeTexto(topVisivel, '{%ADVERTISER_NAME%}');
+                let noAlvo = encontrarNoDeTexto(containerTopo, '{%ADVERTISER_NAME%}');
 
                 if (noAlvo) {
                     const rangeToken = document.createRange();
@@ -241,26 +243,36 @@ export async function runQuickEmail(template) {
         await esperar(300);
     }
 
-    // 2. Inserir Corpo
-    const editorPai = document.querySelector('div[contenteditable="true"][aria-label="Email body"]');
+    // 2. Inserir Corpo (No editor VISÍVEL)
+    // openAndClearEmail já deixou o cursor no lugar certo do editor visível.
+    // Mas por segurança, vamos focar no contenteditable correto.
     
-    if (editorPai) {
-        editorPai.focus();
-        
-        // O cursor já está posicionado dentro do span limpo
-        
-        let finalBody = template.body;
-        finalBody = finalBody.replace(/\[Nome do Cliente\]/g, pageData.advertiserName || "Cliente");
-        finalBody = finalBody.replace(/\[INSERIR URL\]/g, pageData.websiteUrl || "seu site");
-        finalBody = finalBody.replace(/\[Seu Nome\]/g, "Agente Google"); 
-
-        document.execCommand('insertHTML', false, finalBody);
-        
-        editorPai.dispatchEvent(new Event('input', { bubbles: true }));
-        editorPai.dispatchEvent(new Event('change', { bubbles: true }));
-        
-        showToast("Email preenchido com sucesso!", { duration: 2000 });
-    } else {
-        showToast("Erro ao focar no editor.", { error: true });
+    const editorVisivel = getVisibleEditor();
+    if (editorVisivel) {
+         // Sobe até achar o contenteditable pai deste elemento visível
+         const wrapperGeral = editorVisivel.closest('.email-body-content') || document.body;
+         const editorPai = wrapperGeral.querySelector('div[contenteditable="true"][aria-label="Email body"]');
+         
+         if (editorPai) editorPai.focus();
     }
+
+    // Substituição de Placeholders
+    let finalBody = template.body;
+    finalBody = finalBody.replace(/\[Nome do Cliente\]/g, pageData.advertiserName || "Cliente");
+    finalBody = finalBody.replace(/\[INSERIR URL\]/g, pageData.websiteUrl || "seu site");
+    finalBody = finalBody.replace(/\[Seu Nome\]/g, "Agente Google"); 
+    
+    // INSERÇÃO
+    document.execCommand('insertHTML', false, finalBody);
+    
+    // Dispara eventos
+    if (editorVisivel) {
+        const editorPai = editorVisivel.closest('div[contenteditable="true"]');
+        if (editorPai) {
+            editorPai.dispatchEvent(new Event('input', { bubbles: true }));
+            editorPai.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+    
+    showToast("Email preenchido com sucesso!", { duration: 2000 });
 }
