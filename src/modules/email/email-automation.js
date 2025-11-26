@@ -87,15 +87,39 @@ async function openAndClearEmail() {
     }
 
     // 2. DESCARTAR RASCUNHO
-    const btnDiscardDraft = document.querySelector('material-button[debug-id="discard-prewrite-draft-button"]');
-    if (btnDiscardDraft && btnDiscardDraft.offsetParent !== null) {
+// 2. DESCARTAR RASCUNHO (Lógica Blindada)
+    // Busca TODOS os botões de descarte possíveis
+    const todosDescartes = Array.from(document.querySelectorAll('material-button[debug-id="discard-prewrite-draft-button"]'));
+    // Filtra apenas o que está visível na tela
+    const btnDiscardDraft = todosDescartes.find(el => el.offsetParent !== null);
+    
+    if (btnDiscardDraft) {
+        console.log("⚠️ Rascunho detectado. Clicando em Discard...");
         simularCliqueReal(btnDiscardDraft);
-        await esperar(800);
-        const btnConfirm = document.querySelector('material-button[debug-id="confirm-button"]');
+        
+        // Espera ativa pelo botão de confirmação (o modal pode demorar a aparecer)
+        let btnConfirm = null;
+        let tentativasConfirm = 0;
+        
+        while (!btnConfirm && tentativasConfirm < 10) { // Espera até 2s
+            await esperar(200);
+            const todosConfirms = Array.from(document.querySelectorAll('material-button[debug-id="confirm-button"]'));
+            btnConfirm = todosConfirms.find(el => el.offsetParent !== null);
+            tentativasConfirm++;
+        }
+
         if (btnConfirm) {
+            console.log("✅ Confirmando descarte...");
             simularCliqueReal(btnConfirm);
-            await esperar(1500);
-            editorVisivel = getVisibleEditor(); // Recaptura após refresh
+            
+            // Espera crítica: O editor recarrega após o descarte.
+            // Precisamos esperar o editor antigo sumir e o novo aparecer, ou apenas esperar um tempo seguro.
+            await esperar(2500); 
+            
+            // Atualiza a referência do editor, pois o DOM mudou
+            // Não precisamos fazer nada aqui, pois a função vai buscar o editor novamente abaixo
+        } else {
+            console.warn("⚠️ Cliquei em Discard, mas o botão Confirm não apareceu.");
         }
     }
 
