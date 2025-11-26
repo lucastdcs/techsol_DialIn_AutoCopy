@@ -71,6 +71,7 @@ async function openAndClearEmail() {
             await esperar(1500);
         }
     }
+        await esperar(300);
 
     // ============================================================
     // 3. LIMPEZA INTELIGENTE (Lógica V53 - Focar no Visível)
