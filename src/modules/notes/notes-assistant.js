@@ -1267,8 +1267,8 @@ function triggerInputEvents(element) {
     });
 }
   
-generateButton.onclick = () => {
-        // 1. Verificações de Segurança (Aba e Substatus)
+    generateButton.onclick = () => {
+        // 1. Verificações de Segurança
         const selectedSubStatusKey = subStatusSelect.value;
         const htmlOutput = generateOutputHtml();
 
@@ -1277,45 +1277,56 @@ generateButton.onclick = () => {
             return;
         }
 
-        // Verifica se a aba do caso está ativa
-        if (!isCaseTabActive()) {
-            showToast("Atenção: Nenhuma aba de caso ativa detectada.", { error: true });
-            // Opcional: return; (Se quiser impedir o preenchimento se a aba não estiver ativa)
-        }
-
-        // 2. Copia para a área de transferência (Backup de segurança)
+        // 2. Copia para a área de transferência
         copyHtmlToClipboard(htmlOutput);
 
-        // 3. Busca o editor VISÍVEL (usando a classe is-top)
+        // 3. Busca o editor VISÍVEL
         const campo = getVisibleEditor();
 
         if (campo) {
             try {
-                // Foca no campo para garantir que o comando de inserção vá para o lugar certo
                 campo.focus();
+                
+                // ===== CORREÇÃO AQUI: SELEÇÃO SEGURA =====
+                // Em vez de 'selectAll' (que é perigoso), usamos Range.
+                // Isso garante que a ação fique presa DENTRO do campo, nunca vazando para a página.
+                
+                const isEmpty = campo.innerHTML.trim() === '<p><br></p>' || campo.innerHTML.trim() === '<br>' || campo.innerText.trim() === '';
 
-                // Limpeza inteligente: Se tiver apenas <br> ou <p><br></p>, limpa antes de colar
-                if (campo.innerHTML.trim() === '<p><br></p>' || campo.innerHTML.trim() === '<br>') {
-                    document.execCommand('selectAll', false, null);
+                if (isEmpty) {
+                    // Se estiver "vazio" (apenas tags de formatação), limpa tudo com segurança
+                    const selection = window.getSelection();
+                    const range = document.createRange();
+                    range.selectNodeContents(campo); // Seleciona APENAS o conteúdo deste campo
+                    selection.removeAllRanges();
+                    selection.addRange(range);
                     document.execCommand('delete', false, null);
                 } else {
-                    // Se já tiver texto, adiciona quebras de linha antes
-                     if (campo.innerHTML.trim() !== '' && !campo.innerHTML.endsWith('<br><br>')) {
-                        document.execCommand('insertHTML', false, '<br><br>');
+                    // Se já tiver texto, adiciona quebras de linha no final
+                    // Verifica se já não tem os <br> para não duplicar
+                    if (!campo.innerHTML.endsWith('<br><br>')) {
+                         // Move o cursor para o final antes de inserir
+                         const selection = window.getSelection();
+                         const range = document.createRange();
+                         range.selectNodeContents(campo);
+                         range.collapse(false); // false = ir para o final
+                         selection.removeAllRanges();
+                         selection.addRange(range);
+                         
+                         document.execCommand('insertHTML', false, '<br><br>');
                     }
                 }
+                // ========================================
 
                 // INSERÇÃO DO CONTEÚDO
-                // execCommand é o método mais confiável para preservar o histórico de desfazer (Ctrl+Z)
                 const success = document.execCommand('insertHTML', false, htmlOutput);
                 
                 if (!success) {
-                    // Fallback se execCommand falhar (raro, mas possível)
+                    // Fallback seguro
                     campo.innerHTML += htmlOutput;
                 }
 
-                // 4. FORÇA O REGISTRO DA MUDANÇA (A mágica acontece aqui)
-                // Dispara eventos para o framework perceber que o texto mudou
+                // 4. FORÇA O REGISTRO DA MUDANÇA
                 triggerInputEvents(campo);
                 
                 setTimeout(() => {
@@ -1324,7 +1335,10 @@ generateButton.onclick = () => {
 
                 // --- LÓGICA DE EMAIL ---
                 console.log("--- DIAGNÓSTICO DE EMAIL ---");
-                if (selectedSubStatusKey && SUBSTATUS_SHORTCODES[selectedSubStatusKey] && emailCheckbox.checked) {
+                // Verifica se o checkbox existe antes de checar o valor (segurança)
+                const emailEnabled = typeof emailCheckbox !== 'undefined' && emailCheckbox ? emailCheckbox.checked : true;
+
+                if (selectedSubStatusKey && SUBSTATUS_SHORTCODES[selectedSubStatusKey] && emailEnabled) {
                     const emailCode = SUBSTATUS_SHORTCODES[selectedSubStatusKey];
                     console.log("Disparando email:", emailCode);
                     setTimeout(() => {
@@ -1333,7 +1347,6 @@ generateButton.onclick = () => {
                 }
                 // -----------------------
 
-                // 5. Fecha e Reseta
                 togglePopup(false);
                 resetSteps(1.5);
                 mainStatusSelect.value = "";
@@ -1342,11 +1355,10 @@ generateButton.onclick = () => {
 
             } catch (err) {
                 console.error("Erro ao inserir texto:", err);
-                showToast("Erro ao inserir. O texto foi copiado para o clipboard.", { error: true });
+                showToast("Erro ao inserir. Texto copiado.", { error: true });
             }
         } else {
-            // Se não achou o campo VISÍVEL
-            showToast("Nota não encontrada. Certifique-se que o card 'Case Note' está aberto.", { error: true, duration: 4000 });
+            showToast(t('campo_nao_encontrado'), { error: true, duration: 4000 });
         }
     };
 
