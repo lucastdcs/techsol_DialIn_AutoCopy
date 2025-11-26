@@ -30,7 +30,7 @@ import {
 import { runEmailAutomation } from '../email/email-automation.js'; 
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v3.2.1"; // Atualizado com Fix de Seleção
+    const CURRENT_VERSION = "v3.2.5"; // Atualizado com Fix de Seleção
     
     // --- ESTADO GLOBAL DO MÓDULO ---
     let currentCaseType = 'bau';
