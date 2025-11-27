@@ -60,10 +60,12 @@ export function initQuickEmailAssistant() {
     };
 
     // --- UI: Botão Flutuante ---
+    // --- UI: Botão Flutuante ---
     const btnContainer = document.createElement("div");
     Object.assign(btnContainer.style, {
         position: "fixed", top: "50%", right: "24px", zIndex: "9999",
-        display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px"
+        display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px",
+        cursor: "pointer" // Importante para indicar que é interativo
     });
 
     const btn = document.createElement("button");
@@ -73,33 +75,34 @@ export function initQuickEmailAssistant() {
         width: "48px", height: "48px", borderRadius: "50%",
         background: "#ea4335", color: "white", border: "none", cursor: "pointer",
         display: "flex", alignItems: "center", justifyContent: "center",
-        boxShadow: "0 4px 6px rgba(0,0,0,0.1)"
+        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+        transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)"
     });
-    btn.onmouseenter = () => { btn.style.transform = "scale(1.1)"; };
-    btn.onmouseleave = () => { btn.style.transform = "scale(1)"; };
-    btnContainer.appendChild(btn);
-    document.body.appendChild(btnContainer);
-    makeDraggable(btnContainer);
 
-        const tooltip = document.createElement("span");
-    tooltip.textContent = "Emails Rápidos";
+    const tooltip = document.createElement("span");
+    tooltip.textContent = "Emails Rápidos"; // <--- O TÍTULO QUE VOCÊ QUER
     Object.assign(tooltip.style, {
         background: "rgba(0,0,0,0.7)", color: "white", padding: "4px 8px",
         borderRadius: "4px", fontSize: "12px", opacity: "0", pointerEvents: "none",
         transition: "opacity 0.2s", whiteSpace: "nowrap", fontWeight: "500"
     });
 
-    btnContainer.onmouseenter = () => {
-        btn.style.transform = "scale(1.1)";
-        tooltip.style.opacity = "1";
-        tooltip.style.transform = "translateX(0)";
+    // --- CORREÇÃO: Eventos no Container ---
+    // Assim o texto aparece mesmo se o mouse estiver "chegando perto" ou em cima do texto
+    btnContainer.onmouseenter = () => { 
+        btn.style.transform = "scale(1.1)"; 
+        tooltip.style.opacity = "1"; 
     };
     
-    btnContainer.onmouseleave = () => {
-        btn.style.transform = "scale(1)";
-        tooltip.style.opacity = "0";
-        tooltip.style.transform = "translateX(10px)";
+    btnContainer.onmouseleave = () => { 
+        btn.style.transform = "scale(1)"; 
+        tooltip.style.opacity = "0"; 
     };
+
+    btnContainer.appendChild(btn);
+    btnContainer.appendChild(tooltip);
+    document.body.appendChild(btnContainer);
+    makeDraggable(btnContainer);
 
     // --- POPUP ---
     const popup = document.createElement("div");
