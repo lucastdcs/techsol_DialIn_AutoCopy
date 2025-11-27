@@ -27,7 +27,7 @@ export function initCallScriptAssistant() {
     // --- UI: Botão Flutuante (Material Design Pro) ---
     const btnContainer = document.createElement("div");
     Object.assign(btnContainer.style, {
-        position: "fixed", top: "45%", right: "24px", zIndex: "9999",
+        position: "fixed", bottom: "35%", right: "24px", zIndex: "9999",
         display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px"
     });
 

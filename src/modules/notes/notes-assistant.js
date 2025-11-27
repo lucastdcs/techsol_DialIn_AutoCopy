@@ -30,7 +30,7 @@ export function initCaseNotesAssistant() {
     // --- CONSTRUÇÃO DA UI ---
     const btnContainer = document.createElement("div"); 
     Object.assign(btnContainer.style, {
-        position: "fixed", top: "15%", right: "24px", zIndex: "9999",
+        position: "fixed", bottom: "45%", right: "24px", zIndex: "9999",
         display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px"
     });
 
