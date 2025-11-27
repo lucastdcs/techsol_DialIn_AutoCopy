@@ -301,7 +301,71 @@ export function initCaseNotesAssistant() {
     step2Div.appendChild(taskCheckboxesContainer); 
     popupContent.appendChild(step2Div);
 
-    step3Div.id = "step-3-form"; Object.assign(step3Div.style, { ...NoteStyles.styleStepBlock, display: 'none' }); Object.assign(step3Title.style, NoteStyles.styleH3); dynamicFormFieldsContainer.id = "dynamic-form-fields-container"; step3Div.appendChild(step3Title); step3Div.appendChild(dynamicFormFieldsContainer);
+    step3Div.id = "step-3-form"; Object.assign(step3Div.style, { ...NoteStyles.styleStepBlock, display: 'none' }); Object.assign(step3Title.style, NoteStyles.styleH3); dynamicFormFieldsContainer.id = "dynamic-form-fields-container"; 
+    // --- UI TAG SUPPORT (NOVO) ---
+    const tagSupportDiv = document.createElement("div");
+    Object.assign(tagSupportDiv.style, { 
+        marginTop: "12px", marginBottom: "12px", padding: "10px", 
+        background: "#fff8e1", borderRadius: "6px", border: "1px solid #ffecb3", 
+        display: "none" 
+    });
+
+    const tsLabel = document.createElement("label");
+    tsLabel.textContent = "Utilizou o Tag Support para criar/verificar?";
+    Object.assign(tsLabel.style, styleLabel, { marginTop: "0" });
+
+    // Container dos Radios
+    const tsRadioContainer = document.createElement("div");
+    Object.assign(tsRadioContainer.style, styleRadioContainer);
+    
+    // Sim
+    const tsSim = document.createElement("input"); tsSim.type = "radio"; tsSim.name = "ts_usage"; tsSim.value = "Sim"; 
+    Object.assign(tsSim.style, styleCheckboxInput);
+    const lblSim = document.createElement("label"); lblSim.textContent = "Sim";
+    const divTsSim = document.createElement("div"); Object.assign(divTsSim.style, { display: 'flex', alignItems: 'center' });
+    divTsSim.appendChild(tsSim); divTsSim.appendChild(lblSim);
+
+    // Não
+    const tsNao = document.createElement("input"); tsNao.type = "radio"; tsNao.name = "ts_usage"; tsNao.value = "Não"; tsNao.checked = true; 
+    Object.assign(tsNao.style, styleCheckboxInput);
+    const lblNao = document.createElement("label"); lblNao.textContent = "Não";
+    const divTsNao = document.createElement("div"); Object.assign(divTsNao.style, { display: 'flex', alignItems: 'center' });
+    divTsNao.appendChild(tsNao); divTsNao.appendChild(lblNao);
+
+    tsRadioContainer.appendChild(divTsSim); tsRadioContainer.appendChild(divTsNao);
+
+    // Container do Motivo (Aparece se Não)
+    const tsReasonContainer = document.createElement("div");
+    tsReasonContainer.style.display = "block"; 
+    
+    const tsReasonLabel = document.createElement("label");
+    tsReasonLabel.textContent = "Qual foi o Motivo?";
+    Object.assign(tsReasonLabel.style, styleLabel, { fontSize: "12px" });
+    
+    const tsReasonInput = document.createElement("input");
+    tsReasonInput.type = "text";
+    Object.assign(tsReasonInput.style, styleInput);
+
+    const tsWarning = document.createElement("div");
+    tsWarning.innerHTML = `⚠️ <strong>Lembre-se de preencher o Form!</strong> <a href="https://docs.google.com/forms/d/e/1FAIpQLSeP_JM8D-6qHa5ZC93aTzj38WiO5zx8nyrWNPvbZhjJj6CpkA/viewform" target="_blank" style="color:#e37400">Link aqui</a>`;
+    Object.assign(tsWarning.style, { fontSize: "12px", color: "#e37400", marginTop: "4px" });
+
+    tsReasonContainer.appendChild(tsReasonLabel);
+    tsReasonContainer.appendChild(tsReasonInput);
+    tsReasonContainer.appendChild(tsWarning);
+
+    tagSupportDiv.appendChild(tsLabel);
+    tagSupportDiv.appendChild(tsRadioContainer);
+    tagSupportDiv.appendChild(tsReasonContainer);
+
+    // Eventos de troca
+    tsSim.onchange = () => { tsReasonContainer.style.display = "none"; };
+    tsNao.onchange = () => { tsReasonContainer.style.display = "block"; };
+
+    // Adiciona tudo ao Step 3
+    step3Div.appendChild(step3Title);
+    step3Div.appendChild(dynamicFormFieldsContainer);
+    step3Div.appendChild(tagSupportDiv); // <--- ADICIONADO AO STEP 3
     step3Div.appendChild(screenshotsContainer); 
     popupContent.appendChild(step3Div);
 
@@ -359,6 +423,7 @@ export function initCaseNotesAssistant() {
                     stepperDiv.style.display = 'none'; countSpan.textContent = '0'; Object.assign(label.style, { background: '#f8f9fa' });
                 }
                 renderScreenshotInputs();
+                checkTagSupportVisibility();
             };
             btnMinus.onclick = (e) => {
                 e.preventDefault(); e.stopPropagation();
@@ -516,7 +581,37 @@ function renderScreenshotInputs() {
         });
         screenshotsContainer.style.display = hasScreenshots ? 'block' : 'none';
     }
+function checkTagSupportVisibility() {
+        const selectedSubStatusKey = subStatusSelect.value;
+        
+        // Se não tem substatus ou é Education, esconde
+        if (!selectedSubStatusKey || selectedSubStatusKey.includes('Education')) {
+            tagSupportDiv.style.display = 'none';
+            return;
+        }
 
+        // Pega as tasks marcadas
+        const checkedBoxes = Array.from(taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked'));
+        const tasks = checkedBoxes.map(cb => cb.value); // Array de IDs das tasks (ex: conversion_tracking_google_ads)
+
+        if (tasks.length === 0) {
+            tagSupportDiv.style.display = 'none';
+            return;
+        }
+
+        // CONDIÇÃO 1: Tem Enhanced Conversion? (Mesmo misturado)
+        const hasEnhanced = tasks.some(t => t.includes('enhanced') || t === 'ec_google_ads');
+
+        // CONDIÇÃO 2: É APENAS Ads Conversion Tracking?
+        // (Ou seja, todas as tasks são de conversão de ads e NENHUMA é outra coisa)
+        const allAreAdsConv = tasks.every(t => t.includes('conversion') && !t.includes('enhanced'));
+
+        if (hasEnhanced || allAreAdsConv) {
+            tagSupportDiv.style.display = 'block';
+        } else {
+            tagSupportDiv.style.display = 'none';
+        }
+    }
    function generateOutputHtml() {
         const selectedSubStatusKey = subStatusSelect.value;
         if (!selectedSubStatusKey) return null;
@@ -651,8 +746,19 @@ function renderScreenshotInputs() {
         // Limpeza final de placeholders perdidos e quebras duplas
         outputText = outputText.replace(/{([A-Z0-9_]+)}/g, ''); 
         outputText = outputText.replace(/(<br>){3,}/g, '<br><br>');
+
+        if (tagSupportDiv.style.display !== 'none') {
+            const usedTs = tsSim.checked ? "Sim" : "Não";
+            outputText += `<br><b>Utilizou Tag Support?</b> ${usedTs}`;
+            
+            if (!tsSim.checked && tsReasonInput.value.trim() !== "") {
+                 outputText += `<br><b>Motivo:</b> ${tsReasonInput.value}`;
+            }
+            outputText += `<br>`;
+        }
         
         return outputText;
+
     }
 // --- FUNÇÕES LÓGICAS DO FORMULÁRIO ---
 
@@ -879,6 +985,8 @@ function renderScreenshotInputs() {
         step3Div.style.display = 'block';
         if (SUBSTATUS_SHORTCODES[selectedSubStatusKey]) emailAutomationDiv.style.display = 'block'; else emailAutomationDiv.style.display = 'none';
         buttonContainer.style.display = 'flex';
+
+        checkTagSupportVisibility();
     };
 
     copyButton.onclick = () => {
