@@ -12,3 +12,13 @@ export const styleStepperCount = { fontSize: '14px', fontWeight: '500', color: '
 export const styleStepBlock = { borderTop: "1px solid #eee", paddingTop: "12px", marginTop: "12px" };
 export const styleRadioContainer = { display: 'flex', gap: '15px', marginBottom: '10px' };
 export const styleOptionalBtn = { width: '100%', padding: '10px', background: 'white', border: '1px dashed #1a73e8', color: '#1a73e8', borderRadius: '6px', cursor: 'pointer', fontWeight: '500', fontSize: '13px', marginBottom: '10px', transition: 'all 0.2s' };
+// Adicione ao final do arquivo
+export const styleTagSupportContainer = { 
+    marginTop: "12px", marginBottom: "12px", padding: "10px", 
+    background: "#fff8e1", borderRadius: "6px", border: "1px solid #ffecb3", 
+    display: "none" // Começa oculto
+};
+
+export const styleWarningText = { 
+    fontSize: "12px", color: "#e37400", marginTop: "4px" 
+};

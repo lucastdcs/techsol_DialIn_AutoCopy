@@ -175,6 +175,61 @@ export function initCaseNotesAssistant() {
     
     const step3Div = document.createElement("div");
     const dynamicFormFieldsContainer = document.createElement("div");
+    // ... (criação do dynamicFormFieldsContainer)
+
+    // --- UI TAG SUPPORT (Compliance) ---
+    const tagSupportDiv = document.createElement("div");
+    Object.assign(tagSupportDiv.style, styleTagSupportContainer);
+
+    const tsLabel = document.createElement("label");
+    tsLabel.textContent = "Utilizou o Tag Support para criar/verificar?";
+    Object.assign(tsLabel.style, styleLabel, { marginTop: "0" });
+
+    // Radio Buttons (Sim/Não)
+    const tsRadioGroup = document.createElement("div");
+    Object.assign(tsRadioGroup.style, styleRadioContainer);
+    
+    const tsSim = document.createElement("input"); tsSim.type = "radio"; tsSim.name = "ts_usage"; tsSim.value = "Sim"; 
+    const tsNao = document.createElement("input"); tsNao.type = "radio"; tsNao.name = "ts_usage"; tsNao.value = "Não"; tsNao.checked = true; // Default Não
+    
+    const lblSim = document.createElement("label"); lblSim.textContent = "Sim";
+    const lblNao = document.createElement("label"); lblNao.textContent = "Não";
+    
+    // Agrupamento visual dos radios (pode simplificar se quiser)
+    tsRadioGroup.appendChild(tsSim); tsRadioGroup.appendChild(lblSim);
+    tsRadioGroup.appendChild(tsNao); tsRadioGroup.appendChild(lblNao);
+
+    // Container do Motivo (Só aparece se "Não")
+    const tsReasonContainer = document.createElement("div");
+    
+    const tsReasonLabel = document.createElement("label");
+    tsReasonLabel.textContent = "Qual foi o Motivo?";
+    Object.assign(tsReasonLabel.style, styleLabel, { fontSize: "12px" });
+    
+    const tsReasonInput = document.createElement("input");
+    tsReasonInput.type = "text";
+    tsReasonInput.id = "ts_reason_input";
+    Object.assign(tsReasonInput.style, styleInput);
+
+    // Aviso com Link
+    const tsWarning = document.createElement("div");
+    tsWarning.innerHTML = `⚠️ <strong>Lembre-se de preencher o Form!</strong> <a href="https://docs.google.com/forms/d/e/1FAIpQLSeP_JM8D-6qHa5ZC93aTzj38WiO5zx8nyrWNPvbZhjJj6CpkA/viewform" target="_blank" style="color:#e37400;text-decoration:underline;">Link aqui</a>`;
+    Object.assign(tsWarning.style, styleWarningText);
+
+    tsReasonContainer.appendChild(tsReasonLabel);
+    tsReasonContainer.appendChild(tsReasonInput);
+    tsReasonContainer.appendChild(tsWarning);
+
+    tagSupportDiv.appendChild(tsLabel);
+    tagSupportDiv.appendChild(tsRadioGroup);
+    tagSupportDiv.appendChild(tsReasonContainer);
+
+    // Eventos de visibilidade do Motivo
+    tsSim.onchange = () => { tsReasonContainer.style.display = "none"; };
+    tsNao.onchange = () => { tsReasonContainer.style.display = "block"; };
+
+    // Adiciona ao Step 3 (ANTES dos screenshots)
+    step3Div.appendChild(tagSupportDiv);
     const step3Title = document.createElement("h3");
     const mainStatusSelect = document.createElement("select");
     const subStatusSelect = document.createElement("select");
@@ -359,6 +414,7 @@ export function initCaseNotesAssistant() {
                     stepperDiv.style.display = 'none'; countSpan.textContent = '0'; Object.assign(label.style, { background: '#f8f9fa' });
                 }
                 renderScreenshotInputs();
+                checkTagSupport()
             };
             btnMinus.onclick = (e) => {
                 e.preventDefault(); e.stopPropagation();
@@ -516,7 +572,34 @@ function renderScreenshotInputs() {
         });
         screenshotsContainer.style.display = hasScreenshots ? 'block' : 'none';
     }
+function checkTagSupport() {
+        const subStatus = subStatusSelect.value;
+        if (!subStatus) {
+            tagSupportDiv.style.display = 'none';
+            return;
+        }
 
+        // Pega tasks marcadas
+        const checkedBoxes = Array.from(taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked'));
+        const tasks = checkedBoxes.map(cb => cb.value);
+
+        // Regras
+        const isImplementation = !subStatus.includes('Education'); // Assume implementação se não for educação
+        const hasEnhanced = tasks.some(t => t.includes('enhanced') || t === 'ec_google_ads');
+        
+        // Verifica se é "APENAS Ads Conversion"
+        const hasAdsConv = tasks.some(t => t.includes('conversion'));
+        const hasAnalytics = tasks.some(t => t.includes('ga4') || t.includes('analytics'));
+        const hasMerchant = tasks.some(t => t.includes('merchant') || t.includes('gmc'));
+        const isOnlyAds = hasAdsConv && !hasAnalytics && !hasMerchant && !hasEnhanced;
+
+        // Lógica Final: Implementation E (Enhanced OU OnlyAds)
+        if (isImplementation && (hasEnhanced || isOnlyAds)) {
+            tagSupportDiv.style.display = 'block';
+        } else {
+            tagSupportDiv.style.display = 'none';
+        }
+    }
    function generateOutputHtml() {
         const selectedSubStatusKey = subStatusSelect.value;
         if (!selectedSubStatusKey) return null;
@@ -651,6 +734,16 @@ function renderScreenshotInputs() {
         // Limpeza final de placeholders perdidos e quebras duplas
         outputText = outputText.replace(/{([A-Z0-9_]+)}/g, ''); 
         outputText = outputText.replace(/(<br>){3,}/g, '<br><br>');
+
+        if (tagSupportDiv.style.display !== 'none') {
+        const usedTs = tsSim.checked ? "Sim" : "Não";
+        outputText += `<br><b>Utilizou Tag Support?</b> ${usedTs}`;
+        
+        if (!tsSim.checked) {
+             outputText += `<br><b>Motivo:</b> ${tsReasonInput.value}`;
+        }
+        outputText += `<br>`;
+    }
         
         return outputText;
     }
@@ -879,6 +972,8 @@ function renderScreenshotInputs() {
         step3Div.style.display = 'block';
         if (SUBSTATUS_SHORTCODES[selectedSubStatusKey]) emailAutomationDiv.style.display = 'block'; else emailAutomationDiv.style.display = 'none';
         buttonContainer.style.display = 'flex';
+
+        checkTagSupport();
     };
 
     copyButton.onclick = () => {
