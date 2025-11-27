@@ -19,7 +19,7 @@ import * as NoteStyles from './notes-styles.js';
 import { copyHtmlToClipboard, ensureNoteCardIsOpen, triggerInputEvents } from './notes-bridge.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v3.4.2"; 
+    const CURRENT_VERSION = "v3.4.5"; 
     
     let currentCaseType = 'bau';
     let currentLang = 'pt'; 
