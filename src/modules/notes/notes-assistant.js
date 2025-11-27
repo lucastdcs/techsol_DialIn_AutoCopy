@@ -1015,6 +1015,12 @@ function renderScreenshotInputs() {
 
     let visible = false;
     btn.onclick = () => {
+        // VERIFICAÇÃO DE ARRASTO
+        // Se o atributo data-dragging for 'true', o usuário estava arrastando, não clicando.
+        if (btnContainer.getAttribute('data-dragging') === 'true') {
+            return; // Sai sem fazer nada
+        }
+
         visible = !visible;
         togglePopup(visible);
     };
