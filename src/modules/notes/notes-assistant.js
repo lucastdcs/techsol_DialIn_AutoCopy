@@ -1,5 +1,5 @@
 // src/modules/notes/notes-assistant.js
-
+import { createTagSupportModule } from './tag-support.js';
 import { 
     showToast, makeDraggable, styleSelect, styleLabel, stylePopup, 
     stylePopupHeader, stylePopupTitle, stylePopupCloseBtn, 
@@ -25,7 +25,8 @@ export function initCaseNotesAssistant() {
     let currentLang = 'pt'; 
     let isPortugalCase = false;
 
-
+// Instancia o módulo
+    const tagSupport = createTagSupportModule();
     // --- CONSTRUÇÃO DA UI ---
     const btnContainer = document.createElement("div"); 
     Object.assign(btnContainer.style, {
@@ -301,7 +302,9 @@ export function initCaseNotesAssistant() {
     step2Div.appendChild(taskCheckboxesContainer); 
     popupContent.appendChild(step2Div);
 
-    step3Div.id = "step-3-form"; Object.assign(step3Div.style, { ...NoteStyles.styleStepBlock, display: 'none' }); Object.assign(step3Title.style, NoteStyles.styleH3); dynamicFormFieldsContainer.id = "dynamic-form-fields-container"; step3Div.appendChild(step3Title); step3Div.appendChild(dynamicFormFieldsContainer);
+    step3Div.id = "step-3-form";
+    Object.assign(step3Div.style, { ...NoteStyles.styleStepBlock, display: 'none' }); Object.assign(step3Title.style, NoteStyles.styleH3); dynamicFormFieldsContainer.id = "dynamic-form-fields-container"; step3Div.appendChild(step3Title); step3Div.appendChild(dynamicFormFieldsContainer);
+    step3Div.appendChild(tagSupport.element);
     step3Div.appendChild(screenshotsContainer); 
     popupContent.appendChild(step3Div);
 
@@ -359,6 +362,8 @@ export function initCaseNotesAssistant() {
                     stepperDiv.style.display = 'none'; countSpan.textContent = '0'; Object.assign(label.style, { background: '#f8f9fa' });
                 }
                 renderScreenshotInputs();
+                const checked = Array.from(taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked')).map(c => c.value);
+    tagSupport.updateVisibility(subStatusSelect.value, checked);
             };
             btnMinus.onclick = (e) => {
                 e.preventDefault(); e.stopPropagation();
@@ -651,6 +656,8 @@ function renderScreenshotInputs() {
         // Limpeza final de placeholders perdidos e quebras duplas
         outputText = outputText.replace(/{([A-Z0-9_]+)}/g, ''); 
         outputText = outputText.replace(/(<br>){3,}/g, '<br><br>');
+
+        outputText += tagSupport.getOutput();
         
         return outputText;
     }
@@ -879,6 +886,8 @@ function renderScreenshotInputs() {
         step3Div.style.display = 'block';
         if (SUBSTATUS_SHORTCODES[selectedSubStatusKey]) emailAutomationDiv.style.display = 'block'; else emailAutomationDiv.style.display = 'none';
         buttonContainer.style.display = 'flex';
+        const checked = Array.from(taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked')).map(c => c.value);
+    tagSupport.updateVisibility(subStatusSelect.value, checked);
     };
 
     copyButton.onclick = () => {
@@ -985,6 +994,7 @@ function renderScreenshotInputs() {
             }
             buttonContainer.style.display = 'none';
             emailAutomationDiv.style.display = 'none'; 
+            tagSupport.reset();
         }
     }
     
