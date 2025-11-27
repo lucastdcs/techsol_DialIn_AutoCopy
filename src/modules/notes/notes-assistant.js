@@ -1,30 +1,45 @@
 // src/modules/notes/notes-assistant.js
 
 import { 
-    showToast, makeDraggable, styleSelect, styleLabel, stylePopup, 
-    stylePopupHeader, stylePopupTitle, stylePopupCloseBtn, 
-    styleFloatingButton, stylePopupVersion, styleCredit, 
-    styleExpandButton, typeBtnStyle, getRandomGoogleStyle
+    showToast, 
+    makeDraggable,
+    styleSelect,
+    styleLabel,
+    stylePopup,
+    stylePopupHeader,
+    stylePopupTitle,
+    stylePopupCloseBtn,
+    styleFloatingButton,
+    stylePopupVersion,
+    styleCredit,
+    styleExpandButton,
+    typeBtnStyle,
+    getRandomGoogleStyle
 } from '../shared/utils.js'; 
 
 import {
-    TASKS_DB, SUBSTATUS_TEMPLATES, SUBSTATUS_SHORTCODES, 
-    textareaListFields, textareaParagraphFields, scenarioSnippets, translations
+    TASKS_DB,
+    SUBSTATUS_TEMPLATES,
+    SUBSTATUS_SHORTCODES, 
+    textareaListFields,
+    textareaParagraphFields,
+    scenarioSnippets,
+    translations
 } from './notes-data.js';
 
 import { runEmailAutomation } from '../email/email-automation.js'; 
 
-// NOVOS IMPORTS (Refatoração)
+// IMPORTS DE ESTILOS E BRIDGE
 import * as NoteStyles from './notes-styles.js';
 import { copyHtmlToClipboard, ensureNoteCardIsOpen, triggerInputEvents } from './notes-bridge.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v3.4.9"; 
+    const CURRENT_VERSION = "v3.4.1"; 
     
+    // --- ESTADO GLOBAL ---
     let currentCaseType = 'bau';
     let currentLang = 'pt'; 
     let isPortugalCase = false;
-
 
     // --- CONSTRUÇÃO DA UI ---
     const btnContainer = document.createElement("div"); 
@@ -165,72 +180,61 @@ export function initCaseNotesAssistant() {
     
     const step2Div = document.createElement("div");
     const optionalTaskBtn = document.createElement("button");
-    optionalTaskBtn.textContent = "+ Gostaria de selecionar uma task?";
-    Object.assign(optionalTaskBtn.style, NoteStyles.styleOptionalBtn);
-    optionalTaskBtn.onmouseover = () => { optionalTaskBtn.style.background = '#e8f0fe'; };
-    optionalTaskBtn.onmouseout = () => { optionalTaskBtn.style.background = 'white'; };
-
     const taskCheckboxesContainer = document.createElement("div");
     const step2Title = document.createElement("h3");
     
     const step3Div = document.createElement("div");
     const dynamicFormFieldsContainer = document.createElement("div");
-    // ... (criação do dynamicFormFieldsContainer)
+    const step3Title = document.createElement("h3");
 
-    // --- UI TAG SUPPORT (Compliance) ---
+    // --- UI TAG SUPPORT ---
     const tagSupportDiv = document.createElement("div");
-    Object.assign(tagSupportDiv.style, styleTagSupportContainer);
+    Object.assign(tagSupportDiv.style, NoteStyles.styleTagSupportContainer);
 
     const tsLabel = document.createElement("label");
     tsLabel.textContent = "Utilizou o Tag Support para criar/verificar?";
     Object.assign(tsLabel.style, styleLabel, { marginTop: "0" });
 
-    // Radio Buttons (Sim/Não)
-    const tsRadioGroup = document.createElement("div");
-    Object.assign(tsRadioGroup.style, styleRadioContainer);
+    const tsRadioContainer = document.createElement("div");
+    Object.assign(tsRadioContainer.style, NoteStyles.styleRadioContainer);
     
     const tsSim = document.createElement("input"); tsSim.type = "radio"; tsSim.name = "ts_usage"; tsSim.value = "Sim"; 
-    const tsNao = document.createElement("input"); tsNao.type = "radio"; tsNao.name = "ts_usage"; tsNao.value = "Não"; tsNao.checked = true; // Default Não
-    
+    const tsNao = document.createElement("input"); tsNao.type = "radio"; tsNao.name = "ts_usage"; tsNao.value = "Não"; tsNao.checked = true; 
     const lblSim = document.createElement("label"); lblSim.textContent = "Sim";
     const lblNao = document.createElement("label"); lblNao.textContent = "Não";
     
-    // Agrupamento visual dos radios (pode simplificar se quiser)
-    tsRadioGroup.appendChild(tsSim); tsRadioGroup.appendChild(lblSim);
-    tsRadioGroup.appendChild(tsNao); tsRadioGroup.appendChild(lblNao);
+    const divTsSim = document.createElement("div"); Object.assign(divTsSim.style, { display: 'flex', alignItems: 'center' });
+    divTsSim.appendChild(tsSim); divTsSim.appendChild(lblSim);
+    const divTsNao = document.createElement("div"); Object.assign(divTsNao.style, { display: 'flex', alignItems: 'center' });
+    divTsNao.appendChild(tsNao); divTsNao.appendChild(lblNao);
 
-    // Container do Motivo (Só aparece se "Não")
+    tsRadioContainer.appendChild(divTsSim); tsRadioContainer.appendChild(divTsNao);
+
     const tsReasonContainer = document.createElement("div");
-    
+    tsReasonContainer.style.display = "block"; // Default visible
     const tsReasonLabel = document.createElement("label");
     tsReasonLabel.textContent = "Qual foi o Motivo?";
     Object.assign(tsReasonLabel.style, styleLabel, { fontSize: "12px" });
-    
     const tsReasonInput = document.createElement("input");
     tsReasonInput.type = "text";
-    tsReasonInput.id = "ts_reason_input";
-    Object.assign(tsReasonInput.style, styleInput);
+    Object.assign(tsReasonInput.style, NoteStyles.styleInput);
 
-    // Aviso com Link
     const tsWarning = document.createElement("div");
-    tsWarning.innerHTML = `⚠️ <strong>Lembre-se de preencher o Form!</strong> <a href="https://docs.google.com/forms/d/e/1FAIpQLSeP_JM8D-6qHa5ZC93aTzj38WiO5zx8nyrWNPvbZhjJj6CpkA/viewform" target="_blank" style="color:#e37400;text-decoration:underline;">Link aqui</a>`;
-    Object.assign(tsWarning.style, styleWarningText);
+    tsWarning.innerHTML = `⚠️ <strong>Lembre-se de preencher o Form!</strong> <a href="https://docs.google.com/forms/d/e/1FAIpQLSeP_JM8D-6qHa5ZC93aTzj38WiO5zx8nyrWNPvbZhjJj6CpkA/viewform" target="_blank" style="color:#e37400">Link aqui</a>`;
+    Object.assign(tsWarning.style, NoteStyles.styleWarningText);
 
     tsReasonContainer.appendChild(tsReasonLabel);
     tsReasonContainer.appendChild(tsReasonInput);
     tsReasonContainer.appendChild(tsWarning);
 
     tagSupportDiv.appendChild(tsLabel);
-    tagSupportDiv.appendChild(tsRadioGroup);
+    tagSupportDiv.appendChild(tsRadioContainer);
     tagSupportDiv.appendChild(tsReasonContainer);
 
-    // Eventos de visibilidade do Motivo
     tsSim.onchange = () => { tsReasonContainer.style.display = "none"; };
     tsNao.onchange = () => { tsReasonContainer.style.display = "block"; };
+    // ----------------------
 
-    // Adiciona ao Step 3 (ANTES dos screenshots)
-    step3Div.appendChild(tagSupportDiv);
-    const step3Title = document.createElement("h3");
     const mainStatusSelect = document.createElement("select");
     const subStatusSelect = document.createElement("select");
     const emailAutomationDiv = document.createElement("div");
@@ -239,6 +243,7 @@ export function initCaseNotesAssistant() {
     const buttonContainer = document.createElement("div");
     const copyButton = document.createElement("button");
     const generateButton = document.createElement("button");
+    
     const screenshotsContainer = document.createElement("div");
     screenshotsContainer.id = "screenshots-input-container";
     Object.assign(screenshotsContainer.style, { marginTop: "16px", borderTop: "1px dashed #ccc", paddingTop: "12px", display: "none" });
@@ -250,12 +255,14 @@ export function initCaseNotesAssistant() {
     screenshotsContainer.appendChild(screenshotsListDiv);
 
     function t(key) {
-        if (translations && translations[currentLang] && translations[currentLang][key]) {
-            return translations[currentLang][key];
-        }
-        if (translations && translations['pt'] && translations['pt'][key]) {
-            return translations['pt'][key];
-        }
+        try {
+            if (translations && translations[currentLang] && translations[currentLang][key]) {
+                return translations[currentLang][key];
+            }
+            if (translations && translations['pt'] && translations['pt'][key]) {
+                return translations['pt'][key];
+            }
+        } catch(e) { console.warn(e); }
         return key; 
     }
 
@@ -351,13 +358,23 @@ export function initCaseNotesAssistant() {
     
     // Step 2 (Tasks) + Redundância
     step2Div.id = "step-2-tasks"; Object.assign(step2Div.style, { ...NoteStyles.styleStepBlock, display: 'none' }); Object.assign(step2Title.style, NoteStyles.styleH3); taskCheckboxesContainer.id = "task-checkboxes-container"; 
+    
+    optionalTaskBtn.textContent = "+ Gostaria de selecionar uma task?";
+    Object.assign(optionalTaskBtn.style, NoteStyles.styleOptionalBtn);
+    optionalTaskBtn.onmouseover = () => { optionalTaskBtn.style.background = '#e8f0fe'; };
+    optionalTaskBtn.onmouseout = () => { optionalTaskBtn.style.background = 'white'; };
+
     step2Div.appendChild(optionalTaskBtn); 
     step2Div.appendChild(step2Title); 
     step2Div.appendChild(taskCheckboxesContainer); 
     popupContent.appendChild(step2Div);
 
     step3Div.id = "step-3-form"; Object.assign(step3Div.style, { ...NoteStyles.styleStepBlock, display: 'none' }); Object.assign(step3Title.style, NoteStyles.styleH3); dynamicFormFieldsContainer.id = "dynamic-form-fields-container"; step3Div.appendChild(step3Title); step3Div.appendChild(dynamicFormFieldsContainer);
+    
+    // Inserindo Tag Support e Screenshots no Step 3
+    step3Div.appendChild(tagSupportDiv); 
     step3Div.appendChild(screenshotsContainer); 
+    
     popupContent.appendChild(step3Div);
 
     emailAutomationDiv.id = "step-4-email"; Object.assign(emailAutomationDiv.style, { display: "none", marginTop: "16px", paddingTop: "12px", borderTop: "1px solid #eee" });
@@ -372,6 +389,30 @@ export function initCaseNotesAssistant() {
     document.body.appendChild(popup);
 
     // --- FUNÇÕES DE LÓGICA (TASKS) ---
+    
+    function checkTagSupportVisibility() {
+        const selectedSubStatusKey = subStatusSelect.value;
+        if (!selectedSubStatusKey) {
+            tagSupportDiv.style.display = 'none';
+            return;
+        }
+        const checkedBoxes = Array.from(taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked'));
+        const tasks = checkedBoxes.map(cb => cb.value);
+
+        const isEducation = selectedSubStatusKey.includes('Education');
+        const hasEnhanced = tasks.some(t => t.includes('enhanced') || t === 'ec_google_ads');
+        
+        const hasAdsConv = tasks.some(t => t.includes('conversion'));
+        const hasAnalytics = tasks.some(t => t.includes('ga4') || t.includes('analytics'));
+        const hasMerchant = tasks.some(t => t.includes('merchant') || t.includes('gmc'));
+        const isOnlyAds = hasAdsConv && !hasAnalytics && !hasMerchant && !hasEnhanced;
+
+        if (!isEducation && (hasEnhanced || isOnlyAds)) {
+            tagSupportDiv.style.display = 'block';
+        } else {
+            tagSupportDiv.style.display = 'none';
+        }
+    }
 
     function populateTaskCheckboxes() {
         taskCheckboxesContainer.innerHTML = '';
@@ -414,18 +455,20 @@ export function initCaseNotesAssistant() {
                     stepperDiv.style.display = 'none'; countSpan.textContent = '0'; Object.assign(label.style, { background: '#f8f9fa' });
                 }
                 renderScreenshotInputs();
-                checkTagSupport()
+                checkTagSupportVisibility();
             };
             btnMinus.onclick = (e) => {
                 e.preventDefault(); e.stopPropagation();
                 let count = parseInt(countSpan.textContent);
                 if (count > 1) { countSpan.textContent = count - 1; } else { checkbox.checked = false; checkbox.dispatchEvent(new Event('change')); }
                 renderScreenshotInputs();
+                checkTagSupportVisibility();
             };
             btnPlus.onclick = (e) => {
                 e.preventDefault(); e.stopPropagation();
                 let count = parseInt(countSpan.textContent); countSpan.textContent = count + 1;
                 renderScreenshotInputs();
+                checkTagSupportVisibility();
             };
         }
     }
@@ -437,13 +480,11 @@ export function initCaseNotesAssistant() {
         populateTaskCheckboxes(); 
     };
 
-function renderScreenshotInputs() {
-        // --- FALLBACK DE ESTILO (Segurança) ---
-        const localStyleInput = (typeof styleInput !== 'undefined') ? styleInput : {
-            width: "100%", padding: "8px", borderRadius: "8px", 
-            border: "1px solid #dadce0", fontSize: "14px", marginBottom: "12px", 
-            boxSizing: "border-box", fontFamily: "'Poppins', sans-serif", 
-            transition: "border-color 0.2s ease, box-shadow 0.2s ease"
+    function renderScreenshotInputs() {
+        const localStyleInput = { 
+            width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #dadce0", 
+            fontSize: "14px", marginBottom: "12px", boxSizing: "border-box", fontFamily: "'Poppins', sans-serif", 
+            transition: "border-color 0.2s ease, box-shadow 0.2s ease" 
         };
 
         screenshotsListDiv.innerHTML = ''; 
@@ -465,22 +506,14 @@ function renderScreenshotInputs() {
 
             if (screenshotList.length > 0) {
                 hasScreenshots = true;
-                
-                // Bloco Principal (Fundo Cinza)
                 const taskBlock = document.createElement('div');
-                Object.assign(taskBlock.style, { 
-                    marginBottom: '16px', background: '#f8f9fa', 
-                    padding: '12px', borderRadius: '8px', border: '1px solid #e0e0e0' 
-                });
-                
-                // Cabeçalho do Bloco
+                Object.assign(taskBlock.style, { marginBottom: '12px', background: '#f1f3f4', padding: '8px', borderRadius: '6px', border: '1px solid #e0e0e0' });
                 const taskHeader = document.createElement('div');
                 taskHeader.innerHTML = `<strong style="color:#5f6368">${task.name}</strong> <small style="color:#1a73e8">(${count}x)</small>`;
                 taskHeader.style.marginBottom = "12px";
                 taskBlock.appendChild(taskHeader);
 
                 for (let i = 1; i <= count; i++) {
-                    // Card Branco Individual
                     const instanceContainer = document.createElement('div');
                     Object.assign(instanceContainer.style, {
                         background: 'white', padding: '12px', borderRadius: '6px', 
@@ -488,81 +521,40 @@ function renderScreenshotInputs() {
                         boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
                     });
 
-                    // --- UX: CAMPO DE NOME EDITÁVEL ---
+                    // Nome Personalizado
                     const nameWrapper = document.createElement('div');
-                    Object.assign(nameWrapper.style, {
-                        display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px'
-                    });
-
-                    // Ícone de Lápis
+                    Object.assign(nameWrapper.style, { display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px' });
                     const editIcon = document.createElement('span');
                     editIcon.textContent = "✎";
                     Object.assign(editIcon.style, { fontSize: '14px', color: '#9aa0a6', cursor: 'text' });
-
                     const nameInput = document.createElement('input');
                     nameInput.type = 'text';
                     const suffix = count > 1 ? ` #${i}` : '';
                     nameInput.value = `${task.name}${suffix}`;
                     nameInput.id = `name-${taskKey}-${i}`; 
-                    
-                    // Estilo Especial para parecer um Título Editável
-                    Object.assign(nameInput.style, localStyleInput, { 
-                        fontWeight: '600', 
-                        color: '#1a73e8', // Azul Google
-                        marginBottom: '0', // Remove margem do input base
-                        border: 'none', 
-                        borderBottom: '1px dashed #ccc', // Tracejado indica "clique para editar"
-                        borderRadius: '0',
-                        padding: '4px 0', 
-                        background: 'transparent',
-                        width: '100%'
-                    });
-
-                    // Efeitos de Foco
-                    nameInput.onfocus = () => {
-                        nameInput.style.borderBottom = '2px solid #1a73e8';
-                        editIcon.style.color = '#1a73e8';
-                        editIcon.style.opacity = '1';
-                    };
-                    nameInput.onblur = () => {
-                        nameInput.style.borderBottom = '1px dashed #ccc';
-                        editIcon.style.color = '#9aa0a6';
-                    };
-                    
-                    // Tooltip nativo
+                    Object.assign(nameInput.style, localStyleInput, { fontWeight: '600', color: '#1a73e8', marginBottom: '0', border: 'none', borderBottom: '1px dashed #ccc', borderRadius: '0', padding: '4px 0', background: 'transparent', width: '100%' });
+                    nameInput.onfocus = () => { nameInput.style.borderBottom = '2px solid #1a73e8'; editIcon.style.color = '#1a73e8'; };
+                    nameInput.onblur = () => { nameInput.style.borderBottom = '1px dashed #ccc'; editIcon.style.color = '#9aa0a6'; };
                     nameInput.title = "Renomear esta ação";
-                    
-                    // Ao clicar no ícone, foca no input
                     editIcon.onclick = () => nameInput.focus();
-
-                    nameWrapper.appendChild(editIcon);
-                    nameWrapper.appendChild(nameInput);
+                    nameWrapper.appendChild(editIcon); nameWrapper.appendChild(nameInput);
                     instanceContainer.appendChild(nameWrapper);
-                    // ---------------------------------------
 
-                    // Inputs de Screenshots
                     screenshotList.forEach((reqPrint, index) => {
                         const row = document.createElement('div');
                         Object.assign(row.style, { display: 'flex', flexDirection: 'column', marginBottom: '8px' });
-                        
                         const printLabel = document.createElement('label');
-                        // Adicionei um ícone de câmera para ficar mais visual
                         printLabel.innerHTML = `📷 ${reqPrint}:`;
                         Object.assign(printLabel.style, { fontSize: '11px', color: '#5f6368', marginBottom: '4px', fontWeight: '500' });
-                        
                         const printInput = document.createElement('input');
                         printInput.type = 'text';
                         printInput.placeholder = "Cole o link...";
                         printInput.id = `screen-${taskKey}-${i}-${index}`; 
                         printInput.className = 'screenshot-input-field'; 
-                        
-                        // Usa o estilo padrão seguro
                         Object.assign(printInput.style, localStyleInput);
                         printInput.style.marginBottom = "4px";
                         printInput.style.fontSize = "12px";
-
-                        row.appendChild(printLabel);
-                        row.appendChild(printInput);
+                        row.appendChild(printLabel); row.appendChild(printInput);
                         instanceContainer.appendChild(row);
                     });
                     taskBlock.appendChild(instanceContainer);
@@ -571,44 +563,20 @@ function renderScreenshotInputs() {
             }
         });
         screenshotsContainer.style.display = hasScreenshots ? 'block' : 'none';
+        checkTagSupportVisibility();
     }
-function checkTagSupport() {
-        const subStatus = subStatusSelect.value;
-        if (!subStatus) {
-            tagSupportDiv.style.display = 'none';
-            return;
-        }
 
-        // Pega tasks marcadas
-        const checkedBoxes = Array.from(taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked'));
-        const tasks = checkedBoxes.map(cb => cb.value);
-
-        // Regras
-        const isImplementation = !subStatus.includes('Education'); // Assume implementação se não for educação
-        const hasEnhanced = tasks.some(t => t.includes('enhanced') || t === 'ec_google_ads');
-        
-        // Verifica se é "APENAS Ads Conversion"
-        const hasAdsConv = tasks.some(t => t.includes('conversion'));
-        const hasAnalytics = tasks.some(t => t.includes('ga4') || t.includes('analytics'));
-        const hasMerchant = tasks.some(t => t.includes('merchant') || t.includes('gmc'));
-        const isOnlyAds = hasAdsConv && !hasAnalytics && !hasMerchant && !hasEnhanced;
-
-        // Lógica Final: Implementation E (Enhanced OU OnlyAds)
-        if (isImplementation && (hasEnhanced || isOnlyAds)) {
-            tagSupportDiv.style.display = 'block';
-        } else {
-            tagSupportDiv.style.display = 'none';
-        }
-    }
-   function generateOutputHtml() {
+    function generateOutputHtml() {
         const selectedSubStatusKey = subStatusSelect.value;
         if (!selectedSubStatusKey) return null;
         const templateData = SUBSTATUS_TEMPLATES[selectedSubStatusKey];
         let outputText = templateData.template.replace(/\n/g, "<br>");
         const ulStyle = "style=\"margin-bottom: 12px; padding-left: 30px;\"";
 
-        // 1. Processamento de Tasks e Screenshots
-        if (templateData.requiresTasks || taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked').length > 0) {
+        // Verificação de Tasks (Checkbox + Required)
+        const hasCheckedTasks = taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked').length > 0;
+        
+        if (templateData.requiresTasks || hasCheckedTasks) {
             const selectedCheckboxes = taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked');
             let tagNames = [];
             let screenshotsText = '';
@@ -653,7 +621,6 @@ function checkTagSupport() {
              outputText = outputText.replace(/{SCREENSHOTS_LIST}/g, 'N/A');
         }
 
-        // 2. Campos de Portugal e Consentimento
         if (currentLang === 'pt' && isPortugalCase) {
             const consentValue = consentRadioSim.checked ? t('sim') : t('nao');
             const consentHtml = `<br><b>${t('consentiu_gravacao')}</b> ${consentValue}<br><br>`;
@@ -667,7 +634,6 @@ function checkTagSupport() {
             outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, '');
         }
 
-        // 3. Campos Dinâmicos com Limpeza Inteligente
         const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
         inputs.forEach(input => {
             const fieldName = input.id.replace('field-', '');
@@ -675,206 +641,63 @@ function checkTagSupport() {
             const placeholderRegex = new RegExp(placeholderStr, 'g');
             
             let value = input.value;
-            
-            // Lógica para Radio Buttons (REASON_COMMENTS)
             if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey.startsWith('NI_') || selectedSubStatusKey.startsWith('IN_'))) {
                 const checkedRadio = snippetContainer.querySelector('input[type="radio"]:checked');
                 if (checkedRadio && scenarioSnippets[checkedRadio.id] && scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS']) {
                      value = scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS'];
                 }
             }
-
-            // Formatação de Listas e Parágrafos
             if (textareaListFields.includes(fieldName) && value.trim() !== '') {
-                const lines = value.split('\n')
-                                 .map(line => line.trim())
-                                 .filter(line => line !== '' && line !== '•')
-                                 .map(line => line.startsWith('• ') ? line.substring(2).trim() : line.trim())
-                                 .filter(line => line !== '')
-                                 .map(line => `<li>${line}</li>`)
-                                 .join('');
+                const lines = value.split('\n').map(line => line.trim()).filter(line => line !== '' && line !== '•').map(line => line.startsWith('• ') ? line.substring(2).trim() : line.trim()).filter(line => line !== '').map(line => `<li>${line}</li>`).join('');
                 value = lines ? `<ul ${ulStyle}>${lines}</ul>` : '';
             } else if (textareaParagraphFields.includes(fieldName) && value.trim() !== '') {
                 value = value.split('\n').filter(line => line.trim() !== '').map(line => `<p style="margin: 0 0 8px 0;">${line}</p>`).join('');
             } else if (input.tagName === 'TEXTAREA' && !textareaListFields.includes(fieldName) && !textareaParagraphFields.includes(fieldName)) {
                  value = value.replace(/\n/g, '<br>');
             } 
-            
-            // Normalização de valores vazios
             if (input.tagName === 'TEXTAREA' && value.trim() === '') { value = ''; }
             else if (fieldName === 'ON_CALL' && value.trim() === '') { value = 'N/A'; }
             else if (fieldName === 'GTM_GA4_VERIFICADO' && value.trim() === '') { value = 'N/A'; }
 
-            // === LÓGICA DE LIMPEZA INTELIGENTE ===
-            // Remove tags HTML para checar se o conteúdo real é vazio ou N/A
             const textContent = value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-            const isEffectivelyEmpty = 
-                textContent === '' || 
-                textContent === '•' || 
-                textContent.toLowerCase() === 'n/a' || 
-                textContent.toLowerCase() === 'na';
+            const isEffectivelyEmpty = textContent === '' || textContent === '•' || textContent.toLowerCase() === 'n/a' || textContent.toLowerCase() === 'na';
 
             if (isEffectivelyEmpty) {
-                // Se vazio, tenta remover a LINHA INTEIRA (Rótulo + Placeholder)
-                // Regex para: (Quebra opcional) + <b>Label:</b> + Placeholder + (Quebra opcional)
                 const lineRemoverRegex = new RegExp(`(?:<br>\\s*)?<[b|strong]+>[^<]+:\\s*<\\/[b|strong]+>\\s*\\{${fieldName}\\}(?:<br>\\s*)?`, 'gi');
-                
                 if (lineRemoverRegex.test(outputText)) {
-                    outputText = outputText.replace(lineRemoverRegex, ''); // Remove a linha
+                    outputText = outputText.replace(lineRemoverRegex, '');
                 } else {
-                    outputText = outputText.replace(placeholderRegex, ''); // Remove só o placeholder
+                    outputText = outputText.replace(placeholderRegex, '');
                 }
             } else {
-                // Se tem conteúdo, substitui normal
                 const safeValue = (value || '').replace(/\$/g, '$$$$');
                 outputText = outputText.replace(placeholderRegex, safeValue);
             }
         });
         
-        // Limpeza final de placeholders perdidos e quebras duplas
         outputText = outputText.replace(/{([A-Z0-9_]+)}/g, ''); 
         outputText = outputText.replace(/(<br>){3,}/g, '<br><br>');
 
         if (tagSupportDiv.style.display !== 'none') {
-        const usedTs = tsSim.checked ? "Sim" : "Não";
-        outputText += `<br><b>Utilizou Tag Support?</b> ${usedTs}`;
-        
-        if (!tsSim.checked) {
-             outputText += `<br><b>Motivo:</b> ${tsReasonInput.value}`;
+            const usedTs = tsSim.checked ? "Sim" : "Não";
+            outputText += `<br><b>Utilizou Tag Support?</b> ${usedTs}`;
+            if (!tsSim.checked) {
+                 outputText += `<br><b>Motivo:</b> ${tsReasonInput.value}`;
+            }
+            outputText += `<br>`;
         }
-        outputText += `<br>`;
-    }
-        
+
         return outputText;
-    }
-// --- FUNÇÕES LÓGICAS DO FORMULÁRIO ---
-
-    function enableAutoBullet(textarea) {
-        if(textarea.value.trim() === '' || textarea.value.trim() === '•') {
-            textarea.value = '• ';
-        }
-        textarea.onkeydown = function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                const start = this.selectionStart, end = this.selectionEnd, value = this.value;
-                const lineStart = value.lastIndexOf('\n', start - 1) + 1;
-                const currentLine = value.substring(lineStart, start);
-                const insertText = (currentLine.trim() === '•' || currentLine.trim() === '') ? '\n' : '\n• ';
-
-                this.value = value.substring(0, start) + insertText + value.substring(end);
-                const newPos = start + insertText.length;
-                this.selectionStart = newPos; this.selectionEnd = newPos;
-            } else if (e.key === 'Backspace') {
-                const start = this.selectionStart;
-                if (start === this.selectionEnd && start > 0) {
-                    const textBefore = this.value.substring(0, start);
-                    if (textBefore.endsWith('\n• ')) {
-                        e.preventDefault();
-                        this.value = textBefore.substring(0, start - 3) + this.value.substring(this.selectionEnd);
-                        this.selectionStart = start - 3; this.selectionEnd = start - 3;
-                    } else if (textBefore === '• ') {
-                         e.preventDefault();
-                         this.value = '';
-                         this.selectionStart = 0; this.selectionEnd = 0;
-                    }
-                }
-            }
-        };
-    }
-
-    function updateFieldsFromScenarios() {
-        const activeScenarioInputs = snippetContainer.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
-        const targetFieldsContent = {};
-        const activeLinkedTasks = new Set();
-
-        activeScenarioInputs.forEach(input => {
-            const scenarioId = input.id;
-            const snippets = scenarioSnippets[scenarioId];
-            if (snippets) {
-                for (const fieldId in snippets) {
-                    if (fieldId !== 'linkedTask' && fieldId !== 'type') {
-                        if (!targetFieldsContent[fieldId]) {
-                            targetFieldsContent[fieldId] = [];
-                        }
-                         if (!targetFieldsContent[fieldId].includes(snippets[fieldId])) {
-                            targetFieldsContent[fieldId].push(snippets[fieldId]);
-                         }
-                    } else if (fieldId === 'linkedTask') {
-                         activeLinkedTasks.add(snippets.linkedTask);
-                    }
-                }
-            }
-        });
-
-        const allPossibleTargetFields = new Set();
-         Object.values(scenarioSnippets).forEach(snippets => {
-             Object.keys(snippets).forEach(key => {
-                 if(key !== 'linkedTask' && key !== 'type') allPossibleTargetFields.add(key);
-             });
-         });
-
-        allPossibleTargetFields.forEach(fieldId => {
-            const field = document.getElementById(fieldId);
-            if (field) {
-                const combinedTextArray = targetFieldsContent[fieldId] || [];
-                let finalValue = "";
-
-                if (textareaListFields.includes(fieldId.replace('field-', ''))) {
-                    finalValue = combinedTextArray
-                        .map(line => line.startsWith('• ') ? line : '• ' + line)
-                        .join('\n');
-
-                    if (finalValue === '') {
-                         finalValue = '• ';
-                    } else if (!finalValue.endsWith('\n• ')) {
-                         finalValue += '\n• ';
-                    }
-                } else {
-                     finalValue = combinedTextArray.join('\n\n');
-                }
-                
-                // Preenche
-                if (finalValue.trim() !== '•' && finalValue.trim() !== '') {
-                    field.value = finalValue;
-                } else if (textareaListFields.includes(fieldId.replace('field-', ''))) {
-                     field.value = '• ';
-                } else {
-                    field.value = '';
-                }
-
-                // CORREÇÃO: Chama a função que agora existe
-                if (field.tagName === 'TEXTAREA' && textareaListFields.includes(fieldId.replace('field-', ''))) {
-                     enableAutoBullet(field);
-                }
-             }
-        });
-
-        const taskCheckboxes = taskCheckboxesContainer.querySelectorAll('.task-checkbox');
-        taskCheckboxes.forEach(taskCheckbox => {
-            // Não reseta se já estiver marcado manualmente, apenas se for linkedTask
-            if (activeLinkedTasks.has(taskCheckbox.value)) {
-                taskCheckbox.checked = true;
-                taskCheckbox.dispatchEvent(new Event('change')); 
-            }
-        });
     }
 
     mainStatusSelect.onchange = () => {
         const selectedStatus = mainStatusSelect.value;
-        
-        // Reseta os passos seguintes
         resetSteps(1.5);
-        
-        // Limpa e reseta o texto do segundo select
-        subStatusSelect.innerHTML = `<option value="">${t('select_substatus') || '-- Selecione --'}</option>`;
-
+        subStatusSelect.innerHTML = `<option value="">${t('select_substatus')}</option>`;
         if (!selectedStatus) {
             subStatusSelect.disabled = true;
             return;
         }
-
-        // Filtra os templates baseados na seleção (NI, SO, IN, AS)
-        let optionsFound = false;
         for (const key in SUBSTATUS_TEMPLATES) {
             const template = SUBSTATUS_TEMPLATES[key];
             if (template.status === selectedStatus) {
@@ -882,16 +705,9 @@ function checkTagSupport() {
                 option.value = key;
                 option.textContent = template.name; 
                 subStatusSelect.appendChild(option);
-                optionsFound = true;
             }
         }
-
-        // Habilita o campo se encontrou opções
-        if (optionsFound) {
-            subStatusSelect.disabled = false;
-        } else {
-            subStatusSelect.disabled = true;
-        }
+        subStatusSelect.disabled = false;
     };
 
     subStatusSelect.onchange = () => {
@@ -972,8 +788,8 @@ function checkTagSupport() {
         step3Div.style.display = 'block';
         if (SUBSTATUS_SHORTCODES[selectedSubStatusKey]) emailAutomationDiv.style.display = 'block'; else emailAutomationDiv.style.display = 'none';
         buttonContainer.style.display = 'flex';
-
-        checkTagSupport();
+        
+        checkTagSupportVisibility();
     };
 
     copyButton.onclick = () => {
@@ -996,15 +812,11 @@ function checkTagSupport() {
         }
 
         copyHtmlToClipboard(htmlOutput);
-        
-        // 1. Abertura Automática
         const campo = await ensureNoteCardIsOpen(); 
 
         if (campo) {
             try {
                 campo.focus();
-                
-                // 2. Limpeza Segura (Range)
                 const isEmpty = campo.innerHTML.trim() === '<p><br></p>' || campo.innerHTML.trim() === '<br>' || campo.innerText.trim() === '';
 
                 if (isEmpty) {
@@ -1026,24 +838,16 @@ function checkTagSupport() {
                     }
                 }
 
-                // 3. Inserção
                 const success = document.execCommand('insertHTML', false, htmlOutput);
-                if (!success) {
-                    campo.innerHTML += htmlOutput;
-                }
+                if (!success) campo.innerHTML += htmlOutput;
 
-                // 4. Notifica Angular
                 triggerInputEvents(campo);
                 setTimeout(() => { showToast(t('inserido_copiado')); }, 600);
 
-                // 5. Dispara Email (Se ativado)
                 const emailEnabled = typeof emailCheckbox !== 'undefined' && emailCheckbox ? emailCheckbox.checked : true;
-                
                 if (selectedSubStatusKey && SUBSTATUS_SHORTCODES[selectedSubStatusKey] && emailEnabled) {
                     const emailCode = SUBSTATUS_SHORTCODES[selectedSubStatusKey];
-                    setTimeout(() => { 
-                        runEmailAutomation(emailCode); 
-                    }, 1000);
+                    setTimeout(() => { runEmailAutomation(emailCode); }, 1000);
                 }
 
                 togglePopup(false);
@@ -1078,6 +882,7 @@ function checkTagSupport() {
                 screenshotsContainer.style.display = 'none';
                 screenshotsListDiv.innerHTML = ''; 
             }
+            tagSupportDiv.style.display = 'none';
             buttonContainer.style.display = 'none';
             emailAutomationDiv.style.display = 'none'; 
         }
