@@ -34,11 +34,13 @@ export function copyHtmlToClipboard(html) {
 export function getVisibleEditor() {
     // 1. Procura o Card que está no topo da pilha (visível)
     const activeCard = document.querySelector('card.write-card.is-top');
+    
     if (!activeCard) {
-        // Fallback
+        // Fallback: tenta achar qualquer editor visível se a classe is-top não existir
         const allEditors = Array.from(document.querySelectorAll('div[contenteditable="true"]'));
         return allEditors.find(e => e.offsetParent !== null);
     }
+
     return activeCard.querySelector('div[contenteditable="true"]');
 }
 
@@ -50,22 +52,21 @@ export function triggerInputEvents(element) {
     });
 }
 
+// --- MUDANÇA AQUI: Sempre força a abertura de uma nova nota ---
 export async function ensureNoteCardIsOpen() {
-    // 1. Verifica se já está aberta
-    let editor = getVisibleEditor();
-    if (editor) return editor;
+    console.log("Forçando abertura de nova nota...");
 
-    console.log("Nota fechada. Tentando abrir...");
-
-    // 2. Busca o botão 'description' (Nota)
+    // 1. Busca o botão 'description' (Nota)
     const icones = Array.from(document.querySelectorAll('i.material-icons-extended'));
     const iconeNota = icones.find(el => el.innerText.trim() === 'description');
 
     if (iconeNota) {
+        // Pega o botão pai
         const btnAlvo = iconeNota.closest('material-fab') || iconeNota.closest('material-button');
         
         if (btnAlvo) {
-            // Hack de visibilidade
+            // Hack de visibilidade: força display block se estiver hidden
+            // Isso permite clicar mesmo que o menu (+) esteja fechado
             if (btnAlvo.style) {
                 btnAlvo.style.display = 'block';
                 btnAlvo.style.visibility = 'visible';
@@ -75,7 +76,7 @@ export async function ensureNoteCardIsOpen() {
             simularCliqueReal(iconeNota);
         }
     } else {
-        // Fallback: Menu (+)
+        // Fallback: Tenta abrir via Menu (+) se o botão direto não for achado
         const speedDial = document.querySelector('material-fab-speed-dial');
         if (speedDial) {
             const trigger = speedDial.querySelector('.trigger');
@@ -85,19 +86,25 @@ export async function ensureNoteCardIsOpen() {
             } else {
                 speedDial.click();
             }
+            
             await esperar(800);
+            // Tenta achar de novo com menu aberto
             const iconesAgora = Array.from(document.querySelectorAll('i.material-icons-extended'));
             const btnAgora = iconesAgora.find(el => el.innerText.trim() === 'description');
             if(btnAgora) simularCliqueReal(btnAgora);
         }
     }
 
-    // 3. Aguarda o editor aparecer (Polling)
+    // 2. Aguarda o NOVO editor aparecer (Polling)
     let tentativas = 0;
+    let editor = null;
+    
+    // Espera até que o editor (provavelmente com a classe .is-top) apareça
     while (!editor && tentativas < 15) {
         await esperar(300);
         editor = getVisibleEditor();
         tentativas++;
     }
+    
     return editor;
 }

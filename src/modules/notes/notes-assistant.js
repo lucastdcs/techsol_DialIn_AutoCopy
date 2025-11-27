@@ -25,7 +25,6 @@ export function initCaseNotesAssistant() {
     let currentLang = 'pt'; 
     let isPortugalCase = false;
 
-    
 
     // --- CONSTRUÇÃO DA UI ---
     const btnContainer = document.createElement("div"); 
