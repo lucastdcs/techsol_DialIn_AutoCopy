@@ -63,7 +63,7 @@ export function initQuickEmailAssistant() {
     // --- UI: Botão Flutuante ---
     const btnContainer = document.createElement("div");
     Object.assign(btnContainer.style, {
-        position: "fixed", bottom: "15%", right: "24px", zIndex: "9999",
+        position: "fixed", bottom: "20%", right: "24px", zIndex: "9999",
         display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px",
         cursor: "pointer" // Importante para indicar que é interativo
     });
