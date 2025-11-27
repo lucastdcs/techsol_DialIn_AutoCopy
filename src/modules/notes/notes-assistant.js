@@ -30,7 +30,7 @@ import {
 import { runEmailAutomation } from '../email/email-automation.js'; 
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v3.3.1"; // Versão Corrigida
+    const CURRENT_VERSION = "v3.3.1"; 
     
     // --- ESTADO GLOBAL ---
     let currentCaseType = 'bau';
@@ -70,11 +70,16 @@ export function initCaseNotesAssistant() {
 
     // --- HELPERS DE DOM / EDITOR ---
     function getVisibleEditor() {
+        // 1. Procura o Card que está no topo da pilha (visível)
         const activeCard = document.querySelector('card.write-card.is-top');
+        
         if (!activeCard) {
+            // Fallback: tenta achar qualquer editor visível se a classe is-top não existir
             const allEditors = Array.from(document.querySelectorAll('div[contenteditable="true"]'));
             return allEditors.find(e => e.offsetParent !== null);
         }
+
+        // 2. Dentro do card ativo, busca o editor contenteditable
         return activeCard.querySelector('div[contenteditable="true"]');
     }
 
@@ -86,7 +91,7 @@ export function initCaseNotesAssistant() {
         });
     }
 
-    // --- LÓGICA DE ABERTURA AUTOMÁTICA (CORRIGIDA - MODO SNIPER) ---
+    // --- LÓGICA DE ABERTURA AUTOMÁTICA DA NOTA (Sniper Mode) ---
     async function ensureNoteCardIsOpen() {
         // 1. Verifica se já está aberta
         let editor = getVisibleEditor();
@@ -99,8 +104,11 @@ export function initCaseNotesAssistant() {
         const iconeNota = icones.find(el => el.innerText.trim() === 'description');
 
         if (iconeNota) {
+            // Pega o botão pai
             const btnAlvo = iconeNota.closest('material-fab') || iconeNota.closest('material-button');
+            
             if (btnAlvo) {
+                // Hack de visibilidade: força display block se estiver hidden
                 if (btnAlvo.style) {
                     btnAlvo.style.display = 'block';
                     btnAlvo.style.visibility = 'visible';
@@ -110,7 +118,7 @@ export function initCaseNotesAssistant() {
                 simularCliqueReal(iconeNota);
             }
         } else {
-            // Fallback: Menu (+)
+            // Fallback: Tenta abrir via Menu (+) se o botão direto não for achado
             const speedDial = document.querySelector('material-fab-speed-dial');
             if (speedDial) {
                 const trigger = speedDial.querySelector('.trigger');
@@ -120,20 +128,23 @@ export function initCaseNotesAssistant() {
                 } else {
                     speedDial.click();
                 }
+                
                 await esperar(800);
+                // Tenta achar de novo com menu aberto
                 const iconesAgora = Array.from(document.querySelectorAll('i.material-icons-extended'));
                 const btnAgora = iconesAgora.find(el => el.innerText.trim() === 'description');
                 if(btnAgora) simularCliqueReal(btnAgora);
             }
         }
 
-        // 3. Aguarda
+        // 3. Aguarda o editor aparecer (Polling)
         let tentativas = 0;
-        while (!editor && tentativas < 15) {
+        while (!editor && tentativas < 20) {
             await esperar(300);
             editor = getVisibleEditor();
             tentativas++;
         }
+        
         return editor;
     }
 
@@ -141,6 +152,7 @@ export function initCaseNotesAssistant() {
     //                              CONSTRUÇÃO DA UI
     // =================================================================================
 
+    // Botão Flutuante
     const btnContainer = document.createElement("div"); 
     Object.assign(btnContainer.style, {
         position: "fixed", top: "15%", right: "24px", zIndex: "9999",
@@ -174,10 +186,12 @@ export function initCaseNotesAssistant() {
     document.body.appendChild(btnContainer);
     makeDraggable(btnContainer); 
 
+    // Popup Principal
     const popup = document.createElement("div");
     popup.id = "autofill-popup";
     Object.assign(popup.style, stylePopup, { right: "24px" });
 
+    // Header
     const header = document.createElement("div");
     Object.assign(header.style, stylePopupHeader);
     makeDraggable(popup, header); 
@@ -253,7 +267,7 @@ export function initCaseNotesAssistant() {
     const styleStepperCount = { fontSize: '14px', fontWeight: '500', color: '#1a73e8', minWidth: '15px', textAlign: 'center' };
     const styleStepBlock = { borderTop: "1px solid #eee", paddingTop: "12px", marginTop: "12px" };
     const styleRadioContainer = { display: 'flex', gap: '15px', marginBottom: '10px' };
-    // NOVO: Estilo para o botão de redundância
+    // Estilo para o botão de redundância
     const styleOptionalBtn = { width: '100%', padding: '10px', background: 'white', border: '1px dashed #1a73e8', color: '#1a73e8', borderRadius: '6px', cursor: 'pointer', fontWeight: '500', fontSize: '13px', marginBottom: '10px', transition: 'all 0.2s' };
 
     const popupContent = document.createElement("div");
@@ -276,18 +290,21 @@ export function initCaseNotesAssistant() {
     const step1Div = document.createElement("div");
     const mainStatusLabel = document.createElement("label");
     const subStatusLabel = document.createElement("label");
+    
     const stepPortugalDiv = document.createElement("div");
     const portugalLabel = document.createElement("label");
     const portugalRadioSim = document.createElement("input");
     const portugalLabelSim = document.createElement("label");
     const portugalRadioNao = document.createElement("input");
     const portugalLabelNao = document.createElement("label");
+
     const stepConsentDiv = document.createElement("div");
     const consentLabel = document.createElement("label");
     const consentRadioSim = document.createElement("input");
     const consentLabelSim = document.createElement("label");
     const consentRadioNao = document.createElement("input");
     const consentLabelNao = document.createElement("label");
+    
     const stepSnippetsDiv = document.createElement("div");
     const snippetContainer = document.createElement("div");
     const stepSnippetsTitle = document.createElement("h3");
@@ -532,6 +549,7 @@ export function initCaseNotesAssistant() {
                 hasScreenshots = true;
                 const taskBlock = document.createElement('div');
                 Object.assign(taskBlock.style, { marginBottom: '12px', background: '#f1f3f4', padding: '8px', borderRadius: '6px', border: '1px solid #e0e0e0' });
+                
                 const taskHeader = document.createElement('div');
                 taskHeader.style.marginBottom = "8px";
                 taskBlock.appendChild(taskHeader);
@@ -608,6 +626,7 @@ export function initCaseNotesAssistant() {
                     for (let i = 1; i <= count; i++) {
                         const nameInput = document.getElementById(`name-${taskKey}-${i}`);
                         const customName = nameInput ? nameInput.value : `${task.name} #${i}`;
+                        
                         screenshotsText += `<b>${customName}</b>`;
                         
                         let itemsHtml = '';
@@ -662,13 +681,19 @@ export function initCaseNotesAssistant() {
                 value = value.split('\n').filter(line => line.trim() !== '').map(line => `<p style="margin: 0 0 8px 0;">${line}</p>`).join('');
             } else if (input.tagName === 'TEXTAREA' && !textareaListFields.includes(fieldName) && !textareaParagraphFields.includes(fieldName)) {
                  value = value.replace(/\n/g, '<br>');
-            } else if (input.tagName === 'TEXTAREA' && value.trim() === '') { value = ''; }
-            else if (fieldName === 'ON_CALL' && value.trim() === '') { value = 'N/A'; }
-            else if (fieldName === 'GTM_GA4_VERIFICADO' && value.trim() === '') { value = 'N/A'; }
+            } else if (input.tagName === 'TEXTAREA' && value.trim() === '') {
+                 value = '';
+            } else if (fieldName === 'ON_CALL' && value.trim() === '') {
+                value = 'N/A';
+            } else if (fieldName === 'GTM_GA4_VERIFICADO' && value.trim() === '') {
+                value = 'N/A';
+            }
             const safeValue = (value || '').replace(/\$/g, '$$$$');
             outputText = outputText.replace(placeholder, safeValue);
         });
+        
         outputText = outputText.replace(/{([A-Z0-9_]+)}/g, ''); 
+        
         return outputText;
     }
 
@@ -762,8 +787,9 @@ export function initCaseNotesAssistant() {
         }
     };
 
-    // === BOTÃO PREENCHER (COM ABERTURA AUTOMÁTICA E LIMPEZA SEGURA) ===
+    // === BOTÃO AÇÃO PRINCIPAL (Com abertura automática e inserção segura) ===
     generateButton.onclick = async () => {
+        // 1. Verificações Iniciais
         const selectedSubStatusKey = subStatusSelect.value;
         const htmlOutput = generateOutputHtml();
 
@@ -772,56 +798,68 @@ export function initCaseNotesAssistant() {
             return;
         }
 
+        // 2. Copia para o clipboard por segurança
         copyHtmlToClipboard(htmlOutput);
         
-        // 1. Abre ou encontra o card de nota
+        // 3. ABERTURA AUTOMÁTICA (Espera a nota abrir e retorna o elemento)
         const campo = await ensureNoteCardIsOpen(); 
 
         if (campo) {
             try {
                 campo.focus();
                 
-                // 2. Limpeza Segura (Range)
-                // Evita o bug de selecionar a página inteira
+                // 4. LÓGICA DE SELEÇÃO E LIMPEZA SEGURA (Range)
+                // Isso evita usar 'selectAll' que poderia selecionar a página inteira
+                
                 const isEmpty = campo.innerHTML.trim() === '<p><br></p>' || campo.innerHTML.trim() === '<br>' || campo.innerText.trim() === '';
 
                 if (isEmpty) {
+                    // Se estiver vazio, seleciona o conteúdo interno e deleta para garantir o estado limpo
                     const selection = window.getSelection();
                     const range = document.createRange();
-                    range.selectNodeContents(campo);
+                    range.selectNodeContents(campo); // Seleciona APENAS dentro da div da nota
                     selection.removeAllRanges();
                     selection.addRange(range);
                     document.execCommand('delete', false, null);
                 } else {
+                    // Se já tiver texto, vamos adicionar ao final (Append)
+                    // Verifica se já não tem os <br> para não duplicar espaços
                     if (!campo.innerHTML.endsWith('<br><br>')) {
                          const selection = window.getSelection();
                          const range = document.createRange();
                          range.selectNodeContents(campo);
-                         range.collapse(false);
+                         range.collapse(false); // false = colapsar para o FINAL do texto
                          selection.removeAllRanges();
                          selection.addRange(range);
                          document.execCommand('insertHTML', false, '<br><br>');
                     }
                 }
 
-                // 3. Insere o HTML
+                // 5. INSERÇÃO DO CONTEÚDO
                 const success = document.execCommand('insertHTML', false, htmlOutput);
+                
+                // Fallback se o comando falhar
                 if (!success) {
                     campo.innerHTML += htmlOutput;
                 }
 
-                // 4. Notifica o Angular
+                // 6. ATUALIZAÇÃO DO ANGULAR (Dispara eventos)
                 triggerInputEvents(campo);
                 
                 setTimeout(() => { showToast(t('inserido_copiado')); }, 600);
 
-                // 5. Dispara Email
+                // 7. AUTOMAÇÃO DE EMAIL (Se habilitado e tiver shortcode)
                 const emailEnabled = typeof emailCheckbox !== 'undefined' && emailCheckbox ? emailCheckbox.checked : true;
+                
                 if (selectedSubStatusKey && SUBSTATUS_SHORTCODES[selectedSubStatusKey] && emailEnabled) {
                     const emailCode = SUBSTATUS_SHORTCODES[selectedSubStatusKey];
-                    setTimeout(() => { runEmailAutomation(emailCode); }, 1000);
+                    // Delay de 1s para garantir que a nota salvou/processou antes de mudar o foco para o email
+                    setTimeout(() => { 
+                        runEmailAutomation(emailCode); 
+                    }, 1000);
                 }
 
+                // 8. RESET FINAL
                 togglePopup(false);
                 resetSteps(1.5);
                 mainStatusSelect.value = "";
@@ -850,10 +888,12 @@ export function initCaseNotesAssistant() {
         if (startFrom <= 3) {
             step3Div.style.display = 'none';
             dynamicFormFieldsContainer.innerHTML = '';
+            
             if (typeof screenshotsContainer !== 'undefined') {
                 screenshotsContainer.style.display = 'none';
                 screenshotsListDiv.innerHTML = ''; 
             }
+            
             buttonContainer.style.display = 'none';
             emailAutomationDiv.style.display = 'none'; 
         }
