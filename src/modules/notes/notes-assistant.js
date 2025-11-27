@@ -550,6 +550,42 @@ export function initCaseNotesAssistant() {
         return outputText;
     }
 
+    // --- Lógica de Seleção do Status Principal ---
+    mainStatusSelect.onchange = () => {
+        const selectedStatus = mainStatusSelect.value;
+        
+        // Reseta os passos seguintes
+        resetSteps(1.5);
+        
+        // Limpa e reseta o texto do segundo select
+        subStatusSelect.innerHTML = `<option value="">${t('select_substatus') || '-- Selecione --'}</option>`;
+
+        if (!selectedStatus) {
+            subStatusSelect.disabled = true;
+            return;
+        }
+
+        // Filtra os templates baseados na seleção (NI, SO, IN, AS)
+        let optionsFound = false;
+        for (const key in SUBSTATUS_TEMPLATES) {
+            const template = SUBSTATUS_TEMPLATES[key];
+            if (template.status === selectedStatus) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = template.name; 
+                subStatusSelect.appendChild(option);
+                optionsFound = true;
+            }
+        }
+
+        // Habilita o campo se encontrou opções
+        if (optionsFound) {
+            subStatusSelect.disabled = false;
+        } else {
+            subStatusSelect.disabled = true;
+        }
+    };
+
     subStatusSelect.onchange = () => {
         const selectedSubStatusKey = subStatusSelect.value;
         resetSteps(1.5);
