@@ -30,7 +30,7 @@ import {
 import { runEmailAutomation } from '../email/email-automation.js'; 
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v3.3.1"; 
+    const CURRENT_VERSION = "v3.3.2"; // Versão Corrigida (Diff Restore)
     
     // --- ESTADO GLOBAL ---
     let currentCaseType = 'bau';
@@ -68,19 +68,18 @@ export function initCaseNotesAssistant() {
         document.body.removeChild(container);
     };
 
-    // --- HELPERS DE DOM / EDITOR ---
+    // --- HELPERS DE DOM / EDITOR (RESTAURADO DO COMMIT) ---
     function getVisibleEditor() {
-        // 1. Procura o Card que está no topo da pilha (visível)
+        // 1. Tenta achar o card ativo específico
         const activeCard = document.querySelector('card.write-card.is-top');
-        
-        if (!activeCard) {
-            // Fallback: tenta achar qualquer editor visível se a classe is-top não existir
-            const allEditors = Array.from(document.querySelectorAll('div[contenteditable="true"]'));
-            return allEditors.find(e => e.offsetParent !== null);
+        if (activeCard) {
+            return activeCard.querySelector('div[contenteditable="true"]');
         }
-
-        // 2. Dentro do card ativo, busca o editor contenteditable
-        return activeCard.querySelector('div[contenteditable="true"]');
+        
+        // 2. Fallback: Procura qualquer editor visível (offsetParent !== null)
+        // Isso corrige o problema quando a classe .is-top ainda não foi aplicada pelo Angular
+        const allEditors = Array.from(document.querySelectorAll('div[contenteditable="true"]'));
+        return allEditors.find(e => e.offsetParent !== null);
     }
 
     function triggerInputEvents(element) {
@@ -91,11 +90,14 @@ export function initCaseNotesAssistant() {
         });
     }
 
-    // --- LÓGICA DE ABERTURA AUTOMÁTICA DA NOTA (Sniper Mode) ---
+    // --- LÓGICA DE ABERTURA AUTOMÁTICA DA NOTA ---
     async function ensureNoteCardIsOpen() {
-        // 1. Verifica se já está aberta
+        // 1. Verifica se já está aberta e visível
         let editor = getVisibleEditor();
-        if (editor) return editor;
+        if (editor) {
+            console.log("Nota já aberta.");
+            return editor;
+        }
 
         console.log("Nota fechada. Tentando abrir...");
 
@@ -108,7 +110,7 @@ export function initCaseNotesAssistant() {
             const btnAlvo = iconeNota.closest('material-fab') || iconeNota.closest('material-button');
             
             if (btnAlvo) {
-                // Hack de visibilidade: força display block se estiver hidden
+                // Hack de visibilidade
                 if (btnAlvo.style) {
                     btnAlvo.style.display = 'block';
                     btnAlvo.style.visibility = 'visible';
@@ -118,7 +120,7 @@ export function initCaseNotesAssistant() {
                 simularCliqueReal(iconeNota);
             }
         } else {
-            // Fallback: Tenta abrir via Menu (+) se o botão direto não for achado
+            // Fallback: Menu (+)
             const speedDial = document.querySelector('material-fab-speed-dial');
             if (speedDial) {
                 const trigger = speedDial.querySelector('.trigger');
@@ -130,7 +132,7 @@ export function initCaseNotesAssistant() {
                 }
                 
                 await esperar(800);
-                // Tenta achar de novo com menu aberto
+                
                 const iconesAgora = Array.from(document.querySelectorAll('i.material-icons-extended'));
                 const btnAgora = iconesAgora.find(el => el.innerText.trim() === 'description');
                 if(btnAgora) simularCliqueReal(btnAgora);
@@ -152,7 +154,6 @@ export function initCaseNotesAssistant() {
     //                              CONSTRUÇÃO DA UI
     // =================================================================================
 
-    // Botão Flutuante
     const btnContainer = document.createElement("div"); 
     Object.assign(btnContainer.style, {
         position: "fixed", top: "15%", right: "24px", zIndex: "9999",
@@ -186,12 +187,10 @@ export function initCaseNotesAssistant() {
     document.body.appendChild(btnContainer);
     makeDraggable(btnContainer); 
 
-    // Popup Principal
     const popup = document.createElement("div");
     popup.id = "autofill-popup";
     Object.assign(popup.style, stylePopup, { right: "24px" });
 
-    // Header
     const header = document.createElement("div");
     Object.assign(header.style, stylePopupHeader);
     makeDraggable(popup, header); 
@@ -267,7 +266,7 @@ export function initCaseNotesAssistant() {
     const styleStepperCount = { fontSize: '14px', fontWeight: '500', color: '#1a73e8', minWidth: '15px', textAlign: 'center' };
     const styleStepBlock = { borderTop: "1px solid #eee", paddingTop: "12px", marginTop: "12px" };
     const styleRadioContainer = { display: 'flex', gap: '15px', marginBottom: '10px' };
-    // Estilo para o botão de redundância
+    // NOVO: Estilo para o botão de redundância
     const styleOptionalBtn = { width: '100%', padding: '10px', background: 'white', border: '1px dashed #1a73e8', color: '#1a73e8', borderRadius: '6px', cursor: 'pointer', fontWeight: '500', fontSize: '13px', marginBottom: '10px', transition: 'all 0.2s' };
 
     const popupContent = document.createElement("div");
@@ -290,21 +289,18 @@ export function initCaseNotesAssistant() {
     const step1Div = document.createElement("div");
     const mainStatusLabel = document.createElement("label");
     const subStatusLabel = document.createElement("label");
-    
     const stepPortugalDiv = document.createElement("div");
     const portugalLabel = document.createElement("label");
     const portugalRadioSim = document.createElement("input");
     const portugalLabelSim = document.createElement("label");
     const portugalRadioNao = document.createElement("input");
     const portugalLabelNao = document.createElement("label");
-
     const stepConsentDiv = document.createElement("div");
     const consentLabel = document.createElement("label");
     const consentRadioSim = document.createElement("input");
     const consentLabelSim = document.createElement("label");
     const consentRadioNao = document.createElement("input");
     const consentLabelNao = document.createElement("label");
-    
     const stepSnippetsDiv = document.createElement("div");
     const snippetContainer = document.createElement("div");
     const stepSnippetsTitle = document.createElement("h3");
@@ -549,7 +545,6 @@ export function initCaseNotesAssistant() {
                 hasScreenshots = true;
                 const taskBlock = document.createElement('div');
                 Object.assign(taskBlock.style, { marginBottom: '12px', background: '#f1f3f4', padding: '8px', borderRadius: '6px', border: '1px solid #e0e0e0' });
-                
                 const taskHeader = document.createElement('div');
                 taskHeader.style.marginBottom = "8px";
                 taskBlock.appendChild(taskHeader);
@@ -617,6 +612,8 @@ export function initCaseNotesAssistant() {
                 const countSpan = label.querySelector('.stepper-count');
                 const count = parseInt(countSpan.textContent);
 
+                // Se personalizou o nome, não adiciona na lista simples
+                // (Ou pode adicionar o nome original para referência)
                 if (count > 1) tagNames.push(`${task.name} (x${count})`);
                 else tagNames.push(task.name);
 
