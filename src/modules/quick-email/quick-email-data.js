@@ -108,19 +108,21 @@ export const QUICK_EMAILS = {
                     <p>Lamentamos o inconveniente e esperamos trabalhar com você novamente no futuro.</p>
                     <br>
                     <p>Se você quiser saber mais, confira abaixo alguns links úteis de recursos valiosos relacionados à implementação de tags e suporte do Shopping.</p>
+                    
                     <p><strong>Em relação às tags</strong></p>
                     <ul>
-                        <li>Suporte à implementação de tags</li>
-                        <li>Google Ads</li>
-                        <li>Google Analytics</li>
+                        <li><a href="https://developers.google.com/gtagjs">Suporte à implementação de tags</a></li>
+                        <li><a href="https://www.youtube.com/user/learnwithgoogle/playlists">Google Ads</a></li>
+                        <li><a href="https://www.youtube.com/user/googleanalytics">Google Analytics</a></li>
                     </ul>
+
                     <p><strong>Em relação ao Shopping</strong></p>
                     <ul>
-                        <li>Google for Retail</li>
-                        <li>Google Merchant Center</li>
-                        <li>Como configurar a conta e o feed</li>
-                        <li>Otimização do feed</li>
-                        <li>Google plataformas</li>
+                        <li><a href="https://www.google.com/retail/">Google for Retail</a></li>
+                        <li><a href="https://www.google.com/retail/solutions/merchant-center/">Google Merchant Center</a></li>
+                        <li><a href="https://support.google.com/merchants/answer/188924">Como configurar a conta e o feed</a></li>
+                        <li><a href="https://support.google.com/merchants/topic/7294606">Otimização do feed</a></li>
+                        <li><a href="https://support.google.com/merchants/answer/9199328">Google plataformas</a></li>
                     </ul>
                     <br>
                     <p><strong>[Seu Nome]</strong><br>Time de Soluções Técnicas Cognizant, em nome do Google</p>
@@ -138,19 +140,21 @@ export const QUICK_EMAILS = {
                     <p>Lamentamos o inconveniente e esperamos trabalhar com você novamente no futuro.</p>
                     <br>
                     <p>Se você quiser saber mais, confira abaixo alguns links úteis de recursos valiosos relacionados à implementação de tags e suporte do Shopping.</p>
+                    
                     <p><strong>Em relação às tags</strong></p>
                     <ul>
-                        <li>Suporte à implementação de tags</li>
-                        <li>Google Ads</li>
-                        <li>Google Analytics</li>
+                        <li><a href="https://developers.google.com/gtagjs">Suporte à implementação de tags</a></li>
+                        <li><a href="https://www.youtube.com/user/learnwithgoogle/playlists">Google Ads</a></li>
+                        <li><a href="https://www.youtube.com/user/googleanalytics">Google Analytics</a></li>
                     </ul>
+
                     <p><strong>Em relação ao Shopping</strong></p>
                     <ul>
-                        <li>Google for Retail</li>
-                        <li>Google Merchant Center</li>
-                        <li>Como configurar a conta e o feed</li>
-                        <li>Otimização do feed</li>
-                        <li>Google plataformas</li>
+                        <li><a href="https://www.google.com/retail/">Google for Retail</a></li>
+                        <li><a href="https://www.google.com/retail/solutions/merchant-center/">Google Merchant Center</a></li>
+                        <li><a href="https://support.google.com/merchants/answer/188924">Como configurar a conta e o feed</a></li>
+                        <li><a href="https://support.google.com/merchants/topic/7294606">Otimização do feed</a></li>
+                        <li><a href="https://support.google.com/merchants/answer/9199328">Google plataformas</a></li>
                     </ul>
                     <br>
                     <p><strong>[Seu Nome]</strong><br>Time de Soluções Técnicas Cognizant, em nome do Google</p>
