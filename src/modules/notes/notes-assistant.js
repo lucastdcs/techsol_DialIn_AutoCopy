@@ -517,13 +517,14 @@ function renderScreenshotInputs() {
         screenshotsContainer.style.display = hasScreenshots ? 'block' : 'none';
     }
 
-    function generateOutputHtml() {
+   function generateOutputHtml() {
         const selectedSubStatusKey = subStatusSelect.value;
         if (!selectedSubStatusKey) return null;
         const templateData = SUBSTATUS_TEMPLATES[selectedSubStatusKey];
         let outputText = templateData.template.replace(/\n/g, "<br>");
         const ulStyle = "style=\"margin-bottom: 12px; padding-left: 30px;\"";
 
+        // 1. Processamento de Tasks e Screenshots
         if (templateData.requiresTasks || taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked').length > 0) {
             const selectedCheckboxes = taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked');
             let tagNames = [];
@@ -569,6 +570,7 @@ function renderScreenshotInputs() {
              outputText = outputText.replace(/{SCREENSHOTS_LIST}/g, 'N/A');
         }
 
+        // 2. Campos de Portugal e Consentimento
         if (currentLang === 'pt' && isPortugalCase) {
             const consentValue = consentRadioSim.checked ? t('sim') : t('nao');
             const consentHtml = `<br><b>${t('consentiu_gravacao')}</b> ${consentValue}<br><br>`;
@@ -582,12 +584,16 @@ function renderScreenshotInputs() {
             outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, '');
         }
 
+        // 3. Campos Dinâmicos com Limpeza Inteligente
         const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
         inputs.forEach(input => {
             const fieldName = input.id.replace('field-', '');
-            const placeholder = new RegExp(`{${fieldName}}`, 'g');
+            const placeholderStr = `{${fieldName}}`;
+            const placeholderRegex = new RegExp(placeholderStr, 'g');
+            
             let value = input.value;
             
+            // Lógica para Radio Buttons (REASON_COMMENTS)
             if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey.startsWith('NI_') || selectedSubStatusKey.startsWith('IN_'))) {
                 const checkedRadio = snippetContainer.querySelector('input[type="radio"]:checked');
                 if (checkedRadio && scenarioSnippets[checkedRadio.id] && scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS']) {
@@ -595,25 +601,56 @@ function renderScreenshotInputs() {
                 }
             }
 
+            // Formatação de Listas e Parágrafos
             if (textareaListFields.includes(fieldName) && value.trim() !== '') {
-                const lines = value.split('\n').map(line => line.trim()).filter(line => line !== '' && line !== '•').map(line => line.startsWith('• ') ? line.substring(2).trim() : line.trim()).filter(line => line !== '').map(line => `<li>${line}</li>`).join('');
+                const lines = value.split('\n')
+                                 .map(line => line.trim())
+                                 .filter(line => line !== '' && line !== '•')
+                                 .map(line => line.startsWith('• ') ? line.substring(2).trim() : line.trim())
+                                 .filter(line => line !== '')
+                                 .map(line => `<li>${line}</li>`)
+                                 .join('');
                 value = lines ? `<ul ${ulStyle}>${lines}</ul>` : '';
             } else if (textareaParagraphFields.includes(fieldName) && value.trim() !== '') {
                 value = value.split('\n').filter(line => line.trim() !== '').map(line => `<p style="margin: 0 0 8px 0;">${line}</p>`).join('');
             } else if (input.tagName === 'TEXTAREA' && !textareaListFields.includes(fieldName) && !textareaParagraphFields.includes(fieldName)) {
                  value = value.replace(/\n/g, '<br>');
-            } else if (input.tagName === 'TEXTAREA' && value.trim() === '') {
-                 value = '';
-            } else if (fieldName === 'ON_CALL' && value.trim() === '') {
-                value = 'N/A';
-            } else if (fieldName === 'GTM_GA4_VERIFICADO' && value.trim() === '') {
-                value = 'N/A';
+            } 
+            
+            // Normalização de valores vazios
+            if (input.tagName === 'TEXTAREA' && value.trim() === '') { value = ''; }
+            else if (fieldName === 'ON_CALL' && value.trim() === '') { value = 'N/A'; }
+            else if (fieldName === 'GTM_GA4_VERIFICADO' && value.trim() === '') { value = 'N/A'; }
+
+            // === LÓGICA DE LIMPEZA INTELIGENTE ===
+            // Remove tags HTML para checar se o conteúdo real é vazio ou N/A
+            const textContent = value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+            const isEffectivelyEmpty = 
+                textContent === '' || 
+                textContent === '•' || 
+                textContent.toLowerCase() === 'n/a' || 
+                textContent.toLowerCase() === 'na';
+
+            if (isEffectivelyEmpty) {
+                // Se vazio, tenta remover a LINHA INTEIRA (Rótulo + Placeholder)
+                // Regex para: (Quebra opcional) + <b>Label:</b> + Placeholder + (Quebra opcional)
+                const lineRemoverRegex = new RegExp(`(?:<br>\\s*)?<[b|strong]+>[^<]+:\\s*<\\/[b|strong]+>\\s*\\{${fieldName}\\}(?:<br>\\s*)?`, 'gi');
+                
+                if (lineRemoverRegex.test(outputText)) {
+                    outputText = outputText.replace(lineRemoverRegex, ''); // Remove a linha
+                } else {
+                    outputText = outputText.replace(placeholderRegex, ''); // Remove só o placeholder
+                }
+            } else {
+                // Se tem conteúdo, substitui normal
+                const safeValue = (value || '').replace(/\$/g, '$$$$');
+                outputText = outputText.replace(placeholderRegex, safeValue);
             }
-            const safeValue = (value || '').replace(/\$/g, '$$$$');
-            outputText = outputText.replace(placeholder, safeValue);
         });
         
+        // Limpeza final de placeholders perdidos e quebras duplas
         outputText = outputText.replace(/{([A-Z0-9_]+)}/g, ''); 
+        outputText = outputText.replace(/(<br>){3,}/g, '<br><br>');
         
         return outputText;
     }
