@@ -265,6 +265,12 @@ export function initQuickEmailAssistant() {
 
     let visible = false;
     btn.onclick = () => {
+        // --- PROTEÇÃO CONTRA ARRASTO ---
+        if (btnContainer.getAttribute('data-dragging') === 'true') {
+            return; 
+        }
+        // -------------------------------
+
         visible = !visible;
         togglePopup(visible);
     };

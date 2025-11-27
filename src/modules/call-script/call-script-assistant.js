@@ -292,8 +292,14 @@ export function initCallScriptAssistant() {
     }
 
     // --- Event Handlers (CORREÇÃO DE NOME DE VARIÁVEL) ---
-    let csaVisible = false;
-    btn.onclick = () => { // <--- CORRIGIDO de csaBtn para btn
+   let csaVisible = false;
+    btn.onclick = () => {
+        // --- PROTEÇÃO CONTRA ARRASTO ---
+        if (btnContainer.getAttribute('data-dragging') === 'true') {
+            return; 
+        }
+        // -------------------------------
+
         csaVisible = !csaVisible;
         csaTogglePopup(csaVisible);
     };
