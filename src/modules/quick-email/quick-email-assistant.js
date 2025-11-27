@@ -20,7 +20,7 @@ import { QUICK_EMAILS } from './quick-email-data.js';
 import { runQuickEmail } from '../email/email-automation.js';
 
 export function initQuickEmailAssistant() {
-    const CURRENT_VERSION = "v2.8.5"; 
+    const CURRENT_VERSION = "v2.8.7"; 
 
     // --- ESTADO ---
     let activeCategory = Object.keys(QUICK_EMAILS)[0]; 
