@@ -231,8 +231,6 @@ export function initCaseNotesAssistant() {
         display: 'flex', gap: '15px', marginBottom: '10px'
     };
 
-    const styleOptionalBtn = { width: '100%', padding: '10px', background: 'white', border: '1px dashed #1a73e8', color: '#1a73e8', borderRadius: '6px', cursor: 'pointer', fontWeight: '500', fontSize: '13px', marginBottom: '10px', transition: 'all 0.2s' };
-
     
 
     // Conteúdo principal do popup
@@ -283,9 +281,9 @@ export function initCaseNotesAssistant() {
     const snippetContainer = document.createElement("div");
     const stepSnippetsTitle = document.createElement("h3");
     
-    // const step2Div = document.createElement("div");
-    // const taskCheckboxesContainer = document.createElement("div");
-    // const step2Title = document.createElement("h3");
+    const step2Div = document.createElement("div");
+    const taskCheckboxesContainer = document.createElement("div");
+    const step2Title = document.createElement("h3");
     
     const step3Div = document.createElement("div");
     const dynamicFormFieldsContainer = document.createElement("div");
@@ -374,77 +372,12 @@ export function initCaseNotesAssistant() {
         }
         return key; 
     }
-    // --- ADICIONE ISTO ANTES DE renderScreenshotInputs() ---
-
-    function populateTaskCheckboxes() {
-        taskCheckboxesContainer.innerHTML = '';
-        for (const taskKey in TASKS_DB) {
-            const task = TASKS_DB[taskKey];
-            const label = document.createElement('label');
-            Object.assign(label.style, styleCheckboxLabel);
-            // ... (Seu código de criação de checkbox existente vai aqui, ou use o helper abaixo)
-            // Para facilitar, apenas garanta que o loop de criação das checkboxes esteja dentro desta função
-            // e não solto no código.
-            
-            // (Vou assumir que você moveu o loop 'for (const taskKey in TASKS_DB)' para cá)
-             const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.value = taskKey;
-            checkbox.className = 'task-checkbox'; 
-            Object.assign(checkbox.style, styleCheckboxInput);
-            
-            const taskName = document.createElement('span');
-            taskName.textContent = task.name;
-            Object.assign(taskName.style, { flexGrow: '1' }); 
-
-            const stepperDiv = document.createElement('div');
-            stepperDiv.className = 'stepper-container';
-            Object.assign(stepperDiv.style, styleStepper);
-            
-            const btnMinus = document.createElement('button');
-            btnMinus.type = 'button'; btnMinus.textContent = '−'; btnMinus.classList.add('no-drag'); Object.assign(btnMinus.style, styleStepperBtn);
-            const countSpan = document.createElement('span');
-            countSpan.className = 'stepper-count'; countSpan.textContent = '1'; Object.assign(countSpan.style, styleStepperCount);
-            const btnPlus = document.createElement('button');
-            btnPlus.type = 'button'; btnPlus.textContent = '+'; btnPlus.classList.add('no-drag'); Object.assign(btnPlus.style, styleStepperBtn);
-
-            stepperDiv.appendChild(btnMinus); stepperDiv.appendChild(countSpan); stepperDiv.appendChild(btnPlus);
-            label.appendChild(checkbox); label.appendChild(taskName); label.appendChild(stepperDiv);
-            taskCheckboxesContainer.appendChild(label);
-
-            checkbox.onchange = () => {
-                if (checkbox.checked) {
-                    stepperDiv.style.display = 'flex'; countSpan.textContent = '1'; Object.assign(label.style, { background: '#e8f0fe' });
-                } else {
-                    stepperDiv.style.display = 'none'; countSpan.textContent = '0'; Object.assign(label.style, { background: '#f8f9fa' });
-                }
-                renderScreenshotInputs();
-            };
-            btnMinus.onclick = (e) => {
-                e.preventDefault(); e.stopPropagation();
-                let count = parseInt(countSpan.textContent);
-                if (count > 1) { countSpan.textContent = count - 1; } else { checkbox.checked = false; checkbox.dispatchEvent(new Event('change')); }
-                renderScreenshotInputs();
-            };
-            btnPlus.onclick = (e) => {
-                e.preventDefault(); e.stopPropagation();
-                let count = parseInt(countSpan.textContent); countSpan.textContent = count + 1;
-                renderScreenshotInputs();
-            };
-        }
-    }
-
-    optionalTaskBtn.onclick = () => {
-        optionalTaskBtn.style.display = 'none'; 
-        step2Title.style.display = 'block';     
-        taskCheckboxesContainer.style.display = 'block'; 
-        populateTaskCheckboxes(); 
-    };
-    function renderScreenshotInputs() {
-        screenshotsListDiv.innerHTML = ''; 
+function renderScreenshotInputs() {
+        screenshotsListDiv.innerHTML = ''; // Limpa inputs anteriores
         const selectedCheckboxes = taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked');
         const selectedSubStatusKey = subStatusSelect.value;
         
+        // Define se é educação ou implementação
         const isEducation = selectedSubStatusKey && selectedSubStatusKey.includes('Education');
         const screenshotType = isEducation ? 'education' : 'implementation';
         
@@ -455,6 +388,7 @@ export function initCaseNotesAssistant() {
             const task = TASKS_DB[taskKey];
             const label = checkbox.closest('label');
             
+            // Pega a contagem do Stepper
             const countSpan = label.querySelector('.stepper-count');
             const count = countSpan ? parseInt(countSpan.textContent) : 1;
             
@@ -462,59 +396,51 @@ export function initCaseNotesAssistant() {
 
             if (screenshotList.length > 0) {
                 hasScreenshots = true;
-                // Container Pai da Task
+                
+                // Cria um bloco para a Task
                 const taskBlock = document.createElement('div');
-                Object.assign(taskBlock.style, { marginBottom: '12px', background: '#f1f3f4', padding: '8px', borderRadius: '6px', border: '1px solid #e0e0e0' });
+                Object.assign(taskBlock.style, { marginBottom: '12px', background: '#f1f3f4', padding: '8px', borderRadius: '6px' });
                 
                 const taskHeader = document.createElement('div');
+                taskHeader.innerHTML = `<strong>${task.name}</strong> <small>(${count}x)</small>`;
                 taskHeader.style.marginBottom = "8px";
                 taskBlock.appendChild(taskHeader);
 
-                // Loop para criar instâncias (1x, 2x...)
+                // Loop pela quantidade do stepper (Ex: Tag disparada 2 vezes)
                 for (let i = 1; i <= count; i++) {
-                    const instanceContainer = document.createElement('div');
-                    // Estilo de Card Branco para cada instância
-                    Object.assign(instanceContainer.style, {
-                        background: 'white', padding: '8px', borderRadius: '4px', 
-                        marginBottom: '8px', border: '1px solid #dadce0'
-                    });
-
-                    // --- CAMPO DE NOME PERSONALIZADO ---
-                    const nameInput = document.createElement('input');
-                    nameInput.type = 'text';
                     const suffix = count > 1 ? ` #${i}` : '';
-                    nameInput.value = `${task.name}${suffix}`; // Valor padrão
-                    nameInput.id = `name-${taskKey}-${i}`; // ID Único
-                    Object.assign(nameInput.style, styleInput, { 
-                        fontWeight: '600', color: '#1a73e8', marginBottom: '8px', border: 'none', borderBottom: '1px solid #eee', borderRadius: '0' 
-                    });
-                    instanceContainer.appendChild(nameInput);
-
-                    // Inputs de Screenshots
+                    
+                    // Loop pelos prints requeridos daquela task (Ex: Disparo, Datalayer, Request)
                     screenshotList.forEach((reqPrint, index) => {
                         const row = document.createElement('div');
                         Object.assign(row.style, { display: 'flex', flexDirection: 'column', marginBottom: '8px' });
+
                         const printLabel = document.createElement('label');
-                        printLabel.textContent = `${reqPrint}:`;
-                        Object.assign(printLabel.style, { fontSize: '11px', color: '#5f6368', marginBottom: '2px' });
+                        printLabel.textContent = `${reqPrint}${suffix}:`;
+                        Object.assign(printLabel.style, { fontSize: '12px', color: '#5f6368', marginBottom: '4px' });
+
                         const printInput = document.createElement('input');
                         printInput.type = 'text';
                         printInput.placeholder = "Cole o link ou descreva...";
+                        // ID único para recuperar depois: taskKey + indice_stepper + indice_print
                         printInput.id = `screen-${taskKey}-${i}-${index}`; 
-                        printInput.className = 'screenshot-input-field'; 
+                        printInput.className = 'screenshot-input-field'; // Marcador de classe
+                        // Guarda metadados para facilitar a busca
+                        printInput.dataset.printName = reqPrint; 
                         
                         Object.assign(printInput.style, styleInput);
                         printInput.style.marginBottom = "4px";
 
                         row.appendChild(printLabel);
                         row.appendChild(printInput);
-                        instanceContainer.appendChild(row);
+                        taskBlock.appendChild(row);
                     });
-                    taskBlock.appendChild(instanceContainer);
                 }
                 screenshotsListDiv.appendChild(taskBlock);
             }
         });
+
+        // Mostra ou esconde a seção inteira
         screenshotsContainer.style.display = hasScreenshots ? 'block' : 'none';
     }
     function updateUIText() {
@@ -874,26 +800,12 @@ export function initCaseNotesAssistant() {
     popupContent.appendChild(stepSnippetsDiv);
 
     // ===== ETAPA 2 - Tasks =====
-  const step2Div = document.createElement("div");
-    const taskCheckboxesContainer = document.createElement("div");
-    const step2Title = document.createElement("h3");
-
-    // --- ADICIONE ISTO: ---
-    const optionalTaskBtn = document.createElement("button");
-    optionalTaskBtn.textContent = "+ Gostaria de selecionar uma task?";
-    Object.assign(optionalTaskBtn.style, styleOptionalBtn);
-    optionalTaskBtn.onmouseover = () => { optionalTaskBtn.style.background = '#e8f0fe'; };
-    optionalTaskBtn.onmouseout = () => { optionalTaskBtn.style.background = 'white'; };
-
-    step2Div.id = "step-2-tasks"; 
-    Object.assign(step2Div.style, { ...styleStepBlock, display: 'none' }); 
-    Object.assign(step2Title.style, styleH3); 
-    taskCheckboxesContainer.id = "task-checkboxes-container"; 
-    
-    // A ordem de append muda aqui:
-    step2Div.appendChild(optionalTaskBtn); // Botão primeiro
-    step2Div.appendChild(step2Title); 
-    step2Div.appendChild(taskCheckboxesContainer); 
+    step2Div.id = "step-2-tasks";
+    Object.assign(step2Div.style, { ...styleStepBlock, display: 'none' });
+    Object.assign(step2Title.style, styleH3);
+    taskCheckboxesContainer.id = "task-checkboxes-container";
+    step2Div.appendChild(step2Title);
+    step2Div.appendChild(taskCheckboxesContainer);
     popupContent.appendChild(step2Div);
 
     // ===== ETAPA 3 - Campos Dinâmicos =====
@@ -1079,21 +991,6 @@ export function initCaseNotesAssistant() {
                 { id: 'quickfill-in-manual', text: 'Outro (Manual)' }
              ];
         }
-        // ===== LÓGICA DE REDUNDÂNCIA DE TASKS (ALTERADA) =====
-        if (templateData.requiresTasks) {
-            optionalTaskBtn.style.display = 'none'; // Esconde botão opcional
-            step2Title.style.display = 'block';
-            taskCheckboxesContainer.style.display = 'block';
-            populateTaskCheckboxes(); // Chama a função helper
-            step2Div.style.display = 'block';
-        } else {
-            // Não requer task, mostra o botão para opção
-            optionalTaskBtn.style.display = 'block'; 
-            step2Title.style.display = 'none';
-            taskCheckboxesContainer.style.display = 'none'; 
-            step2Div.style.display = 'block'; 
-        }
-        // ====================================================
 
         const filteredScenarios = scenarios.filter(s => {
             const scenarioData = scenarioSnippets[s.id];
@@ -1272,48 +1169,59 @@ export function initCaseNotesAssistant() {
     };
 
 
-   function generateOutputHtml() {
+    function generateOutputHtml() {
         const selectedSubStatusKey = subStatusSelect.value;
         if (!selectedSubStatusKey) return null;
         const templateData = SUBSTATUS_TEMPLATES[selectedSubStatusKey];
         let outputText = templateData.template.replace(/\n/g, "<br>");
         const ulStyle = "style=\"margin-bottom: 12px; padding-left: 30px;\"";
 
-        if (templateData.requiresTasks || taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked').length > 0) {
+        // Lógica do Stepper (Saída)
+        if (templateData.requiresTasks) {
             const selectedCheckboxes = taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked');
             let tagNames = [];
             let screenshotsText = '';
-            const isEducation = selectedSubStatusKey.includes('Education');
+            // Detecta se é Education ou Implementation baseada no nome do substatus (ajuste conforme sua lógica real)
+            const isEducation = selectedSubStatusKey.includes('Education'); 
             const screenshotType = isEducation ? 'education' : 'implementation';
             
             selectedCheckboxes.forEach(checkbox => {
                 const taskKey = checkbox.value;
                 const task = TASKS_DB[taskKey];
-                const countSpan = checkbox.closest('label').querySelector('.stepper-count');
+                
+                const label = checkbox.closest('label');
+                const countSpan = label.querySelector('.stepper-count');
                 const count = parseInt(countSpan.textContent);
 
-                // Adiciona à lista de tags (Aqui mantemos o nome original para controle)
-                if (count > 1) tagNames.push(`${task.name} (x${count})`);
-                else tagNames.push(task.name);
+                if (count > 1) {
+                    tagNames.push(`${task.name} (x${count})`);
+                } else {
+                    tagNames.push(task.name);
+                }
 
                 const screenshotList = task.screenshots ? (task.screenshots[screenshotType] || []) : [];
                 
                 if (screenshotList.length > 0) {
                     for (let i = 1; i <= count; i++) {
-                        // --- MUDANÇA AQUI: Tenta pegar o nome personalizado ---
-                        const nameInput = document.getElementById(`name-${taskKey}-${i}`);
-                        const customName = nameInput ? nameInput.value : `${task.name} #${i}`;
-                        
-                        screenshotsText += `<b>${customName}</b>`;
+                        if (count > 1) {
+                            screenshotsText += `<b>${task.name} - Implementação #${i}</b>`;
+                        } else {
+                            screenshotsText += `<b>${task.name}</b>`;
+                        }
                         
                         let itemsHtml = '';
                         screenshotList.forEach((reqPrint, index) => {
+                            // Tenta achar o input correspondente criado no Step 3
                             const inputId = `screen-${taskKey}-${i}-${index}`;
                             const inputEl = document.getElementById(inputId);
                             const userValue = inputEl ? inputEl.value.trim() : '';
+                            
+                            // Se tiver valor, coloca ele; se não, deixa espaço em branco ou " - "
                             const displayValue = userValue ? ` ${userValue}` : '';
+                            
                             itemsHtml += `<li>${reqPrint} -${displayValue}</li>`;
                         });
+                        
                         screenshotsText += `<ul ${ulStyle}>${itemsHtml}</ul>`;
                     }
                 }
@@ -1321,17 +1229,60 @@ export function initCaseNotesAssistant() {
             
             outputText = outputText.replace(/{TAGS_IMPLEMENTED}/g, tagNames.join(', ') || 'N/A');
             outputText = outputText.replace(/{SCREENSHOTS_LIST}/g, screenshotsText ? `${screenshotsText}` : 'N/A');
-        } else {
-             outputText = outputText.replace(/{TAGS_IMPLEMENTED}/g, 'N/A');
-             outputText = outputText.replace(/{SCREENSHOTS_LIST}/g, 'N/A');
         }
 
-        // ... (Resto da função de replace de placeholders e idioma mantém-se igual) ...
-        // (Copie o restante da função original que trata de Portugal/Consentimento e Inputs dinâmicos)
+        // ===== Lógica dos Campos de Portugal =====
         if (currentLang === 'pt' && isPortugalCase) {
-             // ... (código existente)
+            const consentValue = consentRadioSim.checked ? t('sim') : t('nao');
+            const consentHtml = `<br><b>${t('consentiu_gravacao')}</b> ${consentValue}<br><br>`;
+            outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, consentHtml);
+            outputText = outputText.replace(/{CASO_PORTUGAL}/g, `<br><b>${t('caso_portugal')}</b> ${t('sim')}<br>`);
+        } else if (currentLang === 'pt' && !isPortugalCase) {
+            outputText = outputText.replace(/{CASO_PORTUGAL}/g, `<br><b>${t('caso_portugal')}</b> ${t('nao')}<br>`);
+            outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, ''); 
+        } else {
+            outputText = outputText.replace(/{CASO_PORTUGAL}/g, '');
+            outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, '');
         }
-        // ...
+
+        const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
+        inputs.forEach(input => {
+            const fieldName = input.id.replace('field-', '');
+            const placeholder = new RegExp(`{${fieldName}}`, 'g');
+            let value = input.value;
+            
+            if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey.startsWith('NI_') || selectedSubStatusKey.startsWith('IN_'))) {
+                const checkedRadio = snippetContainer.querySelector('input[type="radio"]:checked');
+                if (checkedRadio && scenarioSnippets[checkedRadio.id] && scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS']) {
+                     value = scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS'];
+                }
+            }
+
+            if (textareaListFields.includes(fieldName) && value.trim() !== '') {
+                const lines = value.split('\n')
+                                 .map(line => line.trim())
+                                 .filter(line => line !== '' && line !== '•')
+                                 .map(line => line.startsWith('• ') ? line.substring(2).trim() : line.trim())
+                                 .filter(line => line !== '')
+                                 .map(line => `<li>${line}</li>`)
+                                 .join('');
+                value = lines ? `<ul ${ulStyle}>${lines}</ul>` : '';
+            } else if (textareaParagraphFields.includes(fieldName) && value.trim() !== '') {
+                value = value.split('\n').filter(line => line.trim() !== '').map(line => `<p style="margin: 0 0 8px 0;">${line}</p>`).join('');
+            } else if (input.tagName === 'TEXTAREA' && !textareaListFields.includes(fieldName) && !textareaParagraphFields.includes(fieldName)) {
+                 value = value.replace(/\n/g, '<br>');
+            } else if (input.tagName === 'TEXTAREA' && value.trim() === '') {
+                 value = '';
+            } else if (fieldName === 'ON_CALL' && value.trim() === '') {
+                value = 'N/A';
+            } else if (fieldName === 'GTM_GA4_VERIFICADO' && value.trim() === '') {
+                value = 'N/A';
+            }
+            const safeValue = (value || '').replace(/\$/g, '$$$$');
+            outputText = outputText.replace(placeholder, safeValue);
+        });
+        
+        outputText = outputText.replace(/{([A-Z0-9_]+)}/g, ''); 
         
         return outputText;
     }
