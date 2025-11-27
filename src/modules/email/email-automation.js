@@ -12,6 +12,23 @@ function simularCliqueReal(elemento) {
     );
 }
 
+function getFollowUpDate() {
+    const date = new Date();
+    date.setDate(date.getDate() + 3); // Soma 3 dias corridos
+
+    const dayOfWeek = date.getDay(); // 0 = Domingo, 6 = Sábado
+
+    if (dayOfWeek === 6) { 
+        // Se cair no Sábado, joga para Segunda (+2 dias)
+        date.setDate(date.getDate() + 2);
+    } else if (dayOfWeek === 0) { 
+        // Se cair no Domingo, joga para Segunda (+1 dia)
+        date.setDate(date.getDate() + 1);
+    }
+
+    // Formata para DD/MM/AAAA (Padrão BR/PT)
+    return date.toLocaleDateString('pt-BR');
+}
 // --- FUNÇÃO AUXILIAR: ENCONTRAR EDITOR VISÍVEL E EDITÁVEL ---
 function getVisibleEditor() {
     // Pega todos os candidatos a corpo de email
@@ -279,18 +296,35 @@ export async function runQuickEmail(template) {
     // 2. Corpo
     const editorVisivel = getVisibleEditor();
     
-    if (editorVisivel) {
+   if (editorVisivel) {
          const wrapperGeral = editorVisivel.closest('.email-body-content') || document.body;
          const editorPai = wrapperGeral.querySelector('div[contenteditable="true"][aria-label="Email body"]');
+         
          if (editorPai) {
              editorPai.focus();
              editorPai.dispatchEvent(new Event('input', { bubbles: true }));
          }
 
+        // --- CÁLCULO AUTOMÁTICO DA DATA (3 dias + FDS) ---
+        const date = new Date();
+        date.setDate(date.getDate() + 3); // Soma 3 dias corridos
+        const day = date.getDay();
+        
+        if (day === 6) { // Sábado -> joga para Segunda (+2)
+            date.setDate(date.getDate() + 2);
+        } else if (day === 0) { // Domingo -> joga para Segunda (+1)
+            date.setDate(date.getDate() + 1);
+        }
+        const dataFormatada = date.toLocaleDateString('pt-BR');
+        // ------------------------------------------------
+
         let finalBody = template.body;
         finalBody = finalBody.replace(/\[Nome do Cliente\]/g, pageData.advertiserName || "Cliente");
         finalBody = finalBody.replace(/\[INSERIR URL\]/g, pageData.websiteUrl || "seu site");
         finalBody = finalBody.replace(/\[Seu Nome\]/g, "Agente Google"); 
+        
+        // Substitui o placeholder de data pela data calculada
+        finalBody = finalBody.replace(/\[MM\/DD\/YYYY\]/g, dataFormatada);
 
         document.execCommand('insertHTML', false, finalBody);
         
