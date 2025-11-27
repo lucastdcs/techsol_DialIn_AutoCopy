@@ -81,6 +81,14 @@ export function initQuickEmailAssistant() {
     document.body.appendChild(btnContainer);
     makeDraggable(btnContainer);
 
+        const tooltip = document.createElement("span");
+    tooltip.textContent = "Emails Rápidos";
+    Object.assign(tooltip.style, {
+        background: "rgba(0,0,0,0.7)", color: "white", padding: "4px 8px",
+        borderRadius: "4px", fontSize: "12px", opacity: "0", pointerEvents: "none",
+        transition: "opacity 0.2s", whiteSpace: "nowrap", fontWeight: "500"
+    });
+
     // --- POPUP ---
     const popup = document.createElement("div");
     popup.id = "quick-email-popup";
