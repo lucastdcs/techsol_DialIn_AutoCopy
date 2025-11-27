@@ -76,7 +76,7 @@ export function makeDraggable(element, handle = null) {
     // Adiciona evento para trazer para frente ao clicar (mousedown)
     dragHandle.onmousedown = dragMouseDown;
 
-    function dragMouseDown(e) {
+   function dragMouseDown(e) {
         // Evita drag em inputs
         if (e.target.tagName === 'INPUT' || 
             e.target.tagName === 'TEXTAREA' || 
@@ -86,10 +86,21 @@ export function makeDraggable(element, handle = null) {
             return; 
         }
 
-        // === AQUI ESTÁ A MUDANÇA (Trazer para frente) ===
+        // === CORREÇÃO DO DRAG ===
+        // 1. Remove a âncora 'right' para evitar esmagamento
+        element.style.right = 'auto'; 
+        
+        // 2. Define a posição inicial baseada no offset atual para não "pular"
+        // Se não tiver left definido ainda (primeira vez), calcula baseado na posição atual
+        if (!element.style.left) {
+            const rect = element.getBoundingClientRect();
+            element.style.left = rect.left + "px";
+            element.style.top = rect.top + "px";
+        }
+        // ========================
+
         highestZIndex++;
         element.style.zIndex = highestZIndex;
-        // ===============================================
         
         e = e || window.event;
         e.preventDefault();
