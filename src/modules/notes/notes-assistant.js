@@ -25,6 +25,8 @@ export function initCaseNotesAssistant() {
     let currentLang = 'pt'; 
     let isPortugalCase = false;
 
+    
+
     // --- CONSTRUÇÃO DA UI ---
     const btnContainer = document.createElement("div"); 
     Object.assign(btnContainer.style, {
@@ -380,7 +382,15 @@ export function initCaseNotesAssistant() {
         populateTaskCheckboxes(); 
     };
 
- function renderScreenshotInputs() {
+function renderScreenshotInputs() {
+        // --- FALLBACK DE ESTILO (Segurança) ---
+        const localStyleInput = (typeof styleInput !== 'undefined') ? styleInput : {
+            width: "100%", padding: "8px", borderRadius: "8px", 
+            border: "1px solid #dadce0", fontSize: "14px", marginBottom: "12px", 
+            boxSizing: "border-box", fontFamily: "'Poppins', sans-serif", 
+            transition: "border-color 0.2s ease, box-shadow 0.2s ease"
+        };
+
         screenshotsListDiv.innerHTML = ''; 
         const selectedCheckboxes = taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked');
         const selectedSubStatusKey = subStatusSelect.value;
@@ -401,35 +411,29 @@ export function initCaseNotesAssistant() {
             if (screenshotList.length > 0) {
                 hasScreenshots = true;
                 
-                // Bloco Principal da Task (Fundo Cinza)
+                // Bloco Principal (Fundo Cinza)
                 const taskBlock = document.createElement('div');
                 Object.assign(taskBlock.style, { 
-                    marginBottom: '16px', 
-                    background: '#f8f9fa', 
-                    padding: '12px', 
-                    borderRadius: '8px', 
-                    border: '1px solid #e0e0e0' 
+                    marginBottom: '16px', background: '#f8f9fa', 
+                    padding: '12px', borderRadius: '8px', border: '1px solid #e0e0e0' 
                 });
                 
-                // Título do Bloco (Ex: GTM Installation - 2 itens)
+                // Cabeçalho do Bloco
                 const taskHeader = document.createElement('div');
                 taskHeader.innerHTML = `<strong style="color:#5f6368">${task.name}</strong> <small style="color:#1a73e8">(${count}x)</small>`;
                 taskHeader.style.marginBottom = "12px";
                 taskBlock.appendChild(taskHeader);
 
                 for (let i = 1; i <= count; i++) {
-                    // Container da Instância (Card Branco)
+                    // Card Branco Individual
                     const instanceContainer = document.createElement('div');
                     Object.assign(instanceContainer.style, {
-                        background: 'white', 
-                        padding: '12px', 
-                        borderRadius: '6px', 
-                        marginBottom: '12px', 
-                        border: '1px solid #dadce0',
+                        background: 'white', padding: '12px', borderRadius: '6px', 
+                        marginBottom: '12px', border: '1px solid #dadce0',
                         boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
                     });
 
-                    // --- UX MELHORADA: CAMPO DE NOME ---
+                    // --- UX: CAMPO DE NOME EDITÁVEL ---
                     const nameWrapper = document.createElement('div');
                     Object.assign(nameWrapper.style, {
                         display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px'
@@ -438,7 +442,7 @@ export function initCaseNotesAssistant() {
                     // Ícone de Lápis
                     const editIcon = document.createElement('span');
                     editIcon.textContent = "✎";
-                    Object.assign(editIcon.style, { fontSize: '14px', color: '#9aa0a6' });
+                    Object.assign(editIcon.style, { fontSize: '14px', color: '#9aa0a6', cursor: 'text' });
 
                     const nameInput = document.createElement('input');
                     nameInput.type = 'text';
@@ -446,58 +450,61 @@ export function initCaseNotesAssistant() {
                     nameInput.value = `${task.name}${suffix}`;
                     nameInput.id = `name-${taskKey}-${i}`; 
                     
-                    // Estilo de "Título Editável"
-                    Object.assign(nameInput.style, {
-                        width: '100%',
-                        border: 'none',
-                        borderBottom: '1px dashed #dadce0', // Tracejado indica edição
-                        fontWeight: '600',
+                    // Estilo Especial para parecer um Título Editável
+                    Object.assign(nameInput.style, localStyleInput, { 
+                        fontWeight: '600', 
                         color: '#1a73e8', // Azul Google
-                        fontSize: '13px',
-                        padding: '4px 0',
+                        marginBottom: '0', // Remove margem do input base
+                        border: 'none', 
+                        borderBottom: '1px dashed #ccc', // Tracejado indica "clique para editar"
+                        borderRadius: '0',
+                        padding: '4px 0', 
                         background: 'transparent',
-                        outline: 'none',
-                        transition: 'border-color 0.2s'
+                        width: '100%'
                     });
 
-                    // Efeito de Foco
+                    // Efeitos de Foco
                     nameInput.onfocus = () => {
                         nameInput.style.borderBottom = '2px solid #1a73e8';
                         editIcon.style.color = '#1a73e8';
+                        editIcon.style.opacity = '1';
                     };
                     nameInput.onblur = () => {
-                        nameInput.style.borderBottom = '1px dashed #dadce0';
+                        nameInput.style.borderBottom = '1px dashed #ccc';
                         editIcon.style.color = '#9aa0a6';
                     };
                     
-                    // Adiciona Tooltip nativo
-                    nameInput.title = "Clique para renomear esta ação na nota";
+                    // Tooltip nativo
+                    nameInput.title = "Renomear esta ação";
+                    
+                    // Ao clicar no ícone, foca no input
+                    editIcon.onclick = () => nameInput.focus();
 
                     nameWrapper.appendChild(editIcon);
                     nameWrapper.appendChild(nameInput);
                     instanceContainer.appendChild(nameWrapper);
-                    // --------------------------------------
+                    // ---------------------------------------
 
+                    // Inputs de Screenshots
                     screenshotList.forEach((reqPrint, index) => {
                         const row = document.createElement('div');
                         Object.assign(row.style, { display: 'flex', flexDirection: 'column', marginBottom: '8px' });
                         
                         const printLabel = document.createElement('label');
-                        // Ícone de câmera ou link para indicar print
+                        // Adicionei um ícone de câmera para ficar mais visual
                         printLabel.innerHTML = `📷 ${reqPrint}:`;
                         Object.assign(printLabel.style, { fontSize: '11px', color: '#5f6368', marginBottom: '4px', fontWeight: '500' });
-
+                        
                         const printInput = document.createElement('input');
                         printInput.type = 'text';
-                        printInput.placeholder = "Cole o link do print aqui...";
+                        printInput.placeholder = "Cole o link...";
                         printInput.id = `screen-${taskKey}-${i}-${index}`; 
                         printInput.className = 'screenshot-input-field'; 
                         
-                        Object.assign(printInput.style, styleInput);
-                        // Ajuste fino no input do print
-                        printInput.style.fontSize = "12px"; 
-                        printInput.style.padding = "6px 8px";
+                        // Usa o estilo padrão seguro
+                        Object.assign(printInput.style, localStyleInput);
                         printInput.style.marginBottom = "4px";
+                        printInput.style.fontSize = "12px";
 
                         row.appendChild(printLabel);
                         row.appendChild(printInput);
@@ -723,9 +730,6 @@ export function initCaseNotesAssistant() {
         });
     }
 
-    // -------------------------------------------------------
-    // AQUI COMEÇA O: mainStatusSelect.onchange = () => { ...
-    // --- Lógica de Seleção do Status Principal ---
     mainStatusSelect.onchange = () => {
         const selectedStatus = mainStatusSelect.value;
         
