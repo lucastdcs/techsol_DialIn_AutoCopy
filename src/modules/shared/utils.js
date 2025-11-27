@@ -73,39 +73,43 @@ export function makeDraggable(element, handle = null) {
     let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
     const dragHandle = handle || element;
     
-    // Adiciona evento para trazer para frente ao clicar (mousedown)
     dragHandle.onmousedown = dragMouseDown;
 
-   function dragMouseDown(e) {
-        // Evita drag em inputs
-        if (e.target.tagName === 'INPUT' || 
-            e.target.tagName === 'TEXTAREA' || 
-            e.target.tagName === 'SELECT' || 
-            e.target.tagName === 'BUTTON' || 
+    function dragMouseDown(e) {
+        // Ignora inputs e botões internos
+        if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(e.target.tagName) || 
             e.target.classList.contains('no-drag')) {
             return; 
         }
 
-        // === CORREÇÃO DO DRAG ===
-        // 1. Remove a âncora 'right' para evitar esmagamento
-        element.style.right = 'auto'; 
-        
-        // 2. Define a posição inicial baseada no offset atual para não "pular"
-        // Se não tiver left definido ainda (primeira vez), calcula baseado na posição atual
-        if (!element.style.left) {
-            const rect = element.getBoundingClientRect();
-            element.style.left = rect.left + "px";
-            element.style.top = rect.top + "px";
-        }
-        // ========================
-
-        highestZIndex++;
-        element.style.zIndex = highestZIndex;
-        
         e = e || window.event;
         e.preventDefault();
+
+        // === CORREÇÃO 1: O PULO ===
+        // Captura a posição visual ATUAL exata
+        const rect = element.getBoundingClientRect();
+        
+        // 1. Fixa a posição usando Left/Top ANTES de remover o Right
+        element.style.left = rect.left + "px";
+        element.style.top = rect.top + "px";
+        
+        // 2. Agora sim, remove as âncoras que causam conflito
+        element.style.right = 'auto';
+        element.style.bottom = 'auto';
+        
+        // 3. Fixa a largura para evitar deformação ao encostar na borda
+        element.style.width = rect.width + "px";
+        // ===========================
+
+        // Z-Index e Inicialização
+        highestZIndex++;
+        element.style.zIndex = highestZIndex;
         pos3 = e.clientX;
         pos4 = e.clientY;
+        
+        // Reseta flag de arrasto
+        element.setAttribute('data-dragging', 'false');
+        
         document.onmouseup = closeDragElement;
         document.onmousemove = elementDrag;
     }
@@ -113,10 +117,19 @@ export function makeDraggable(element, handle = null) {
     function elementDrag(e) {
         e = e || window.event;
         e.preventDefault();
+        
+        // Calcula quanto moveu
         pos1 = pos3 - e.clientX;
         pos2 = pos4 - e.clientY;
         pos3 = e.clientX;
         pos4 = e.clientY;
+
+        // === CORREÇÃO 2: DETECTAR ARRASTO ===
+        // Se moveu, marca como 'arrastando' para não disparar o click depois
+        element.setAttribute('data-dragging', 'true');
+        // ====================================
+        
+        // Aplica nova posição
         element.style.top = (element.offsetTop - pos2) + "px";
         element.style.left = (element.offsetLeft - pos1) + "px";
     }
@@ -124,6 +137,12 @@ export function makeDraggable(element, handle = null) {
     function closeDragElement() {
         document.onmouseup = null;
         document.onmousemove = null;
+        
+        // Remove a flag de arrasto após um breve delay
+        // Isso permite que o evento 'click' verifique a flag antes dela sumir
+        setTimeout(() => {
+            element.setAttribute('data-dragging', 'false');
+        }, 100);
     }
 }
 
