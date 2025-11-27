@@ -89,6 +89,18 @@ export function initQuickEmailAssistant() {
         transition: "opacity 0.2s", whiteSpace: "nowrap", fontWeight: "500"
     });
 
+    btnContainer.onmouseenter = () => {
+        btn.style.transform = "scale(1.1)";
+        tooltip.style.opacity = "1";
+        tooltip.style.transform = "translateX(0)";
+    };
+    
+    btnContainer.onmouseleave = () => {
+        btn.style.transform = "scale(1)";
+        tooltip.style.opacity = "0";
+        tooltip.style.transform = "translateX(10px)";
+    };
+
     // --- POPUP ---
     const popup = document.createElement("div");
     popup.id = "quick-email-popup";
