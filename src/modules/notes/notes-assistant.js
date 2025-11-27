@@ -380,7 +380,7 @@ export function initCaseNotesAssistant() {
         populateTaskCheckboxes(); 
     };
 
-    function renderScreenshotInputs() {
+ function renderScreenshotInputs() {
         screenshotsListDiv.innerHTML = ''; 
         const selectedCheckboxes = taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked');
         const selectedSubStatusKey = subStatusSelect.value;
@@ -400,43 +400,105 @@ export function initCaseNotesAssistant() {
 
             if (screenshotList.length > 0) {
                 hasScreenshots = true;
-                const taskBlock = document.createElement('div');
-                Object.assign(taskBlock.style, { marginBottom: '12px', background: '#f1f3f4', padding: '8px', borderRadius: '6px', border: '1px solid #e0e0e0' });
                 
+                // Bloco Principal da Task (Fundo Cinza)
+                const taskBlock = document.createElement('div');
+                Object.assign(taskBlock.style, { 
+                    marginBottom: '16px', 
+                    background: '#f8f9fa', 
+                    padding: '12px', 
+                    borderRadius: '8px', 
+                    border: '1px solid #e0e0e0' 
+                });
+                
+                // Título do Bloco (Ex: GTM Installation - 2 itens)
                 const taskHeader = document.createElement('div');
-                taskHeader.style.marginBottom = "8px";
+                taskHeader.innerHTML = `<strong style="color:#5f6368">${task.name}</strong> <small style="color:#1a73e8">(${count}x)</small>`;
+                taskHeader.style.marginBottom = "12px";
                 taskBlock.appendChild(taskHeader);
 
                 for (let i = 1; i <= count; i++) {
+                    // Container da Instância (Card Branco)
                     const instanceContainer = document.createElement('div');
                     Object.assign(instanceContainer.style, {
-                        background: 'white', padding: '8px', borderRadius: '4px', 
-                        marginBottom: '8px', border: '1px solid #dadce0'
+                        background: 'white', 
+                        padding: '12px', 
+                        borderRadius: '6px', 
+                        marginBottom: '12px', 
+                        border: '1px solid #dadce0',
+                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
                     });
+
+                    // --- UX MELHORADA: CAMPO DE NOME ---
+                    const nameWrapper = document.createElement('div');
+                    Object.assign(nameWrapper.style, {
+                        display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px'
+                    });
+
+                    // Ícone de Lápis
+                    const editIcon = document.createElement('span');
+                    editIcon.textContent = "✎";
+                    Object.assign(editIcon.style, { fontSize: '14px', color: '#9aa0a6' });
 
                     const nameInput = document.createElement('input');
                     nameInput.type = 'text';
                     const suffix = count > 1 ? ` #${i}` : '';
                     nameInput.value = `${task.name}${suffix}`;
                     nameInput.id = `name-${taskKey}-${i}`; 
-                    Object.assign(nameInput.style, NoteStyles.styleInput, { 
-                        fontWeight: '600', color: '#1a73e8', marginBottom: '8px', border: 'none', borderBottom: '1px solid #eee', borderRadius: '0' 
+                    
+                    // Estilo de "Título Editável"
+                    Object.assign(nameInput.style, {
+                        width: '100%',
+                        border: 'none',
+                        borderBottom: '1px dashed #dadce0', // Tracejado indica edição
+                        fontWeight: '600',
+                        color: '#1a73e8', // Azul Google
+                        fontSize: '13px',
+                        padding: '4px 0',
+                        background: 'transparent',
+                        outline: 'none',
+                        transition: 'border-color 0.2s'
                     });
-                    instanceContainer.appendChild(nameInput);
+
+                    // Efeito de Foco
+                    nameInput.onfocus = () => {
+                        nameInput.style.borderBottom = '2px solid #1a73e8';
+                        editIcon.style.color = '#1a73e8';
+                    };
+                    nameInput.onblur = () => {
+                        nameInput.style.borderBottom = '1px dashed #dadce0';
+                        editIcon.style.color = '#9aa0a6';
+                    };
+                    
+                    // Adiciona Tooltip nativo
+                    nameInput.title = "Clique para renomear esta ação na nota";
+
+                    nameWrapper.appendChild(editIcon);
+                    nameWrapper.appendChild(nameInput);
+                    instanceContainer.appendChild(nameWrapper);
+                    // --------------------------------------
 
                     screenshotList.forEach((reqPrint, index) => {
                         const row = document.createElement('div');
                         Object.assign(row.style, { display: 'flex', flexDirection: 'column', marginBottom: '8px' });
+                        
                         const printLabel = document.createElement('label');
-                        printLabel.textContent = `${reqPrint}:`;
-                        Object.assign(printLabel.style, { fontSize: '11px', color: '#5f6368', marginBottom: '2px' });
+                        // Ícone de câmera ou link para indicar print
+                        printLabel.innerHTML = `📷 ${reqPrint}:`;
+                        Object.assign(printLabel.style, { fontSize: '11px', color: '#5f6368', marginBottom: '4px', fontWeight: '500' });
+
                         const printInput = document.createElement('input');
                         printInput.type = 'text';
-                        printInput.placeholder = "Cole o link ou descreva...";
+                        printInput.placeholder = "Cole o link do print aqui...";
                         printInput.id = `screen-${taskKey}-${i}-${index}`; 
                         printInput.className = 'screenshot-input-field'; 
-                        Object.assign(printInput.style, NoteStyles.styleInput);
+                        
+                        Object.assign(printInput.style, styleInput);
+                        // Ajuste fino no input do print
+                        printInput.style.fontSize = "12px"; 
+                        printInput.style.padding = "6px 8px";
                         printInput.style.marginBottom = "4px";
+
                         row.appendChild(printLabel);
                         row.appendChild(printInput);
                         instanceContainer.appendChild(row);
