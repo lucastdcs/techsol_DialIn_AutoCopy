@@ -549,7 +549,120 @@ export function initCaseNotesAssistant() {
         
         return outputText;
     }
+// --- FUNÇÕES LÓGICAS DO FORMULÁRIO ---
 
+    function enableAutoBullet(textarea) {
+        if(textarea.value.trim() === '' || textarea.value.trim() === '•') {
+            textarea.value = '• ';
+        }
+        textarea.onkeydown = function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const start = this.selectionStart, end = this.selectionEnd, value = this.value;
+                const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+                const currentLine = value.substring(lineStart, start);
+                const insertText = (currentLine.trim() === '•' || currentLine.trim() === '') ? '\n' : '\n• ';
+
+                this.value = value.substring(0, start) + insertText + value.substring(end);
+                const newPos = start + insertText.length;
+                this.selectionStart = newPos; this.selectionEnd = newPos;
+            } else if (e.key === 'Backspace') {
+                const start = this.selectionStart;
+                if (start === this.selectionEnd && start > 0) {
+                    const textBefore = this.value.substring(0, start);
+                    if (textBefore.endsWith('\n• ')) {
+                        e.preventDefault();
+                        this.value = textBefore.substring(0, start - 3) + this.value.substring(this.selectionEnd);
+                        this.selectionStart = start - 3; this.selectionEnd = start - 3;
+                    } else if (textBefore === '• ') {
+                         e.preventDefault();
+                         this.value = '';
+                         this.selectionStart = 0; this.selectionEnd = 0;
+                    }
+                }
+            }
+        };
+    }
+
+    function updateFieldsFromScenarios() {
+        const activeScenarioInputs = snippetContainer.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
+        const targetFieldsContent = {};
+        const activeLinkedTasks = new Set();
+
+        activeScenarioInputs.forEach(input => {
+            const scenarioId = input.id;
+            const snippets = scenarioSnippets[scenarioId];
+            if (snippets) {
+                for (const fieldId in snippets) {
+                    if (fieldId !== 'linkedTask' && fieldId !== 'type') {
+                        if (!targetFieldsContent[fieldId]) {
+                            targetFieldsContent[fieldId] = [];
+                        }
+                         if (!targetFieldsContent[fieldId].includes(snippets[fieldId])) {
+                            targetFieldsContent[fieldId].push(snippets[fieldId]);
+                         }
+                    } else if (fieldId === 'linkedTask') {
+                         activeLinkedTasks.add(snippets.linkedTask);
+                    }
+                }
+            }
+        });
+
+        const allPossibleTargetFields = new Set();
+         Object.values(scenarioSnippets).forEach(snippets => {
+             Object.keys(snippets).forEach(key => {
+                 if(key !== 'linkedTask' && key !== 'type') allPossibleTargetFields.add(key);
+             });
+         });
+
+        allPossibleTargetFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                const combinedTextArray = targetFieldsContent[fieldId] || [];
+                let finalValue = "";
+
+                if (textareaListFields.includes(fieldId.replace('field-', ''))) {
+                    finalValue = combinedTextArray
+                        .map(line => line.startsWith('• ') ? line : '• ' + line)
+                        .join('\n');
+
+                    if (finalValue === '') {
+                         finalValue = '• ';
+                    } else if (!finalValue.endsWith('\n• ')) {
+                         finalValue += '\n• ';
+                    }
+                } else {
+                     finalValue = combinedTextArray.join('\n\n');
+                }
+                
+                // Preenche
+                if (finalValue.trim() !== '•' && finalValue.trim() !== '') {
+                    field.value = finalValue;
+                } else if (textareaListFields.includes(fieldId.replace('field-', ''))) {
+                     field.value = '• ';
+                } else {
+                    field.value = '';
+                }
+
+                // CORREÇÃO: Chama a função que agora existe
+                if (field.tagName === 'TEXTAREA' && textareaListFields.includes(fieldId.replace('field-', ''))) {
+                     enableAutoBullet(field);
+                }
+             }
+        });
+
+        const taskCheckboxes = taskCheckboxesContainer.querySelectorAll('.task-checkbox');
+        taskCheckboxes.forEach(taskCheckbox => {
+            // Não reseta se já estiver marcado manualmente, apenas se for linkedTask
+            if (activeLinkedTasks.has(taskCheckbox.value)) {
+                taskCheckbox.checked = true;
+                taskCheckbox.dispatchEvent(new Event('change')); 
+            }
+        });
+    }
+
+    // -------------------------------------------------------
+    // AQUI COMEÇA O: mainStatusSelect.onchange = () => { ...
     // --- Lógica de Seleção do Status Principal ---
     mainStatusSelect.onchange = () => {
         const selectedStatus = mainStatusSelect.value;
