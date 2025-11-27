@@ -419,7 +419,7 @@ export function initCaseNotesAssistant() {
         for (const taskKey in TASKS_DB) {
             const task = TASKS_DB[taskKey];
             const label = document.createElement('label');
-            Object.assign(label.style, NoteStyles.styleCheckboxLabel);
+            Object.assign(label.style, styleCheckboxLabel); // Corrigido
             label.onmouseover = () => { if (!checkbox.checked) label.style.backgroundColor = '#e8eaed'; };
             label.onmouseout = () => { if (!checkbox.checked) label.style.backgroundColor = '#f8f9fa'; };
 
@@ -427,7 +427,7 @@ export function initCaseNotesAssistant() {
             checkbox.type = 'checkbox';
             checkbox.value = taskKey;
             checkbox.className = 'task-checkbox'; 
-            Object.assign(checkbox.style, NoteStyles.styleCheckboxInput);
+            Object.assign(checkbox.style, styleCheckboxInput); // Corrigido
             
             const taskName = document.createElement('span');
             taskName.textContent = task.name;
@@ -435,14 +435,19 @@ export function initCaseNotesAssistant() {
 
             const stepperDiv = document.createElement('div');
             stepperDiv.className = 'stepper-container';
-            Object.assign(stepperDiv.style, NoteStyles.styleStepper);
+            Object.assign(stepperDiv.style, styleStepper); // Corrigido
             
             const btnMinus = document.createElement('button');
-            btnMinus.type = 'button'; btnMinus.textContent = '−'; btnMinus.classList.add('no-drag'); Object.assign(btnMinus.style, NoteStyles.styleStepperBtn);
+            btnMinus.type = 'button'; btnMinus.textContent = '−'; btnMinus.classList.add('no-drag'); 
+            Object.assign(btnMinus.style, styleStepperBtn); // Corrigido
+            
             const countSpan = document.createElement('span');
-            countSpan.className = 'stepper-count'; countSpan.textContent = '1'; Object.assign(countSpan.style, NoteStyles.styleStepperCount);
+            countSpan.className = 'stepper-count'; countSpan.textContent = '1'; 
+            Object.assign(countSpan.style, styleStepperCount); // Corrigido
+            
             const btnPlus = document.createElement('button');
-            btnPlus.type = 'button'; btnPlus.textContent = '+'; btnPlus.classList.add('no-drag'); Object.assign(btnPlus.style, NoteStyles.styleStepperBtn);
+            btnPlus.type = 'button'; btnPlus.textContent = '+'; btnPlus.classList.add('no-drag'); 
+            Object.assign(btnPlus.style, styleStepperBtn); // Corrigido
 
             stepperDiv.appendChild(btnMinus); stepperDiv.appendChild(countSpan); stepperDiv.appendChild(btnPlus);
             label.appendChild(checkbox); label.appendChild(taskName); label.appendChild(stepperDiv);
@@ -481,12 +486,6 @@ export function initCaseNotesAssistant() {
     };
 
     function renderScreenshotInputs() {
-        const localStyleInput = { 
-            width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #dadce0", 
-            fontSize: "14px", marginBottom: "12px", boxSizing: "border-box", fontFamily: "'Poppins', sans-serif", 
-            transition: "border-color 0.2s ease, box-shadow 0.2s ease" 
-        };
-
         screenshotsListDiv.innerHTML = ''; 
         const selectedCheckboxes = taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked');
         const selectedSubStatusKey = subStatusSelect.value;
@@ -508,34 +507,41 @@ export function initCaseNotesAssistant() {
                 hasScreenshots = true;
                 const taskBlock = document.createElement('div');
                 Object.assign(taskBlock.style, { marginBottom: '12px', background: '#f1f3f4', padding: '8px', borderRadius: '6px', border: '1px solid #e0e0e0' });
+                
                 const taskHeader = document.createElement('div');
                 taskHeader.innerHTML = `<strong style="color:#5f6368">${task.name}</strong> <small style="color:#1a73e8">(${count}x)</small>`;
-                taskHeader.style.marginBottom = "12px";
+                taskHeader.style.marginBottom = "8px";
                 taskBlock.appendChild(taskHeader);
 
                 for (let i = 1; i <= count; i++) {
                     const instanceContainer = document.createElement('div');
                     Object.assign(instanceContainer.style, {
-                        background: 'white', padding: '12px', borderRadius: '6px', 
-                        marginBottom: '12px', border: '1px solid #dadce0',
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                        background: 'white', padding: '12px', borderRadius: '4px', 
+                        marginBottom: '8px', border: '1px solid #dadce0'
                     });
 
                     // Nome Personalizado
                     const nameWrapper = document.createElement('div');
                     Object.assign(nameWrapper.style, { display: 'flex', alignItems: 'center', marginBottom: '12px', gap: '8px' });
+                    
                     const editIcon = document.createElement('span');
                     editIcon.textContent = "✎";
                     Object.assign(editIcon.style, { fontSize: '14px', color: '#9aa0a6', cursor: 'text' });
+
                     const nameInput = document.createElement('input');
                     nameInput.type = 'text';
                     const suffix = count > 1 ? ` #${i}` : '';
                     nameInput.value = `${task.name}${suffix}`;
                     nameInput.id = `name-${taskKey}-${i}`; 
-                    Object.assign(nameInput.style, localStyleInput, { fontWeight: '600', color: '#1a73e8', marginBottom: '0', border: 'none', borderBottom: '1px dashed #ccc', borderRadius: '0', padding: '4px 0', background: 'transparent', width: '100%' });
+                    
+                    // Correção AQUI: styleInput
+                    Object.assign(nameInput.style, styleInput, { 
+                        fontWeight: '600', color: '#1a73e8', marginBottom: '0', border: 'none', borderBottom: '1px dashed #ccc', borderRadius: '0', padding: '4px 0', background: 'transparent', width: '100%' 
+                    });
+                    
                     nameInput.onfocus = () => { nameInput.style.borderBottom = '2px solid #1a73e8'; editIcon.style.color = '#1a73e8'; };
                     nameInput.onblur = () => { nameInput.style.borderBottom = '1px dashed #ccc'; editIcon.style.color = '#9aa0a6'; };
-                    nameInput.title = "Renomear esta ação";
+                    
                     editIcon.onclick = () => nameInput.focus();
                     nameWrapper.appendChild(editIcon); nameWrapper.appendChild(nameInput);
                     instanceContainer.appendChild(nameWrapper);
@@ -546,14 +552,18 @@ export function initCaseNotesAssistant() {
                         const printLabel = document.createElement('label');
                         printLabel.innerHTML = `📷 ${reqPrint}:`;
                         Object.assign(printLabel.style, { fontSize: '11px', color: '#5f6368', marginBottom: '4px', fontWeight: '500' });
+                        
                         const printInput = document.createElement('input');
                         printInput.type = 'text';
                         printInput.placeholder = "Cole o link...";
                         printInput.id = `screen-${taskKey}-${i}-${index}`; 
                         printInput.className = 'screenshot-input-field'; 
-                        Object.assign(printInput.style, localStyleInput);
+                        
+                        // Correção AQUI: styleInput
+                        Object.assign(printInput.style, styleInput);
                         printInput.style.marginBottom = "4px";
                         printInput.style.fontSize = "12px";
+                        
                         row.appendChild(printLabel); row.appendChild(printInput);
                         instanceContainer.appendChild(row);
                     });
@@ -720,19 +730,24 @@ export function initCaseNotesAssistant() {
         let snippetAdded = false;
 
         const addSnippetInput = (scenario, type, container) => {
-            const label = document.createElement('label'); Object.assign(label.style, NoteStyles.styleCheckboxLabel);
+            const label = document.createElement('label'); 
+            Object.assign(label.style, styleCheckboxLabel); // Corrigido
             label.onmouseover = () => label.style.backgroundColor = '#e8eaed'; label.onmouseout = () => label.style.backgroundColor = '#f8f9fa';
-            const input = document.createElement('input'); input.type = type; input.id = scenario.id; Object.assign(input.style, NoteStyles.styleCheckboxInput);
+            
+            const input = document.createElement('input'); input.type = type; input.id = scenario.id; 
+            Object.assign(input.style, styleCheckboxInput); // Corrigido
+            
             label.appendChild(input); label.appendChild(document.createTextNode(` ${scenario.text}`)); container.appendChild(label); return input;
         };
         
+        // ... (mantém a lógica de scenarios igual) ...
         let scenarios = []; let inputType = 'radio'; 
         if (selectedSubStatusKey === 'NI_Awaiting_Inputs') {
             scenarios = [ { id: 'quickfill-ni-inicio-manual', text: 'Início 2/6 (Manual)'}, { id: 'quickfill-ni-cms-access', text: 'Início 2/6 (ADV sem acesso ao CMS)' }, { id: 'quickfill-ni-followup-bau', text: 'Follow-up 2/6 (BAU)' }, { id: 'quickfill-ni-followup-lm', text: 'Follow-up 2/6 (LM)' } ];
         } else if (selectedSubStatusKey.startsWith('SO_')) {
             inputType = 'checkbox'; scenarios = [ { id: 'quickfill-gtm-install', text: 'Instalação do GTM' }, { id: 'quickfill-whatsapp', text: 'Conversão de WhatsApp' }, { id: 'quickfill-form', text: 'Conversão de Formulário (Padrão)' }, { id: 'quickfill-ecw4-close', text: 'Fechamento ECW4 (Pós 7 dias)' } ];
         } else if (selectedSubStatusKey.startsWith('AS_')) {
-            inputType = 'checkbox'; const reasonTitle = document.createElement('label'); reasonTitle.textContent = t('cenarios_comuns'); Object.assign(reasonTitle.style, NoteStyles.styleLabel); snippetContainer.appendChild(reasonTitle);
+            inputType = 'checkbox'; const reasonTitle = document.createElement('label'); reasonTitle.textContent = t('cenarios_comuns'); Object.assign(reasonTitle.style, styleLabel); snippetContainer.appendChild(reasonTitle); // Corrigido
             scenarios = [ { id: 'quickfill-as-no-show', text: 'Anunciante não compareceu (respondeu e-mail)' }, { id: 'quickfill-as-insufficient-time', text: 'Tempo insuficiente' }, { id: 'quickfill-as-no-access', text: 'Anunciante sem acessos necessários' } ];
         } else if (selectedSubStatusKey.startsWith('IN_')) {
              scenarios = [ { id: 'quickfill-in-nrp-bau', text: 'NRP (BAU - 3 tentativas)' }, { id: 'quickfill-in-nrp-lm', text: 'NRP (LM - Sem tentativas)' }, { id: 'quickfill-in-no-show-bau', text: 'No-Show (BAU - 3 tentativas)' }, { id: 'quickfill-in-2-6-final', text: 'Finalização 2/6 (Sem Resposta)' }, { id: 'quickfill-in-manual', text: 'Outro (Manual)' } ];
@@ -744,11 +759,12 @@ export function initCaseNotesAssistant() {
 
         if (snippetAdded) stepSnippetsDiv.style.display = 'block';
 
+        // Redundância de tasks
+        populateTaskCheckboxes();
         if (templateData.requiresTasks) {
             optionalTaskBtn.style.display = 'none'; 
             step2Title.style.display = 'block';
             taskCheckboxesContainer.style.display = 'block';
-            populateTaskCheckboxes();
             step2Div.style.display = 'block';
         } else {
             optionalTaskBtn.style.display = 'block'; 
@@ -766,14 +782,14 @@ export function initCaseNotesAssistant() {
             const label = document.createElement('label');
             const translatedLabel = t(fieldName.toLowerCase());
             label.textContent = (translatedLabel !== fieldName.toLowerCase()) ? translatedLabel : (fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) + ':');
-            Object.assign(label.style, NoteStyles.styleLabel);
+            Object.assign(label.style, styleLabel); // Corrigido
             let field;
             if (textareaListFields.includes(fieldName)) {
-                field = document.createElement('textarea'); Object.assign(field.style, NoteStyles.styleTextarea); field.classList.add('bullet-textarea'); enableAutoBullet(field);
+                field = document.createElement('textarea'); Object.assign(field.style, styleTextarea); field.classList.add('bullet-textarea'); enableAutoBullet(field); // Corrigido
             } else if (textareaParagraphFields.includes(fieldName)) {
-                field = document.createElement('textarea'); Object.assign(field.style, NoteStyles.styleTextarea);
+                field = document.createElement('textarea'); Object.assign(field.style, styleTextarea); // Corrigido
             } else {
-                field = document.createElement('input'); field.type = 'text'; Object.assign(field.style, NoteStyles.styleInput);
+                field = document.createElement('input'); field.type = 'text'; Object.assign(field.style, styleInput); // Corrigido
                  if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey === 'NI_Awaiting_Inputs' || selectedSubStatusKey.startsWith('IN_'))) { Object.assign(label.style, { display: 'none' }); Object.assign(field.style, { display: 'none' }); }
             }
             field.id = `field-${fieldName}`; dynamicFormFieldsContainer.appendChild(label); dynamicFormFieldsContainer.appendChild(field);
