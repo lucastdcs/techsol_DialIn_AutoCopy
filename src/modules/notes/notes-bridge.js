@@ -31,18 +31,31 @@ export function copyHtmlToClipboard(html) {
     document.body.removeChild(container);
 }
 
-export function getVisibleEditor() {
-    // 1. Procura o Card que está no topo da pilha (visível)
-    const activeCard = document.querySelector('card.write-card.is-top');
-    
-    if (!activeCard) {
-        // Fallback: tenta achar qualquer editor visível se a classe is-top não existir
-        const allEditors = Array.from(document.querySelectorAll('div[contenteditable="true"]'));
-        return allEditors.find(e => e.offsetParent !== null);
-    }
+// --- HELPER DE DOM / EDITOR (CORRIGIDO PARA PEGAR O ÚLTIMO) ---
+    function getVisibleEditor() {
+        // 1. Tenta achar o card que o sistema diz ser o "topo" (ativo)
+        const activeCard = document.querySelector('card.write-card.is-top');
+        
+        if (activeCard) {
+            return activeCard.querySelector('div[contenteditable="true"]');
+        }
 
-    return activeCard.querySelector('div[contenteditable="true"]');
-}
+        // 2. ESTRATÉGIA LIFO (Last In, First Out)
+        // Se não achou classe 'is-top', pega TODOS os cards de escrita
+        const allCards = Array.from(document.querySelectorAll('card.write-card'));
+        
+        // Filtra apenas os que estão visíveis na tela
+        const visibleCards = allCards.filter(c => c.offsetParent !== null);
+
+        // Pega o ÚLTIMO da lista (o mais recente adicionado ao DOM)
+        // Isso evita pegar notas antigas que ficaram "para trás" no HTML
+        if (visibleCards.length > 0) {
+            const newestCard = visibleCards[visibleCards.length - 1];
+            return newestCard.querySelector('div[contenteditable="true"]');
+        }
+
+        return null;
+    }
 
 export function triggerInputEvents(element) {
     const events = ['input', 'change', 'keydown', 'keyup'];
