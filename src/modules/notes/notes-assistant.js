@@ -874,6 +874,11 @@ function renderScreenshotInputs() {
                 field = document.createElement('input'); field.type = 'text'; Object.assign(field.style, NoteStyles.styleInput);
                  if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey === 'NI_Awaiting_Inputs' || selectedSubStatusKey.startsWith('IN_'))) { Object.assign(label.style, { display: 'none' }); Object.assign(field.style, { display: 'none' }); }
             }
+            if (fieldName === 'ON_CALL' && currentCaseType === 'lm') {
+                Object.assign(label.style, { display: 'none' });
+                Object.assign(field.style, { display: 'none' });
+                field.value = 'N/A'; // Define valor padrão para não quebrar o template
+            }
             field.id = `field-${fieldName}`; dynamicFormFieldsContainer.appendChild(label); dynamicFormFieldsContainer.appendChild(field);
         });
 
