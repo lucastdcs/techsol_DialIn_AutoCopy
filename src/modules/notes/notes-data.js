@@ -249,6 +249,25 @@ export const TASKS_DB = {
                 'Validating the _ga cookie values are same on both the domains from the application tab in the developer tools.'
             ]
         }
+    },
+    'fix_sitewide_tagging': {
+        name: 'FIX SITEWIDE TAGGING (OGT & CT)',
+        screenshots: {
+            implementation: [
+                '1. OGT (gTag/GTM com tag de vinculador de conversão) adicionado em todas as páginas',
+                '2. A codificação automática (auto tagging) está habilitada no Google Ads (Admin > Config. da Conta)',
+                '3. [Se for GTM] O vinculador de conversão está presente e o acionador definido para disparar em "Todas as Páginas".',
+                '4. O gclid está sendo mantido sem redirecionamentos e armazenado no cookie _gcl_aw na landing page?',
+                '5. O gclid foi passado para a página de conversão?'
+            ],
+            education: [
+                 '1. OGT (gTag/GTM com tag de vinculador de conversão) adicionado em todas as páginas',
+                '2. A codificação automática (auto tagging) está habilitada no Google Ads (Admin > Config. da Conta)',
+                '3. [Se for GTM] O vinculador de conversão está presente e o acionador definido para disparar em "Todas as Páginas".',
+                '4. O gclid está sendo mantido sem redirecionamentos e armazenado no cookie _gcl_aw na landing page?',
+                '5. O gclid foi passado para a página de conversão?'
+            ]
+        }
     }
 };
 

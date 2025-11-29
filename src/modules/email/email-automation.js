@@ -12,12 +12,40 @@ function simularCliqueReal(elemento) {
     );
 }
 
-// --- FUNÇÃO AUXILIAR: ENCONTRAR EDITOR VISÍVEL ---
+function getFollowUpDate() {
+    const date = new Date();
+    date.setDate(date.getDate() + 3); // Soma 3 dias corridos
+
+    const dayOfWeek = date.getDay(); // 0 = Domingo, 6 = Sábado
+
+    if (dayOfWeek === 6) { 
+        // Se cair no Sábado, joga para Segunda (+2 dias)
+        date.setDate(date.getDate() + 2);
+    } else if (dayOfWeek === 0) { 
+        // Se cair no Domingo, joga para Segunda (+1 dia)
+        date.setDate(date.getDate() + 1);
+    }
+
+    // Formata para DD/MM/AAAA (Padrão BR/PT)
+    return date.toLocaleDateString('pt-BR');
+}
+// --- FUNÇÃO AUXILIAR: ENCONTRAR EDITOR VISÍVEL E EDITÁVEL ---
 function getVisibleEditor() {
     // Pega todos os candidatos a corpo de email
     const todos = Array.from(document.querySelectorAll('[id="email-body-content-top-content"]'));
-    // Retorna apenas aquele que tem dimensão na tela (está visível)
-    return todos.find(el => el.offsetParent !== null);
+    
+    // FILTRO DE SEGURANÇA:
+    // 1. Deve estar visível (offsetParent !== null)
+    // 2. NÃO pode estar dentro de um 'case-message-view' (email enviado/leitura)
+    // 3. DEVE estar dentro de um 'editor' ou 'write-card' (email sendo escrito)
+    
+    return todos.find(el => {
+        const isVisible = el.offsetParent !== null;
+        const isReadOnly = el.closest('case-message-view') !== null;
+        const isEditable = el.closest('.editor') !== null || el.closest('write-card') !== null;
+        
+        return isVisible && !isReadOnly && isEditable;
+    });
 }
 
 // --- FUNÇÃO COMPARTILHADA: ABRIR E LIMPAR ---
@@ -30,6 +58,10 @@ async function openAndClearEmail() {
     // Tenta achar botão de email VISÍVEL
     if (iconeEmail && iconeEmail.offsetParent !== null) {
         const botaoAlvo = iconeEmail.closest('material-button') || iconeEmail.closest('material-fab') || iconeEmail;
+        if (botaoAlvo.style) {
+            botaoAlvo.style.display = 'block';
+            botaoAlvo.style.visibility = 'visible';
+        }
         simularCliqueReal(botaoAlvo);
         emailAberto = true;
     } else {
@@ -42,7 +74,6 @@ async function openAndClearEmail() {
                 simularCliqueReal(triggerBtn);
                 await esperar(1000);
                 
-                // Busca novamente após abrir menu
                 const iconesNovos = Array.from(document.querySelectorAll('i.material-icons-extended'));
                 const emailBtnNovo = iconesNovos.find(el => el.innerText.trim() === 'email');
                 if (emailBtnNovo) {
@@ -55,45 +86,63 @@ async function openAndClearEmail() {
         }
     }
 
-    // === CORREÇÃO CRÍTICA: ESPERAR PELO VISÍVEL ===
+    // === ESPERA PELO EDITOR VISÍVEL E VÁLIDO ===
     let tentativas = 0;
-    let editorVisivel = getVisibleEditor();
+    let editorVisivel = getVisibleEditor(); // Usa a nova função filtrada
 
-    console.log("⏳ Aguardando editor VISÍVEL...");
+    console.log("⏳ Aguardando editor EDITÁVEL...");
     
-    while (!editorVisivel && tentativas < 30) { // Espera até 15s
+    while (!editorVisivel && tentativas < 30) {
         await esperar(500);
         editorVisivel = getVisibleEditor();
         tentativas++;
     }
 
     if (!editorVisivel) {
-        showToast("Erro: Editor de email não apareceu na tela.", { error: true });
+        showToast("Erro: Editor de email não apareceu.", { error: true });
         return false;
     }
-    // ==============================================
 
     // 2. DESCARTAR RASCUNHO
-    const btnDiscardDraft = document.querySelector('material-button[debug-id="discard-prewrite-draft-button"]');
-    if (btnDiscardDraft && btnDiscardDraft.offsetParent !== null) {
+// 2. DESCARTAR RASCUNHO (Lógica Blindada)
+    // Busca TODOS os botões de descarte possíveis
+    const todosDescartes = Array.from(document.querySelectorAll('material-button[debug-id="discard-prewrite-draft-button"]'));
+    // Filtra apenas o que está visível na tela
+    const btnDiscardDraft = todosDescartes.find(el => el.offsetParent !== null);
+    
+    if (btnDiscardDraft) {
+        console.log("⚠️ Rascunho detectado. Clicando em Discard...");
         simularCliqueReal(btnDiscardDraft);
-        await esperar(800);
-        const btnConfirm = document.querySelector('material-button[debug-id="confirm-button"]');
+        
+        // Espera ativa pelo botão de confirmação (o modal pode demorar a aparecer)
+        let btnConfirm = null;
+        let tentativasConfirm = 0;
+        
+        while (!btnConfirm && tentativasConfirm < 10) { // Espera até 2s
+            await esperar(200);
+            const todosConfirms = Array.from(document.querySelectorAll('material-button[debug-id="confirm-button"]'));
+            btnConfirm = todosConfirms.find(el => el.offsetParent !== null);
+            tentativasConfirm++;
+        }
+
         if (btnConfirm) {
+            console.log("✅ Confirmando descarte...");
             simularCliqueReal(btnConfirm);
-            await esperar(1500);
-            // Atualiza referência após descarte (o DOM pode ter mudado)
-            editorVisivel = getVisibleEditor();
+            
+            // Espera crítica: O editor recarrega após o descarte.
+            // Precisamos esperar o editor antigo sumir e o novo aparecer, ou apenas esperar um tempo seguro.
+            await esperar(2500); 
+            
+            // Atualiza a referência do editor, pois o DOM mudou
+            // Não precisamos fazer nada aqui, pois a função vai buscar o editor novamente abaixo
+        } else {
+            console.warn("⚠️ Cliquei em Discard, mas o botão Confirm não apareceu.");
         }
     }
 
-    // 3. LIMPEZA RADICAL (TOP LEVEL) NO ELEMENTO VISÍVEL
+    // 3. LIMPEZA NUCLEAR NO EDITOR CORRETO
     if (editorVisivel) {
-        // Sobe para o container pai ('top') para limpar assinaturas
         const containerTopo = editorVisivel.closest('[id="email-body-content-top"]');
-        
-        // Tenta achar o contenteditable correspondente a este editor visível
-        // Usamos .closest para garantir que estamos no contexto certo
         const wrapperGeral = editorVisivel.closest('.email-body-content') || document.body;
         const editorPai = wrapperGeral.querySelector('div[contenteditable="true"][aria-label="Email body"]');
 
@@ -113,7 +162,7 @@ async function openAndClearEmail() {
                 </div>
             `;
             
-            // REPOSICIONA CURSOR (No elemento visível)
+            // REPOSICIONA CURSOR
             const novoElementoSagrado = containerTopo.querySelector('#cases-body-field');
             if (novoElementoSagrado) {
                 const range = document.createRange();
@@ -128,12 +177,12 @@ async function openAndClearEmail() {
         }
     }
     
-    showToast("Erro ao acessar estrutura do editor.", { error: true });
+    showToast("Erro crítico ao acessar editor.", { error: true });
     return false;
 }
 
 // ============================================================
-// FUNÇÃO 1: PARA NOTAS (CANNED RESPONSE)
+// FUNÇÃO 1: CANNED RESPONSE
 // ============================================================
 export async function runEmailAutomation(cannedResponseText) {
     if (!cannedResponseText) return;
@@ -181,7 +230,7 @@ export async function runEmailAutomation(cannedResponseText) {
                 simularCliqueReal(opcaoAlvo);
                 await esperar(2000); 
 
-                // Substituir Nome - Busca apenas no container VISÍVEL
+                // Substituir Nome
                 function encontrarNoDeTexto(elemento, textoParaAchar) {
                     if (elemento.nodeType === 3 && elemento.nodeValue.includes(textoParaAchar)) return elemento;
                     if (!elemento.childNodes) return null;
@@ -192,6 +241,7 @@ export async function runEmailAutomation(cannedResponseText) {
                     return null;
                 }
 
+                // Busca no container visível
                 const editorVisivel = getVisibleEditor();
                 const containerTopo = editorVisivel ? editorVisivel.closest('[id="email-body-content-top"]') : document.body;
                 
@@ -222,7 +272,7 @@ export async function runEmailAutomation(cannedResponseText) {
 }
 
 // ============================================================
-// FUNÇÃO 2: PARA QUICK EMAIL (HTML DIRETO)
+// FUNÇÃO 2: QUICK EMAIL
 // ============================================================
 export async function runQuickEmail(template) {
     console.log(`🚀 Iniciando automação (Quick): ${template.name}`);
@@ -233,7 +283,7 @@ export async function runQuickEmail(template) {
     
     if (!emailPronto) return;
 
-    // 1. Preencher Assunto
+    // 1. Assunto
     const subjectInput = document.querySelector('input[aria-label="Subject"]');
     if (subjectInput && template.subject) {
         subjectInput.focus();
@@ -243,36 +293,49 @@ export async function runQuickEmail(template) {
         await esperar(300);
     }
 
-    // 2. Inserir Corpo (No editor VISÍVEL)
-    // openAndClearEmail já deixou o cursor no lugar certo do editor visível.
-    // Mas por segurança, vamos focar no contenteditable correto.
-    
+    // 2. Corpo
     const editorVisivel = getVisibleEditor();
-    if (editorVisivel) {
-         // Sobe até achar o contenteditable pai deste elemento visível
+    
+   if (editorVisivel) {
          const wrapperGeral = editorVisivel.closest('.email-body-content') || document.body;
          const editorPai = wrapperGeral.querySelector('div[contenteditable="true"][aria-label="Email body"]');
          
-         if (editorPai) editorPai.focus();
-    }
+         if (editorPai) {
+             editorPai.focus();
+             editorPai.dispatchEvent(new Event('input', { bubbles: true }));
+         }
 
-    // Substituição de Placeholders
-    let finalBody = template.body;
-    finalBody = finalBody.replace(/\[Nome do Cliente\]/g, pageData.advertiserName || "Cliente");
-    finalBody = finalBody.replace(/\[INSERIR URL\]/g, pageData.websiteUrl || "seu site");
-    finalBody = finalBody.replace(/\[Seu Nome\]/g, "Agente Google"); 
-    
-    // INSERÇÃO
-    document.execCommand('insertHTML', false, finalBody);
-    
-    // Dispara eventos
-    if (editorVisivel) {
-        const editorPai = editorVisivel.closest('div[contenteditable="true"]');
+        // --- CÁLCULO AUTOMÁTICO DA DATA (3 dias + FDS) ---
+        const date = new Date();
+        date.setDate(date.getDate() + 3); // Soma 3 dias corridos
+        const day = date.getDay();
+        
+        if (day === 6) { // Sábado -> joga para Segunda (+2)
+            date.setDate(date.getDate() + 2);
+        } else if (day === 0) { // Domingo -> joga para Segunda (+1)
+            date.setDate(date.getDate() + 1);
+        }
+        const dataFormatada = date.toLocaleDateString('pt-BR');
+        // ------------------------------------------------
+
+        let finalBody = template.body;
+        finalBody = finalBody.replace(/\[Nome do Cliente\]/g, pageData.advertiserName || "Cliente");
+        finalBody = finalBody.replace(/\[INSERIR URL\]/g, pageData.websiteUrl || "seu site");
+        finalBody = finalBody.replace(/\[URL\]/g, pageData.websiteUrl || "seu site");
+        finalBody = finalBody.replace(/\[Seu Nome\]/g, "Agente Google"); 
+        
+        // Substitui o placeholder de data pela data calculada
+        finalBody = finalBody.replace(/\[MM\/DD\/YYYY\]/g, dataFormatada);
+
+        document.execCommand('insertHTML', false, finalBody);
+        
         if (editorPai) {
             editorPai.dispatchEvent(new Event('input', { bubbles: true }));
             editorPai.dispatchEvent(new Event('change', { bubbles: true }));
         }
+        
+        showToast("Email preenchido com sucesso!", { duration: 2000 });
+    } else {
+        showToast("Erro ao focar no editor.", { error: true });
     }
-    
-    showToast("Email preenchido com sucesso!", { duration: 2000 });
 }

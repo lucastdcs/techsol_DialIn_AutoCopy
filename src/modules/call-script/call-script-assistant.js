@@ -27,7 +27,7 @@ export function initCallScriptAssistant() {
     // --- UI: Botão Flutuante (Material Design Pro) ---
     const btnContainer = document.createElement("div");
     Object.assign(btnContainer.style, {
-        position: "fixed", top: "45%", right: "24px", zIndex: "9999",
+        position: "fixed", bottom: "30%", right: "24px", zIndex: "9999",
         display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px"
     });
 
@@ -292,8 +292,14 @@ export function initCallScriptAssistant() {
     }
 
     // --- Event Handlers (CORREÇÃO DE NOME DE VARIÁVEL) ---
-    let csaVisible = false;
-    btn.onclick = () => { // <--- CORRIGIDO de csaBtn para btn
+   let csaVisible = false;
+    btn.onclick = () => {
+        // --- PROTEÇÃO CONTRA ARRASTO ---
+        if (btnContainer.getAttribute('data-dragging') === 'true') {
+            return; 
+        }
+        // -------------------------------
+
         csaVisible = !csaVisible;
         csaTogglePopup(csaVisible);
     };

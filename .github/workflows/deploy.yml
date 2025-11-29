@@ -3,7 +3,8 @@ name: Build and Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main # Roda toda vez que você fizer push no 'main'
+      - main
+      - refactor-structure  # <--- ADICIONEI ISSO AQUI (use o nome exato da sua branch)
 
 jobs:
   build-and-deploy:
@@ -21,13 +22,12 @@ jobs:
         run: npm install esbuild
 
       - name: Build (Bundle)
-        # CORREÇÃO: Aponta para o app.js dentro da pasta src
         run: ./node_modules/.bin/esbuild src/app.js --bundle --outfile=dist/bundle.js --minify
         
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist # A pasta que contém o 'bundle.js'
+          publish_dir: ./dist
           publish_branch: gh-pages
           cname: ''

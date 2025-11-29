@@ -19,7 +19,7 @@ const LINKS_DB = {
     lm: {
         label: "LM Forms",
         links: [
-            { name: "Relatório de Ocorrências", url: "https://docs.google.com/forms/d/e/1FAIpQLSc6CamPehrREeVr7yCWMyqFETrFYYezNcLb_13W4yZDQkfY6Q/viewform", desc: "Reportar problemas operacionais" },
+            { name: "Relatório de Ocorrências", url: "https://docs.google.com/forms/d/e/1FAIpQLSc6CamPehrREeVr7yCWMyqFETrFYYezNcLb_13W4yZDQkfY6Q/viewform", desc: "Reportar problemas operacionais | Aviso de pausas" },
             { name: "Chamadas Excedidas (>50min)", url: "https://docs.google.com/forms/d/e/1FAIpQLSfE8EMHNJMTKYeA6XM2RZjZ9AQ4LhGk1Dwm_WLu3kcMdKMikA/viewform", desc: "Registro de chamadas longas" },
             { name: "Relatório de Bugs", url: "https://docs.google.com/forms/d/e/1FAIpQLSfkqRqT2Kbf08IStz31fQPE84MDOtGxk7cetJmc3xzShXIXRA/viewform", desc: "Erros de sistema/ferramenta" },
              { name: "Suporte LM", url: "https://script.google.com/a/macros/google.com/s/AKfycbxYMlFCMZvqgHMIImeS_u-lNZPiertXmem-5m9Fox3jvZaq0ZOQDoc5ma96ltSvWHY/exec", desc: "Enviar casos para BAU/Solicitar Descarte/Abrir Monitoria para AMs" }
@@ -28,28 +28,33 @@ const LINKS_DB = {
     qa: {
         label: "QA",
         links: [
-            { name: "Elogios", url: "https://docs.google.com/forms/d/e/1FAIpQLSezY5K-trQDv0LkL5IoTlV0Tl0oOqGTEszylmgcbMRXcC9Weg/viewform", desc: "Feedback positivo" },
-            { name: "Casos Complexos", url: "https://docs.google.com/forms/d/e/1FAIpQLSe26q1LEloFNRfOAVZtA7DCOQTqdu1BAEeWuxtK6oPwZhLp-A/viewform?resourcekey=0-c1N4h8gntza2gQowqYAqMw", desc: "Escalonamento técnico" }
+            { name: "Elogios", url: "https://docs.google.com/forms/d/e/1FAIpQLSezY5K-trQDv0LkL5IoTlV0Tl0oOqGTEszylmgcbMRXcC9Weg/viewform", desc: "Feedback positivo dos Anunciantes" },
+            { name: "Casos Complexos", url: "https://docs.google.com/forms/d/e/1FAIpQLSe26q1LEloFNRfOAVZtA7DCOQTqdu1BAEeWuxtK6oPwZhLp-A/viewform?resourcekey=0-c1N4h8gntza2gQowqYAqMw", desc: "Casos complicados de atender" }
         ]
     },
     suporte: {
         label: "Central de Ajuda",
         links: [
-            { name: "Suporte Google Ads", url: "https://support.google.com/google-ads/", desc: "Help Center Oficial" },
-            { name: "Suporte GA4", url: "https://support.google.com/analytics/", desc: "Documentação do Analytics" },
-            { name: "Suporte Merchant Center", url: "https://support.google.com/merchants/gethelp", desc: "GMC Help" }
+            { name: "Suporte Google Ads", url: "https://support.google.com/google-ads/", desc: "Oficial" },
+            { name: "Suporte GA4", url: "https://support.google.com/analytics/", desc: "Oficial" },
+            { name: "Suporte Merchant Center", url: "https://support.google.com/merchants/gethelp", desc: "Oficial" },
+            { name: "Doc. CSP", url: "https://developers.google.com/tag-platform/tag-manager/web/csp?hl=pt-br.", desc: "Doc. oficial sobre CSP" },
+            { name: "Doc. Enhanced Conversion", url: "https://support.google.com/google-ads/answer/9888656?hl=pt-BR", desc: "Como funcionam as conversões otimizadas?" },
+            { name: "Doc. CoMo", url: "https://developers.google.com/tag-platform/security/concepts/consent-mode?hl=pt-br", desc: "Doc. oficial sobre Consent Mode" },
+
+  
         ]
     },
     outros: {
         label: "Diversos",
         links: [
-            { name: "Solicitar Gravação", url: "https://support.google.com/policies/contact/sar", desc: "SAR Request" }
+            { name: "Solicitar Gravação", url: "https://support.google.com/policies/contact/sar", desc: "Form para solicitar gravação da chamada." }
         ]
     }
 };
 
 export function initFeedbackAssistant() {
-    const CURRENT_VERSION = "v2.2.7";
+    const CURRENT_VERSION = "v2.3.0";
 
     let activeTab = 'lm'; 
     let searchTerm = "";
@@ -93,7 +98,7 @@ export function initFeedbackAssistant() {
     // --- UI: Botão Flutuante ---
     const btnContainer = document.createElement("div");
     Object.assign(btnContainer.style, {
-        position: "fixed", top: "35%", right: "24px", zIndex: "9999",
+        position: "fixed", bottom: "10%", right: "24px", zIndex: "9999",
         display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px"
     });
 
@@ -351,8 +356,14 @@ export function initFeedbackAssistant() {
         }
     }
 
-    let visible = false;
+ let visible = false;
     btn.onclick = () => {
+        // --- PROTEÇÃO CONTRA ARRASTO ---
+        if (btnContainer.getAttribute('data-dragging') === 'true') {
+            return; 
+        }
+        // -------------------------------
+
         visible = !visible;
         togglePopup(visible);
     };
