@@ -76,3 +76,28 @@ export const styleLinkButton = {
     transition: 'background-color 0.2s ease',
     fontFamily: "'Poppins', sans-serif"
 };
+
+// Container da lista de tasks (o "Drawer")
+export const styleTaskListContainer = {
+    maxHeight: "220px",          // Limita a altura (Scroll interno)
+    overflowY: "auto",           // Scroll automático
+    border: "1px solid #dadce0", // Borda suave Google
+    borderRadius: "8px",         // Cantos arredondados
+    marginTop: "8px",            // Separação da busca
+    backgroundColor: "#ffffff",  // Fundo branco limpo
+    boxShadow: "inset 0 1px 2px rgba(0,0,0,0.03)", // Sombra interna sutil (profundidade)
+    display: "none"              // Começa oculto (controlado pelo JS)
+};
+
+// Item individual da lista (sobrescreve o checkbox padrão para ficar mais compacto)
+export const styleTaskListItem = {
+    display: "flex",
+    alignItems: "center",
+    padding: "8px 12px",         // Mais compacto que o padrão
+    borderBottom: "1px solid #f1f3f4", // Separador ultra leve
+    cursor: "pointer",
+    fontSize: "13px",            // Fonte levemente menor
+    color: "#3c4043",
+    transition: "background 0.1s",
+    userSelect: "none"
+};

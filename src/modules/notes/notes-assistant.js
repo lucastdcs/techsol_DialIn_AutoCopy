@@ -20,7 +20,7 @@ import { copyHtmlToClipboard, ensureNoteCardIsOpen, triggerInputEvents } from '.
 
 export function initCaseNotesAssistant() {
     const CURRENT_VERSION = "v3.5.3"; 
-    
+
     let currentCaseType = 'bau';
     let currentLang = 'pt'; 
     let isPortugalCase = false;
@@ -331,42 +331,41 @@ export function initCaseNotesAssistant() {
         Object.assign(searchInput.style, NoteStyles.styleSearchInput);
         taskCheckboxesContainer.appendChild(searchInput);
 
-        // 2. CHIPS (Populares - Sempre Visíveis)
+        // 2. CHIPS (Populares)
         const chipsContainer = document.createElement("div");
         Object.assign(chipsContainer.style, NoteStyles.styleChipContainer);
         
         const popularTasks = Object.entries(TASKS_DB).filter(([_, task]) => task.popular);
-        // ... (MANTENHA O CÓDIGO DE CRIAÇÃO DOS CHIPS IGUAL AO ANTERIOR) ...
-        // (Vou resumir aqui para focar na mudança da lista, mas você deve manter a lógica de clique dos chips)
+        
         popularTasks.forEach(([key, task]) => {
             const chip = document.createElement("div");
             chip.id = `chip-${key}`;
-            // ... criação do chip ...
             const chipText = document.createElement("span"); chipText.textContent = task.name;
             const chipRemove = document.createElement("span"); chipRemove.textContent = "✕";
             Object.assign(chipRemove.style, NoteStyles.styleChipRemove);
             Object.assign(chip.style, NoteStyles.styleChip);
             
-            // Hover X
             chipRemove.onmouseover = () => chipRemove.style.backgroundColor = 'white';
             chipRemove.onmouseout = () => chipRemove.style.backgroundColor = 'rgba(255,255,255,0.6)';
 
             chip.appendChild(chipText); chip.appendChild(chipRemove);
 
-            // Events (Copie a lógica completa que te passei antes)
             chip.onclick = () => { 
                 const checkbox = document.getElementById(`chk-${key}`);
                 if(!checkbox) return;
                 const stepperDiv = checkbox.parentNode.querySelector('.stepper-container');
                 const countSpan = stepperDiv.querySelector('.stepper-count');
                 if (!checkbox.checked) {
-                    checkbox.checked = true; stepperDiv.style.display = 'flex'; countSpan.textContent = '1'; checkbox.closest('label').style.background = '#e8f0fe';
+                    checkbox.checked = true; stepperDiv.style.display = 'flex'; countSpan.textContent = '1'; 
+                    // Update visual do item da lista também
+                    checkbox.closest('label').style.background = '#e8f0fe';
                 } else {
                     let currentCount = parseInt(countSpan.textContent); countSpan.textContent = currentCount + 1;
                 }
                 updateChipVisual(chip, chipText, chipRemove, parseInt(countSpan.textContent));
                 renderScreenshotInputs(); checkTagSupportVisibility();
             };
+
             chipRemove.onclick = (e) => {
                 e.stopPropagation();
                 const checkbox = document.getElementById(`chk-${key}`);
@@ -381,41 +380,43 @@ export function initCaseNotesAssistant() {
 
         if (popularTasks.length > 0) taskCheckboxesContainer.appendChild(chipsContainer);
 
-        // --- 3. BOTÃO "VER TODAS" (A MUDANÇA COMEÇA AQUI) ---
-       // --- 3. BOTÃO "VER TODAS" (CLEAN DESIGN) ---
+        // 3. BOTÃO "VER TODAS"
         const toggleListBtn = document.createElement("button");
-        
-        // Ícones SVG (Chevron Down / Up)
         const iconDown = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#1a73e8"><path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/></svg>`;
         const iconUp = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#1a73e8"><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"/></svg>`;
 
-        // Estado Inicial
         toggleListBtn.innerHTML = `Ver lista completa (${Object.keys(TASKS_DB).length}) ${iconDown}`;
         Object.assign(toggleListBtn.style, NoteStyles.styleLinkButton);
-        
-        // Hover Effect (Google Style)
-        toggleListBtn.onmouseover = () => toggleListBtn.style.backgroundColor = '#f1f8ff'; // Azul bem clarinho
+        toggleListBtn.onmouseover = () => toggleListBtn.style.backgroundColor = '#f1f8ff'; 
         toggleListBtn.onmouseout = () => toggleListBtn.style.backgroundColor = 'transparent';
 
         taskCheckboxesContainer.appendChild(toggleListBtn);
 
-
-        // 4. LISTA DE CHECKBOXES (Inicialmente Oculta)
+        // 4. LISTA DE CHECKBOXES (ESTILO SECUNDÁRIO)
         const listContainer = document.createElement("div");
         listContainer.id = "tasks-list-scroll";
-        listContainer.style.display = "none"; // <--- COMEÇA OCULTO
+        // Aplica o estilo de "Gaveta/Drawer"
+        Object.assign(listContainer.style, NoteStyles.styleTaskListContainer); 
         
-        // Loop de criação das checkboxes (Igual ao anterior)
         for (const taskKey in TASKS_DB) {
-            // ... (MANTENHA TODO O CÓDIGO DE CRIAÇÃO DA LISTA IGUAL) ...
-            // ... (Criação de label, checkbox, stepper, eventos...) ...
             const task = TASKS_DB[taskKey];
-            const label = document.createElement('label'); label.className = "task-row-item"; Object.assign(label.style, NoteStyles.styleCheckboxLabel);
-            label.onmouseover = () => { if (!checkbox.checked) label.style.backgroundColor = '#e8eaed'; };
-            label.onmouseout = () => { if (!checkbox.checked) label.style.backgroundColor = '#f8f9fa'; else label.style.backgroundColor = '#e8f0fe'; };
+            const label = document.createElement('label');
+            label.className = "task-row-item";
+            
+            // Aplica o estilo de item de lista compacto
+            Object.assign(label.style, NoteStyles.styleTaskListItem);
+            
+            label.onmouseover = () => { if (!checkbox.checked) label.style.backgroundColor = '#f8f9fa'; }; // Hover sutil
+            label.onmouseout = () => { 
+                if (!checkbox.checked) label.style.backgroundColor = 'transparent'; 
+                else label.style.backgroundColor = '#e8f0fe';
+            };
 
-            const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.value = taskKey; checkbox.id = `chk-${taskKey}`; checkbox.className = 'task-checkbox'; Object.assign(checkbox.style, NoteStyles.styleCheckboxInput);
+            const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.value = taskKey; checkbox.id = `chk-${taskKey}`; checkbox.className = 'task-checkbox'; 
+            Object.assign(checkbox.style, NoteStyles.styleCheckboxInput);
+            
             const taskName = document.createElement('span'); taskName.textContent = task.name; Object.assign(taskName.style, { flexGrow: '1' }); 
+            
             const stepperDiv = document.createElement('div'); stepperDiv.className = 'stepper-container'; Object.assign(stepperDiv.style, NoteStyles.styleStepper);
             const btnMinus = document.createElement('button'); btnMinus.type = 'button'; btnMinus.textContent = '−'; btnMinus.classList.add('no-drag'); Object.assign(btnMinus.style, NoteStyles.styleStepperBtn);
             const countSpan = document.createElement('span'); countSpan.className = 'stepper-count'; countSpan.textContent = '1'; Object.assign(countSpan.style, NoteStyles.styleStepperCount);
@@ -425,7 +426,6 @@ export function initCaseNotesAssistant() {
             label.appendChild(checkbox); label.appendChild(taskName); label.appendChild(stepperDiv);
             listContainer.appendChild(label);
 
-            // Sync Chip
             const syncChip = () => {
                 const chip = document.getElementById(`chip-${taskKey}`);
                 if (chip) {
@@ -437,48 +437,42 @@ export function initCaseNotesAssistant() {
             };
 
             checkbox.onchange = () => {
-                if (checkbox.checked) { stepperDiv.style.display = 'flex'; countSpan.textContent = '1'; label.style.background = '#e8f0fe'; } 
-                else { stepperDiv.style.display = 'none'; countSpan.textContent = '0'; label.style.background = '#f8f9fa'; }
+                if (checkbox.checked) { 
+                    stepperDiv.style.display = 'flex'; countSpan.textContent = '1'; 
+                    label.style.backgroundColor = '#e8f0fe'; // Selecionado (Azul Claro)
+                } else { 
+                    stepperDiv.style.display = 'none'; countSpan.textContent = '0'; 
+                    label.style.backgroundColor = 'transparent'; // Deselecionado (Transparente no fundo branco)
+                }
                 syncChip(); renderScreenshotInputs(); checkTagSupportVisibility();
             };
+            
             btnMinus.onclick = (e) => { e.preventDefault(); e.stopPropagation(); let count = parseInt(countSpan.textContent); if (count > 1) { countSpan.textContent = count - 1; } else { checkbox.checked = false; checkbox.dispatchEvent(new Event('change')); return; } syncChip(); renderScreenshotInputs(); checkTagSupportVisibility(); };
             btnPlus.onclick = (e) => { e.preventDefault(); e.stopPropagation(); let count = parseInt(countSpan.textContent); countSpan.textContent = count + 1; syncChip(); renderScreenshotInputs(); checkTagSupportVisibility(); };
         }
         
         taskCheckboxesContainer.appendChild(listContainer);
 
-        // --- EVENTOS DE INTERAÇÃO ---
-
-        // 1. Clique no botão "Ver todas"
-       toggleListBtn.onclick = () => {
+        toggleListBtn.onclick = () => {
             if (listContainer.style.display === "none") {
-                // Abrir
                 listContainer.style.display = "block";
-                toggleListBtn.innerHTML = `Ocultar lista ${iconUp}`; // Usa o SVG
+                toggleListBtn.innerHTML = `Ocultar lista ${iconUp}`;
             } else {
-                // Fechar
                 listContainer.style.display = "none";
-                toggleListBtn.innerHTML = `Ver lista completa (${Object.keys(TASKS_DB).length}) ${iconDown}`; // Usa o SVG
+                toggleListBtn.innerHTML = `Ver lista completa (${Object.keys(TASKS_DB).length}) ${iconDown}`;
             }
         };
 
-        // 2. Digitação na Busca (Abre a lista automaticamente)
         searchInput.oninput = (e) => {
             const term = e.target.value.toLowerCase();
-            
             if (term.length > 0) {
-                // Se tem texto, mostra a lista e esconde o botão de toggle
                 listContainer.style.display = "block";
                 toggleListBtn.style.display = "none";
             } else {
-                // Se limpou, esconde a lista e volta o botão
                 listContainer.style.display = "none";
-                toggleListBtn.style.display = "flex"; 
-                // Reseta o texto do botão com o SVG
+                toggleListBtn.style.display = "flex";
                 toggleListBtn.innerHTML = `Ver lista completa (${Object.keys(TASKS_DB).length}) ${iconDown}`;
             }
-
-            // Filtro das linhas
             const rows = listContainer.querySelectorAll('.task-row-item');
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
