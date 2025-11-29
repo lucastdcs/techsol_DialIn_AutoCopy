@@ -1,7 +1,8 @@
 // src/modules/notes/tag-support.js
 
 // Importamos estilos genéricos do utils para manter consistência
-import { styleLabel, styleCheckboxInput } from '../shared/utils.js';
+import { styleLabel } from '../shared/utils.js';
+import {styleCheckboxInput} from '../notes/notes-styles.js'
 
 // Estilos locais específicos deste módulo
 const styleContainer = { 
