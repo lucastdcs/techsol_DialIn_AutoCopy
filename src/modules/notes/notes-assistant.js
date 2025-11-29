@@ -325,7 +325,7 @@ function checkTagSupportVisibility() {
         
         // 1. Validação Inicial: Se não tem substatus ou é Educação, esconde
         if (!selectedSubStatusKey || selectedSubStatusKey.includes('Education')) {
-            tagSupportDiv.style.display = 'none';
+            tagSupport.style.display = 'none';
             return;
         }
 
@@ -334,7 +334,7 @@ function checkTagSupportVisibility() {
         const tasks = checkedBoxes.map(cb => cb.value);
 
         if (tasks.length === 0) {
-            tagSupportDiv.style.display = 'none';
+            tagSupport.style.display = 'none';
             return;
         }
 
@@ -362,9 +362,9 @@ function checkTagSupportVisibility() {
         // 4. Aplicação da Visibilidade
         // Mostra se for Enhanced OU se for Apenas Ads
         if (hasEnhanced || isOnlyAds) {
-            tagSupportDiv.style.display = 'block';
+            tagSupport.style.display = 'block';
         } else {
-            tagSupportDiv.style.display = 'none';
+            tagSupport.style.display = 'none';
         }
     }
  function populateTaskCheckboxes() {
@@ -684,6 +684,10 @@ function renderScreenshotInputs() {
             }
         });
         screenshotsContainer.style.display = hasScreenshots ? 'block' : 'none';
+
+        // No final da função renderScreenshotInputs
+const checkedValues = Array.from(taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked')).map(cb => cb.value);
+tagSupport.updateVisibility(subStatusSelect.value, checkedValues);
     }
 
    function generateOutputHtml() {
