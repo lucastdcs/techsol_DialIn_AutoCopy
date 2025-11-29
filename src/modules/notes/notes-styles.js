@@ -58,3 +58,10 @@ export const styleChipRemove = {
     fontSize: '10px', color: '#1967d2', backgroundColor: 'rgba(255,255,255,0.6)',
     transition: 'background 0.2s', lineHeight: '1'
 };
+
+export const styleLinkButton = {
+    background: 'none', border: 'none', color: '#1a73e8', 
+    cursor: 'pointer', fontSize: '13px', fontWeight: '500',
+    padding: '8px 0', display: 'flex', alignItems: 'center', gap: '5px',
+    margin: '0 auto' // Centralizado
+};

@@ -19,7 +19,7 @@ import * as NoteStyles from './notes-styles.js';
 import { copyHtmlToClipboard, ensureNoteCardIsOpen, triggerInputEvents } from './notes-bridge.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v3.5.0"; 
+    const CURRENT_VERSION = "v3.5.1"; 
     
     let currentCaseType = 'bau';
     let currentLang = 'pt'; 
@@ -331,151 +331,138 @@ export function initCaseNotesAssistant() {
         Object.assign(searchInput.style, NoteStyles.styleSearchInput);
         taskCheckboxesContainer.appendChild(searchInput);
 
-        // 2. CHIPS (ATALHOS RÁPIDOS)
+        // 2. CHIPS (Populares - Sempre Visíveis)
         const chipsContainer = document.createElement("div");
         Object.assign(chipsContainer.style, NoteStyles.styleChipContainer);
         
         const popularTasks = Object.entries(TASKS_DB).filter(([_, task]) => task.popular);
-        
+        // ... (MANTENHA O CÓDIGO DE CRIAÇÃO DOS CHIPS IGUAL AO ANTERIOR) ...
+        // (Vou resumir aqui para focar na mudança da lista, mas você deve manter a lógica de clique dos chips)
         popularTasks.forEach(([key, task]) => {
             const chip = document.createElement("div");
-            chip.id = `chip-${key}`; // ID para sincronia
-            Object.assign(chip.style, NoteStyles.styleChip);
-
-            const chipText = document.createElement("span");
-            chipText.textContent = task.name;
-            
-            const chipRemove = document.createElement("span");
-            chipRemove.textContent = "✕";
+            chip.id = `chip-${key}`;
+            // ... criação do chip ...
+            const chipText = document.createElement("span"); chipText.textContent = task.name;
+            const chipRemove = document.createElement("span"); chipRemove.textContent = "✕";
             Object.assign(chipRemove.style, NoteStyles.styleChipRemove);
+            Object.assign(chip.style, NoteStyles.styleChip);
             
-            // Hover no X
+            // Hover X
             chipRemove.onmouseover = () => chipRemove.style.backgroundColor = 'white';
             chipRemove.onmouseout = () => chipRemove.style.backgroundColor = 'rgba(255,255,255,0.6)';
 
-            chip.appendChild(chipText);
-            chip.appendChild(chipRemove);
-            
-            // CLIQUE NO CHIP (Adicionar/Incrementar)
-            chip.onclick = () => {
+            chip.appendChild(chipText); chip.appendChild(chipRemove);
+
+            // Events (Copie a lógica completa que te passei antes)
+            chip.onclick = () => { 
                 const checkbox = document.getElementById(`chk-${key}`);
-                if (!checkbox) return;
+                if(!checkbox) return;
                 const stepperDiv = checkbox.parentNode.querySelector('.stepper-container');
                 const countSpan = stepperDiv.querySelector('.stepper-count');
-                
                 if (!checkbox.checked) {
-                    checkbox.checked = true; // Marca
-                    stepperDiv.style.display = 'flex';
-                    countSpan.textContent = '1';
-                    checkbox.closest('label').style.background = '#e8f0fe';
+                    checkbox.checked = true; stepperDiv.style.display = 'flex'; countSpan.textContent = '1'; checkbox.closest('label').style.background = '#e8f0fe';
                 } else {
-                    // Se já marcado, incrementa
-                    let currentCount = parseInt(countSpan.textContent);
-                    countSpan.textContent = currentCount + 1;
+                    let currentCount = parseInt(countSpan.textContent); countSpan.textContent = currentCount + 1;
                 }
                 updateChipVisual(chip, chipText, chipRemove, parseInt(countSpan.textContent));
-                renderScreenshotInputs();
-                checkTagSupportVisibility();
+                renderScreenshotInputs(); checkTagSupportVisibility();
             };
-
-            // CLIQUE NO X (Diminuir/Remover)
             chipRemove.onclick = (e) => {
-                e.stopPropagation(); // Não ativa o clique do chip pai
+                e.stopPropagation();
                 const checkbox = document.getElementById(`chk-${key}`);
-                const btnMinus = checkbox.parentNode.querySelector('button:first-child'); // Botão menos da lista
-                if (btnMinus) btnMinus.click(); // Reusa a lógica do botão menos
-                
-                // Força atualização visual imediata
+                const btnMinus = checkbox.parentNode.querySelector('button:first-child');
+                if (btnMinus) btnMinus.click();
                 const countSpan = checkbox.parentNode.querySelector('.stepper-count');
-                const count = checkbox.checked ? parseInt(countSpan.textContent) : 0;
-                updateChipVisual(chip, chipText, chipRemove, count);
+                updateChipVisual(chip, chipText, chipRemove, checkbox.checked ? parseInt(countSpan.textContent) : 0);
             };
 
             chipsContainer.appendChild(chip);
         });
-        
+
         if (popularTasks.length > 0) taskCheckboxesContainer.appendChild(chipsContainer);
 
-        // 3. LISTA DE CHECKBOXES (Com IDs para linkar aos chips)
+        // --- 3. BOTÃO "VER TODAS" (A MUDANÇA COMEÇA AQUI) ---
+        const toggleListBtn = document.createElement("button");
+        toggleListBtn.innerHTML = `🔽 Ver lista completa (${Object.keys(TASKS_DB).length})`;
+        Object.assign(toggleListBtn.style, NoteStyles.styleLinkButton);
+        taskCheckboxesContainer.appendChild(toggleListBtn);
+
+        // 4. LISTA DE CHECKBOXES (Inicialmente Oculta)
         const listContainer = document.createElement("div");
+        listContainer.id = "tasks-list-scroll";
+        listContainer.style.display = "none"; // <--- COMEÇA OCULTO
         
+        // Loop de criação das checkboxes (Igual ao anterior)
         for (const taskKey in TASKS_DB) {
+            // ... (MANTENHA TODO O CÓDIGO DE CRIAÇÃO DA LISTA IGUAL) ...
+            // ... (Criação de label, checkbox, stepper, eventos...) ...
             const task = TASKS_DB[taskKey];
-            const label = document.createElement('label');
-            label.className = "task-row-item"; // Classe para o filtro de busca
-            Object.assign(label.style, NoteStyles.styleCheckboxLabel);
-            
-            // Hover da linha
+            const label = document.createElement('label'); label.className = "task-row-item"; Object.assign(label.style, NoteStyles.styleCheckboxLabel);
             label.onmouseover = () => { if (!checkbox.checked) label.style.backgroundColor = '#e8eaed'; };
-            label.onmouseout = () => { if (!checkbox.checked) label.style.backgroundColor = '#f8f9fa'; };
+            label.onmouseout = () => { if (!checkbox.checked) label.style.backgroundColor = '#f8f9fa'; else label.style.backgroundColor = '#e8f0fe'; };
 
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.value = taskKey;
-            checkbox.id = `chk-${taskKey}`; // ID IMPORTANTE
-            checkbox.className = 'task-checkbox'; 
-            Object.assign(checkbox.style, NoteStyles.styleCheckboxInput);
-            
-            const taskName = document.createElement('span');
-            taskName.textContent = task.name;
-            Object.assign(taskName.style, { flexGrow: '1' }); 
-
-            const stepperDiv = document.createElement('div');
-            stepperDiv.className = 'stepper-container';
-            Object.assign(stepperDiv.style, NoteStyles.styleStepper);
-            
-            const btnMinus = document.createElement('button');
-            btnMinus.type = 'button'; btnMinus.textContent = '−'; btnMinus.classList.add('no-drag'); Object.assign(btnMinus.style, NoteStyles.styleStepperBtn);
-            const countSpan = document.createElement('span');
-            countSpan.className = 'stepper-count'; countSpan.textContent = '1'; Object.assign(countSpan.style, NoteStyles.styleStepperCount);
-            const btnPlus = document.createElement('button');
-            btnPlus.type = 'button'; btnPlus.textContent = '+'; btnPlus.classList.add('no-drag'); Object.assign(btnPlus.style, NoteStyles.styleStepperBtn);
+            const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.value = taskKey; checkbox.id = `chk-${taskKey}`; checkbox.className = 'task-checkbox'; Object.assign(checkbox.style, NoteStyles.styleCheckboxInput);
+            const taskName = document.createElement('span'); taskName.textContent = task.name; Object.assign(taskName.style, { flexGrow: '1' }); 
+            const stepperDiv = document.createElement('div'); stepperDiv.className = 'stepper-container'; Object.assign(stepperDiv.style, NoteStyles.styleStepper);
+            const btnMinus = document.createElement('button'); btnMinus.type = 'button'; btnMinus.textContent = '−'; btnMinus.classList.add('no-drag'); Object.assign(btnMinus.style, NoteStyles.styleStepperBtn);
+            const countSpan = document.createElement('span'); countSpan.className = 'stepper-count'; countSpan.textContent = '1'; Object.assign(countSpan.style, NoteStyles.styleStepperCount);
+            const btnPlus = document.createElement('button'); btnPlus.type = 'button'; btnPlus.textContent = '+'; btnPlus.classList.add('no-drag'); Object.assign(btnPlus.style, NoteStyles.styleStepperBtn);
 
             stepperDiv.appendChild(btnMinus); stepperDiv.appendChild(countSpan); stepperDiv.appendChild(btnPlus);
             label.appendChild(checkbox); label.appendChild(taskName); label.appendChild(stepperDiv);
             listContainer.appendChild(label);
 
-            // Sincronização Lista -> Chip
+            // Sync Chip
             const syncChip = () => {
                 const chip = document.getElementById(`chip-${taskKey}`);
                 if (chip) {
-                    const tSpan = chip.querySelector('span:first-child');
-                    const rSpan = chip.querySelector('span:last-child');
-                    const cnt = checkbox.checked ? parseInt(countSpan.textContent) : 0;
-                    updateChipVisual(chip, tSpan, rSpan, cnt);
+                    const textSpan = chip.querySelector('span:first-child');
+                    const removeSpan = chip.querySelector('span:last-child');
+                    const count = checkbox.checked ? parseInt(countSpan.textContent) : 0;
+                    updateChipVisual(chip, textSpan, removeSpan, count);
                 }
             };
 
             checkbox.onchange = () => {
-                if (checkbox.checked) { stepperDiv.style.display = 'flex'; countSpan.textContent = '1'; Object.assign(label.style, { background: '#e8f0fe' }); } 
-                else { stepperDiv.style.display = 'none'; countSpan.textContent = '0'; Object.assign(label.style, { background: '#f8f9fa' }); }
-                syncChip();
-                renderScreenshotInputs();
-                checkTagSupportVisibility();
+                if (checkbox.checked) { stepperDiv.style.display = 'flex'; countSpan.textContent = '1'; label.style.background = '#e8f0fe'; } 
+                else { stepperDiv.style.display = 'none'; countSpan.textContent = '0'; label.style.background = '#f8f9fa'; }
+                syncChip(); renderScreenshotInputs(); checkTagSupportVisibility();
             };
-            
-            btnMinus.onclick = (e) => {
-                e.preventDefault(); e.stopPropagation();
-                let count = parseInt(countSpan.textContent);
-                if (count > 1) { countSpan.textContent = count - 1; } else { checkbox.checked = false; checkbox.dispatchEvent(new Event('change')); return; }
-                syncChip();
-                renderScreenshotInputs();
-                checkTagSupportVisibility();
-            };
-            
-            btnPlus.onclick = (e) => {
-                e.preventDefault(); e.stopPropagation();
-                let count = parseInt(countSpan.textContent); countSpan.textContent = count + 1;
-                syncChip();
-                renderScreenshotInputs();
-                checkTagSupportVisibility();
-            };
+            btnMinus.onclick = (e) => { e.preventDefault(); e.stopPropagation(); let count = parseInt(countSpan.textContent); if (count > 1) { countSpan.textContent = count - 1; } else { checkbox.checked = false; checkbox.dispatchEvent(new Event('change')); return; } syncChip(); renderScreenshotInputs(); checkTagSupportVisibility(); };
+            btnPlus.onclick = (e) => { e.preventDefault(); e.stopPropagation(); let count = parseInt(countSpan.textContent); countSpan.textContent = count + 1; syncChip(); renderScreenshotInputs(); checkTagSupportVisibility(); };
         }
+        
         taskCheckboxesContainer.appendChild(listContainer);
 
-        // 4. LÓGICA DE BUSCA
+        // --- EVENTOS DE INTERAÇÃO ---
+
+        // 1. Clique no botão "Ver todas"
+        toggleListBtn.onclick = () => {
+            if (listContainer.style.display === "none") {
+                listContainer.style.display = "block";
+                toggleListBtn.innerHTML = `🔼 Ocultar lista`;
+            } else {
+                listContainer.style.display = "none";
+                toggleListBtn.innerHTML = `🔽 Ver lista completa (${Object.keys(TASKS_DB).length})`;
+            }
+        };
+
+        // 2. Digitação na Busca (Abre a lista automaticamente)
         searchInput.oninput = (e) => {
             const term = e.target.value.toLowerCase();
+            
+            if (term.length > 0) {
+                // Se tem texto, mostra a lista e esconde o botão de toggle
+                listContainer.style.display = "block";
+                toggleListBtn.style.display = "none";
+            } else {
+                // Se limpou, esconde a lista e volta o botão
+                listContainer.style.display = "none";
+                toggleListBtn.style.display = "flex"; // ou block
+                toggleListBtn.innerHTML = `🔽 Ver lista completa (${Object.keys(TASKS_DB).length})`;
+            }
+
+            // Filtro das linhas
             const rows = listContainer.querySelectorAll('.task-row-item');
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
