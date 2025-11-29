@@ -72,28 +72,54 @@ export function createTagSupportModule() {
     // --- LÓGICA PÚBLICA ---
 
     function updateVisibility(subStatus, selectedTasksArray) {
+        // 1. Filtros Básicos (Se for Educação ou vazio, esconde)
         if (!subStatus || subStatus.includes('Education')) {
             container.style.display = 'none';
             return;
         }
         
-        if (selectedTasksArray.length === 0) {
+        if (!selectedTasksArray || selectedTasksArray.length === 0) {
             container.style.display = 'none';
             return;
         }
 
-        const hasEnhanced = selectedTasksArray.some(t => t.includes('enhanced') || t === 'ec_google_ads');
-        const hasAdsConv = selectedTasksArray.some(t => t.includes('conversion'));
-        const hasAnalytics = selectedTasksArray.some(t => t.includes('ga4') || t.includes('analytics'));
-        const hasMerchant = selectedTasksArray.some(t => t.includes('merchant') || t.includes('gmc'));
-        
-        const isOnlyAds = hasAdsConv && !hasAnalytics && !hasMerchant && !hasEnhanced;
+        // 2. Identificação das Tasks
+        const hasEnhanced = selectedTasksArray.some(t => 
+            t.includes('enhanced') || t === 'ec_google_ads'
+        );
 
-        if (hasEnhanced || isOnlyAds) {
+        const hasAdsConversion = selectedTasksArray.some(t => 
+            (t.includes('conversion') || t.includes('ads')) && !t.includes('enhanced')
+        );
+
+        // GTM é neutro nesta lógica (permitido), então não precisamos verificar ele explicitamente
+        // para bloquear, apenas garantimos que não vamos bloquear se ele estiver lá.
+
+        const hasAnalytics = selectedTasksArray.some(t => 
+            t.includes('ga4') || t.includes('analytics') || t.includes('ua')
+        );
+
+        const hasMerchant = selectedTasksArray.some(t => 
+            t.includes('merchant') || t.includes('gmc') || t.includes('shopping')
+        );
+        
+        // --- REGRA FINAL ---
+        
+        // CASO 1: Tem Enhanced Conversion? (Soberano)
+        if (hasEnhanced) {
             container.style.display = 'block';
-        } else {
-            container.style.display = 'none';
+            return;
         }
+
+        // CASO 2: Ads Conversion (Permite GTM, Bloqueia Analytics/Merchant)
+        // Lógica: Tem Ads Conversion E (Não tem Analytics E Não tem Merchant)
+        if (hasAdsConversion && !hasAnalytics && !hasMerchant) {
+            container.style.display = 'block';
+            return;
+        }
+
+        // Se não caiu em nenhum caso acima
+        container.style.display = 'none';
     }
 
     function getOutput() {

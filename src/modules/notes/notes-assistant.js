@@ -320,7 +320,53 @@ export function initCaseNotesAssistant() {
     document.body.appendChild(popup);
 
     // --- FUNÇÕES DE LÓGICA (TASKS) ---
+function checkTagSupportVisibility() {
+        const selectedSubStatusKey = subStatusSelect.value;
+        
+        // 1. Validação Inicial: Se não tem substatus ou é Educação, esconde
+        if (!selectedSubStatusKey || selectedSubStatusKey.includes('Education')) {
+            tagSupportDiv.style.display = 'none';
+            return;
+        }
 
+        // 2. Coleta de Dados das Tasks
+        const checkedBoxes = Array.from(taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked'));
+        const tasks = checkedBoxes.map(cb => cb.value);
+
+        if (tasks.length === 0) {
+            tagSupportDiv.style.display = 'none';
+            return;
+        }
+
+        // 3. Verificação das Condições
+        
+        // Condição A: Enhanced Conversions (Prioridade máxima)
+        const hasEnhanced = tasks.some(t => 
+            t.includes('enhanced') || t === 'ec_google_ads'
+        );
+
+        // Condição B: Ads Conversion Only (Permite GTM, Bloqueia Analytics/Merchant)
+        const hasAdsConversion = tasks.some(t => 
+            (t.includes('conversion') || t.includes('ads')) && !t.includes('enhanced')
+        );
+        const hasAnalytics = tasks.some(t => 
+            t.includes('ga4') || t.includes('analytics') || t.includes('ua')
+        );
+        const hasMerchant = tasks.some(t => 
+            t.includes('merchant') || t.includes('gmc') || t.includes('shopping')
+        );
+        
+        // É "Apenas Ads"? (Sim se tiver Ads E não tiver os proibidos)
+        const isOnlyAds = hasAdsConversion && !hasAnalytics && !hasMerchant;
+
+        // 4. Aplicação da Visibilidade
+        // Mostra se for Enhanced OU se for Apenas Ads
+        if (hasEnhanced || isOnlyAds) {
+            tagSupportDiv.style.display = 'block';
+        } else {
+            tagSupportDiv.style.display = 'none';
+        }
+    }
  function populateTaskCheckboxes() {
         taskCheckboxesContainer.innerHTML = '';
 
