@@ -382,10 +382,23 @@ export function initCaseNotesAssistant() {
         if (popularTasks.length > 0) taskCheckboxesContainer.appendChild(chipsContainer);
 
         // --- 3. BOTÃO "VER TODAS" (A MUDANÇA COMEÇA AQUI) ---
+       // --- 3. BOTÃO "VER TODAS" (CLEAN DESIGN) ---
         const toggleListBtn = document.createElement("button");
-        toggleListBtn.innerHTML = `🔽 Ver lista completa (${Object.keys(TASKS_DB).length})`;
+        
+        // Ícones SVG (Chevron Down / Up)
+        const iconDown = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#1a73e8"><path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/></svg>`;
+        const iconUp = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#1a73e8"><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"/></svg>`;
+
+        // Estado Inicial
+        toggleListBtn.innerHTML = `Ver lista completa (${Object.keys(TASKS_DB).length}) ${iconDown}`;
         Object.assign(toggleListBtn.style, NoteStyles.styleLinkButton);
+        
+        // Hover Effect (Google Style)
+        toggleListBtn.onmouseover = () => toggleListBtn.style.backgroundColor = '#f1f8ff'; // Azul bem clarinho
+        toggleListBtn.onmouseout = () => toggleListBtn.style.backgroundColor = 'transparent';
+
         taskCheckboxesContainer.appendChild(toggleListBtn);
+
 
         // 4. LISTA DE CHECKBOXES (Inicialmente Oculta)
         const listContainer = document.createElement("div");

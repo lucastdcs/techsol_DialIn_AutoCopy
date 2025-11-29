@@ -60,8 +60,19 @@ export const styleChipRemove = {
 };
 
 export const styleLinkButton = {
-    background: 'none', border: 'none', color: '#1a73e8', 
-    cursor: 'pointer', fontSize: '13px', fontWeight: '500',
-    padding: '8px 0', display: 'flex', alignItems: 'center', gap: '5px',
-    margin: '0 auto' // Centralizado
+    background: 'transparent', 
+    border: '1px solid #dadce0', // Borda suave opcional, ou remove se preferir 'text-only'
+    borderRadius: '18px',        // Formato de pílula (Google Chips)
+    color: '#1a73e8',            // Azul Google
+    cursor: 'pointer', 
+    fontSize: '13px', 
+    fontWeight: '500',
+    padding: '6px 16px', 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    gap: '6px',
+    margin: '12px auto 0 auto',  // Centralizado com margem no topo
+    transition: 'background-color 0.2s ease',
+    fontFamily: "'Poppins', sans-serif"
 };
