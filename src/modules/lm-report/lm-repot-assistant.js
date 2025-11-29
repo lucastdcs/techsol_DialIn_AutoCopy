@@ -54,17 +54,20 @@ const LINKS_DB = {
 };
 
 export function initFeedbackAssistant() {
-    const CURRENT_VERSION = "v2.3.0";
+    const CURRENT_VERSION = "v2.3.1";
 
     let activeTab = 'lm'; 
     let searchTerm = "";
 
    // --- ESTILOS LOCAIS ---
-    const styleSearchInput = {
+const styleSearchInput = {
         width: "100%", padding: "10px 12px 10px 36px",
-        borderRadius: "8px", border: "1px solid #f1f3f4", background: "#f8f9fa",
+        borderRadius: "8px", border: "1px solid #dadce0", background: "#f8f9fa",
         fontSize: "14px", boxSizing: "border-box", outline: "none",
-        color: "#3c4043", transition: "background 0.2s, border-color 0.2s"
+        color: "#3c4043", transition: "background 0.2s, border-color 0.2s",
+        // SVG Clean
+        backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="%235f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>')`,
+        backgroundRepeat: "no-repeat", backgroundPosition: "10px center"
     };
 
     // CORREÇÃO: Adicionado flexWrap e removido overflowX
@@ -199,19 +202,25 @@ export function initFeedbackAssistant() {
     const searchContainer = document.createElement("div");
     Object.assign(searchContainer.style, { position: "relative", width: "100%" });
     const searchIcon = document.createElement("span");
-    searchIcon.innerHTML = "🔍"; 
+    searchIcon.innerHTML = "Filtrar links..."; 
     Object.assign(searchIcon.style, { position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "14px", opacity: "0.5", pointerEvents: "none" });
+// Linha 2: Busca (Simplificada e Clean)
     const searchInput = document.createElement("input");
     searchInput.type = "text";
-    searchInput.placeholder = "Buscar link, form ou ajuda...";
+    searchInput.placeholder = "Buscar link, form ou ajuda..."; // Sem emoji
     Object.assign(searchInput.style, styleSearchInput);
     
-    searchInput.onfocus = () => searchInput.style.borderColor = "#34a853"; 
-    searchInput.onblur = () => searchInput.style.borderColor = "#f1f3f4";
+    searchInput.onfocus = () => {
+        searchInput.style.borderColor = "#1a73e8"; // Azul no foco
+        searchInput.style.backgroundColor = "#fff";
+    };
+    searchInput.onblur = () => {
+        searchInput.style.borderColor = "#dadce0";
+        searchInput.style.backgroundColor = "#f8f9fa";
+    };
 
-    searchContainer.appendChild(searchIcon);
-    searchContainer.appendChild(searchInput);
-    header.appendChild(searchContainer);
+    // Adiciona direto no header, sem container extra
+    header.appendChild(searchInput);
 
     // Linha 3: Abas
     const tabsContainer = document.createElement("div");

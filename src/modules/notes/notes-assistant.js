@@ -19,7 +19,7 @@ import * as NoteStyles from './notes-styles.js';
 import { copyHtmlToClipboard, ensureNoteCardIsOpen, triggerInputEvents } from './notes-bridge.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v3.5.2"; 
+    const CURRENT_VERSION = "v3.5.3"; 
     
     let currentCaseType = 'bau';
     let currentLang = 'pt'; 
@@ -327,7 +327,7 @@ export function initCaseNotesAssistant() {
         // 1. BARRA DE BUSCA
         const searchInput = document.createElement("input");
         searchInput.type = "text";
-        searchInput.placeholder = "🔍 Buscar task...";
+        searchInput.placeholder = "Buscar task...";
         Object.assign(searchInput.style, NoteStyles.styleSearchInput);
         taskCheckboxesContainer.appendChild(searchInput);
 
@@ -450,13 +450,15 @@ export function initCaseNotesAssistant() {
         // --- EVENTOS DE INTERAÇÃO ---
 
         // 1. Clique no botão "Ver todas"
-        toggleListBtn.onclick = () => {
+       toggleListBtn.onclick = () => {
             if (listContainer.style.display === "none") {
+                // Abrir
                 listContainer.style.display = "block";
-                toggleListBtn.innerHTML = `🔼 Ocultar lista`;
+                toggleListBtn.innerHTML = `Ocultar lista ${iconUp}`; // Usa o SVG
             } else {
+                // Fechar
                 listContainer.style.display = "none";
-                toggleListBtn.innerHTML = `🔽 Ver lista completa (${Object.keys(TASKS_DB).length})`;
+                toggleListBtn.innerHTML = `Ver lista completa (${Object.keys(TASKS_DB).length}) ${iconDown}`; // Usa o SVG
             }
         };
 
@@ -471,8 +473,9 @@ export function initCaseNotesAssistant() {
             } else {
                 // Se limpou, esconde a lista e volta o botão
                 listContainer.style.display = "none";
-                toggleListBtn.style.display = "flex"; // ou block
-                toggleListBtn.innerHTML = `🔽 Ver lista completa (${Object.keys(TASKS_DB).length})`;
+                toggleListBtn.style.display = "flex"; 
+                // Reseta o texto do botão com o SVG
+                toggleListBtn.innerHTML = `Ver lista completa (${Object.keys(TASKS_DB).length}) ${iconDown}`;
             }
 
             // Filtro das linhas

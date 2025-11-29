@@ -20,19 +20,29 @@ import { QUICK_EMAILS } from './quick-email-data.js';
 import { runQuickEmail } from '../email/email-automation.js';
 
 export function initQuickEmailAssistant() {
-    const CURRENT_VERSION = "v2.8.7"; 
+    const CURRENT_VERSION = "v2.8.8"; 
 
     // --- ESTADO ---
     let activeCategory = Object.keys(QUICK_EMAILS)[0]; 
     let searchTerm = "";
 
     // --- ESTILOS ---
-    const styleSearchInput = {
-        width: "100%", padding: "10px 12px 10px 36px",
-        borderRadius: "8px", border: "1px solid #dadce0", background: "#f8f9fa",
-        fontSize: "14px", boxSizing: "border-box", outline: "none",
-        color: "#3c4043", transition: "background 0.2s, border-color 0.2s",
-        marginBottom: "8px"
+const styleSearchInput = {
+        width: "100%", 
+        padding: "10px 12px 10px 36px", // Espaço na esquerda para o ícone
+        borderRadius: "8px", 
+        border: "1px solid #dadce0", 
+        background: "#f8f9fa",
+        fontSize: "14px", 
+        boxSizing: "border-box", 
+        outline: "none",
+        color: "#3c4043", 
+        transition: "background 0.2s, border-color 0.2s",
+        marginBottom: "8px",
+        // Ícone SVG Clean (Material Design)
+        backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="%235f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>')`,
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "10px center"
     };
 
     const styleTabContainer = {
@@ -147,7 +157,7 @@ export function initQuickEmailAssistant() {
     header.appendChild(headerTopRow);
 
     const searchInput = document.createElement("input");
-    searchInput.placeholder = "🔍 Filtrar emails...";
+    searchInput.placeholder = "Filtrar emails...";
     Object.assign(searchInput.style, styleSearchInput);
     header.appendChild(searchInput);
 
