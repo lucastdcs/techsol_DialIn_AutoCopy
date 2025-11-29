@@ -19,7 +19,7 @@ import * as NoteStyles from './notes-styles.js';
 import { copyHtmlToClipboard, ensureNoteCardIsOpen, triggerInputEvents } from './notes-bridge.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v3.4.9"; 
+    const CURRENT_VERSION = "v3.5.0"; 
     
     let currentCaseType = 'bau';
     let currentLang = 'pt'; 
@@ -321,18 +321,98 @@ export function initCaseNotesAssistant() {
 
     // --- FUNÇÕES DE LÓGICA (TASKS) ---
 
-    function populateTaskCheckboxes() {
+ function populateTaskCheckboxes() {
         taskCheckboxesContainer.innerHTML = '';
+
+        // 1. BARRA DE BUSCA
+        const searchInput = document.createElement("input");
+        searchInput.type = "text";
+        searchInput.placeholder = "🔍 Buscar task...";
+        Object.assign(searchInput.style, NoteStyles.styleSearchInput);
+        taskCheckboxesContainer.appendChild(searchInput);
+
+        // 2. CHIPS (ATALHOS RÁPIDOS)
+        const chipsContainer = document.createElement("div");
+        Object.assign(chipsContainer.style, NoteStyles.styleChipContainer);
+        
+        const popularTasks = Object.entries(TASKS_DB).filter(([_, task]) => task.popular);
+        
+        popularTasks.forEach(([key, task]) => {
+            const chip = document.createElement("div");
+            chip.id = `chip-${key}`; // ID para sincronia
+            Object.assign(chip.style, NoteStyles.styleChip);
+
+            const chipText = document.createElement("span");
+            chipText.textContent = task.name;
+            
+            const chipRemove = document.createElement("span");
+            chipRemove.textContent = "✕";
+            Object.assign(chipRemove.style, NoteStyles.styleChipRemove);
+            
+            // Hover no X
+            chipRemove.onmouseover = () => chipRemove.style.backgroundColor = 'white';
+            chipRemove.onmouseout = () => chipRemove.style.backgroundColor = 'rgba(255,255,255,0.6)';
+
+            chip.appendChild(chipText);
+            chip.appendChild(chipRemove);
+            
+            // CLIQUE NO CHIP (Adicionar/Incrementar)
+            chip.onclick = () => {
+                const checkbox = document.getElementById(`chk-${key}`);
+                if (!checkbox) return;
+                const stepperDiv = checkbox.parentNode.querySelector('.stepper-container');
+                const countSpan = stepperDiv.querySelector('.stepper-count');
+                
+                if (!checkbox.checked) {
+                    checkbox.checked = true; // Marca
+                    stepperDiv.style.display = 'flex';
+                    countSpan.textContent = '1';
+                    checkbox.closest('label').style.background = '#e8f0fe';
+                } else {
+                    // Se já marcado, incrementa
+                    let currentCount = parseInt(countSpan.textContent);
+                    countSpan.textContent = currentCount + 1;
+                }
+                updateChipVisual(chip, chipText, chipRemove, parseInt(countSpan.textContent));
+                renderScreenshotInputs();
+                checkTagSupportVisibility();
+            };
+
+            // CLIQUE NO X (Diminuir/Remover)
+            chipRemove.onclick = (e) => {
+                e.stopPropagation(); // Não ativa o clique do chip pai
+                const checkbox = document.getElementById(`chk-${key}`);
+                const btnMinus = checkbox.parentNode.querySelector('button:first-child'); // Botão menos da lista
+                if (btnMinus) btnMinus.click(); // Reusa a lógica do botão menos
+                
+                // Força atualização visual imediata
+                const countSpan = checkbox.parentNode.querySelector('.stepper-count');
+                const count = checkbox.checked ? parseInt(countSpan.textContent) : 0;
+                updateChipVisual(chip, chipText, chipRemove, count);
+            };
+
+            chipsContainer.appendChild(chip);
+        });
+        
+        if (popularTasks.length > 0) taskCheckboxesContainer.appendChild(chipsContainer);
+
+        // 3. LISTA DE CHECKBOXES (Com IDs para linkar aos chips)
+        const listContainer = document.createElement("div");
+        
         for (const taskKey in TASKS_DB) {
             const task = TASKS_DB[taskKey];
             const label = document.createElement('label');
+            label.className = "task-row-item"; // Classe para o filtro de busca
             Object.assign(label.style, NoteStyles.styleCheckboxLabel);
+            
+            // Hover da linha
             label.onmouseover = () => { if (!checkbox.checked) label.style.backgroundColor = '#e8eaed'; };
             label.onmouseout = () => { if (!checkbox.checked) label.style.backgroundColor = '#f8f9fa'; };
 
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.value = taskKey;
+            checkbox.id = `chk-${taskKey}`; // ID IMPORTANTE
             checkbox.className = 'task-checkbox'; 
             Object.assign(checkbox.style, NoteStyles.styleCheckboxInput);
             
@@ -353,29 +433,70 @@ export function initCaseNotesAssistant() {
 
             stepperDiv.appendChild(btnMinus); stepperDiv.appendChild(countSpan); stepperDiv.appendChild(btnPlus);
             label.appendChild(checkbox); label.appendChild(taskName); label.appendChild(stepperDiv);
-            taskCheckboxesContainer.appendChild(label);
+            listContainer.appendChild(label);
+
+            // Sincronização Lista -> Chip
+            const syncChip = () => {
+                const chip = document.getElementById(`chip-${taskKey}`);
+                if (chip) {
+                    const tSpan = chip.querySelector('span:first-child');
+                    const rSpan = chip.querySelector('span:last-child');
+                    const cnt = checkbox.checked ? parseInt(countSpan.textContent) : 0;
+                    updateChipVisual(chip, tSpan, rSpan, cnt);
+                }
+            };
 
             checkbox.onchange = () => {
-                if (checkbox.checked) {
-                    stepperDiv.style.display = 'flex'; countSpan.textContent = '1'; Object.assign(label.style, { background: '#e8f0fe' });
-                } else {
-                    stepperDiv.style.display = 'none'; countSpan.textContent = '0'; Object.assign(label.style, { background: '#f8f9fa' });
-                }
+                if (checkbox.checked) { stepperDiv.style.display = 'flex'; countSpan.textContent = '1'; Object.assign(label.style, { background: '#e8f0fe' }); } 
+                else { stepperDiv.style.display = 'none'; countSpan.textContent = '0'; Object.assign(label.style, { background: '#f8f9fa' }); }
+                syncChip();
                 renderScreenshotInputs();
-                const checked = Array.from(taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked')).map(c => c.value);
-    tagSupport.updateVisibility(subStatusSelect.value, checked);
+                checkTagSupportVisibility();
             };
+            
             btnMinus.onclick = (e) => {
                 e.preventDefault(); e.stopPropagation();
                 let count = parseInt(countSpan.textContent);
-                if (count > 1) { countSpan.textContent = count - 1; } else { checkbox.checked = false; checkbox.dispatchEvent(new Event('change')); }
+                if (count > 1) { countSpan.textContent = count - 1; } else { checkbox.checked = false; checkbox.dispatchEvent(new Event('change')); return; }
+                syncChip();
                 renderScreenshotInputs();
+                checkTagSupportVisibility();
             };
+            
             btnPlus.onclick = (e) => {
                 e.preventDefault(); e.stopPropagation();
                 let count = parseInt(countSpan.textContent); countSpan.textContent = count + 1;
+                syncChip();
                 renderScreenshotInputs();
+                checkTagSupportVisibility();
             };
+        }
+        taskCheckboxesContainer.appendChild(listContainer);
+
+        // 4. LÓGICA DE BUSCA
+        searchInput.oninput = (e) => {
+            const term = e.target.value.toLowerCase();
+            const rows = listContainer.querySelectorAll('.task-row-item');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(term) ? 'flex' : 'none';
+            });
+        };
+    }
+
+    function updateChipVisual(chip, textSpan, removeSpan, count) {
+        let originalName = textSpan.textContent.split(' (')[0]; // Limpa contador anterior
+        
+        if (count > 0) {
+            Object.assign(chip.style, NoteStyles.styleChipSelected); // Fica Azul
+            textSpan.textContent = count > 1 ? `${originalName} (${count})` : originalName;
+            removeSpan.style.display = 'flex'; // Mostra o X
+            chip.style.paddingRight = '4px'; 
+        } else {
+            Object.assign(chip.style, NoteStyles.styleChip); // Volta ao Branco
+            textSpan.textContent = originalName;
+            removeSpan.style.display = 'none'; // Esconde o X
+            chip.style.paddingRight = '12px'; 
         }
     }
 

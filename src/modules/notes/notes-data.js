@@ -99,10 +99,12 @@ export const translations = {
 export const TASKS_DB = {
    'gtm_installation': {
         name: 'GTM Installation',
+        popular: true,
         screenshots: { implementation: ['GTM Instalado', 'Vinculador de conversões'], education: [] }
     },
     'ads_conversion_tracking': {
         name: 'Ads Conversion Tracking',
+        popular: true,
         screenshots: {
             implementation: ['Tag criada', 'Teste GTM', 'Teste Ads', 'Versão Publicada', 'Status Ads'],
             education: ['Screenshot for TAG assistant of tag working:', 'Screenshot of conversion tracking status in Google Ads:']
@@ -110,6 +112,7 @@ export const TASKS_DB = {
     },
     'ads_enhanced_conversions': {
         name: 'Ads Enhanced Conversions (ECW4)',
+        popular: true,
         screenshots: {
             implementation: ['Termos aceitos no Ads', 'Tag implementada', 'Teste GTM', 'Teste Ads', 'Versão Publicada', 'Painel do Ads (após 7 dias)'],
             education: ['Termos aceitos no Ads', 'Tag implementada', 'Teste GTM', 'Teste Ads', 'Versão Publicada', 'Painel do Ads (após 7 dias)']
@@ -117,6 +120,7 @@ export const TASKS_DB = {
     },
     'ga4_event_tracking': {
         name: 'Analytics Event Tracking (GA4)',
+        popular: true,
         screenshots: {
             implementation: ['Tag do evento GA4 implementado no GTM', 'Teste GTM (tagassistant.google.com)', 'Teste GA4 (DebugView - tagassistant.google.com)', 'Versão publicada no GTM', '(Se houver parâmetros) Dimensões customizadas criadas no GA4', 'Evento marcado como principal no GA4', 'GA4 e Google Ads vinculados corretamente', 'Evento principal GA4 importado no Google Ads (como secundário)', 'Métricas app & web ativadas no Google Ads', '(Opcional) Teste no Relatório do Tempo Real (GA4)'],
             education: ['Tag do evento GA4 implementado no GTM', 'Teste GTM (tagassistant.google.com)', 'Teste GA4 (DebugView - tagassistant.google.com)', 'Versão publicada no GTM', '(Se houver parâmetros) Dimensões customizadas criadas no GA4', 'Evento marcado como principal no GA4', 'GA4 e Google Ads vinculados corretamente', 'Evento principal GA4 importado no Google Ads (como secundário)', 'Métricas app & web ativadas no Google Ads', '(Opcional) Teste no Relatório do Tempo Real (GA4)']
@@ -124,6 +128,7 @@ export const TASKS_DB = {
     },
     'upd_for_ga4': {
         name: 'UPD for GA4 (User-Provided Data)',
+        popular: true,
         screenshots: {
             implementation: ['Validação: Conta GA4 (somente fluxo web, não é setor de saúde)', '"Coleta de dados fornecidos pelo usuário" habilitado no GA4 (Admin > Coleta de Dados)', 'Confirmação de coleta de dados (UI)', 'Tag do evento GA4 otimizado (UPD) implementado no GTM', 'Teste GTM (tagassistant - parâmetro \'em\' sem erro)', 'Teste GA4 (DebugView - tagassistant)', 'Versão publicada no GTM', '(Treinamento) Evento principal importado no Google Ads como secundário'],
             education: []
