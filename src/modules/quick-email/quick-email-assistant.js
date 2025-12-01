@@ -10,6 +10,8 @@ import {
     triggerGoogleAnimation
 } from '../shared/utils.js';
 
+import { animationStyles, togglePopupAnimation } from '../shared/animations.js';
+
 import { QUICK_EMAILS } from './quick-email-data.js';
 import { runQuickEmail } from '../email/email-automation.js';
 
@@ -113,63 +115,38 @@ export function initQuickEmailAssistant() {
         transition: "max-height 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s linear, padding 0.3s step-start"
     };
 
-    // --- UI: Botão Flutuante ---
-    const btnContainer = document.createElement("div");
-    Object.assign(btnContainer.style, {
-        position: "fixed", bottom: "20%", right: "24px", zIndex: "9999",
-        display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px",
-        cursor: "pointer"
-    });
-
-    const btn = document.createElement("button");
-    btn.id = "email-floating-btn";
-    btn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4M20,8L12,13L4,8V6L12,11L20,6V8Z"/></svg>`;
-    Object.assign(btn.style, {
-        width: "48px", height: "48px", borderRadius: "50%",
-        background: "#ea4335", color: "white", border: "none", cursor: "pointer",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
-        transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)"
-    });
-
-    const tooltip = document.createElement("span");
-    tooltip.textContent = "Emails Rápidos"; 
-    Object.assign(tooltip.style, {
-        background: "rgba(0,0,0,0.7)", color: "white", padding: "4px 8px",
-        borderRadius: "4px", fontSize: "12px", opacity: "0", pointerEvents: "none",
-        transition: "opacity 0.2s", whiteSpace: "nowrap", fontWeight: "500"
-    });
-
-    btnContainer.onmouseenter = () => { 
-        btn.style.transform = "scale(1.1)"; 
-        tooltip.style.opacity = "1"; 
-    };
-    
-    btnContainer.onmouseleave = () => { 
-        btn.style.transform = "scale(1)"; 
-        tooltip.style.opacity = "0"; 
-    };
-
-    btnContainer.appendChild(btn);
-    btnContainer.appendChild(tooltip);
-    document.body.appendChild(btnContainer);
-    makeDraggable(btnContainer);
-
-    // --- POPUP ---
+   // --- POPUP (Com Animação) ---
     const popup = document.createElement("div");
     popup.id = "quick-email-popup";
+    
+    // Combina estilos locais + estilo base + ESTADO INICIAL DA ANIMAÇÃO
     Object.assign(popup.style, stylePopup, { 
         right: "80px", width: "550px", maxHeight: "85vh", 
         borderRadius: "12px", display: "flex", flexDirection: "column",
         boxShadow: "0 8px 24px rgba(0,0,0,0.2)"
-    });
+    }, animationStyles.popupInitial); // <--- APLICAÇÃO DA ANIMAÇÃO
 
     const header = document.createElement("div");
-    Object.assign(header.style, stylePopupHeader, { padding: "16px", height: "auto", flexDirection: "column", alignItems: "stretch" });
+    // Remove padding do header pai para a linha ficar na borda
+    Object.assign(header.style, stylePopupHeader, { 
+        padding: "0", height: "auto", flexDirection: "column", 
+        alignItems: "stretch", overflow: "hidden", borderRadius: "12px 12px 0 0" 
+    });
     makeDraggable(popup, header);
 
+    // --- LINHA COLORIDA ---
+    const googleLine = document.createElement("div");
+    Object.assign(googleLine.style, animationStyles.googleLine);
+    header.appendChild(googleLine);
+
+    // Container interno para devolver o padding ao conteúdo
+    const headerContent = document.createElement("div");
+    Object.assign(headerContent.style, { 
+        padding: "16px", display: "flex", flexDirection: "column", gap: "12px" 
+    });
+
     const headerTopRow = document.createElement("div");
-    Object.assign(headerTopRow.style, { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" });
+    Object.assign(headerTopRow.style, { display: "flex", justifyContent: "space-between", alignItems: "center" });
     
     const headerLeft = document.createElement("div");
     Object.assign(headerLeft.style, { display: "flex", alignItems: "center", gap: "10px" });
@@ -192,21 +169,29 @@ export function initQuickEmailAssistant() {
     const closeBtn = document.createElement("div");
     closeBtn.textContent = "✕";
     Object.assign(closeBtn.style, stylePopupCloseBtn);
-    closeBtn.onclick = () => togglePopup(false);
+    
+    // Fecha usando a nova animação
+    closeBtn.onclick = () => {
+        visible = false;
+        togglePopupAnimation(false, { popup, btnContainer, googleLine });
+    };
     
     headerTopRow.appendChild(headerLeft);
     headerTopRow.appendChild(closeBtn);
-    header.appendChild(headerTopRow);
-
+    
+    // Montagem do Header Content
+    headerContent.appendChild(headerTopRow);
+    
     const searchInput = document.createElement("input");
     searchInput.placeholder = "Filtrar emails...";
     Object.assign(searchInput.style, styleSearchInput);
-    header.appendChild(searchInput);
+    headerContent.appendChild(searchInput); // Append no Content
 
     const tabsContainer = document.createElement("div");
     Object.assign(tabsContainer.style, styleChipContainer);
-    header.appendChild(tabsContainer);
+    headerContent.appendChild(tabsContainer); // Append no Content
 
+    header.appendChild(headerContent); // Append Content no Header
     popup.appendChild(header);
 
     const contentArea = document.createElement("div");
@@ -429,21 +414,22 @@ export function initQuickEmailAssistant() {
         }
     }
 
-    let visible = false;
+let visible = false;
     btn.onclick = () => {
-        // --- PROTEÇÃO CONTRA ARRASTO ---
+        // Proteção contra arrasto
         if (btnContainer.getAttribute('data-dragging') === 'true') {
             return; 
         }
-        if (!visible) {
-            triggerGoogleAnimation(btn);
-        }
+
+        visible = !visible;
         
-        // Pequeno delay para a animação começar antes do popup aparecer
-        setTimeout(() => {
-             visible = !visible;
-             togglePopup(visible);
-        }, 100); // 100ms é imperceptível mas ajuda na fluidez visual
+        // Chama a animação centralizada
+        togglePopupAnimation(visible, { 
+            popup, 
+            btnContainer, 
+            googleLine, 
+            focusElement: searchInput 
+        });
     };
 
     renderTabs();
