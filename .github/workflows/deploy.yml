@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - refactor-structure  # <--- ADICIONEI ISSO AQUI (use o nome exato da sua branch)
+      - refactor-structure
 
 jobs:
   build-and-deploy:
@@ -21,8 +21,16 @@ jobs:
       - name: Install esbuild
         run: npm install esbuild
 
-      - name: Build (Bundle)
+      # --- BUILD DE PRODUÇÃO (Apenas na main) ---
+      - name: Build Production (bundle.js)
+        if: github.ref == 'refs/heads/main'
         run: ./node_modules/.bin/esbuild src/app.js --bundle --outfile=dist/bundle.js --minify
+
+      # --- BUILD DE DESENVOLVIMENTO (Apenas na refactor) ---
+      # Cria um arquivo com nome diferente: bundle-dev.js
+      - name: Build Development (bundle-dev.js)
+        if: github.ref == 'refs/heads/refactor-structure'
+        run: ./node_modules/.bin/esbuild src/app.js --bundle --outfile=dist/bundle-dev.js --minify
         
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
@@ -31,3 +39,5 @@ jobs:
           publish_dir: ./dist
           publish_branch: gh-pages
           cname: ''
+          # IMPORTANTE: Isso impede que o deploy da refactor apague o arquivo da main e vice-versa
+          keep_files: true
