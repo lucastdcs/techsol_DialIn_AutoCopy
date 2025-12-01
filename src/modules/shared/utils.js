@@ -322,3 +322,210 @@ export function getRandomGoogleStyle() {
     lastColorIndex = newIndex;
     return GOOGLE_COLORS_LIST[newIndex]; 
 }
+
+// =========================================
+// --- ANIMAÇÕES GOOGLE (Novo) ---
+// =========================================
+
+// 1. Injeta os estilos da animação na página (roda uma vez só)
+let googleStylesInjected = false;
+function injectGoogleAnimationStyles() {
+    if (googleStylesInjected) return;
+
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @keyframes google-pulse-ring {
+            0% {
+                box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.7); /* Azul */
+            }
+            25% {
+                box-shadow: 0 0 0 10px rgba(234, 67, 53, 0); /* Vermelho */
+            }
+            50% {
+                box-shadow: 0 0 0 20px rgba(251, 188, 5, 0); /* Amarelo */
+            }
+            100% {
+                box-shadow: 0 0 0 30px rgba(52, 168, 83, 0); /* Verde */
+            }
+        }
+
+        .google-animate-click {
+            animation: google-pulse-ring 0.6s cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
+    `;
+    document.head.appendChild(style);
+    googleStylesInjected = true;
+}
+
+// 2. Função que os módulos vão chamar para animar um botão
+export function triggerGoogleAnimation(element) {
+    // Garante que os estilos existem
+    injectGoogleAnimationStyles();
+
+    // Remove a classe se já estiver rodando (para poder reiniciar)
+    element.classList.remove('google-animate-click');
+
+    // Força um "reflow" para o navegador perceber que removemos a classe
+    void element.offsetWidth; 
+
+    // Adiciona a classe que roda a animação
+    element.classList.add('google-animate-click');
+
+    // Limpa a classe depois que a animação termina
+    setTimeout(() => {
+        element.classList.remove('google-animate-click');
+    }, 600); // O mesmo tempo da duração da animação no CSS
+}
+
+// =========================================
+// --- STARTUP ANIMATION (Splash Screen) ---
+// =========================================
+// =========================================
+// --- GOOGLE-STYLE STARTUP ANIMATION ---
+// =========================================
+export function playStartupAnimation() {
+    if (document.getElementById('techsol-splash-screen')) return;
+
+    // 1. Container (Overlay)
+    const splash = document.createElement('div');
+    splash.id = 'techsol-splash-screen';
+    Object.assign(splash.style, {
+        position: 'fixed', top: '0', left: '0', width: '100vw', height: '100vh',
+        backgroundColor: '#ffffff', 
+        zIndex: '2147483647',
+        display: 'flex', flexDirection: 'column', 
+        alignItems: 'center', justifyContent: 'center',
+        opacity: '0', transition: 'opacity 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)',
+        fontFamily: "'Poppins', 'Roboto', sans-serif"
+    });
+
+    // 2. Conteúdo Central
+    const content = document.createElement('div');
+    content.style.textAlign = 'center';
+    
+    // Logo "Cases Wizard"
+    const logoHTML = `
+        <div style="
+            font-size: 36px; 
+            font-weight: 500; 
+            color: #5f6368; 
+            margin-bottom: 24px; 
+            letter-spacing: -0.5px;
+            animation: slide-up 0.6s cubic-bezier(0.0, 0.0, 0.2, 1);
+        ">
+            Cases Wizard
+        </div>
+    `;
+
+    // Barra de Progresso (Agora colorida!)
+    const loaderHTML = `
+        <div class="google-material-loader">
+            <div class="indeterminate"></div>
+        </div>
+    `;
+    
+    content.innerHTML = logoHTML + loaderHTML;
+
+    // 3. Créditos
+    const credit = document.createElement('div');
+    credit.innerHTML = "created by <span style='color: #1a73e8; font-weight: 500;'>@lucaste</span>";
+    Object.assign(credit.style, {
+        position: 'absolute', bottom: '40px',
+        fontSize: '12px', color: '#9aa0a6',
+        opacity: '0', 
+        animation: 'fade-in 0.8s ease-out 0.5s forwards'
+    });
+
+    // 4. CSS (Com ciclo de cores)
+    const style = document.createElement('style');
+    style.innerHTML = `
+        /* Container da Barra */
+        .google-material-loader {
+            position: relative;
+            height: 4px;
+            display: block;
+            width: 240px;
+            background-color: #e0e0e0; /* Fundo cinza claro */
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+
+        /* O Elemento que se move */
+        .google-material-loader .indeterminate {
+            background-color: #4285F4; /* Começa Azul */
+        }
+        
+        .google-material-loader .indeterminate:before {
+            content: '';
+            position: absolute;
+            background-color: inherit;
+            top: 0; left: 0; bottom: 0;
+            will-change: left, right;
+            /* Animação de movimento E cor */
+            animation: 
+                indeterminate 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite,
+                google-colors 2.1s steps(4) infinite; /* Troca de cor */
+        }
+        
+        .google-material-loader .indeterminate:after {
+            content: '';
+            position: absolute;
+            background-color: inherit;
+            top: 0; left: 0; bottom: 0;
+            will-change: left, right;
+            /* Animação de movimento E cor (com delay) */
+            animation: 
+                indeterminate-short 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite,
+                google-colors 2.1s steps(4) infinite; /* Troca de cor */
+            animation-delay: 1.15s;
+        }
+
+        /* Ciclo de Cores Oficiais do Google */
+        @keyframes google-colors {
+            0% { background-color: #4285F4; } /* Azul */
+            25% { background-color: #EA4335; } /* Vermelho */
+            50% { background-color: #FBBC05; } /* Amarelo */
+            75% { background-color: #34A853; } /* Verde */
+            100% { background-color: #4285F4; } /* Volta ao Azul */
+        }
+
+        /* Movimento da Barra */
+        @keyframes indeterminate {
+            0% { left: -35%; right: 100%; }
+            60% { left: 100%; right: -90%; }
+            100% { left: 100%; right: -90%; }
+        }
+        @keyframes indeterminate-short {
+            0% { left: -200%; right: 100%; }
+            60% { left: 107%; right: -8%; }
+            100% { left: 107%; right: -8%; }
+        }
+
+        /* Animações de Entrada */
+        @keyframes slide-up {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes fade-in {
+            to { opacity: 1; }
+        }
+    `;
+    
+    splash.appendChild(style);
+    splash.appendChild(content);
+    splash.appendChild(credit);
+    document.body.appendChild(splash);
+
+    // 5. Execução
+    requestAnimationFrame(() => {
+        splash.style.opacity = '1';
+    });
+
+    setTimeout(() => {
+        splash.style.opacity = '0'; 
+        setTimeout(() => {
+            if (splash.parentNode) splash.parentNode.removeChild(splash);
+        }, 400); 
+    }, 2500);
+}

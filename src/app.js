@@ -1,24 +1,40 @@
-// src/app.js
-
-import { initGlobalStylesAndFont } from './modules/shared/utils.js';
 import { initCaseNotesAssistant } from './modules/notes/notes-assistant.js';
 import { initCallScriptAssistant } from './modules/call-script/call-script-assistant.js';
-import { initFeedbackAssistant } from './modules/lm-report/lm-repot-assistant.js';
 import { initQuickEmailAssistant } from './modules/quick-email/quick-email-assistant.js';
-// --- 1. VERIFICAÇÕES GLOBAIS ---
-if (document.getElementById("autofill-floating-btn") || document.getElementById("call-script-floating-btn")) {
-    console.log("Assistentes já carregados.");
-} else {
-    // 1. Carrega fontes e estilos globais
+import { initFeedbackAssistant } from './modules/lm-report/lm-repot-assistant.js';
+import { initGlobalStylesAndFont, showToast, playStartupAnimation } from './modules/shared/utils.js'; // <--- IMPORT AQUI
+
+function initApp() {
+    console.log('🚀 TechSol Suite Initializing...');
+
+    // 1. Injeta Fonte e Estilos Globais
     initGlobalStylesAndFont();
-    
-    // 2. Inicializa o Módulo 1 (Notas)
-    initCaseNotesAssistant();
-    
-    // 3. Inicializa o Módulo 2 (Script)
-    initCallScriptAssistant();
 
-    initFeedbackAssistant();
+    // 2. Roda a Animação de Abertura (Splash Screen)
+    playStartupAnimation(); // <--- CHAMADA AQUI
 
-    initQuickEmailAssistant();
+    // 3. Inicializa os Módulos
+    try {
+        initCaseNotesAssistant();
+        initCallScriptAssistant();
+        initQuickEmailAssistant();
+        initFeedbackAssistant();
+        
+        // Não precisamos mais do Toast inicial aqui, a animação já faz esse papel!
+        // showToast("TechSol Suite Carregado! 🚀"); 
+
+    } catch (error) {
+        console.error("Erro fatal na inicialização:", error);
+        showToast("Erro ao carregar TechSol. Verifique o console.", { error: true });
+    }
+}
+
+// Verifica se já rodou para não duplicar botões
+if (!window.techSolInitialized) {
+    window.techSolInitialized = true;
+    initApp();
+} else {
+    // Se o usuário clicar de novo no bookmarklet, podemos rodar a animação de novo
+    // ou apenas avisar que já está ativo.
+    playStartupAnimation(); 
 }
