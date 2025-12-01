@@ -19,8 +19,8 @@ import * as NoteStyles from './notes-styles.js';
 import { copyHtmlToClipboard, ensureNoteCardIsOpen, triggerInputEvents } from './notes-bridge.js';
 
 export function initCaseNotesAssistant() {
-    const CURRENT_VERSION = "v3.4.8"; 
-    
+    const CURRENT_VERSION = "v3.5.4"; 
+
     let currentCaseType = 'bau';
     let currentLang = 'pt'; 
     let isPortugalCase = false;
@@ -320,62 +320,226 @@ export function initCaseNotesAssistant() {
     document.body.appendChild(popup);
 
     // --- FUNÇÕES DE LÓGICA (TASKS) ---
+function checkTagSupportVisibility() {
+        const selectedSubStatusKey = subStatusSelect.value;
+        
+        // 1. Validação Inicial: Se não tem substatus ou é Educação, esconde
+        if (!selectedSubStatusKey || selectedSubStatusKey.includes('Education')) {
+            tagSupport.style.display = 'none';
+            return;
+        }
 
-    function populateTaskCheckboxes() {
+        // 2. Coleta de Dados das Tasks
+        const checkedBoxes = Array.from(taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked'));
+        const tasks = checkedBoxes.map(cb => cb.value);
+
+        if (tasks.length === 0) {
+            tagSupport.style.display = 'none';
+            return;
+        }
+
+        // 3. Verificação das Condições
+        
+        // Condição A: Enhanced Conversions (Prioridade máxima)
+        const hasEnhanced = tasks.some(t => 
+            t.includes('enhanced') || t === 'ec_google_ads'
+        );
+
+        // Condição B: Ads Conversion Only (Permite GTM, Bloqueia Analytics/Merchant)
+        const hasAdsConversion = tasks.some(t => 
+            (t.includes('conversion') || t.includes('ads')) && !t.includes('enhanced')
+        );
+        const hasAnalytics = tasks.some(t => 
+            t.includes('ga4') || t.includes('analytics') || t.includes('ua')
+        );
+        const hasMerchant = tasks.some(t => 
+            t.includes('merchant') || t.includes('gmc') || t.includes('shopping')
+        );
+        
+        // É "Apenas Ads"? (Sim se tiver Ads E não tiver os proibidos)
+        const isOnlyAds = hasAdsConversion && !hasAnalytics && !hasMerchant;
+
+        // 4. Aplicação da Visibilidade
+        // Mostra se for Enhanced OU se for Apenas Ads
+        if (hasEnhanced || isOnlyAds) {
+            tagSupport.style.display = 'block';
+        } else {
+            tagSupport.style.display = 'none';
+        }
+    }
+ function populateTaskCheckboxes() {
         taskCheckboxesContainer.innerHTML = '';
+
+        // 1. BARRA DE BUSCA
+        const searchInput = document.createElement("input");
+        searchInput.type = "text";
+        searchInput.placeholder = "Buscar task...";
+        Object.assign(searchInput.style, NoteStyles.styleSearchInput);
+        taskCheckboxesContainer.appendChild(searchInput);
+
+        // 2. CHIPS (Populares)
+        const chipsContainer = document.createElement("div");
+        Object.assign(chipsContainer.style, NoteStyles.styleChipContainer);
+        
+        const popularTasks = Object.entries(TASKS_DB).filter(([_, task]) => task.popular);
+        
+        popularTasks.forEach(([key, task]) => {
+            const chip = document.createElement("div");
+            chip.id = `chip-${key}`;
+            const chipText = document.createElement("span"); chipText.textContent = task.name;
+            const chipRemove = document.createElement("span"); chipRemove.textContent = "✕";
+            Object.assign(chipRemove.style, NoteStyles.styleChipRemove);
+            Object.assign(chip.style, NoteStyles.styleChip);
+            
+            chipRemove.onmouseover = () => chipRemove.style.backgroundColor = 'white';
+            chipRemove.onmouseout = () => chipRemove.style.backgroundColor = 'rgba(255,255,255,0.6)';
+
+            chip.appendChild(chipText); chip.appendChild(chipRemove);
+
+            chip.onclick = () => { 
+                const checkbox = document.getElementById(`chk-${key}`);
+                if(!checkbox) return;
+                const stepperDiv = checkbox.parentNode.querySelector('.stepper-container');
+                const countSpan = stepperDiv.querySelector('.stepper-count');
+                if (!checkbox.checked) {
+                    checkbox.checked = true; stepperDiv.style.display = 'flex'; countSpan.textContent = '1'; 
+                    // Update visual do item da lista também
+                    checkbox.closest('label').style.background = '#e8f0fe';
+                } else {
+                    let currentCount = parseInt(countSpan.textContent); countSpan.textContent = currentCount + 1;
+                }
+                updateChipVisual(chip, chipText, chipRemove, parseInt(countSpan.textContent));
+                renderScreenshotInputs(); checkTagSupportVisibility();
+            };
+
+            chipRemove.onclick = (e) => {
+                e.stopPropagation();
+                const checkbox = document.getElementById(`chk-${key}`);
+                const btnMinus = checkbox.parentNode.querySelector('button:first-child');
+                if (btnMinus) btnMinus.click();
+                const countSpan = checkbox.parentNode.querySelector('.stepper-count');
+                updateChipVisual(chip, chipText, chipRemove, checkbox.checked ? parseInt(countSpan.textContent) : 0);
+            };
+
+            chipsContainer.appendChild(chip);
+        });
+
+        if (popularTasks.length > 0) taskCheckboxesContainer.appendChild(chipsContainer);
+
+        // 3. BOTÃO "VER TODAS"
+        const toggleListBtn = document.createElement("button");
+        const iconDown = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#1a73e8"><path d="M16.59 8.59L12 13.17 7.41 8.59 6 10l6 6 6-6z"/></svg>`;
+        const iconUp = `<svg width="18" height="18" viewBox="0 0 24 24" fill="#1a73e8"><path d="M12 8l-6 6 1.41 1.41L12 10.83l4.59 4.58L18 14z"/></svg>`;
+
+        toggleListBtn.innerHTML = `Ver lista completa (${Object.keys(TASKS_DB).length}) ${iconDown}`;
+        Object.assign(toggleListBtn.style, NoteStyles.styleLinkButton);
+        toggleListBtn.onmouseover = () => toggleListBtn.style.backgroundColor = '#f1f8ff'; 
+        toggleListBtn.onmouseout = () => toggleListBtn.style.backgroundColor = 'transparent';
+
+        taskCheckboxesContainer.appendChild(toggleListBtn);
+
+        // 4. LISTA DE CHECKBOXES (ESTILO SECUNDÁRIO)
+        const listContainer = document.createElement("div");
+        listContainer.id = "tasks-list-scroll";
+        // Aplica o estilo de "Gaveta/Drawer"
+        Object.assign(listContainer.style, NoteStyles.styleTaskListContainer); 
+        
         for (const taskKey in TASKS_DB) {
             const task = TASKS_DB[taskKey];
             const label = document.createElement('label');
-            Object.assign(label.style, NoteStyles.styleCheckboxLabel);
-            label.onmouseover = () => { if (!checkbox.checked) label.style.backgroundColor = '#e8eaed'; };
-            label.onmouseout = () => { if (!checkbox.checked) label.style.backgroundColor = '#f8f9fa'; };
+            label.className = "task-row-item";
+            
+            // Aplica o estilo de item de lista compacto
+            Object.assign(label.style, NoteStyles.styleTaskListItem);
+            
+            label.onmouseover = () => { if (!checkbox.checked) label.style.backgroundColor = '#f8f9fa'; }; // Hover sutil
+            label.onmouseout = () => { 
+                if (!checkbox.checked) label.style.backgroundColor = 'transparent'; 
+                else label.style.backgroundColor = '#e8f0fe';
+            };
 
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.value = taskKey;
-            checkbox.className = 'task-checkbox'; 
+            const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.value = taskKey; checkbox.id = `chk-${taskKey}`; checkbox.className = 'task-checkbox'; 
             Object.assign(checkbox.style, NoteStyles.styleCheckboxInput);
             
-            const taskName = document.createElement('span');
-            taskName.textContent = task.name;
-            Object.assign(taskName.style, { flexGrow: '1' }); 
-
-            const stepperDiv = document.createElement('div');
-            stepperDiv.className = 'stepper-container';
-            Object.assign(stepperDiv.style, NoteStyles.styleStepper);
+            const taskName = document.createElement('span'); taskName.textContent = task.name; Object.assign(taskName.style, { flexGrow: '1' }); 
             
-            const btnMinus = document.createElement('button');
-            btnMinus.type = 'button'; btnMinus.textContent = '−'; btnMinus.classList.add('no-drag'); Object.assign(btnMinus.style, NoteStyles.styleStepperBtn);
-            const countSpan = document.createElement('span');
-            countSpan.className = 'stepper-count'; countSpan.textContent = '1'; Object.assign(countSpan.style, NoteStyles.styleStepperCount);
-            const btnPlus = document.createElement('button');
-            btnPlus.type = 'button'; btnPlus.textContent = '+'; btnPlus.classList.add('no-drag'); Object.assign(btnPlus.style, NoteStyles.styleStepperBtn);
+            const stepperDiv = document.createElement('div'); stepperDiv.className = 'stepper-container'; Object.assign(stepperDiv.style, NoteStyles.styleStepper);
+            const btnMinus = document.createElement('button'); btnMinus.type = 'button'; btnMinus.textContent = '−'; btnMinus.classList.add('no-drag'); Object.assign(btnMinus.style, NoteStyles.styleStepperBtn);
+            const countSpan = document.createElement('span'); countSpan.className = 'stepper-count'; countSpan.textContent = '1'; Object.assign(countSpan.style, NoteStyles.styleStepperCount);
+            const btnPlus = document.createElement('button'); btnPlus.type = 'button'; btnPlus.textContent = '+'; btnPlus.classList.add('no-drag'); Object.assign(btnPlus.style, NoteStyles.styleStepperBtn);
 
             stepperDiv.appendChild(btnMinus); stepperDiv.appendChild(countSpan); stepperDiv.appendChild(btnPlus);
             label.appendChild(checkbox); label.appendChild(taskName); label.appendChild(stepperDiv);
-            taskCheckboxesContainer.appendChild(label);
+            listContainer.appendChild(label);
+
+            const syncChip = () => {
+                const chip = document.getElementById(`chip-${taskKey}`);
+                if (chip) {
+                    const textSpan = chip.querySelector('span:first-child');
+                    const removeSpan = chip.querySelector('span:last-child');
+                    const count = checkbox.checked ? parseInt(countSpan.textContent) : 0;
+                    updateChipVisual(chip, textSpan, removeSpan, count);
+                }
+            };
 
             checkbox.onchange = () => {
-                if (checkbox.checked) {
-                    stepperDiv.style.display = 'flex'; countSpan.textContent = '1'; Object.assign(label.style, { background: '#e8f0fe' });
-                } else {
-                    stepperDiv.style.display = 'none'; countSpan.textContent = '0'; Object.assign(label.style, { background: '#f8f9fa' });
+                if (checkbox.checked) { 
+                    stepperDiv.style.display = 'flex'; countSpan.textContent = '1'; 
+                    label.style.backgroundColor = '#e8f0fe'; // Selecionado (Azul Claro)
+                } else { 
+                    stepperDiv.style.display = 'none'; countSpan.textContent = '0'; 
+                    label.style.backgroundColor = 'transparent'; // Deselecionado (Transparente no fundo branco)
                 }
-                renderScreenshotInputs();
-                const checked = Array.from(taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked')).map(c => c.value);
-    tagSupport.updateVisibility(subStatusSelect.value, checked);
+                syncChip(); renderScreenshotInputs(); checkTagSupportVisibility();
             };
-            btnMinus.onclick = (e) => {
-                e.preventDefault(); e.stopPropagation();
-                let count = parseInt(countSpan.textContent);
-                if (count > 1) { countSpan.textContent = count - 1; } else { checkbox.checked = false; checkbox.dispatchEvent(new Event('change')); }
-                renderScreenshotInputs();
-            };
-            btnPlus.onclick = (e) => {
-                e.preventDefault(); e.stopPropagation();
-                let count = parseInt(countSpan.textContent); countSpan.textContent = count + 1;
-                renderScreenshotInputs();
-            };
+            
+            btnMinus.onclick = (e) => { e.preventDefault(); e.stopPropagation(); let count = parseInt(countSpan.textContent); if (count > 1) { countSpan.textContent = count - 1; } else { checkbox.checked = false; checkbox.dispatchEvent(new Event('change')); return; } syncChip(); renderScreenshotInputs(); checkTagSupportVisibility(); };
+            btnPlus.onclick = (e) => { e.preventDefault(); e.stopPropagation(); let count = parseInt(countSpan.textContent); countSpan.textContent = count + 1; syncChip(); renderScreenshotInputs(); checkTagSupportVisibility(); };
+        }
+        
+        taskCheckboxesContainer.appendChild(listContainer);
+
+        toggleListBtn.onclick = () => {
+            if (listContainer.style.display === "none") {
+                listContainer.style.display = "block";
+                toggleListBtn.innerHTML = `Ocultar lista ${iconUp}`;
+            } else {
+                listContainer.style.display = "none";
+                toggleListBtn.innerHTML = `Ver lista completa (${Object.keys(TASKS_DB).length}) ${iconDown}`;
+            }
+        };
+
+        searchInput.oninput = (e) => {
+            const term = e.target.value.toLowerCase();
+            if (term.length > 0) {
+                listContainer.style.display = "block";
+                toggleListBtn.style.display = "none";
+            } else {
+                listContainer.style.display = "none";
+                toggleListBtn.style.display = "flex";
+                toggleListBtn.innerHTML = `Ver lista completa (${Object.keys(TASKS_DB).length}) ${iconDown}`;
+            }
+            const rows = listContainer.querySelectorAll('.task-row-item');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(term) ? 'flex' : 'none';
+            });
+        };
+    }
+
+    function updateChipVisual(chip, textSpan, removeSpan, count) {
+        let originalName = textSpan.textContent.split(' (')[0]; // Limpa contador anterior
+        
+        if (count > 0) {
+            Object.assign(chip.style, NoteStyles.styleChipSelected); // Fica Azul
+            textSpan.textContent = count > 1 ? `${originalName} (${count})` : originalName;
+            removeSpan.style.display = 'flex'; // Mostra o X
+            chip.style.paddingRight = '4px'; 
+        } else {
+            Object.assign(chip.style, NoteStyles.styleChip); // Volta ao Branco
+            textSpan.textContent = originalName;
+            removeSpan.style.display = 'none'; // Esconde o X
+            chip.style.paddingRight = '12px'; 
         }
     }
 
@@ -520,6 +684,10 @@ function renderScreenshotInputs() {
             }
         });
         screenshotsContainer.style.display = hasScreenshots ? 'block' : 'none';
+
+        // No final da função renderScreenshotInputs
+const checkedValues = Array.from(taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked')).map(cb => cb.value);
+tagSupport.updateVisibility(subStatusSelect.value, checkedValues);
     }
 
    function generateOutputHtml() {
@@ -873,6 +1041,11 @@ function renderScreenshotInputs() {
             } else {
                 field = document.createElement('input'); field.type = 'text'; Object.assign(field.style, NoteStyles.styleInput);
                  if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey === 'NI_Awaiting_Inputs' || selectedSubStatusKey.startsWith('IN_'))) { Object.assign(label.style, { display: 'none' }); Object.assign(field.style, { display: 'none' }); }
+            }
+            if (fieldName === 'ON_CALL' && currentCaseType === 'lm') {
+                Object.assign(label.style, { display: 'none' });
+                Object.assign(field.style, { display: 'none' });
+                field.value = 'N/A'; // Define valor padrão para não quebrar o template
             }
             field.id = `field-${fieldName}`; dynamicFormFieldsContainer.appendChild(label); dynamicFormFieldsContainer.appendChild(field);
         });

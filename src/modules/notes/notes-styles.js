@@ -23,3 +23,81 @@ export const styleWarningText = {
     fontSize: "12px", color: "#e37400", marginTop: "4px" 
 };
 
+// --- NOVOS ESTILOS (Search + Chips) ---
+export const styleSearchInput = {
+    width: "100%", padding: "10px 12px 10px 32px", // Espaço para ícone lupa
+    borderRadius: "8px", border: "1px solid #dadce0", background: "#f8f9fa",
+    fontSize: "14px", marginBottom: "12px", boxSizing: "border-box",
+    // Ícone de lupa em SVG via Data URI
+    backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%235f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>')`,
+    backgroundRepeat: "no-repeat", backgroundPosition: "10px center",
+    outline: "none"
+};
+
+export const styleChipContainer = {
+    display: 'flex', flexWrap: 'wrap', gap: '8px',
+    marginBottom: '16px', paddingBottom: '12px',
+    borderBottom: '1px solid #eee'
+};
+
+export const styleChip = {
+    padding: '6px 12px', borderRadius: '16px',
+    border: '1px solid #dadce0', backgroundColor: '#fff',
+    color: '#3c4043', fontSize: '12px', fontWeight: '500',
+    cursor: 'pointer', transition: 'all 0.2s ease', userSelect: 'none',
+    display: 'flex', alignItems: 'center', gap: '6px'
+};
+
+export const styleChipSelected = {
+    backgroundColor: '#e8f0fe', color: '#1967d2', borderColor: '#1967d2'
+};
+
+export const styleChipRemove = {
+    marginLeft: '2px', width: '16px', height: '16px', borderRadius: '50%',
+    display: 'none', alignItems: 'center', justifyContent: 'center',
+    fontSize: '10px', color: '#1967d2', backgroundColor: 'rgba(255,255,255,0.6)',
+    transition: 'background 0.2s', lineHeight: '1'
+};
+
+export const styleLinkButton = {
+    background: 'transparent', 
+    border: '1px solid #dadce0', // Borda suave opcional, ou remove se preferir 'text-only'
+    borderRadius: '18px',        // Formato de pílula (Google Chips)
+    color: '#1a73e8',            // Azul Google
+    cursor: 'pointer', 
+    fontSize: '13px', 
+    fontWeight: '500',
+    padding: '6px 16px', 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    gap: '6px',
+    margin: '12px auto 0 auto',  // Centralizado com margem no topo
+    transition: 'background-color 0.2s ease',
+    fontFamily: "'Poppins', sans-serif"
+};
+
+// Container da lista de tasks (o "Drawer")
+export const styleTaskListContainer = {
+    maxHeight: "220px",          // Limita a altura (Scroll interno)
+    overflowY: "auto",           // Scroll automático
+    border: "1px solid #dadce0", // Borda suave Google
+    borderRadius: "8px",         // Cantos arredondados
+    marginTop: "8px",            // Separação da busca
+    backgroundColor: "#ffffff",  // Fundo branco limpo
+    boxShadow: "inset 0 1px 2px rgba(0,0,0,0.03)", // Sombra interna sutil (profundidade)
+    display: "none"              // Começa oculto (controlado pelo JS)
+};
+
+// Item individual da lista (sobrescreve o checkbox padrão para ficar mais compacto)
+export const styleTaskListItem = {
+    display: "flex",
+    alignItems: "center",
+    padding: "8px 12px",         // Mais compacto que o padrão
+    borderBottom: "1px solid #f1f3f4", // Separador ultra leve
+    cursor: "pointer",
+    fontSize: "13px",            // Fonte levemente menor
+    color: "#3c4043",
+    transition: "background 0.1s",
+    userSelect: "none"
+};
