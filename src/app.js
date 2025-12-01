@@ -1,7 +1,7 @@
 import { initCaseNotesAssistant } from './modules/notes/notes-assistant.js';
 import { initCallScriptAssistant } from './modules/call-script/call-script-assistant.js';
 import { initQuickEmailAssistant } from './modules/quick-email/quick-email-assistant.js';
-import { initFeedbackAssistant } from './modules/feedback/feedback-assistant.js';
+import { initFeedbackAssistant } from './modules/lm-report/lm-repot-assistant.js';
 import { initGlobalStylesAndFont, showToast, playStartupAnimation } from './modules/shared/utils.js'; // <--- IMPORT AQUI
 
 function initApp() {
