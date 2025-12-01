@@ -7,11 +7,10 @@ import {
     stylePopupTitle,
     stylePopupCloseBtn,
     stylePopupVersion,
-    triggerGoogleAnimation
+    styleCredit
 } from '../shared/utils.js';
 
 import { animationStyles, togglePopupAnimation } from '../shared/animations.js';
-
 import { QUICK_EMAILS } from './quick-email-data.js';
 import { runQuickEmail } from '../email/email-automation.js';
 
@@ -33,7 +32,7 @@ export function initQuickEmailAssistant() {
         backgroundRepeat: "no-repeat", backgroundPosition: "10px center"
     };
 
-    // Estilo Chip (Substitui Tabs)
+    // Estilo Chip
     const styleChipContainer = {
         display: "flex", gap: "8px", overflowX: "auto", 
         paddingBottom: "8px", marginBottom: "8px",
@@ -52,82 +51,91 @@ export function initQuickEmailAssistant() {
         background: "#e8f0fe", color: "#1967d2", borderColor: "#e8f0fe"
     };
 
-    // Estilos da Lista (Com Animação Acordeão)
-// --- ESTILOS ATUALIZADOS (Correção de Altura) ---
-    
+    // Estilos da Lista (Acordeão)
     const styleRow = { 
-        display: "flex", 
-        flexWrap: "wrap", 
-        marginBottom: "8px", 
-        position: "relative", 
-        alignItems: "stretch", // <--- O SEGREDO: Força altura igual para os filhos
-        background: "transparent",
-        borderRadius: "8px",
-        transition: "background 0.2s"
+        display: "flex", flexWrap: "wrap", marginBottom: "8px", 
+        position: "relative", alignItems: "stretch", // Altura igual
+        background: "transparent", borderRadius: "8px", transition: "background 0.2s"
     };
 
     const styleActionBtn = {
-        flexGrow: "1", 
-        textAlign: "left", 
-        padding: "12px",
-        background: "#fff", 
-        border: "1px solid #dadce0", 
-        borderRight: "none", // Remove borda direita para colar no botão do olho
-        borderRadius: "8px 0 0 8px", 
-        cursor: "pointer", 
-        transition: "background 0.1s", 
-        zIndex: "2",
-        display: "flex", 
-        flexDirection: "column", 
-        justifyContent: "center" // Centraliza texto verticalmente se o vizinho for maior
+        flexGrow: "1", textAlign: "left", padding: "12px",
+        background: "#fff", border: "1px solid #dadce0", 
+        borderRight: "none", borderRadius: "8px 0 0 8px", 
+        cursor: "pointer", transition: "background 0.1s", 
+        zIndex: "2", display: "flex", flexDirection: "column", justifyContent: "center"
     };
 
     const stylePreviewBtn = {
-        width: "44px", 
-        display: "flex", 
-        alignItems: "center", 
-        justifyContent: "center",
-        background: "#f8f9fa", 
-        border: "1px solid #dadce0", 
-        // A borda esquerda já é a do botão de ação, ou podemos deixar a borda aqui
-        // Vamos deixar a borda aqui para garantir o divisor visual
-        borderLeft: "1px solid #f1f3f4", 
-        borderRadius: "0 8px 8px 0", 
-        cursor: "pointer", 
-        transition: "all 0.2s",
-        color: "#5f6368", 
-        zIndex: "2"
+        width: "44px", display: "flex", alignItems: "center", justifyContent: "center",
+        background: "#f8f9fa", border: "1px solid #dadce0", borderLeft: "1px solid #f1f3f4",
+        borderRadius: "0 8px 8px 0", cursor: "pointer", transition: "all 0.2s",
+        color: "#5f6368", zIndex: "2"
     };
 
     const stylePreviewCard = {
-        width: "100%", // Força quebra para a próxima linha
-        maxHeight: "0", 
-        opacity: "0",
-        overflow: "hidden", 
-        background: "#f8f9fa", 
-        border: "1px solid #dadce0", 
-        borderTop: "none", 
-        borderRadius: "0 0 8px 8px",
-        marginTop: "-1px", 
-        fontSize: "12px", 
-        color: "#3c4043", 
-        lineHeight: "1.5",
+        width: "100%", maxHeight: "0", opacity: "0", overflow: "hidden", 
+        background: "#f8f9fa", border: "1px solid #dadce0", borderTop: "none", 
+        borderRadius: "0 0 8px 8px", marginTop: "-1px", 
+        fontSize: "12px", color: "#3c4043", lineHeight: "1.5",
         transition: "max-height 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s linear, padding 0.3s step-start"
     };
 
-   // --- POPUP (Com Animação) ---
+    // --- UI: Botão Flutuante ---
+    const btnContainer = document.createElement("div");
+    Object.assign(btnContainer.style, {
+        position: "fixed", bottom: "20%", right: "24px", zIndex: "9999",
+        display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px",
+        cursor: "pointer"
+    });
+
+    const btn = document.createElement("button");
+    btn.id = "email-floating-btn";
+    btn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4M20,8L12,13L4,8V6L12,11L20,6V8Z"/></svg>`;
+    Object.assign(btn.style, {
+        width: "48px", height: "48px", borderRadius: "50%",
+        background: "#ea4335", color: "white", border: "none", cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        boxShadow: "0 4px 6px rgba(0,0,0,0.1)",
+        transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)"
+    });
+
+    const tooltip = document.createElement("span");
+    tooltip.textContent = "Emails Rápidos";
+    Object.assign(tooltip.style, {
+        background: "rgba(0,0,0,0.7)", color: "white", padding: "4px 8px",
+        borderRadius: "4px", fontSize: "12px", opacity: "0", pointerEvents: "none",
+        transition: "opacity 0.2s", whiteSpace: "nowrap", fontWeight: "500"
+    });
+
+    btnContainer.onmouseenter = () => { 
+        btn.style.transform = "scale(1.1)"; 
+        tooltip.style.opacity = "1"; 
+    };
+    
+    btnContainer.onmouseleave = () => { 
+        btn.style.transform = "scale(1)"; 
+        tooltip.style.opacity = "0"; 
+    };
+
+    btnContainer.appendChild(btn);
+    btnContainer.appendChild(tooltip);
+    document.body.appendChild(btnContainer);
+    makeDraggable(btnContainer);
+
+    // --- POPUP (Com Animação) ---
     const popup = document.createElement("div");
     popup.id = "quick-email-popup";
     
-    // Combina estilos locais + estilo base + ESTADO INICIAL DA ANIMAÇÃO
+    // Combina estilos + Estado Inicial da Animação
     Object.assign(popup.style, stylePopup, { 
         right: "80px", width: "550px", maxHeight: "85vh", 
         borderRadius: "12px", display: "flex", flexDirection: "column",
         boxShadow: "0 8px 24px rgba(0,0,0,0.2)"
-    }, animationStyles.popupInitial); // <--- APLICAÇÃO DA ANIMAÇÃO
+    }, animationStyles.popupInitial); 
 
     const header = document.createElement("div");
-    // Remove padding do header pai para a linha ficar na borda
+    // Remove padding do header pai
     Object.assign(header.style, stylePopupHeader, { 
         padding: "0", height: "auto", flexDirection: "column", 
         alignItems: "stretch", overflow: "hidden", borderRadius: "12px 12px 0 0" 
@@ -139,7 +147,7 @@ export function initQuickEmailAssistant() {
     Object.assign(googleLine.style, animationStyles.googleLine);
     header.appendChild(googleLine);
 
-    // Container interno para devolver o padding ao conteúdo
+    // Container Interno do Header
     const headerContent = document.createElement("div");
     Object.assign(headerContent.style, { 
         padding: "16px", display: "flex", flexDirection: "column", gap: "12px" 
@@ -170,7 +178,7 @@ export function initQuickEmailAssistant() {
     closeBtn.textContent = "✕";
     Object.assign(closeBtn.style, stylePopupCloseBtn);
     
-    // Fecha usando a nova animação
+    // Fecha com Animação
     closeBtn.onclick = () => {
         visible = false;
         togglePopupAnimation(false, { popup, btnContainer, googleLine });
@@ -179,19 +187,18 @@ export function initQuickEmailAssistant() {
     headerTopRow.appendChild(headerLeft);
     headerTopRow.appendChild(closeBtn);
     
-    // Montagem do Header Content
     headerContent.appendChild(headerTopRow);
     
     const searchInput = document.createElement("input");
     searchInput.placeholder = "Filtrar emails...";
     Object.assign(searchInput.style, styleSearchInput);
-    headerContent.appendChild(searchInput); // Append no Content
+    headerContent.appendChild(searchInput);
 
     const tabsContainer = document.createElement("div");
     Object.assign(tabsContainer.style, styleChipContainer);
-    headerContent.appendChild(tabsContainer); // Append no Content
+    headerContent.appendChild(tabsContainer);
 
-    header.appendChild(headerContent); // Append Content no Header
+    header.appendChild(headerContent);
     popup.appendChild(header);
 
     const contentArea = document.createElement("div");
@@ -216,8 +223,9 @@ export function initQuickEmailAssistant() {
         tabsContainer.innerHTML = "";
         Object.keys(QUICK_EMAILS).forEach(catKey => {
             const catData = QUICK_EMAILS[catKey];
-            const chip = document.createElement("div"); 
+            const chip = document.createElement("div");
             chip.textContent = catData.title;
+            
             Object.assign(chip.style, styleChip);
             
             if (activeCategory === catKey && searchTerm === "") {
@@ -239,7 +247,6 @@ export function initQuickEmailAssistant() {
         contentArea.innerHTML = ""; 
         let emailsToShow = [];
 
-        // Filtro de Busca
         if (searchTerm.trim() !== "") {
             Object.values(QUICK_EMAILS).forEach(cat => {
                 const found = cat.emails.filter(e => e.name.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -251,7 +258,6 @@ export function initQuickEmailAssistant() {
             }
         }
 
-        // Empty State
         if (emailsToShow.length === 0) {
             const emptyState = document.createElement("div");
             emptyState.textContent = "Nenhum email encontrado.";
@@ -262,20 +268,16 @@ export function initQuickEmailAssistant() {
             return;
         }
 
-        // Ícones SVG
         const iconEye = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
         const iconSend = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
 
         emailsToShow.forEach(email => {
-            // Container da Linha
             const row = document.createElement("div");
-            // AQUI: Usa o estilo atualizado com alignItems: 'stretch'
-            Object.assign(row.style, styleRow); 
+            Object.assign(row.style, styleRow);
 
-            // 1. BOTÃO DE AÇÃO (Esquerda)
+            // 1. BOTÃO DE AÇÃO
             const actionBtn = document.createElement("div");
-            // AQUI: Usa o estilo atualizado com borderRight: 'none'
-            Object.assign(actionBtn.style, styleActionBtn); 
+            Object.assign(actionBtn.style, styleActionBtn);
             
             const shortDesc = email.subject.length > 45 ? email.subject.substring(0, 45) + "..." : email.subject;
             
@@ -297,20 +299,12 @@ export function initQuickEmailAssistant() {
                 runQuickEmail(email);
             };
 
-            // ============================================================
-            // 2. BOTÃO DE PREVIEW (AQUI ESTÁ ELE!)
-            // ============================================================
+            // 2. BOTÃO DE PREVIEW
             const previewBtn = document.createElement("div");
             previewBtn.innerHTML = iconEye;
-            
-            // AQUI: Aplica o estilo atualizado que força a altura igual
-            Object.assign(previewBtn.style, stylePreviewBtn); 
+            Object.assign(previewBtn.style, stylePreviewBtn);
 
-            // Hover do Olho
-            previewBtn.onmouseenter = () => { 
-                previewBtn.style.background = "#e8eaed"; 
-                previewBtn.style.color = "#202124"; 
-            };
+            previewBtn.onmouseenter = () => { previewBtn.style.background = "#e8eaed"; previewBtn.style.color = "#202124"; };
             previewBtn.onmouseleave = () => { 
                 if (!row.classList.contains('expanded')) {
                     previewBtn.style.background = "#f8f9fa"; 
@@ -318,44 +312,35 @@ export function initQuickEmailAssistant() {
                 }
             };
 
-            // Clique do Olho (Lógica de Acordeão)
+            // Lógica Acordeão
             previewBtn.onclick = (e) => {
                 e.stopPropagation();
                 const existingCard = row.querySelector('.preview-card');
 
-                // Se já aberto, fecha
                 if (existingCard) {
                     existingCard.style.maxHeight = "0";
                     existingCard.style.opacity = "0";
+                    existingCard.style.padding = "0"; // Remove padding para fechar totalmente
                     row.classList.remove('expanded');
-                    
-                    // Reseta cores
                     previewBtn.style.background = "#f8f9fa";
                     previewBtn.style.color = "#5f6368";
-                    
                     setTimeout(() => existingCard.remove(), 300);
                     return;
                 }
 
-                // Fecha outros abertos na lista
                 const allOpenRows = contentArea.querySelectorAll('.expanded');
                 allOpenRows.forEach(r => {
-                    // Encontra o botão de preview daquela linha e clica para fechar
-                    // O botão de preview é o segundo filho da div row (índice 1)
                     const btn = r.children[1]; 
                     if(btn) btn.click(); 
                 });
 
-                // Abre Novo
                 row.classList.add('expanded');
-                previewBtn.style.background = "#e8f0fe"; // Ativo Azul
+                previewBtn.style.background = "#e8f0fe";
                 previewBtn.style.color = "#1a73e8";
 
-                // Ajuste fino de bordas para parecer conectado
                 actionBtn.style.borderRadius = "8px 0 0 0";
                 previewBtn.style.borderRadius = "0 8px 0 0";
 
-                // Cria o Card de Conteúdo
                 const card = document.createElement("div");
                 card.className = 'preview-card';
                 Object.assign(card.style, stylePreviewCard);
@@ -371,18 +356,14 @@ export function initQuickEmailAssistant() {
 
                 row.appendChild(card);
                 
-                // Animação de entrada
                 requestAnimationFrame(() => {
                     card.style.maxHeight = "500px";
                     card.style.opacity = "1";
                 });
             };
 
-            // ============================================================
-            // MONTAGEM FINAL DA LINHA
-            // ============================================================
-            row.appendChild(actionBtn);  // Esquerda
-            row.appendChild(previewBtn); // Direita
+            row.appendChild(actionBtn);
+            row.appendChild(previewBtn);
             contentArea.appendChild(row);
         });
     }
@@ -401,22 +382,8 @@ export function initQuickEmailAssistant() {
         renderEmailList();
     });
 
-    function togglePopup(show) {
-        if (show) {
-            popup.style.opacity = "1";
-            popup.style.pointerEvents = "auto";
-            popup.style.transform = "scale(1)";
-            searchInput.focus(); 
-        } else {
-            popup.style.opacity = "0";
-            popup.style.pointerEvents = "none";
-            popup.style.transform = "scale(0.95)";
-        }
-    }
-
-let visible = false;
+    let visible = false;
     btn.onclick = () => {
-        // Proteção contra arrasto
         if (btnContainer.getAttribute('data-dragging') === 'true') {
             return; 
         }
