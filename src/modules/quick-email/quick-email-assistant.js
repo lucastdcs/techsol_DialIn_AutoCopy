@@ -6,7 +6,8 @@ import {
     stylePopupHeader,
     stylePopupTitle,
     stylePopupCloseBtn,
-    stylePopupVersion
+    stylePopupVersion,
+    triggerGoogleAnimation
 } from '../shared/utils.js';
 
 import { QUICK_EMAILS } from './quick-email-data.js';
@@ -434,8 +435,15 @@ export function initQuickEmailAssistant() {
         if (btnContainer.getAttribute('data-dragging') === 'true') {
             return; 
         }
-        visible = !visible;
-        togglePopup(visible);
+        if (!visible) {
+            triggerGoogleAnimation(btn);
+        }
+        
+        // Pequeno delay para a animação começar antes do popup aparecer
+        setTimeout(() => {
+             visible = !visible;
+             togglePopup(visible);
+        }, 100); // 100ms é imperceptível mas ajuda na fluidez visual
     };
 
     renderTabs();

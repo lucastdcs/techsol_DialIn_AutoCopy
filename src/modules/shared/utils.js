@@ -322,3 +322,57 @@ export function getRandomGoogleStyle() {
     lastColorIndex = newIndex;
     return GOOGLE_COLORS_LIST[newIndex]; 
 }
+
+// =========================================
+// --- ANIMAÇÕES GOOGLE (Novo) ---
+// =========================================
+
+// 1. Injeta os estilos da animação na página (roda uma vez só)
+let googleStylesInjected = false;
+function injectGoogleAnimationStyles() {
+    if (googleStylesInjected) return;
+
+    const style = document.createElement('style');
+    style.innerHTML = `
+        @keyframes google-pulse-ring {
+            0% {
+                box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.7); /* Azul */
+            }
+            25% {
+                box-shadow: 0 0 0 10px rgba(234, 67, 53, 0); /* Vermelho */
+            }
+            50% {
+                box-shadow: 0 0 0 20px rgba(251, 188, 5, 0); /* Amarelo */
+            }
+            100% {
+                box-shadow: 0 0 0 30px rgba(52, 168, 83, 0); /* Verde */
+            }
+        }
+
+        .google-animate-click {
+            animation: google-pulse-ring 0.6s cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
+    `;
+    document.head.appendChild(style);
+    googleStylesInjected = true;
+}
+
+// 2. Função que os módulos vão chamar para animar um botão
+export function triggerGoogleAnimation(element) {
+    // Garante que os estilos existem
+    injectGoogleAnimationStyles();
+
+    // Remove a classe se já estiver rodando (para poder reiniciar)
+    element.classList.remove('google-animate-click');
+
+    // Força um "reflow" para o navegador perceber que removemos a classe
+    void element.offsetWidth; 
+
+    // Adiciona a classe que roda a animação
+    element.classList.add('google-animate-click');
+
+    // Limpa a classe depois que a animação termina
+    setTimeout(() => {
+        element.classList.remove('google-animate-click');
+    }, 600); // O mesmo tempo da duração da animação no CSS
+}
