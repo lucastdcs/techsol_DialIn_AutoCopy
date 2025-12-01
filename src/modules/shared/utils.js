@@ -376,3 +376,81 @@ export function triggerGoogleAnimation(element) {
         element.classList.remove('google-animate-click');
     }, 600); // O mesmo tempo da duração da animação no CSS
 }
+
+// =========================================
+// --- STARTUP ANIMATION (Splash Screen) ---
+// =========================================
+export function playStartupAnimation() {
+    // Evita rodar duas vezes se o usuário clicar de novo
+    if (document.getElementById('techsol-splash-screen')) return;
+
+    // 1. Cria o Container (Overlay)
+    const splash = document.createElement('div');
+    splash.id = 'techsol-splash-screen';
+    Object.assign(splash.style, {
+        position: 'fixed', top: '0', left: '0', width: '100vw', height: '100vh',
+        backgroundColor: 'rgba(255, 255, 255, 0.85)', // Fundo branco levemente transparente
+        backdropFilter: 'blur(4px)', // Desfoque elegante no fundo
+        zIndex: '2147483647', // Máximo possível
+        display: 'flex', flexDirection: 'column', 
+        alignItems: 'center', justifyContent: 'center',
+        opacity: '0', transition: 'opacity 0.4s ease-out',
+        fontFamily: "'Poppins', sans-serif" // Garante a fonte
+    });
+
+    // 2. O Conteúdo (Logo/Texto)
+    const content = document.createElement('div');
+    content.innerHTML = `
+        <div style="font-size: 32px; font-weight: 600; color: #5f6368; margin-bottom: 16px; letter-spacing: -0.5px;">
+            <span style="color: #4285F4;">Cases</span><span style="color: #EA4335;">Wizard</span>
+        </div>
+        <div class="google-loader"></div>
+    `;
+
+    // 3. Estilo da Barra de Carregamento (Google Colors)
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .google-loader {
+            width: 150px;
+            height: 4px;
+            background-color: #f1f3f4;
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+        .google-loader::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; bottom: 0;
+            width: 100%;
+            background: linear-gradient(to right, #4285F4, #DB4437, #F4B400, #0F9D58);
+            transform: translateX(-100%);
+            animation: google-slide 1.2s infinite cubic-bezier(0.4, 0.0, 0.2, 1);
+        }
+        @keyframes google-slide {
+            0% { transform: translateX(-100%); }
+            50% { transform: translateX(0%); }
+            100% { transform: translateX(100%); }
+        }
+    `;
+    
+    splash.appendChild(style);
+    splash.appendChild(content);
+    document.body.appendChild(splash);
+
+    // 4. Sequência da Animação
+    
+    // Entrada (Fade In)
+    requestAnimationFrame(() => {
+        splash.style.opacity = '1';
+    });
+
+    // Saída (Fade Out após 1.5s)
+    setTimeout(() => {
+        splash.style.opacity = '0';
+        // Remove do DOM após a transição CSS terminar
+        setTimeout(() => {
+            if (splash.parentNode) splash.parentNode.removeChild(splash);
+        }, 400);
+    }, 1500);
+}
