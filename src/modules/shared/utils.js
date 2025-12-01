@@ -380,6 +380,9 @@ export function triggerGoogleAnimation(element) {
 // =========================================
 // --- STARTUP ANIMATION (Splash Screen) ---
 // =========================================
+// =========================================
+// --- GOOGLE-STYLE STARTUP ANIMATION ---
+// =========================================
 export function playStartupAnimation() {
     if (document.getElementById('techsol-splash-screen')) return;
 
@@ -388,19 +391,19 @@ export function playStartupAnimation() {
     splash.id = 'techsol-splash-screen';
     Object.assign(splash.style, {
         position: 'fixed', top: '0', left: '0', width: '100vw', height: '100vh',
-        backgroundColor: '#ffffff', // Fundo branco puro (Google Style)
+        backgroundColor: '#ffffff', 
         zIndex: '2147483647',
         display: 'flex', flexDirection: 'column', 
         alignItems: 'center', justifyContent: 'center',
         opacity: '0', transition: 'opacity 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)',
-        fontFamily: "'Poppins', 'Roboto', sans-serif" // Fonte limpa
+        fontFamily: "'Poppins', 'Roboto', sans-serif"
     });
 
     // 2. Conteúdo Central
     const content = document.createElement('div');
     content.style.textAlign = 'center';
     
-    // Logo "Cases Wizard" (Tipografia Google: Cinza Escuro, Peso Médio)
+    // Logo "Cases Wizard"
     const logoHTML = `
         <div style="
             font-size: 36px; 
@@ -414,7 +417,7 @@ export function playStartupAnimation() {
         </div>
     `;
 
-    // Barra de Progresso (Material Design Indeterminate)
+    // Barra de Progresso (Agora colorida!)
     const loaderHTML = `
         <div class="google-material-loader">
             <div class="indeterminate"></div>
@@ -423,17 +426,17 @@ export function playStartupAnimation() {
     
     content.innerHTML = logoHTML + loaderHTML;
 
-    // 3. Créditos (Discreto no rodapé)
+    // 3. Créditos
     const credit = document.createElement('div');
     credit.innerHTML = "created by <span style='color: #1a73e8; font-weight: 500;'>@lucaste</span>";
     Object.assign(credit.style, {
         position: 'absolute', bottom: '40px',
         fontSize: '12px', color: '#9aa0a6',
-        opacity: '0', // Começa invisível
-        animation: 'fade-in 0.8s ease-out 0.5s forwards' // Aparece com delay
+        opacity: '0', 
+        animation: 'fade-in 0.8s ease-out 0.5s forwards'
     });
 
-    // 4. CSS Injetado (Animações e Cores Oficiais)
+    // 4. CSS (Com ciclo de cores)
     const style = document.createElement('style');
     style.innerHTML = `
         /* Container da Barra */
@@ -441,16 +444,16 @@ export function playStartupAnimation() {
             position: relative;
             height: 4px;
             display: block;
-            width: 240px; /* Largura elegante */
-            background-color: #e0e0e0; /* Cinza claro fundo */
+            width: 240px;
+            background-color: #e0e0e0; /* Fundo cinza claro */
             border-radius: 2px;
             overflow: hidden;
             margin: 0 auto;
         }
 
-        /* A Barra Animada */
+        /* O Elemento que se move */
         .google-material-loader .indeterminate {
-            background-color: #4285F4; /* Google Blue Principal */
+            background-color: #4285F4; /* Começa Azul */
         }
         
         .google-material-loader .indeterminate:before {
@@ -459,7 +462,10 @@ export function playStartupAnimation() {
             background-color: inherit;
             top: 0; left: 0; bottom: 0;
             will-change: left, right;
-            animation: indeterminate 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+            /* Animação de movimento E cor */
+            animation: 
+                indeterminate 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite,
+                google-colors 2.1s steps(4) infinite; /* Troca de cor */
         }
         
         .google-material-loader .indeterminate:after {
@@ -468,11 +474,23 @@ export function playStartupAnimation() {
             background-color: inherit;
             top: 0; left: 0; bottom: 0;
             will-change: left, right;
-            animation: indeterminate-short 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite;
+            /* Animação de movimento E cor (com delay) */
+            animation: 
+                indeterminate-short 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite,
+                google-colors 2.1s steps(4) infinite; /* Troca de cor */
             animation-delay: 1.15s;
         }
 
-        /* Keyframes da Barra (Movimento Fluido Google) */
+        /* Ciclo de Cores Oficiais do Google */
+        @keyframes google-colors {
+            0% { background-color: #4285F4; } /* Azul */
+            25% { background-color: #EA4335; } /* Vermelho */
+            50% { background-color: #FBBC05; } /* Amarelo */
+            75% { background-color: #34A853; } /* Verde */
+            100% { background-color: #4285F4; } /* Volta ao Azul */
+        }
+
+        /* Movimento da Barra */
         @keyframes indeterminate {
             0% { left: -35%; right: 100%; }
             60% { left: 100%; right: -90%; }
@@ -484,7 +502,7 @@ export function playStartupAnimation() {
             100% { left: 107%; right: -8%; }
         }
 
-        /* Keyframes de Entrada */
+        /* Animações de Entrada */
         @keyframes slide-up {
             from { transform: translateY(20px); opacity: 0; }
             to { transform: translateY(0); opacity: 1; }
@@ -499,20 +517,15 @@ export function playStartupAnimation() {
     splash.appendChild(credit);
     document.body.appendChild(splash);
 
-    // 5. Sequência de Execução
-    
-    // Entrada Suave
+    // 5. Execução
     requestAnimationFrame(() => {
         splash.style.opacity = '1';
     });
 
-    // Saída Elegante (Após 2.5s para dar tempo de ler "Cases Wizard")
     setTimeout(() => {
-        splash.style.opacity = '0'; // Fade out da tela toda
-        
-        // Remove do DOM
+        splash.style.opacity = '0'; 
         setTimeout(() => {
             if (splash.parentNode) splash.parentNode.removeChild(splash);
-        }, 400); // Tempo da transição CSS
+        }, 400); 
     }, 2500);
 }
