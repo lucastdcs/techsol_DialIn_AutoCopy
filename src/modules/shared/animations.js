@@ -1,47 +1,44 @@
 // src/modules/shared/animations.js
 
-// --- ESTILOS DE ANIMAÇÃO (Google Morph) ---
+// --- ESTILOS DE ANIMAÇÃO (Google Morph & Physics) ---
 export const animationStyles = {
     // A linha colorida do Google
     googleLine: {
         height: "3px",
         width: "100%",
         background: "linear-gradient(to right, #4285F4, #EA4335, #FBBC05, #34A853)",
-        transform: "scaleX(0)", 
+        transform: "scaleX(0)", // Começa escondida
         transformOrigin: "left center",
         transition: "transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)"
     },
     
-    // Estado inicial do Popup
+    // Estado inicial do Popup (Fechado e pequeno)
     popupInitial: {
         opacity: "0",
         pointerEvents: "none",
         transform: "scale(0.05)", 
-        transformOrigin: "bottom right", // Nasce perto do botão
+        transformOrigin: "bottom right",
         transition: "transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.2s linear",
-        // Nota: A posição (top/left/right) é controlada pelo módulo, aqui cuidamos da transição
     },
 
-    // --- ESTADO ATIVO DO BOTÃO (A MUDANÇA ESTÁ AQUI) ---
-    // Em vez de sumir, ele vira um botão "pressionado" ou "ativo"
+    // --- ESTADO ATIVO (CORREÇÃO: Pressionado) ---
+    // Não mudamos a cor (background), apenas a física do botão
     btnActive: {
-        transform: "scale(1)",      // Mantém o tamanho
-        backgroundColor: "#ffffff", // Fundo Branco
-        color: "#5f6368",           // Ícone Cinza Escuro
-        boxShadow: "inset 0 0 0 1px #dadce0", // Borda interna sutil
-        pointerEvents: "auto"       // Continua clicável (para fechar)
+        transform: "scale(0.90)",   // Encolhe levemente (efeito de pressionado)
+        filter: "brightness(0.9)",  // Escurece 10% para indicar "ativo"
+        boxShadow: "inset 0 2px 4px rgba(0,0,0,0.2)", // Sombra interna
+        pointerEvents: "auto",      // Permite clicar para fechar
+        transition: "all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)" // Transição suave
     },
     
     // Estado Normal (Reset)
-    // Nota: Não forçamos cor aqui para respeitar a cor original de cada módulo (azul/vermelho/roxo)
-    // Apenas resetamos as propriedades transformadas
     btnVisible: {
         transform: "scale(1)",
+        filter: "brightness(1)",    // Brilho original
+        boxShadow: "0 4px 12px rgba(0,0,0,0.3)", // Sombra flutuante original (estimada)
         opacity: "1",
         pointerEvents: "auto",
-        backgroundColor: "", // Reseta para o CSS original do módulo
-        color: "",           // Reseta
-        boxShadow: ""        // Reseta
+        transition: "all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)"
     }
 };
 
@@ -51,13 +48,13 @@ export const animationStyles = {
 export function togglePopupAnimation(show, elements) {
     const { popup, btnContainer, googleLine, focusElement } = elements;
 
-    // Pega o botão real dentro do container para aplicar a cor
+    // Pega o botão real dentro do container
     const btn = btnContainer ? btnContainer.querySelector('button') : null;
 
     if (show) {
         // --- ABRIR ---
         
-        // 1. Transforma o botão em "Ativo" (Branco/Cinza)
+        // 1. Efeito "Pressionado" no botão (Mantém a cor original!)
         if (btn) Object.assign(btn.style, animationStyles.btnActive);
         
         // 2. Expande o Popup
@@ -87,16 +84,15 @@ export function togglePopupAnimation(show, elements) {
         popup.style.pointerEvents = "none";
         popup.style.transform = "scale(0.05)"; 
 
-        // 3. Restaura o botão para a cor original do módulo
+        // 3. Restaura o botão (Solta o botão)
         if (btn) {
-            // Usamos setTimeout para sincronizar com o fechamento do popup
             setTimeout(() => {
-                 // Remove os estilos inline de 'active' para voltar ao CSS definido no módulo
-                 btn.style.backgroundColor = "";
-                 btn.style.color = "";
-                 btn.style.boxShadow = "";
-                 // Reaplica transform scale(1) só pra garantir
+                 // Reseta para o estado original (vibrante e flutuando)
                  Object.assign(btn.style, animationStyles.btnVisible);
+                 
+                 // Restaura a sombra específica do botão se necessário
+                 // (Opcional: removemos boxShadow do assign acima se quiser que o CSS original prevaleça 100%)
+                 btn.style.boxShadow = ""; 
             }, 100);
         }
     }
