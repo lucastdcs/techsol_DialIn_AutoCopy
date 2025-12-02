@@ -333,24 +333,29 @@ function injectGoogleAnimationStyles() {
     if (googleStylesInjected) return;
 
     const style = document.createElement('style');
-    style.innerHTML = `
+   style.innerHTML = `
         @keyframes google-pulse-ring {
-            0% {
-                box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.7); /* Azul */
-            }
-            25% {
-                box-shadow: 0 0 0 10px rgba(234, 67, 53, 0); /* Vermelho */
-            }
-            50% {
-                box-shadow: 0 0 0 20px rgba(251, 188, 5, 0); /* Amarelo */
-            }
-            100% {
-                box-shadow: 0 0 0 30px rgba(52, 168, 83, 0); /* Verde */
-            }
+            0% { box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.7); }
+            25% { box-shadow: 0 0 0 10px rgba(234, 67, 53, 0); }
+            50% { box-shadow: 0 0 0 20px rgba(251, 188, 5, 0); }
+            100% { box-shadow: 0 0 0 30px rgba(52, 168, 83, 0); }
         }
 
         .google-animate-click {
             animation: google-pulse-ring 0.6s cubic-bezier(0.215, 0.61, 0.355, 1);
+        }
+
+        /* --- NOVO: BORDA ATIVA GOOGLE --- */
+        /* Cria um anel colorido atrás do botão */
+        .google-active-state::before {
+            content: '';
+            position: absolute;
+            top: -4px; left: -4px; right: -4px; bottom: -4px; /* Espessura da borda externa */
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #4285F4, #EA4335, #FBBC05, #34A853, #4285F4);
+            z-index: -1; /* Fica atrás do botão */
+            opacity: 0.6; /* "Meio apagada" */
+            filter: blur(1px); /* Suaviza para não ficar pixelado */
         }
     `;
     document.head.appendChild(style);

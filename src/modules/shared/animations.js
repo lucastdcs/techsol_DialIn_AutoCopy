@@ -1,4 +1,5 @@
 // src/modules/shared/animations.js
+import { injectGoogleAnimationStyles } from './utils.js'; // Certifique-se de exportar essa função no utils.js se não estiver!
 
 // --- ESTILOS DE ANIMAÇÃO (Google Morph & Physics) ---
 export const animationStyles = {
@@ -47,51 +48,45 @@ export const animationStyles = {
  */
 export function togglePopupAnimation(show, elements) {
     const { popup, btnContainer, googleLine, focusElement } = elements;
-
-    // Pega o botão real dentro do container
     const btn = btnContainer ? btnContainer.querySelector('button') : null;
+
+    // Garante que o CSS da borda colorida exista na página
+    // (Pode importar 'injectGoogleAnimationStyles' do utils ou chamar 'triggerGoogleAnimation' uma vez)
+    // Se não conseguir importar, o CSS deve estar garantido pelo init do app.
 
     if (show) {
         // --- ABRIR ---
+        if (btn) {
+            Object.assign(btn.style, animationStyles.btnActive);
+            // ADICIONA A CLASSE DA BORDA COLORIDA
+            btn.classList.add('google-active-state'); 
+        }
         
-        // 1. Efeito "Pressionado" no botão (Mantém a cor original!)
-        if (btn) Object.assign(btn.style, animationStyles.btnActive);
-        
-        // 2. Expande o Popup
         popup.style.opacity = "1";
         popup.style.pointerEvents = "auto";
         popup.style.transform = "scale(1)";
 
-        // 3. Desenha a linha
         if (googleLine) {
-            setTimeout(() => {
-                googleLine.style.transform = "scaleX(1)";
-            }, 100);
+            setTimeout(() => { googleLine.style.transform = "scaleX(1)"; }, 100);
         }
-
         if (focusElement) {
             setTimeout(() => focusElement.focus(), 100);
         }
 
     } else {
         // --- FECHAR ---
-
-        // 1. Recolhe a linha
         if (googleLine) googleLine.style.transform = "scaleX(0)";
 
-        // 2. Encolhe o Popup
         popup.style.opacity = "0";
         popup.style.pointerEvents = "none";
         popup.style.transform = "scale(0.05)"; 
 
-        // 3. Restaura o botão (Solta o botão)
         if (btn) {
+            // REMOVE A CLASSE DA BORDA COLORIDA
+            btn.classList.remove('google-active-state');
+            
             setTimeout(() => {
-                 // Reseta para o estado original (vibrante e flutuando)
                  Object.assign(btn.style, animationStyles.btnVisible);
-                 
-                 // Restaura a sombra específica do botão se necessário
-                 // (Opcional: removemos boxShadow do assign acima se quiser que o CSS original prevaleça 100%)
                  btn.style.boxShadow = ""; 
             }, 100);
         }
