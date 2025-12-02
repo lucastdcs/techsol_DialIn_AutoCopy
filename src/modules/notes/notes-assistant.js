@@ -91,24 +91,34 @@ export function initCaseNotesAssistant() {
     const animRefs = { popup, btnContainer, googleLine: null };
     let visible = false;
 
-    // Cria Header Padrão
+ // 1. HEADER (Criado pela Factory)
     const header = createStandardHeader(
-        popup,
-        "Case Notes Assistant",
-        CURRENT_VERSION,
-        animRefs,
-        () => { visible = false; } // Callback ao fechar
+        popup,                  
+        "Case Notes Assistant", 
+        CURRENT_VERSION,        
+        animRefs,               
+        () => { togglePopup(false); } 
     );
+
+    // --- BOTÃO EXPANDIR (CORREÇÃO) ---
+    // A Factory retorna o elemento Header inteiro. 
+    // O conteúdo (onde estão os botões) é o último filho desse elemento.
+    const headerContainer = header.lastElementChild; 
     
-    // --- BOTÃO EXPANDIR (Feature exclusiva do Notes) ---
-    // Injetamos o botão de expandir no header criado pela factory
-    const headerRight = header.querySelector('div:last-child'); // O container da direita
-    if (headerRight) {
+    if (headerContainer) {
         const expandBtn = document.createElement("div");
         expandBtn.textContent = "↔";
         expandBtn.classList.add('no-drag'); 
-        Object.assign(expandBtn.style, styleExpandButton);
+        
+        // Usa estilo do NoteStyles se disponível, senão usa fallback local
+        const btnStyle = (typeof NoteStyles !== 'undefined' && NoteStyles.styleExpandButton) 
+            ? NoteStyles.styleExpandButton 
+            : { fontSize: "18px", color: "#5f6368", cursor: "pointer", padding: "4px", borderRadius: "50%", zIndex: "10" };
+            
+        Object.assign(expandBtn.style, btnStyle);
+        
         expandBtn.style.marginRight = "8px"; // Espaço do X
+        expandBtn.style.marginLeft = "auto"; // Força ir para a direita (Flexbox)
         
         expandBtn.onmouseover = () => expandBtn.style.backgroundColor = '#e8eaed';
         expandBtn.onmouseout = () => expandBtn.style.backgroundColor = 'transparent';
@@ -122,11 +132,17 @@ export function initCaseNotesAssistant() {
             popup.style.width = isExpanded ? `${expandedWidth}px` : `${initialWidth}px`;
         };
         
-       const closeBtn = headerContent.lastElementChild;
+        // Pega o botão de fechar (que sabemos ser o último elemento adicionado pela Factory)
+        const closeBtn = headerContainer.lastElementChild;
         
         // Insere o expandir ANTES do botão de fechar
-        headerContent.insertBefore(expandBtn, closeBtn);
+        if (closeBtn) {
+            headerContainer.insertBefore(expandBtn, closeBtn);
+        } else {
+            headerContainer.appendChild(expandBtn);
+        }
     }
+    // ---------------------------------
 
     popup.appendChild(header);
 
