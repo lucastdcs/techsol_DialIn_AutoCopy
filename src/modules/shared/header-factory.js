@@ -11,37 +11,30 @@ import {
 import { animationStyles, togglePopupAnimation } from './animations.js';
 
 /**
- * Cria um Header padrão Google Style.
- * * @param {HTMLElement} popupElement - Elemento pai.
- * @param {string} titleText - Título do módulo.
- * @param {string} versionText - Versão.
- * @param {string} helpDescription - Texto explicativo do módulo (HTML permitido).
- * @param {object} animationRefs - Referências para animação.
- * @param {function} onCloseCallback - Callback ao fechar.
+ * Cria um Header padrão Google Style com suporte a animação e drag.
  */
 export function createStandardHeader(popupElement, titleText, versionText, helpDescription, animationRefs, onCloseCallback) {
     const header = document.createElement("div");
     Object.assign(header.style, stylePopupHeader);
     
+    // 1. APLICA O DRAG (Sem sobrescrever depois!)
     makeDraggable(popupElement, header);
-    header.onmousedown = () => { header.style.cursor = 'grabbing'; };
-    header.onmouseup = () => { header.style.cursor = 'grab'; };
 
-    // 1. Linha Colorida
+    // 2. Linha Colorida
     const googleLine = document.createElement("div");
     Object.assign(googleLine.style, animationStyles.googleLine);
     header.appendChild(googleLine);
     
     if (animationRefs) animationRefs.googleLine = googleLine;
 
-    // 2. Container Interno
+    // 3. Container Interno
     const contentRow = document.createElement("div");
     Object.assign(contentRow.style, { 
         display: "flex", justifyContent: "space-between", alignItems: "center", 
         width: "100%", padding: "12px 16px", boxSizing: "border-box"
     });
 
-    // --- ESQUERDA ---
+    // --- LADO ESQUERDO ---
     const leftDiv = document.createElement("div");
     Object.assign(leftDiv.style, { display: 'flex', alignItems: 'center', gap: '12px' });
 
@@ -56,7 +49,7 @@ export function createStandardHeader(popupElement, titleText, versionText, helpD
     leftDiv.appendChild(logo);
     leftDiv.appendChild(title);
 
-    // --- DIREITA ---
+    // --- LADO DIREITO ---
     const rightDiv = document.createElement("div");
     Object.assign(rightDiv.style, { display: 'flex', alignItems: 'center' });
 
@@ -72,12 +65,12 @@ export function createStandardHeader(popupElement, titleText, versionText, helpD
     Object.assign(closeBtn.style, styleIconBtn);
     closeBtn.title = "Fechar";
 
-    // Hovers
+    // Efeitos Hover (Com stopPropagation para não arrastar ao clicar no botão)
     [helpBtn, closeBtn].forEach(btn => {
-        btn.classList.add('no-drag');
-        btn.onmousedown = (e) => e.stopPropagation(); // Permite clique
+        btn.classList.add('no-drag'); 
         btn.onmouseenter = () => btn.style.backgroundColor = "#f1f3f4";
         btn.onmouseleave = () => btn.style.backgroundColor = "transparent";
+        btn.onmousedown = (e) => e.stopPropagation(); // CRUCIAL: Impede que o clique no botão inicie o drag do header
     });
     closeBtn.onmouseenter = () => { closeBtn.style.backgroundColor = "#fee2e2"; closeBtn.style.color = "#c5221f"; };
 
@@ -87,7 +80,7 @@ export function createStandardHeader(popupElement, titleText, versionText, helpD
         if (onCloseCallback) onCloseCallback();
     };
 
-    // --- HELP OVERLAY (Passando a descrição dinâmica) ---
+    // --- HELP OVERLAY ---
     const overlay = createHelpOverlay(popupElement, titleText, versionText, helpDescription);
     
     helpBtn.onclick = () => {
