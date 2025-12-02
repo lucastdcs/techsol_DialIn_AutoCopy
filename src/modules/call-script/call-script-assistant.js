@@ -1,5 +1,3 @@
-// src/modules/call-script/call-script-assistant.js
-
 import { 
     makeDraggable,
     styleSelect,
@@ -14,6 +12,8 @@ import {
     getRandomGoogleStyle    
 } from '../shared/utils.js';
 
+import { createStandardHeader } from '../shared/header-factory.js';
+import { animationStyles, togglePopupAnimation } from '../shared/animations.js';
 import { csaChecklistData } from './call-script-data.js';
 
 export function initCallScriptAssistant() {
@@ -69,53 +69,30 @@ export function initCallScriptAssistant() {
     // CORREÇÃO: Arrastar o container inteiro
     makeDraggable(btnContainer);
 
-    // --- Popup ---
+  // --- POPUP (Com Animação) ---
     const csaPopup = document.createElement("div");
     csaPopup.id = "call-script-popup";
-    Object.assign(csaPopup.style, stylePopup, { right: "80px" });
+    
+    // Estilos base + Estado Inicial Animação
+    Object.assign(csaPopup.style, stylePopup, { 
+        right: "80px" 
+    }, animationStyles.popupInitial);
 
-    const csaHeader = document.createElement("div");
-    Object.assign(csaHeader.style, stylePopupHeader);
-    makeDraggable(csaPopup, csaHeader);
+    // Refs para animação
+    const animRefs = { popup: csaPopup, btnContainer, googleLine: null };
+    let csaVisible = false;
 
-    const csaHeaderLeft = document.createElement("div");
-    Object.assign(csaHeaderLeft.style, { display: 'flex', alignItems: 'center', gap: '10px' });
-    
-    const csaLogo = document.createElement("div");
-    csaLogo.textContent = "📋";
-    Object.assign(csaLogo.style, { fontSize: "20px" });
-    
-    const titleContainer = document.createElement("div");
-    Object.assign(titleContainer.style, { display: 'flex', flexDirection: 'column' });
-    const csaTitle = document.createElement("div");
-    csaTitle.textContent = "Call Script Assistant";
-    Object.assign(csaTitle.style, stylePopupTitle);
-    titleContainer.appendChild(csaTitle);
-
-    const versionDisplay = document.createElement("div");
-    versionDisplay.textContent = CURRENT_VERSION;
-    Object.assign(versionDisplay.style, stylePopupVersion);
-    titleContainer.appendChild(versionDisplay);
-    
-    csaHeaderLeft.appendChild(csaLogo);
-    csaHeaderLeft.appendChild(titleContainer);
-    
-    const csaHeaderRight = document.createElement("div");
-    Object.assign(csaHeaderRight.style, { display: 'flex', alignItems: 'center' });
-
-    const csaCloseBtn = document.createElement("div");
-    csaCloseBtn.textContent = "✕";
-    csaCloseBtn.classList.add('no-drag');
-    Object.assign(csaCloseBtn.style, stylePopupCloseBtn);
-    csaCloseBtn.onclick = () => csaTogglePopup(false);
-    csaCloseBtn.onmouseover = () => csaCloseBtn.style.backgroundColor = '#e8eaed';
-    csaCloseBtn.onmouseout = () => csaCloseBtn.style.backgroundColor = 'transparent';
-    csaHeaderRight.appendChild(csaCloseBtn);
-    
+    // 1. HEADER (Factory)
+    const csaHeader = createStandardHeader(
+        csaPopup,
+        "Call Script Assistant",
+        CURRENT_VERSION,
+        animRefs,
+        () => { csaVisible = false; }
+    );
     csaPopup.appendChild(csaHeader);
-    csaHeader.appendChild(csaHeaderLeft);
-    csaHeader.appendChild(csaHeaderRight);
 
+    // 2. CONTEÚDO
     const csaContent = document.createElement("div");
     csaContent.id = "csa-content";
     Object.assign(csaContent.style, {
@@ -291,17 +268,11 @@ export function initCallScriptAssistant() {
         });
     }
 
-    // --- Event Handlers (CORREÇÃO DE NOME DE VARIÁVEL) ---
-   let csaVisible = false;
-    btn.onclick = () => {
-        // --- PROTEÇÃO CONTRA ARRASTO ---
-        if (btnContainer.getAttribute('data-dragging') === 'true') {
-            return; 
-        }
-        // -------------------------------
+btn.onclick = () => {
+        if (btnContainer.getAttribute('data-dragging') === 'true') return; 
 
         csaVisible = !csaVisible;
-        csaTogglePopup(csaVisible);
+        togglePopupAnimation(csaVisible, animRefs);
     };
 
     function setActiveType(type) {
