@@ -10,6 +10,7 @@ import {
     styleCredit
 } from '../shared/utils.js';
 
+import { createStandardHeader } from '../shared/header-factory.js';
 import { animationStyles, togglePopupAnimation } from '../shared/animations.js';
 import { QUICK_EMAILS } from './quick-email-data.js';
 import { runQuickEmail } from '../email/email-automation.js';
@@ -124,98 +125,64 @@ export function initQuickEmailAssistant() {
     makeDraggable(btnContainer);
 
     // --- POPUP (Com Animação) ---
+  // --- POPUP ---
     const popup = document.createElement("div");
     popup.id = "quick-email-popup";
     
-    // Combina estilos + Estado Inicial da Animação
+    // Configura estilo + estado inicial da animação
     Object.assign(popup.style, stylePopup, { 
         right: "80px", width: "550px", maxHeight: "85vh", 
         borderRadius: "12px", display: "flex", flexDirection: "column",
         boxShadow: "0 8px 24px rgba(0,0,0,0.2)"
-    }, animationStyles.popupInitial); 
+    }, animationStyles.popupInitial);
 
-    const header = document.createElement("div");
-    // Remove padding do header pai
-    Object.assign(header.style, stylePopupHeader, { 
-        padding: "0", height: "auto", flexDirection: "column", 
-        alignItems: "stretch", overflow: "hidden", borderRadius: "12px 12px 0 0" 
+    // Preparação para animação
+    const animRefs = { popup, btnContainer, googleLine: null };
+
+    // 1. HEADER (Criado pela Factory)
+    const header = createStandardHeader(
+        popup,                  // Quem será arrastado
+        "Emails Rápidos",       // Título
+        CURRENT_VERSION,        // Versão
+        animRefs,               // Referências para animação (ele preenche googleLine)
+        () => { visible = false; } // Callback ao fechar
+    );
+    
+    popup.appendChild(header);
+
+    // 2. TOOLBAR (Busca + Chips) - Separado do Header!
+    const toolbar = document.createElement("div");
+    Object.assign(toolbar.style, { 
+        padding: "0 16px 16px 16px", // Padding lateral e inferior
+        display: "flex", 
+        flexDirection: "column", 
+        gap: "12px",
+        borderBottom: "1px solid #f1f3f4", // Divisor sutil
+        flexShrink: "0",
+        backgroundColor: "#fff" // Garante fundo branco
     });
-    makeDraggable(popup, header);
 
-    // --- LINHA COLORIDA ---
-    const googleLine = document.createElement("div");
-    Object.assign(googleLine.style, animationStyles.googleLine);
-    header.appendChild(googleLine);
-
-    // Container Interno do Header
-    const headerContent = document.createElement("div");
-    Object.assign(headerContent.style, { 
-        padding: "16px", display: "flex", flexDirection: "column", gap: "12px" 
-    });
-
-    const headerTopRow = document.createElement("div");
-    Object.assign(headerTopRow.style, { display: "flex", justifyContent: "space-between", alignItems: "center" });
-    
-    const headerLeft = document.createElement("div");
-    Object.assign(headerLeft.style, { display: "flex", alignItems: "center", gap: "10px" });
-    const logo = document.createElement("img");
-    logo.src = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
-    Object.assign(logo.style, { width: "24px", height: "24px" });
-    const titleDiv = document.createElement("div");
-    Object.assign(titleDiv.style, { display: 'flex', flexDirection: 'column' });
-    const titleText = document.createElement("span");
-    titleText.textContent = "Emails Rápidos";
-    Object.assign(titleText.style, stylePopupTitle);
-    const verText = document.createElement("span");
-    verText.textContent = CURRENT_VERSION;
-    Object.assign(verText.style, stylePopupVersion);
-    titleDiv.appendChild(titleText);
-    titleDiv.appendChild(verText);
-    headerLeft.appendChild(logo);
-    headerLeft.appendChild(titleDiv);
-
-    const closeBtn = document.createElement("div");
-    closeBtn.textContent = "✕";
-    Object.assign(closeBtn.style, stylePopupCloseBtn);
-    
-    // Fecha com Animação
-    closeBtn.onclick = () => {
-        visible = false;
-        togglePopupAnimation(false, { popup, btnContainer, googleLine });
-    };
-    
-    headerTopRow.appendChild(headerLeft);
-    headerTopRow.appendChild(closeBtn);
-    
-    headerContent.appendChild(headerTopRow);
-    
     const searchInput = document.createElement("input");
     searchInput.placeholder = "Filtrar emails...";
     Object.assign(searchInput.style, styleSearchInput);
-    headerContent.appendChild(searchInput);
-
+    
     const tabsContainer = document.createElement("div");
     Object.assign(tabsContainer.style, styleChipContainer);
-    headerContent.appendChild(tabsContainer);
+    // Pequeno ajuste pois agora está dentro da toolbar
+    tabsContainer.style.marginBottom = "0"; 
+    tabsContainer.style.borderBottom = "none";
 
-    header.appendChild(headerContent);
-    popup.appendChild(header);
+    toolbar.appendChild(searchInput);
+    toolbar.appendChild(tabsContainer);
+    
+    popup.appendChild(toolbar);
 
+    // 3. CONTEÚDO (Lista)
     const contentArea = document.createElement("div");
     Object.assign(contentArea.style, { 
         padding: "16px", overflowY: "auto", flexGrow: "1", position: "relative" 
     });
     popup.appendChild(contentArea);
-
-    const footer = document.createElement("div");
-    Object.assign(footer.style, { 
-        padding: "8px 16px", borderTop: "1px solid #eee", 
-        textAlign: "center", fontSize: "10px", color: "#9aa0a6"
-    });
-    footer.textContent = "created by lucaste@";
-    popup.appendChild(footer);
-
-    document.body.appendChild(popup);
 
     // --- RENDERIZAÇÃO ---
 
