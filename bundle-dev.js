@@ -27,7 +27,7 @@
         .csa-li:hover { background-color: #f1f3f4; transform: scale(1.02); }
         .csa-li.csa-completed { text-decoration: line-through; color: #5f6368; transform: scale(0.98); }
     `,document.head.appendChild(i)}function K(e,i={}){let o=document.createElement("div");Object.assign(o.style,{position:"fixed",bottom:"24px",left:"50%",transform:"translateX(-50%) translateY(20px)",background:i.error?"#d93025":"#323232",color:"#fff",padding:"14px 24px",borderRadius:"4px",boxShadow:"0 2px 8px rgba(0,0,0,.3)",fontFamily:"'Poppins', sans-serif",fontSize:"14px",lineHeight:"20px",zIndex:"9999999",opacity:"0",transition:"opacity .3s ease, transform .3s ease"}),o.textContent=e,document.body.appendChild(o),requestAnimationFrame(()=>{o.style.opacity="1",o.style.transform="translateX(-50%) translateY(0)"}),setTimeout(()=>{o.style.opacity="0",o.style.transform="translateX(-50%) translateY(20px)",setTimeout(()=>o.remove(),300)},i.duration||4e3)}function pe(e,i=null){let o=0,r=0,l=0,u=0,a=i||e;a.onmousedown=n;function n(d){if(["INPUT","TEXTAREA","SELECT","BUTTON"].includes(d.target.tagName)||d.target.classList.contains("no-drag"))return;d=d||window.event,d.preventDefault();let p=e.getBoundingClientRect();e.style.left=p.left+"px",e.style.top=p.top+"px",e.style.right="auto",e.style.bottom="auto",e.style.width=p.width+"px",Kt++,e.style.zIndex=Kt,l=d.clientX,u=d.clientY,e.setAttribute("data-dragging","false"),document.onmouseup=h,document.onmousemove=c}function c(d){d=d||window.event,d.preventDefault(),o=l-d.clientX,r=u-d.clientY,l=d.clientX,u=d.clientY,e.setAttribute("data-dragging","true"),e.style.top=e.offsetTop-r+"px",e.style.left=e.offsetLeft-o+"px"}function h(){document.onmouseup=null,document.onmousemove=null,setTimeout(()=>{e.setAttribute("data-dragging","false")},100)}}var Ee={position:"fixed",top:"calc(50% - 250px)",width:"380px",maxHeight:"90vh",backgroundColor:"#fff",borderRadius:"12px",boxShadow:"0 8px 16px rgba(0,0,0,0.2), 0 0 4px rgba(0,0,0,0.08)",zIndex:"9999",overflow:"hidden",display:"flex",flexDirection:"column",transition:"opacity 0.2s ease-out, transform 0.2s ease-out, width 0.3s ease-out",opacity:"0",transform:"scale(0.95)",pointerEvents:"none",fontFamily:"'Poppins', sans-serif"},_e={display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px",backgroundColor:"#f8f9fa",borderBottom:"1px solid #dadce0",cursor:"grab",userSelect:"none",gap:"10px"},we={fontSize:"18px",fontWeight:"600",color:"#202124",flexGrow:"1"},Re={fontSize:"12px",fontWeight:"400",color:"#70757a",marginTop:"4px"},Me={fontSize:"20px",color:"#5f6368",cursor:"pointer",padding:"4px",borderRadius:"50%",transition:"background-color 0.2s ease, color 0.2s ease",lineHeight:"1",zIndex:"10",marginLeft:"8px"},ue={display:"block",fontSize:"14px",fontWeight:"500",color:"#3c4043",marginBottom:"8px",marginTop:"16px"},Qe={width:"100%",padding:"10px 36px 10px 12px",borderRadius:"8px",border:"1px solid #dadce0",backgroundColor:"#fff",fontSize:"14px",color:"#3c4043",boxSizing:"border-box",appearance:"none",backgroundImage:"url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%233c4043%22%20d%3D%22M287%20197.3l-116.5-116.5c-4.7-4.7-12.4-4.7-17.1%200L5.4%20197.3c-4.7%204.7-4.7%2012.4%200%2017.1l17.1%2017.1c4.7%204.7%2012.4%204.7%2017.1%200l94.3-94.3c4.7-4.7%2012.4-4.7%2017.1%200l94.3%2094.3c4.7%204.7%2012.4%204.7%2017.1%200l17.1-17.1c4.7-4.7%204.7-12.4%200-17.1z%22%2F%3E%3C%2Fsvg%3E')",backgroundRepeat:"no-repeat",backgroundPosition:"right 12px center",backgroundSize:"10px",transition:"border-color 0.2s ease, box-shadow 0.2s ease",fontFamily:"'Poppins', sans-serif"};var bt={fontSize:"10px",color:"#9aa0a6",textAlign:"center",padding:"8px 16px",borderTop:"1px solid #eee",marginTop:"16px"},eo={fontSize:"18px",color:"#5f6368",cursor:"pointer",padding:"4px",borderRadius:"50%",transition:"background-color 0.2s ease, color 0.2s ease",lineHeight:"1",zIndex:"10"},ce={padding:"6px 12px",cursor:"pointer",fontSize:"14px",fontWeight:"500",color:"#5f6368",background:"#f8f9fa",transition:"all 0.2s ease",width:"100%",textAlign:"center"},Gt=[{background:"#E8F0FE",color:"#1967D2"},{background:"#FCE8E6",color:"#C5221F"},{background:"#FEF7E0",color:"#F29900"},{background:"#E6F4EA",color:"#1E8E3E"}],Qt=-1;function Ze(){let e=Math.floor(Math.random()*Gt.length);return e===Qt&&(e=(e+1)%Gt.length),Qt=e,Gt[e]}var Zt=!1;function to(){if(Zt||document.getElementById("techsol-google-styles"))return;let e=document.createElement("style");e.id="techsol-google-styles",e.innerHTML=`
-        /* Anima\xE7\xE3o de Pulso (Clique Inicial) */
+        /* Anima\xE7\xE3o de Pulso (Mantida) */
         @keyframes google-pulse-ring {
             0% { box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.7); }
             25% { box-shadow: 0 0 0 10px rgba(234, 67, 53, 0); }
@@ -39,24 +39,24 @@
             animation: google-pulse-ring 0.6s cubic-bezier(0.215, 0.61, 0.355, 1);
         }
 
-        /* --- BORDA ATIVA GOOGLE (O Anel Colorido) --- */
-        /* For\xE7amos position relative no bot\xE3o para o ::before saber onde ficar */
+        /* --- BORDA ATIVA SUTIL (Ajustada) --- */
         .google-active-state {
             position: relative !important; 
-            overflow: visible !important; /* Garante que a borda n\xE3o seja cortada */
+            overflow: visible !important;
         }
 
         .google-active-state::before {
             content: '';
             position: absolute;
-            /* Tamanho negativo para sair para fora do bot\xE3o */
-            top: -3px; left: -3px; right: -3px; bottom: -3px; 
+            /* Apenas 1px para fora (borda fin\xEDssima) */
+            top: -1px; left: -1px; right: -1px; bottom: -1px; 
             border-radius: 50%;
-            /* Gradiente C\xF4nico: Cria o arco-\xEDris circular */
+            /* O Arco-\xEDris */
             background: conic-gradient(from 0deg, #4285F4, #EA4335, #FBBC05, #34A853, #4285F4);
-            z-index: -1; /* Fica atr\xE1s do bot\xE3o */
-            opacity: 0.6;
-            filter: blur(2px); /* Suaviza o brilho */
+            z-index: -1;
+            /* A m\xE1gica do "Meio Apagado" */
+            opacity: 0.25; /* Bem transparente */
+            filter: blur(3px); /* Difuso */
         }
     `,document.head.appendChild(e),Zt=!0}function jt(){if(document.getElementById("techsol-splash-screen"))return;let e=document.createElement("div");e.id="techsol-splash-screen",Object.assign(e.style,{position:"fixed",top:"0",left:"0",width:"100vw",height:"100vh",backgroundColor:"#ffffff",zIndex:"2147483647",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",opacity:"0",transition:"opacity 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)",fontFamily:"'Poppins', 'Roboto', sans-serif"});let i=document.createElement("div");i.style.textAlign="center";let o=`
         <div style="
