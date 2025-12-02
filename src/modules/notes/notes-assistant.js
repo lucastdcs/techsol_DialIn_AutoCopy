@@ -480,46 +480,30 @@ const stepSnippetsDiv = document.createElement("div");
   step3Div.appendChild(screenshotsContainer);
   popupContent.appendChild(step3Div);
 
-  const emailAutomationDiv = document.createElement("div");
-  emailAutomationDiv.id = "step-4-email";
-  Object.assign(emailAutomationDiv.style, {
-    display: "none",
-    marginTop: "16px",
-    paddingTop: "12px",
-    borderTop: "1px solid #eee",
-  });
-  const emailLabel = document.createElement("label");
-  emailLabel.style.display = "flex";
-  emailLabel.style.alignItems = "center";
-  emailLabel.style.cursor = "pointer";
-  emailLabel.style.fontSize = "14px";
-  const emailCheckbox = document.createElement("input");
-  emailCheckbox.type = "checkbox";
-  emailCheckbox.checked = true;
-  Object.assign(emailCheckbox.style, NoteStyles.styleCheckboxInput);
-  emailLabel.appendChild(emailCheckbox);
-  emailLabel.appendChild(
-    document.createTextNode("Preencher email automaticamente?")
-  );
-  emailAutomationDiv.appendChild(emailLabel);
-  popupContent.appendChild(emailAutomationDiv);
+// --- BOTÕES DE AÇÃO (Faltava este bloco) ---
+    const buttonContainer = document.createElement("div");
+    Object.assign(buttonContainer.style, { display: "none", gap: "8px", padding: "0" });
+    popupContent.appendChild(buttonContainer);
 
-  Object.assign(buttonContainer.style, {
-    display: "none",
-    gap: "8px",
-    padding: "0",
-  });
-  popupContent.appendChild(buttonContainer);
-  Object.assign(copyButton.style, {
-    ...NoteStyles.styleButtonBase,
-    backgroundColor: "#5f6368",
-  });
-  buttonContainer.appendChild(copyButton);
-  Object.assign(generateButton.style, {
-    ...NoteStyles.styleButtonBase,
-    backgroundColor: "#1a73e8",
-  });
-  buttonContainer.appendChild(generateButton);
+    const copyButton = document.createElement("button");
+    // Usa estilo do NoteStyles se disponível, ou fallback
+    const styleBtnBase = (typeof NoteStyles !== 'undefined' && NoteStyles.styleButtonBase) ? NoteStyles.styleButtonBase : { flex: "1 1 0", padding: "10px 0", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: "500", cursor: "pointer", marginTop: "16px" };
+    
+    Object.assign(copyButton.style, styleBtnBase, { backgroundColor: "#5f6368" });
+    copyButton.textContent = "Copiar"; // Texto do botão
+    
+    // Hover effects
+    copyButton.onmouseover = () => (copyButton.style.backgroundColor = "#4a4d50");
+    copyButton.onmouseout = () => (copyButton.style.backgroundColor = "#5f6368");
+    buttonContainer.appendChild(copyButton);
+
+    const generateButton = document.createElement("button");
+    Object.assign(generateButton.style, styleBtnBase, { backgroundColor: "#1a73e8" });
+    generateButton.textContent = "Preencher"; // Texto do botão
+
+    generateButton.onmouseover = () => (generateButton.style.backgroundColor = "#1765c0");
+    generateButton.onmouseout = () => (generateButton.style.backgroundColor = "#1a73e8");
+    buttonContainer.appendChild(generateButton);
 
   document.body.appendChild(popup);
 
