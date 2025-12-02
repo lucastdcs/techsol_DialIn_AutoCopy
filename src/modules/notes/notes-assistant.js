@@ -351,14 +351,45 @@ export function initCaseNotesAssistant() {
   portugalRadioGroup.appendChild(divPtNao);
   stepPortugalDiv.appendChild(portugalRadioGroup);
   popupContent.appendChild(stepPortugalDiv);
-  function setPortugalCase(isPT) {
-    isPortugalCase = isPT;
-    if (isPT) {
-      stepConsentDiv.style.display = "block";
-    } else {
-      stepConsentDiv.style.display = "none";
+ function setPortugalCase(isPT) {
+        isPortugalCase = isPT;
+        // Mostra/Esconde consentimento dependendo se é Portugal
+        if (isPT) {
+            stepConsentDiv.style.display = 'block'; 
+        } else {
+            stepConsentDiv.style.display = 'none'; 
+        }
     }
-  }
+    
+    // Eventos dos Radios de Portugal
+    portugalRadioSim.onchange = () => setPortugalCase(true);
+    portugalRadioNao.onchange = () => setPortugalCase(false);
+
+    function setLanguage(lang) {
+        currentLang = lang;
+        const newActiveStyle = getRandomGoogleStyle();
+        
+        // Reseta estilos dos botões
+        Object.assign(langPT.style, typeBtnStyle);
+        Object.assign(langES.style, typeBtnStyle);
+        
+        if (lang === 'pt') {
+            Object.assign(langPT.style, newActiveStyle);
+            stepPortugalDiv.style.display = 'block'; 
+            setPortugalCase(isPortugalCase); 
+        } else {
+            Object.assign(langES.style, newActiveStyle);
+            stepPortugalDiv.style.display = 'none'; 
+            stepConsentDiv.style.display = 'none';  
+        }
+        
+        updateUIText(); // Atualiza os textos da tela
+        
+        // Se já tiver um substatus selecionado, atualiza os campos
+        if (subStatusSelect.value) {
+            subStatusSelect.dispatchEvent(new Event('change'));
+        }
+    }
   portugalRadioSim.onchange = () => setPortugalCase(true);
   portugalRadioNao.onchange = () => setPortugalCase(false);
 
