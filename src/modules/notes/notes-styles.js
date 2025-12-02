@@ -23,7 +23,7 @@ export const styleWarningText = {
     fontSize: "12px", color: "#e37400", marginTop: "4px" 
 };
 
-const styleHelpLink = {
+export const styleHelpLink = {
         fontSize: "12px",
         color: "#1a73e8",
         textDecoration: "none",
@@ -34,7 +34,7 @@ const styleHelpLink = {
         gap: "4px",
         marginLeft: "auto", // Empurra para a direita
         transition: "color 0.2s"
-    };
+};
 
 // --- NOVOS ESTILOS (Search + Chips) ---
 export const styleSearchInput = {
