@@ -1,4 +1,4 @@
-# 🚀 Case Wizard
+# 🚀 Cases Wizard
 
 ![Build Status](https://img.shields.io/github/actions/workflow/status/lucastdcs/techsol_DialIn_AutoCopy/deploy.yml?label=Build&style=flat-square)
 ![Version](https://img.shields.io/badge/version-v3.5.2-blue?style=flat-square)
@@ -38,13 +38,16 @@ Guia de atendimento em tempo real.
 
 ---
 
-## 🛠️ Instalação (Usuários)
+## 📥 Instalação
 
-Como esta ferramenta é um **Bookmarklet**, a instalação é simples e não requer extensões.
+Escolha a versão adequada para o seu uso.
+
+### 🔹 Opção 1: Versão Estável (Recomendada)
+*Para uso diário em atendimentos reais. Esta versão é testada e segura.*
 
 1.  Mostre a sua barra de favoritos (`Ctrl + Shift + B`).
 2.  Clique com o botão direito na barra e selecione **"Adicionar página"**.
-3.  **Nome:** `Case Wizard` (ou o que preferir).
+3.  **Nome:** `Case Wizard`
 4.  **URL:** Cole o código abaixo:
 
 ```javascript
