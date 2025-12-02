@@ -7,60 +7,71 @@ export const animationStyles = {
         height: "3px",
         width: "100%",
         background: "linear-gradient(to right, #4285F4, #EA4335, #FBBC05, #34A853)",
-        transform: "scaleX(0)", // Começa escondida
+        transform: "scaleX(0)", 
         transformOrigin: "left center",
         transition: "transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)"
     },
-    // Estado inicial do Popup (Fechado e pequeno)
+    
+    // Estado inicial do Popup
     popupInitial: {
         opacity: "0",
         pointerEvents: "none",
         transform: "scale(0.05)", 
-        transformOrigin: "bottom right", // Cresce a partir do botão
+        transformOrigin: "bottom right", // Nasce perto do botão
         transition: "transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.2s linear",
-        // Ajuste fino: a posição final é definida no CSS do módulo (bottom/right), 
-        // aqui apenas garantimos a transição.
+        // Nota: A posição (top/left/right) é controlada pelo módulo, aqui cuidamos da transição
     },
-    // Estados do Botão Flutuante
-    btnHidden: {
-        transform: "scale(0)",
-        opacity: "0",
-        pointerEvents: "none"
+
+    // --- ESTADO ATIVO DO BOTÃO (A MUDANÇA ESTÁ AQUI) ---
+    // Em vez de sumir, ele vira um botão "pressionado" ou "ativo"
+    btnActive: {
+        transform: "scale(1)",      // Mantém o tamanho
+        backgroundColor: "#ffffff", // Fundo Branco
+        color: "#5f6368",           // Ícone Cinza Escuro
+        boxShadow: "inset 0 0 0 1px #dadce0", // Borda interna sutil
+        pointerEvents: "auto"       // Continua clicável (para fechar)
     },
+    
+    // Estado Normal (Reset)
+    // Nota: Não forçamos cor aqui para respeitar a cor original de cada módulo (azul/vermelho/roxo)
+    // Apenas resetamos as propriedades transformadas
     btnVisible: {
         transform: "scale(1)",
         opacity: "1",
-        pointerEvents: "auto"
+        pointerEvents: "auto",
+        backgroundColor: "", // Reseta para o CSS original do módulo
+        color: "",           // Reseta
+        boxShadow: ""        // Reseta
     }
 };
 
 /**
  * Gerencia a animação de abrir/fechar qualquer popup
- * @param {boolean} show - Se deve mostrar ou esconder
- * @param {object} elements - { popup, btnContainer, googleLine, focusElement? }
  */
 export function togglePopupAnimation(show, elements) {
     const { popup, btnContainer, googleLine, focusElement } = elements;
 
+    // Pega o botão real dentro do container para aplicar a cor
+    const btn = btnContainer ? btnContainer.querySelector('button') : null;
+
     if (show) {
         // --- ABRIR ---
         
-        // 1. Esconde o botão (ele "vira" o popup)
-        if (btnContainer) Object.assign(btnContainer.style, animationStyles.btnHidden);
+        // 1. Transforma o botão em "Ativo" (Branco/Cinza)
+        if (btn) Object.assign(btn.style, animationStyles.btnActive);
         
         // 2. Expande o Popup
         popup.style.opacity = "1";
         popup.style.pointerEvents = "auto";
         popup.style.transform = "scale(1)";
 
-        // 3. Desenha a linha colorida (com leve delay para acompanhar a expansão)
+        // 3. Desenha a linha
         if (googleLine) {
             setTimeout(() => {
                 googleLine.style.transform = "scaleX(1)";
             }, 100);
         }
 
-        // 4. Foco opcional (ex: input de busca)
         if (focusElement) {
             setTimeout(() => focusElement.focus(), 100);
         }
@@ -74,13 +85,19 @@ export function togglePopupAnimation(show, elements) {
         // 2. Encolhe o Popup
         popup.style.opacity = "0";
         popup.style.pointerEvents = "none";
-        popup.style.transform = "scale(0.05)"; // Volta a ser minúsculo
+        popup.style.transform = "scale(0.05)"; 
 
-        // 3. Mostra o botão de volta
-        if (btnContainer) {
+        // 3. Restaura o botão para a cor original do módulo
+        if (btn) {
+            // Usamos setTimeout para sincronizar com o fechamento do popup
             setTimeout(() => {
-                 Object.assign(btnContainer.style, animationStyles.btnVisible);
-            }, 200); // Espera o popup sumir um pouco
+                 // Remove os estilos inline de 'active' para voltar ao CSS definido no módulo
+                 btn.style.backgroundColor = "";
+                 btn.style.color = "";
+                 btn.style.boxShadow = "";
+                 // Reaplica transform scale(1) só pra garantir
+                 Object.assign(btn.style, animationStyles.btnVisible);
+            }, 100);
         }
     }
 }
