@@ -536,16 +536,15 @@ export function playStartupAnimation() {
 // Atualize o Header para ser Branco
 export const stylePopupHeader = {
     display: "flex",
-    alignItems: "center", // Centraliza verticalmente
-    justifyContent: "space-between",
-    padding: "0", // Sem padding (a linha colorida fica na borda)
-    backgroundColor: "#ffffff", // BRANCO (Google Style)
-    // borderBottom: "1px solid #f1f3f4", // Opcional: separador ultra sutil
+    flexDirection: "column", 
+    alignItems: "stretch",   
+    padding: "0", 
+    backgroundColor: "#ffffff", 
     cursor: "grab",
     userSelect: "none",
     borderRadius: "12px 12px 0 0",
     flexShrink: "0",
-    position: "relative" // Para contexto de z-index
+    position: "relative"
 };
 
 // Novo estilo para botões de ícone (Help, Close, Expand)
