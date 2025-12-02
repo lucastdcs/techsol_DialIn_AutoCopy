@@ -54,7 +54,7 @@ const LINKS_DB = {
 };
 
 export function initFeedbackAssistant() {
-    const CURRENT_VERSION = "v2.3.5";
+    const CURRENT_VERSION = "v2.4.5";
 
     let activeTab = 'lm'; 
     let searchTerm = "";
