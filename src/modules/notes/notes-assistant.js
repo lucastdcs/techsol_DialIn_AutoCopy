@@ -122,8 +122,10 @@ export function initCaseNotesAssistant() {
             popup.style.width = isExpanded ? `${expandedWidth}px` : `${initialWidth}px`;
         };
         
-        // Insere antes do botão fechar
-        headerRight.insertBefore(expandBtn, headerRight.firstChild);
+       const closeBtn = headerContent.lastElementChild;
+        
+        // Insere o expandir ANTES do botão de fechar
+        headerContent.insertBefore(expandBtn, closeBtn);
     }
 
     popup.appendChild(header);
