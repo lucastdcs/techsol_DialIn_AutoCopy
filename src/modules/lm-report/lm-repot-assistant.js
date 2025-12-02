@@ -11,8 +11,8 @@ import {
     styleFloatingButton
 } from '../shared/utils.js';
 
-// ... (código do LINKS_DB mantido igual) ...
-// (Mantenha o seu LINKS_DB aqui)
+import { createStandardHeader } from '../shared/header-factory.js';
+import { animationStyles, togglePopupAnimation } from '../shared/animations.js';
 
 // --- BANCO DE DADOS DE LINKS ---
 const LINKS_DB = {
@@ -39,7 +39,7 @@ const LINKS_DB = {
             { name: "Suporte GA4", url: "https://support.google.com/analytics/", desc: "Oficial" },
             { name: "Suporte Merchant Center", url: "https://support.google.com/merchants/gethelp", desc: "Oficial" },
             { name: "Doc. CSP", url: "https://developers.google.com/tag-platform/tag-manager/web/csp?hl=pt-br.", desc: "Doc. oficial sobre CSP" },
-            { name: "Doc. Enhanced Conversion", url: "https://support.google.com/google-ads/answer/9888656?hl=pt-BR", desc: "Como funcionam as conversões otimizadas?" },
+            { name: "Doc. Enhanced Conversion", url: "https://support.google.com/google-ads/answer/9888656?hl=en", desc: "Como funcionam as conversões otimizadas?" },
             { name: "Doc. CoMo", url: "https://developers.google.com/tag-platform/security/concepts/consent-mode?hl=pt-br", desc: "Doc. oficial sobre Consent Mode" },
 
   
@@ -54,31 +54,28 @@ const LINKS_DB = {
 };
 
 export function initFeedbackAssistant() {
-    const CURRENT_VERSION = "v2.3.1";
+    const CURRENT_VERSION = "v2.3.5";
 
     let activeTab = 'lm'; 
     let searchTerm = "";
 
    // --- ESTILOS LOCAIS ---
-const styleSearchInput = {
+   const styleSearchInput = {
         width: "100%", padding: "10px 12px 10px 36px",
         borderRadius: "8px", border: "1px solid #dadce0", background: "#f8f9fa",
         fontSize: "14px", boxSizing: "border-box", outline: "none",
         color: "#3c4043", transition: "background 0.2s, border-color 0.2s",
-        // SVG Clean
         backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="%235f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>')`,
         backgroundRepeat: "no-repeat", backgroundPosition: "10px center"
     };
 
-    // CORREÇÃO: Adicionado flexWrap e removido overflowX
+    // Estilo Chips (Abas)
     const styleTabContainer = {
         display: "flex", 
-        flexWrap: "wrap", // <--- Isso faz os botões caírem para a linha de baixo
+        flexWrap: "wrap", 
         gap: "8px", 
         paddingBottom: "8px", 
-        marginTop: "12px",
-        borderBottom: "1px solid #dadce0"
-        // Removido: overflowX: "auto" e scrollbarWidth: "none"
+        // O marginTop e borderBottom são cuidados pelo container da toolbar agora
     };
 
     const styleTabButton = {
@@ -86,7 +83,7 @@ const styleSearchInput = {
         background: "transparent", color: "#5f6368", fontSize: "13px",
         fontWeight: "500", cursor: "pointer", whiteSpace: "nowrap",
         transition: "all 0.2s ease",
-        marginBottom: "4px" // <--- Adicionado para dar espaço vertical quando quebrar linha
+        marginBottom: "4px" 
     };
 
     const styleActiveTab = {
@@ -98,11 +95,13 @@ const styleSearchInput = {
         borderRadius: "8px", cursor: "pointer", border: "1px solid transparent",
         marginBottom: "4px", transition: "background 0.1s"
     };
+
     // --- UI: Botão Flutuante ---
     const btnContainer = document.createElement("div");
     Object.assign(btnContainer.style, {
         position: "fixed", bottom: "10%", right: "24px", zIndex: "9999",
-        display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px"
+        display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px",
+        cursor: "pointer"
     });
 
     const btn = document.createElement("button");
@@ -113,8 +112,8 @@ const styleSearchInput = {
         width: "48px", height: "48px", borderRadius: "50%",
         background: "#34a853", color: "white", border: "none", cursor: "pointer",
         display: "flex", alignItems: "center", justifyContent: "center",
-        boxShadow: "0 4px 12px rgba(52, 168, 83, 0.4)", 
-        transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s"
+        boxShadow: "0 4px 6px rgba(52, 168, 83, 0.3)", 
+        transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)"
     });
 
     const tooltip = document.createElement("span");
@@ -125,14 +124,12 @@ const styleSearchInput = {
         transition: "opacity 0.2s", whiteSpace: "nowrap", fontWeight: "500"
     });
 
-    btn.onmouseenter = () => {
+    btnContainer.onmouseenter = () => {
         btn.style.transform = "scale(1.1)";
-        btn.style.boxShadow = "0 6px 16px rgba(52, 168, 83, 0.5)";
         tooltip.style.opacity = "1";
     };
-    btn.onmouseleave = () => {
+    btnContainer.onmouseleave = () => {
         btn.style.transform = "scale(1)";
-        btn.style.boxShadow = "0 4px 12px rgba(52, 168, 83, 0.4)";
         tooltip.style.opacity = "0";
     };
 
@@ -141,77 +138,45 @@ const styleSearchInput = {
     document.body.appendChild(btnContainer);
     makeDraggable(btnContainer);
 
-    // --- POPUP ---
+    // --- POPUP (Com Animação) ---
     const popup = document.createElement("div");
     popup.id = "feedback-popup";
-    // CORREÇÃO: Largura aumentada para 420px
     Object.assign(popup.style, stylePopup, { 
-        right: "100px", width: "max-content", maxHeight: "600px",
-        display: "flex", flexDirection: "column", borderRadius: "12px"
-    }); 
+        right: "100px", width: "420px", maxHeight: "600px",
+        display: "flex", flexDirection: "column", borderRadius: "12px",
+        boxShadow: "0 8px 24px rgba(0,0,0,0.2)"
+    }, animationStyles.popupInitial); // <--- ANIMAÇÃO INICIAL
 
-    // Header Principal
-    const header = document.createElement("div");
-    Object.assign(header.style, stylePopupHeader, { 
-        padding: "16px", 
-        borderBottom: "none", 
-        flexDirection: "column", 
-        alignItems: "stretch",
-        height: "auto"
+    // Refs para animação
+    const animRefs = { popup, btnContainer, googleLine: null, focusElement: null };
+    let visible = false;
+
+    // 1. HEADER (Factory)
+    const header = createStandardHeader(
+        popup,
+        "Links Úteis",
+        CURRENT_VERSION,
+        animRefs,
+        () => { visible = false; }
+    );
+    popup.appendChild(header);
+
+    // 2. TOOLBAR (Busca + Abas)
+    const toolbar = document.createElement("div");
+    Object.assign(toolbar.style, { 
+        padding: "0 16px 16px 16px", 
+        display: "flex", flexDirection: "column", gap: "12px",
+        borderBottom: "1px solid #f1f3f4", flexShrink: "0", backgroundColor: "#fff" 
     });
-    makeDraggable(popup, header);
 
-    // Linha 1: Topo
-    const headerTopRow = document.createElement("div");
-    Object.assign(headerTopRow.style, { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" });
-
-    const headerLeft = document.createElement("div");
-    Object.assign(headerLeft.style, { display: "flex", alignItems: "center", gap: "12px" });
-    
-    const logo = document.createElement("img");
-    logo.src = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
-    Object.assign(logo.style, { width: "24px", height: "24px" });
-    
-    const titleContainer = document.createElement("div");
-    Object.assign(titleContainer.style, { display: 'flex', flexDirection: 'column' });
-    
-    const titleText = document.createElement("span");
-    titleText.textContent = "Links Úteis";
-    Object.assign(titleText.style, stylePopupTitle, { fontSize: "16px", lineHeight: "1.2" });
-    
-    const versionDisplay = document.createElement("div");
-    versionDisplay.textContent = CURRENT_VERSION;
-    Object.assign(versionDisplay.style, stylePopupVersion);
-
-    titleContainer.appendChild(titleText);
-    titleContainer.appendChild(versionDisplay);
-    
-    headerLeft.appendChild(logo);
-    headerLeft.appendChild(titleContainer);
-
-    const closeIcon = document.createElement("div");
-    closeIcon.textContent = "✕";
-    Object.assign(closeIcon.style, stylePopupCloseBtn, { fontSize: "14px", color: "#5f6368" });
-    closeIcon.onclick = () => togglePopup(false);
-
-    headerTopRow.appendChild(headerLeft);
-    headerTopRow.appendChild(closeIcon);
-    header.appendChild(headerTopRow);
-
-    // Linha 2: Busca
-    const searchContainer = document.createElement("div");
-    Object.assign(searchContainer.style, { position: "relative", width: "100%" });
-    const searchIcon = document.createElement("span");
-    searchIcon.innerHTML = "Filtrar links..."; 
-    Object.assign(searchIcon.style, { position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "14px", opacity: "0.5", pointerEvents: "none" });
-// Linha 2: Busca (Simplificada e Clean)
     const searchInput = document.createElement("input");
     searchInput.type = "text";
-    searchInput.placeholder = "Buscar link, form ou ajuda..."; // Sem emoji
+    searchInput.placeholder = "Buscar link, form ou ajuda...";
     Object.assign(searchInput.style, styleSearchInput);
+    animRefs.focusElement = searchInput;
     
     searchInput.onfocus = () => {
-        searchInput.style.borderColor = "#1a73e8"; // Azul no foco
+        searchInput.style.borderColor = "#1a73e8";
         searchInput.style.backgroundColor = "#fff";
     };
     searchInput.onblur = () => {
@@ -219,22 +184,14 @@ const styleSearchInput = {
         searchInput.style.backgroundColor = "#f8f9fa";
     };
 
-    // Adiciona direto no header, sem container extra
-    header.appendChild(searchInput);
-
-    // Linha 3: Abas
     const tabsContainer = document.createElement("div");
     Object.assign(tabsContainer.style, styleTabContainer);
     
-    // Esconde scrollbar
-    const styleSheet = document.createElement("style");
-    styleSheet.textContent = `#feedback-popup ::-webkit-scrollbar { display: none; }`;
-    popup.appendChild(styleSheet);
-    
-    header.appendChild(tabsContainer);
-    popup.appendChild(header);
+    toolbar.appendChild(searchInput);
+    toolbar.appendChild(tabsContainer);
+    popup.appendChild(toolbar);
 
-    // Conteúdo
+    // 3. CONTEÚDO
     const contentArea = document.createElement("div");
     Object.assign(contentArea.style, {
         padding: "0 8px 8px 8px", 
@@ -243,7 +200,7 @@ const styleSearchInput = {
     });
     popup.appendChild(contentArea);
 
-    // Footer
+    // 4. FOOTER
     const footer = document.createElement("div");
     Object.assign(footer.style, { 
         padding: "8px 16px", borderTop: "1px solid #eee", 
@@ -312,7 +269,7 @@ const styleSearchInput = {
 
             const iconSpan = document.createElement('span');
             iconSpan.innerHTML = '&#8599;'; 
-            Object.assign(iconSpan.style, { fontSize: '14px', color: '#dadce0' });
+            Object.assign(iconSpan.style, { fontSize: "14px", color: '#dadce0' });
 
             titleRow.appendChild(nameSpan);
             titleRow.appendChild(iconSpan);
@@ -352,20 +309,6 @@ const styleSearchInput = {
         renderList();
     });
 
-    function togglePopup(show) {
-        if (show) {
-            popup.style.opacity = "1";
-            popup.style.pointerEvents = "auto";
-            popup.style.transform = "scale(1)";
-            searchInput.focus();
-        } else {
-            popup.style.opacity = "0";
-            popup.style.pointerEvents = "none";
-            popup.style.transform = "scale(0.95)";
-        }
-    }
-
- let visible = false;
     btn.onclick = () => {
         // --- PROTEÇÃO CONTRA ARRASTO ---
         if (btnContainer.getAttribute('data-dragging') === 'true') {
@@ -374,7 +317,7 @@ const styleSearchInput = {
         // -------------------------------
 
         visible = !visible;
-        togglePopup(visible);
+        togglePopupAnimation(visible, animRefs); // <--- ANIMAÇÃO
     };
 
     renderTabs();
