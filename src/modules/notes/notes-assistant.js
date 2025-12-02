@@ -14,6 +14,9 @@ import {
 
 import { runEmailAutomation } from '../email/email-automation.js'; 
 
+import { createStandardHeader } from '../shared/header-factory.js';
+import { animationStyles, togglePopupAnimation } from '../shared/animations.js';
+
 // NOVOS IMPORTS (Refatoração)
 import * as NoteStyles from './notes-styles.js';
 import { copyHtmlToClipboard, ensureNoteCardIsOpen, triggerInputEvents } from './notes-bridge.js';
@@ -27,23 +30,28 @@ export function initCaseNotesAssistant() {
 
 // Instancia o módulo
     const tagSupport = createTagSupportModule();
-    // --- CONSTRUÇÃO DA UI ---
-    const btnContainer = document.createElement("div"); 
+
+// --- 1. BOTÃO FLUTUANTE ---
+    const btnContainer = document.createElement("div");
     Object.assign(btnContainer.style, {
-        position: "fixed", bottom: "40%", right: "24px", zIndex: "9999",
-        display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px"
+        position: "fixed", top: "15%", right: "24px", zIndex: "9999",
+        display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px",
+        cursor: "pointer"
     });
 
     const btn = document.createElement("button");
     btn.id = "notes-floating-btn";
     btn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
-    Object.assign(btn.style, {
+    
+    // Usa estilo local ou fallback
+    const btnStyleLocal = (typeof NoteStyles !== 'undefined' && NoteStyles.styleFloatingButton) ? NoteStyles.styleFloatingButton : {
         width: "48px", height: "48px", borderRadius: "50%",
         background: "#1a73e8", color: "white", border: "none", cursor: "pointer",
         display: "flex", alignItems: "center", justifyContent: "center",
-        boxShadow: "0 4px 12px rgba(26, 115, 232, 0.4)", 
-        transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s"
-    });
+        boxShadow: "0 4px 12px rgba(26, 115, 232, 0.4)",
+        transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)"
+    };
+    Object.assign(btn.style, btnStyleLocal);
 
     const tooltip = document.createElement("span");
     tooltip.textContent = "Case Note";
@@ -53,80 +61,72 @@ export function initCaseNotesAssistant() {
         transition: "opacity 0.2s", whiteSpace: "nowrap", fontWeight: "500"
     });
 
-    btn.onmouseenter = () => { btn.style.transform = "scale(1.1)"; btn.style.boxShadow = "0 6px 16px rgba(26, 115, 232, 0.5)"; tooltip.style.opacity = "1"; };
-    btn.onmouseleave = () => { btn.style.transform = "scale(1)"; btn.style.boxShadow = "0 4px 12px rgba(26, 115, 232, 0.4)"; tooltip.style.opacity = "0"; };
+    // Eventos no Container
+    btnContainer.onmouseenter = () => { 
+        btn.style.transform = "scale(1.1)"; 
+        tooltip.style.opacity = "1"; 
+    };
+    btnContainer.onmouseleave = () => { 
+        btn.style.transform = "scale(1)"; 
+        tooltip.style.opacity = "0"; 
+    };
 
     btnContainer.appendChild(btn);
     btnContainer.appendChild(tooltip);
     document.body.appendChild(btnContainer);
     makeDraggable(btnContainer); 
 
+    // --- 2. POPUP (Factory + Animação) ---
     const popup = document.createElement("div");
     popup.id = "autofill-popup";
-    Object.assign(popup.style, stylePopup, { right: "24px" });
-
-    const header = document.createElement("div");
-    Object.assign(header.style, stylePopupHeader);
-    makeDraggable(popup, header); 
-
-    const headerLeft = document.createElement("div");
-    Object.assign(headerLeft.style, { display: 'flex', alignItems: 'center', gap: '10px' });
-    const logo = document.createElement("img");
-    logo.src = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
-    Object.assign(logo.style, { width: "24px", height: "24px" });
-    const titleContainer = document.createElement("div");
-    Object.assign(titleContainer.style, { display: 'flex', flexDirection: 'column' });
-    const title = document.createElement("div");
-    title.textContent = "Case Notes Assistant";
-    Object.assign(title.style, stylePopupTitle);
-    const versionDisplay = document.createElement("div");
-    versionDisplay.textContent = CURRENT_VERSION;
-    Object.assign(versionDisplay.style, stylePopupVersion);
-    titleContainer.appendChild(title);
-    titleContainer.appendChild(versionDisplay);
-    headerLeft.appendChild(logo);
-    headerLeft.appendChild(titleContainer);
     
-    const headerRight = document.createElement("div");
-    Object.assign(headerRight.style, { display: 'flex', alignItems: 'center' });
-    const expandBtn = document.createElement("div");
-    expandBtn.textContent = "↔";
-    expandBtn.classList.add('no-drag'); 
-    Object.assign(expandBtn.style, styleExpandButton);
-    expandBtn.onmouseover = () => expandBtn.style.backgroundColor = '#e8eaed';
-    expandBtn.onmouseout = () => expandBtn.style.backgroundColor = 'transparent';
-    const closeBtn = document.createElement("div");
-    closeBtn.textContent = "✕";
-    closeBtn.classList.add('no-drag'); 
-    Object.assign(closeBtn.style, stylePopupCloseBtn);
-    closeBtn.onmouseover = () => closeBtn.style.backgroundColor = '#e8eaed';
-    closeBtn.onmouseout = () => closeBtn.style.backgroundColor = 'transparent';
-    headerRight.appendChild(expandBtn);
-    headerRight.appendChild(closeBtn);
-    popup.appendChild(header);
-    header.appendChild(headerLeft);
-    header.appendChild(headerRight);
+    // Estilos Base + Estado Inicial da Animação
+    Object.assign(popup.style, stylePopup, { 
+        right: "80px", width: "380px", // Largura padrão do Notes
+        borderRadius: "12px", display: "flex", flexDirection: "column",
+        boxShadow: "0 8px 24px rgba(0,0,0,0.2)"
+    }, animationStyles.popupInitial);
 
-    let isExpanded = false;
-    const initialWidth = parseInt(stylePopup.width, 10);
-    const expandedWidth = initialWidth * 2;
-    expandBtn.onclick = () => {
-        isExpanded = !isExpanded;
-        const newWidth = isExpanded ? expandedWidth : initialWidth;
-        const widthDifference = expandedWidth - initialWidth;
-        popup.style.width = `${newWidth}px`;
-        if (popup.style.right && popup.style.right !== 'auto') {
-            const currentRight = parseInt(popup.style.right, 10);
-            if (!isNaN(currentRight)) {
-                if (isExpanded) {
-                    popup.style.right = `${currentRight - widthDifference}px`;
-                } else {
-                    popup.style.right = `${currentRight + widthDifference}px`;
-                }
-            }
-        }
-    };
-    closeBtn.onclick = () => togglePopup(false);
+    // Refs para animação
+    const animRefs = { popup, btnContainer, googleLine: null };
+    let visible = false;
+
+    // Cria Header Padrão
+    const header = createStandardHeader(
+        popup,
+        "Case Notes Assistant",
+        CURRENT_VERSION,
+        animRefs,
+        () => { visible = false; } // Callback ao fechar
+    );
+    
+    // --- BOTÃO EXPANDIR (Feature exclusiva do Notes) ---
+    // Injetamos o botão de expandir no header criado pela factory
+    const headerRight = header.querySelector('div:last-child'); // O container da direita
+    if (headerRight) {
+        const expandBtn = document.createElement("div");
+        expandBtn.textContent = "↔";
+        expandBtn.classList.add('no-drag'); 
+        Object.assign(expandBtn.style, styleExpandButton);
+        expandBtn.style.marginRight = "8px"; // Espaço do X
+        
+        expandBtn.onmouseover = () => expandBtn.style.backgroundColor = '#e8eaed';
+        expandBtn.onmouseout = () => expandBtn.style.backgroundColor = 'transparent';
+        
+        let isExpanded = false;
+        const initialWidth = 380;
+        const expandedWidth = 700;
+
+        expandBtn.onclick = () => {
+            isExpanded = !isExpanded;
+            popup.style.width = isExpanded ? `${expandedWidth}px` : `${initialWidth}px`;
+        };
+        
+        // Insere antes do botão fechar
+        headerRight.insertBefore(expandBtn, headerRight.firstChild);
+    }
+
+    popup.appendChild(header);
 
     const popupContent = document.createElement("div");
     Object.assign(popupContent.style, { padding: "0 16px 16px 16px", overflowY: "auto", flexGrow: "1" });
@@ -1186,16 +1186,12 @@ tagSupport.updateVisibility(subStatusSelect.value, checkedValues);
         }
     }
 
-    let visible = false;
-    btn.onclick = () => {
-        // VERIFICAÇÃO DE ARRASTO
-        // Se o atributo data-dragging for 'true', o usuário estava arrastando, não clicando.
-        if (btnContainer.getAttribute('data-dragging') === 'true') {
-            return; // Sai sem fazer nada
-        }
+btn.onclick = () => {
+        // Proteção contra arrasto
+        if (btnContainer.getAttribute('data-dragging') === 'true') return; 
 
         visible = !visible;
-        togglePopup(visible);
+        togglePopupAnimation(visible, animRefs);
     };
     
     setLanguage(currentLang);
