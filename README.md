@@ -38,7 +38,7 @@ Guia de atendimento em tempo real.
 
 ---
 
-## 🛠️ Instalação
+## 🛠️ Instalação (Usuários)
 
 Como esta ferramenta é um **Bookmarklet**, a instalação é simples e não requer extensões.
 
