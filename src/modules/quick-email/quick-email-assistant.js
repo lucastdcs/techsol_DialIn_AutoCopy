@@ -10,13 +10,13 @@ import {
     styleCredit
 } from '../shared/utils.js';
 
-import { createStandardHeader } from '../shared/header-factory.js';
+import { createStandardHeader } from '../shared/header-factory.js'; // <--- IMPORTANTE
 import { animationStyles, togglePopupAnimation } from '../shared/animations.js';
 import { QUICK_EMAILS } from './quick-email-data.js';
 import { runQuickEmail } from '../email/email-automation.js';
 
 export function initQuickEmailAssistant() {
-    const CURRENT_VERSION = "v2.9.5"; 
+    const CURRENT_VERSION = "v2.9.6"; 
 
     // --- ESTADO ---
     let activeCategory = Object.keys(QUICK_EMAILS)[0]; 
@@ -33,7 +33,6 @@ export function initQuickEmailAssistant() {
         backgroundRepeat: "no-repeat", backgroundPosition: "10px center"
     };
 
-    // Estilo Chip
     const styleChipContainer = {
         display: "flex", gap: "8px", overflowX: "auto", 
         paddingBottom: "8px", marginBottom: "8px",
@@ -52,10 +51,9 @@ export function initQuickEmailAssistant() {
         background: "#e8f0fe", color: "#1967d2", borderColor: "#e8f0fe"
     };
 
-    // Estilos da Lista (Acordeão)
     const styleRow = { 
         display: "flex", flexWrap: "wrap", marginBottom: "8px", 
-        position: "relative", alignItems: "stretch", // Altura igual
+        position: "relative", alignItems: "stretch", 
         background: "transparent", borderRadius: "8px", transition: "background 0.2s"
     };
 
@@ -113,7 +111,6 @@ export function initQuickEmailAssistant() {
         btn.style.transform = "scale(1.1)"; 
         tooltip.style.opacity = "1"; 
     };
-    
     btnContainer.onmouseleave = () => { 
         btn.style.transform = "scale(1)"; 
         tooltip.style.opacity = "0"; 
@@ -124,8 +121,7 @@ export function initQuickEmailAssistant() {
     document.body.appendChild(btnContainer);
     makeDraggable(btnContainer);
 
-    // --- POPUP (Com Animação) ---
-  // --- POPUP ---
+    // --- POPUP (USANDO FACTORY E ANIMAÇÃO) ---
     const popup = document.createElement("div");
     popup.id = "quick-email-popup";
     
@@ -134,55 +130,62 @@ export function initQuickEmailAssistant() {
         right: "80px", width: "550px", maxHeight: "85vh", 
         borderRadius: "12px", display: "flex", flexDirection: "column",
         boxShadow: "0 8px 24px rgba(0,0,0,0.2)"
-    }, animationStyles.popupInitial);
+    }, animationStyles.popupInitial); // <--- ANIMAÇÃO AQUI
 
-    // Preparação para animação
-    const animRefs = { popup, btnContainer, googleLine: null };
+    // Objeto de referências para a animação
+    const animRefs = { popup, btnContainer, googleLine: null, focusElement: null };
+
+    let visible = false;
 
     // 1. HEADER (Criado pela Factory)
     const header = createStandardHeader(
-        popup,                  // Quem será arrastado
-        "Emails Rápidos",       // Título
-        CURRENT_VERSION,        // Versão
-        animRefs,               // Referências para animação (ele preenche googleLine)
-        () => { visible = false; } // Callback ao fechar
+        popup,                  
+        "Emails Rápidos",       
+        CURRENT_VERSION,        
+        animRefs, // Passa refs para a Factory injetar a googleLine
+        () => { visible = false; } 
     );
     
-    popup.appendChild(header);
-
-    // 2. TOOLBAR (Busca + Chips) - Separado do Header!
+    // 2. TOOLBAR (Busca + Chips)
     const toolbar = document.createElement("div");
     Object.assign(toolbar.style, { 
-        padding: "0 16px 16px 16px", // Padding lateral e inferior
-        display: "flex", 
-        flexDirection: "column", 
-        gap: "12px",
-        borderBottom: "1px solid #f1f3f4", // Divisor sutil
-        flexShrink: "0",
-        backgroundColor: "#fff" // Garante fundo branco
+        padding: "0 16px 16px 16px", 
+        display: "flex", flexDirection: "column", gap: "12px",
+        borderBottom: "1px solid #f1f3f4", flexShrink: "0", backgroundColor: "#fff" 
     });
 
     const searchInput = document.createElement("input");
     searchInput.placeholder = "Filtrar emails...";
     Object.assign(searchInput.style, styleSearchInput);
+    animRefs.focusElement = searchInput; // Salva para focar ao abrir
     
     const tabsContainer = document.createElement("div");
     Object.assign(tabsContainer.style, styleChipContainer);
-    // Pequeno ajuste pois agora está dentro da toolbar
     tabsContainer.style.marginBottom = "0"; 
     tabsContainer.style.borderBottom = "none";
 
     toolbar.appendChild(searchInput);
     toolbar.appendChild(tabsContainer);
     
+    // Montagem do DOM
+    popup.appendChild(header);
     popup.appendChild(toolbar);
 
-    // 3. CONTEÚDO (Lista)
     const contentArea = document.createElement("div");
     Object.assign(contentArea.style, { 
         padding: "16px", overflowY: "auto", flexGrow: "1", position: "relative" 
     });
     popup.appendChild(contentArea);
+
+    const footer = document.createElement("div");
+    Object.assign(footer.style, { 
+        padding: "8px 16px", borderTop: "1px solid #eee", 
+        textAlign: "center", fontSize: "10px", color: "#9aa0a6"
+    });
+    footer.textContent = "created by lucaste@";
+    popup.appendChild(footer);
+
+    document.body.appendChild(popup);
 
     // --- RENDERIZAÇÃO ---
 
@@ -190,22 +193,11 @@ export function initQuickEmailAssistant() {
         tabsContainer.innerHTML = "";
         Object.keys(QUICK_EMAILS).forEach(catKey => {
             const catData = QUICK_EMAILS[catKey];
-            const chip = document.createElement("div");
+            const chip = document.createElement("div"); 
             chip.textContent = catData.title;
-            
             Object.assign(chip.style, styleChip);
-            
-            if (activeCategory === catKey && searchTerm === "") {
-                Object.assign(chip.style, styleChipActive);
-            }
-            
-            chip.onclick = () => {
-                activeCategory = catKey;
-                searchTerm = ""; 
-                searchInput.value = "";
-                renderTabs(); 
-                renderEmailList();
-            };
+            if (activeCategory === catKey && searchTerm === "") { Object.assign(chip.style, styleChipActive); }
+            chip.onclick = () => { activeCategory = catKey; searchTerm = ""; searchInput.value = ""; renderTabs(); renderEmailList(); };
             tabsContainer.appendChild(chip);
         });
     }
@@ -226,12 +218,7 @@ export function initQuickEmailAssistant() {
         }
 
         if (emailsToShow.length === 0) {
-            const emptyState = document.createElement("div");
-            emptyState.textContent = "Nenhum email encontrado.";
-            Object.assign(emptyState.style, { 
-                textAlign: "center", padding: "20px", color: "#9aa0a6", fontSize: "13px" 
-            });
-            contentArea.appendChild(emptyState);
+            contentArea.innerHTML = `<div style="text-align:center; padding:20px; color:#9aa0a6; fontSize:13px">Nenhum email encontrado.</div>`;
             return;
         }
 
@@ -242,76 +229,53 @@ export function initQuickEmailAssistant() {
             const row = document.createElement("div");
             Object.assign(row.style, styleRow);
 
-            // 1. BOTÃO DE AÇÃO
             const actionBtn = document.createElement("div");
             Object.assign(actionBtn.style, styleActionBtn);
-            
             const shortDesc = email.subject.length > 45 ? email.subject.substring(0, 45) + "..." : email.subject;
             
             actionBtn.innerHTML = `
                 <div style="display:flex; align-items:center; gap:8px; color:#202124; font-weight:500; fontSize:13px;">
                     <span style="color:#1a73e8">${iconSend}</span> ${email.name}
                 </div>
-                <div style="color:#5f6368; font-size:11px; padding-left:24px; margin-top:2px;">
-                    ${shortDesc}
-                </div>
+                <div style="color:#5f6368; font-size:11px; padding-left:24px; margin-top:2px;">${shortDesc}</div>
             `;
 
             actionBtn.onmouseenter = () => actionBtn.style.background = "#f8f9fa";
             actionBtn.onmouseleave = () => actionBtn.style.background = "#fff";
-            
             actionBtn.onclick = () => {
                 actionBtn.style.background = "#e8f0fe"; 
                 setTimeout(() => actionBtn.style.background = "#fff", 200);
                 runQuickEmail(email);
             };
 
-            // 2. BOTÃO DE PREVIEW
             const previewBtn = document.createElement("div");
             previewBtn.innerHTML = iconEye;
             Object.assign(previewBtn.style, stylePreviewBtn);
 
             previewBtn.onmouseenter = () => { previewBtn.style.background = "#e8eaed"; previewBtn.style.color = "#202124"; };
             previewBtn.onmouseleave = () => { 
-                if (!row.classList.contains('expanded')) {
-                    previewBtn.style.background = "#f8f9fa"; 
-                    previewBtn.style.color = "#5f6368";
-                }
+                if (!row.querySelector('.preview-card')) { previewBtn.style.background = "#f8f9fa"; previewBtn.style.color = "#5f6368"; }
             };
 
-            // Lógica Acordeão
             previewBtn.onclick = (e) => {
                 e.stopPropagation();
                 const existingCard = row.querySelector('.preview-card');
-
                 if (existingCard) {
-                    existingCard.style.maxHeight = "0";
-                    existingCard.style.opacity = "0";
-                    existingCard.style.padding = "0"; // Remove padding para fechar totalmente
-                    row.classList.remove('expanded');
-                    previewBtn.style.background = "#f8f9fa";
-                    previewBtn.style.color = "#5f6368";
+                    existingCard.style.maxHeight = "0"; existingCard.style.opacity = "0"; existingCard.style.padding = "0";
+                    row.classList.remove('expanded'); previewBtn.style.background = "#f8f9fa"; previewBtn.style.color = "#5f6368";
                     setTimeout(() => existingCard.remove(), 300);
                     return;
                 }
-
                 const allOpenRows = contentArea.querySelectorAll('.expanded');
-                allOpenRows.forEach(r => {
-                    const btn = r.children[1]; 
-                    if(btn) btn.click(); 
-                });
+                allOpenRows.forEach(r => { const btn = r.children[1]; if(btn) btn.click(); });
 
                 row.classList.add('expanded');
-                previewBtn.style.background = "#e8f0fe";
-                previewBtn.style.color = "#1a73e8";
-
-                actionBtn.style.borderRadius = "8px 0 0 0";
-                previewBtn.style.borderRadius = "0 8px 0 0";
+                previewBtn.style.background = "#e8f0fe"; previewBtn.style.color = "#1a73e8";
+                actionBtn.style.borderRadius = "8px 0 0 0"; previewBtn.style.borderRadius = "0 8px 0 0";
 
                 const card = document.createElement("div");
                 card.className = 'preview-card';
                 Object.assign(card.style, stylePreviewCard);
-
                 card.innerHTML = `
                     <div style="padding: 16px;">
                         <div style="font-weight:600; margin-bottom:4px; color:#1a73e8; font-size:11px; text-transform:uppercase;">Assunto</div>
@@ -320,18 +284,11 @@ export function initQuickEmailAssistant() {
                         <div style="color:#3c4043; font-size:12px; line-height:1.5;">${email.body}</div>
                     </div>
                 `;
-
                 row.appendChild(card);
-                
-                requestAnimationFrame(() => {
-                    card.style.maxHeight = "500px";
-                    card.style.opacity = "1";
-                });
+                requestAnimationFrame(() => { card.style.maxHeight = "500px"; card.style.opacity = "1"; });
             };
 
-            row.appendChild(actionBtn);
-            row.appendChild(previewBtn);
-            contentArea.appendChild(row);
+            row.appendChild(actionBtn); row.appendChild(previewBtn); contentArea.appendChild(row);
         });
     }
 
@@ -339,9 +296,7 @@ export function initQuickEmailAssistant() {
         searchTerm = e.target.value;
         if (searchTerm !== "") {
             Array.from(tabsContainer.children).forEach(child => {
-                child.style.background = "#fff";
-                child.style.color = "#3c4043";
-                child.style.borderColor = "#dadce0";
+                child.style.background = "#fff"; child.style.color = "#3c4043"; child.style.borderColor = "#dadce0";
             });
         } else {
             renderTabs();
@@ -349,15 +304,12 @@ export function initQuickEmailAssistant() {
         renderEmailList();
     });
 
-let visible = false;
     btn.onclick = () => {
         if (btnContainer.getAttribute('data-dragging') === 'true') return; 
-
         visible = !visible;
-        
-        // Adiciona o input ao objeto de animação para focar nele ao abrir
-        animRefs.focusElement = searchInput;
-
-        togglePopupAnimation(visible, animRefs);
+        togglePopupAnimation(visible, animRefs); // <--- AQUI A MÁGICA
     };
+
+    renderTabs();
+    renderEmailList();
 }
