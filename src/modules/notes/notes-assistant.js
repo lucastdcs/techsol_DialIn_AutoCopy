@@ -1,4 +1,4 @@
-// src/modules/notes/notes-assistant.js
+
 import { createTagSupportModule } from './tag-support.js';
 import { 
     showToast, makeDraggable, styleSelect, styleLabel, stylePopup, 
@@ -17,7 +17,6 @@ import { runEmailAutomation } from '../email/email-automation.js';
 import { createStandardHeader } from '../shared/header-factory.js';
 import { animationStyles, togglePopupAnimation } from '../shared/animations.js';
 
-// NOVOS IMPORTS (Refatoração)
 import * as NoteStyles from './notes-styles.js';
 import { copyHtmlToClipboard, ensureNoteCardIsOpen, triggerInputEvents } from './notes-bridge.js';
 
@@ -28,10 +27,8 @@ export function initCaseNotesAssistant() {
     let currentLang = 'pt'; 
     let isPortugalCase = false;
 
-// Instancia o módulo
     const tagSupport = createTagSupportModule();
 
-// --- 1. BOTÃO FLUTUANTE ---
     const btnContainer = document.createElement("div");
     Object.assign(btnContainer.style, {
         position: "fixed", bottom: "40%", right: "24px", zIndex: "9999",
@@ -43,7 +40,6 @@ export function initCaseNotesAssistant() {
     btn.id = "notes-floating-btn";
     btn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
     
-    // Usa estilo local ou fallback
     const btnStyleLocal = (typeof NoteStyles !== 'undefined' && NoteStyles.styleFloatingButton) ? NoteStyles.styleFloatingButton : {
         width: "48px", height: "48px", borderRadius: "50%",
         background: "#1a73e8", color: "white", border: "none", cursor: "pointer",
@@ -61,7 +57,6 @@ export function initCaseNotesAssistant() {
         transition: "opacity 0.2s", whiteSpace: "nowrap", fontWeight: "500"
     });
 
-    // Eventos no Container
     btnContainer.onmouseenter = () => { 
         btn.style.transform = "scale(1.1)"; 
         tooltip.style.opacity = "1"; 
@@ -76,22 +71,25 @@ export function initCaseNotesAssistant() {
     document.body.appendChild(btnContainer);
     makeDraggable(btnContainer); 
 
-    // --- 2. POPUP (Factory + Animação) ---
-    const popup = document.createElement("div");
+
+   const popup = document.createElement("div");
     popup.id = "autofill-popup";
-    
-    // Estilos Base + Estado Inicial da Animação
+
     Object.assign(popup.style, stylePopup, { 
-        right: "80px", width: "380px", // Largura padrão do Notes
+        right: "80px", width: "380px",
         borderRadius: "12px", display: "flex", flexDirection: "column",
         boxShadow: "0 8px 24px rgba(0,0,0,0.2)"
     }, animationStyles.popupInitial);
 
-    // Refs para animação
+    popup.style.transition += ", width 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)";
+
+
+
+
     const animRefs = { popup, btnContainer, googleLine: null };
     let visible = false;
 
- // 1. HEADER (Criado pela Factory)
+
     const header = createStandardHeader(
         popup,                  
         "Case Notes Assistant", 
@@ -100,9 +98,6 @@ export function initCaseNotesAssistant() {
         () => { togglePopup(false); } 
     );
 
-    // --- BOTÃO EXPANDIR (CORREÇÃO) ---
-    // A Factory retorna o elemento Header inteiro. 
-    // O conteúdo (onde estão os botões) é o último filho desse elemento.
     const headerContainer = header.lastElementChild; 
     
     if (headerContainer) {
