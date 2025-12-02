@@ -335,8 +335,8 @@ export function injectGoogleAnimationStyles() {
 
     const style = document.createElement('style');
     style.id = 'techsol-google-styles';
-    style.innerHTML = `
-        /* Animação de Pulso (Clique Inicial) */
+   style.innerHTML = `
+        /* Animação de Pulso (Mantida) */
         @keyframes google-pulse-ring {
             0% { box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.7); }
             25% { box-shadow: 0 0 0 10px rgba(234, 67, 53, 0); }
@@ -348,24 +348,24 @@ export function injectGoogleAnimationStyles() {
             animation: google-pulse-ring 0.6s cubic-bezier(0.215, 0.61, 0.355, 1);
         }
 
-        /* --- BORDA ATIVA GOOGLE (O Anel Colorido) --- */
-        /* Forçamos position relative no botão para o ::before saber onde ficar */
+        /* --- BORDA ATIVA SUTIL (Ajustada) --- */
         .google-active-state {
             position: relative !important; 
-            overflow: visible !important; /* Garante que a borda não seja cortada */
+            overflow: visible !important;
         }
 
         .google-active-state::before {
             content: '';
             position: absolute;
-            /* Tamanho negativo para sair para fora do botão */
-            top: -3px; left: -3px; right: -3px; bottom: -3px; 
+            /* Apenas 1px para fora (borda finíssima) */
+            top: -1px; left: -1px; right: -1px; bottom: -1px; 
             border-radius: 50%;
-            /* Gradiente Cônico: Cria o arco-íris circular */
+            /* O Arco-íris */
             background: conic-gradient(from 0deg, #4285F4, #EA4335, #FBBC05, #34A853, #4285F4);
-            z-index: -1; /* Fica atrás do botão */
-            opacity: 0.6;
-            filter: blur(2px); /* Suaviza o brilho */
+            z-index: -1;
+            /* A mágica do "Meio Apagado" */
+            opacity: 0.25; /* Bem transparente */
+            filter: blur(3px); /* Difuso */
         }
     `;
     document.head.appendChild(style);
