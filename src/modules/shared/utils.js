@@ -190,18 +190,6 @@ export const stylePopup = {
     fontFamily: "'Poppins', sans-serif"
 };
 
-export const stylePopupHeader = {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "16px",
-    backgroundColor: "#f8f9fa",
-    borderBottom: "1px solid #dadce0",
-    cursor: "grab",
-    userSelect: "none",
-    gap: "10px"
-};
-
 export const stylePopupTitle = {
     fontSize: "18px",
     fontWeight: "600",
@@ -544,3 +532,52 @@ export function playStartupAnimation() {
         }, 400); 
     }, 2500);
 }
+
+// Atualize o Header para ser Branco
+export const stylePopupHeader = {
+    display: "flex",
+    alignItems: "center", // Centraliza verticalmente
+    justifyContent: "space-between",
+    padding: "0", // Sem padding (a linha colorida fica na borda)
+    backgroundColor: "#ffffff", // BRANCO (Google Style)
+    // borderBottom: "1px solid #f1f3f4", // Opcional: separador ultra sutil
+    cursor: "grab",
+    userSelect: "none",
+    borderRadius: "12px 12px 0 0",
+    flexShrink: "0",
+    position: "relative" // Para contexto de z-index
+};
+
+// Novo estilo para botões de ícone (Help, Close, Expand)
+export const styleIconBtn = {
+    width: "32px",
+    height: "32px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: "50%",
+    cursor: "pointer",
+    color: "#5f6368", // Cinza Google
+    fontSize: "18px", // Tamanho do ícone
+    transition: "background-color 0.2s ease",
+    marginLeft: "4px"
+};
+
+// Estilo do Overlay de Ajuda (Backdrop)
+export const styleHelpOverlay = {
+    position: "absolute",
+    top: "0", left: "0", width: "100%", height: "100%",
+    backgroundColor: "rgba(255, 255, 255, 0.92)", // Branco translúcido
+    backdropFilter: "blur(4px)", // Desfoque chique
+    zIndex: "50", // Fica acima do conteúdo, abaixo do header
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    textAlign: "center",
+    padding: "20px",
+    boxSizing: "border-box",
+    opacity: "0",
+    transition: "opacity 0.3s ease",
+    pointerEvents: "none" // Começa invisível e não clicável
+};
