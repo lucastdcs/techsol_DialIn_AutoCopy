@@ -264,32 +264,93 @@ const header = createStandardHeader(
             const titleRow = document.createElement('div');
             Object.assign(titleRow.style, { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' });
             
+            // Container Esquerdo (Texto)
+            const textContainer = document.createElement('div');
+            Object.assign(textContainer.style, { display: 'flex', flexDirection: 'column', flexGrow: '1' });
+
             const nameSpan = document.createElement('span');
             nameSpan.textContent = link.name;
             Object.assign(nameSpan.style, { fontSize: '14px', color: '#202124', fontWeight: '500' });
 
-            const iconSpan = document.createElement('span');
-            iconSpan.innerHTML = '&#8599;'; 
-            Object.assign(iconSpan.style, { fontSize: "14px", color: '#dadce0' });
-
-            titleRow.appendChild(nameSpan);
-            titleRow.appendChild(iconSpan);
-
             const descSpan = document.createElement('span');
             descSpan.textContent = link.desc + (link._categoryName ? ` • ${link._categoryName}` : '');
-            Object.assign(descSpan.style, { fontSize: '11px', color: '#5f6368' });
+            Object.assign(descSpan.style, { fontSize: '11px', color: '#5f6368', marginTop: '2px' });
+
+            textContainer.appendChild(nameSpan);
+            textContainer.appendChild(descSpan);
+
+            // Container Direito (Ações: Copiar + Abrir)
+            const actionsContainer = document.createElement('div');
+            Object.assign(actionsContainer.style, { display: 'flex', alignItems: 'center', gap: '8px' });
+
+            // --- BOTÃO DE COPIAR (NOVO) ---
+            const copyBtn = document.createElement("div");
+            // Ícone SVG de Copiar (Content Copy)
+            const copyIconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+            const checkIconSvg = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1e8e3e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            
+            copyBtn.innerHTML = copyIconSvg;
+            Object.assign(copyBtn.style, {
+                width: "28px", height: "28px", borderRadius: "50%",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                color: "#5f6368", cursor: "pointer", transition: "all 0.2s",
+                opacity: "0" // Escondido por padrão, aparece no hover do item
+            });
+            
+            copyBtn.onclick = (e) => {
+                e.stopPropagation(); // Não abre o link
+                
+                // Copia para o clipboard
+                const tempInput = document.createElement("input");
+                tempInput.value = link.url;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempInput);
+
+                // Feedback Visual
+                copyBtn.innerHTML = checkIconSvg;
+                copyBtn.style.backgroundColor = "#e6f4ea"; // Fundo verde claro
+                
+                // Importante: showToast precisa ser importado do utils.js
+                // Se não estiver importado, use console.log ou adicione o import no topo
+                // showToast("Link copiado!"); 
+
+                setTimeout(() => {
+                    copyBtn.innerHTML = copyIconSvg;
+                    copyBtn.style.backgroundColor = "transparent";
+                }, 1500);
+            };
+            
+            copyBtn.onmouseenter = () => { copyBtn.style.backgroundColor = "#e8eaed"; copyBtn.style.color = "#202124"; };
+            copyBtn.onmouseleave = () => { copyBtn.style.backgroundColor = "transparent"; copyBtn.style.color = "#5f6368"; };
+
+            // Ícone de Seta (Abrir)
+            const openIcon = document.createElement('span');
+            openIcon.innerHTML = '&#8599;'; 
+            Object.assign(openIcon.style, { fontSize: '18px', color: '#dadce0', marginLeft: '4px' });
+
+            actionsContainer.appendChild(copyBtn);
+            actionsContainer.appendChild(openIcon);
+
+            titleRow.appendChild(textContainer);
+            titleRow.appendChild(actionsContainer);
 
             item.appendChild(titleRow);
-            item.appendChild(descSpan);
 
+            // Eventos do Item
             item.onmouseenter = () => {
                 item.style.backgroundColor = '#f1f3f4';
-                iconSpan.style.color = '#1a73e8';
+                openIcon.style.color = '#1a73e8';
+                copyBtn.style.opacity = "1"; // Mostra o botão de copiar no hover
             };
             item.onmouseleave = () => {
                 item.style.backgroundColor = 'transparent';
-                iconSpan.style.color = '#dadce0';
+                openIcon.style.color = '#dadce0';
+                copyBtn.style.opacity = "0"; // Esconde
             };
+            
+            // Clique no item abre o link
             item.onclick = () => window.open(link.url, '_blank');
 
             contentArea.appendChild(item);
