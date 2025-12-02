@@ -23,6 +23,19 @@ export const styleWarningText = {
     fontSize: "12px", color: "#e37400", marginTop: "4px" 
 };
 
+const styleHelpLink = {
+        fontSize: "12px",
+        color: "#1a73e8",
+        textDecoration: "none",
+        cursor: "pointer",
+        fontWeight: "500",
+        display: "flex",
+        alignItems: "center",
+        gap: "4px",
+        marginLeft: "auto", // Empurra para a direita
+        transition: "color 0.2s"
+    };
+
 // --- NOVOS ESTILOS (Search + Chips) ---
 export const styleSearchInput = {
     width: "100%", padding: "10px 12px 10px 32px", // Espaço para ícone lupa
