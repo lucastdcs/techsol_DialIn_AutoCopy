@@ -11,43 +11,43 @@ import {
 import { animationStyles, togglePopupAnimation } from './animations.js';
 
 /**
- * Cria um Header padrão Google Style (Branco, Limpo, Com Help Overlay).
+ * Cria um Header padrão Google Style.
+ * * @param {HTMLElement} popupElement - Elemento pai.
+ * @param {string} titleText - Título do módulo.
+ * @param {string} versionText - Versão.
+ * @param {string} helpDescription - Texto explicativo do módulo (HTML permitido).
+ * @param {object} animationRefs - Referências para animação.
+ * @param {function} onCloseCallback - Callback ao fechar.
  */
-export function createStandardHeader(popupElement, titleText, versionText, animationRefs, onCloseCallback) {
+export function createStandardHeader(popupElement, titleText, versionText, helpDescription, animationRefs, onCloseCallback) {
     const header = document.createElement("div");
     Object.assign(header.style, stylePopupHeader);
     
-    // 1. Aplica o Drag (Lógica de arrastar)
     makeDraggable(popupElement, header);
-    
-    // OBS: Removemos as linhas manuais de 'onmousedown' que quebravam o drag.
-    // O cursor 'grab' já está definido no estilo do header no utils.js
+    header.onmousedown = () => { header.style.cursor = 'grabbing'; };
+    header.onmouseup = () => { header.style.cursor = 'grab'; };
 
-    // 2. Linha Colorida
+    // 1. Linha Colorida
     const googleLine = document.createElement("div");
     Object.assign(googleLine.style, animationStyles.googleLine);
     header.appendChild(googleLine);
     
     if (animationRefs) animationRefs.googleLine = googleLine;
 
-    // 3. Container Interno (Correção do Layout)
+    // 2. Container Interno
     const contentRow = document.createElement("div");
     Object.assign(contentRow.style, { 
-        display: "flex", 
-        justifyContent: "space-between", 
-        alignItems: "center", 
-        width: "100%", 
-        padding: "12px 16px",
-        boxSizing: "border-box" // <--- CORREÇÃO VITAL PARA O 'X' NÃO SUMIR
+        display: "flex", justifyContent: "space-between", alignItems: "center", 
+        width: "100%", padding: "12px 16px", boxSizing: "border-box"
     });
 
-    // --- LADO ESQUERDO ---
+    // --- ESQUERDA ---
     const leftDiv = document.createElement("div");
     Object.assign(leftDiv.style, { display: 'flex', alignItems: 'center', gap: '12px' });
 
     const logo = document.createElement("img");
     logo.src = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
-    Object.assign(logo.style, { width: "22px", height: "22px", pointerEvents: "none" }); // pointerEvents none para não atrapalhar o drag no logo
+    Object.assign(logo.style, { width: "22px", height: "22px", pointerEvents: "none" });
 
     const title = document.createElement("span");
     title.textContent = titleText;
@@ -56,7 +56,7 @@ export function createStandardHeader(popupElement, titleText, versionText, anima
     leftDiv.appendChild(logo);
     leftDiv.appendChild(title);
 
-    // --- LADO DIREITO ---
+    // --- DIREITA ---
     const rightDiv = document.createElement("div");
     Object.assign(rightDiv.style, { display: 'flex', alignItems: 'center' });
 
@@ -72,27 +72,23 @@ export function createStandardHeader(popupElement, titleText, versionText, anima
     Object.assign(closeBtn.style, styleIconBtn);
     closeBtn.title = "Fechar";
 
-    // Efeitos Hover
+    // Hovers
     [helpBtn, closeBtn].forEach(btn => {
-        btn.classList.add('no-drag'); // Garante que o drag não pegue aqui
+        btn.classList.add('no-drag');
+        btn.onmousedown = (e) => e.stopPropagation(); // Permite clique
         btn.onmouseenter = () => btn.style.backgroundColor = "#f1f3f4";
         btn.onmouseleave = () => btn.style.backgroundColor = "transparent";
-        
-        // Para permitir clicar sem arrastar, paramos a propagação do mousedown
-        btn.onmousedown = (e) => e.stopPropagation();
     });
-
     closeBtn.onmouseenter = () => { closeBtn.style.backgroundColor = "#fee2e2"; closeBtn.style.color = "#c5221f"; };
-    closeBtn.onmouseleave = () => { closeBtn.style.backgroundColor = "transparent"; closeBtn.style.color = "#5f6368"; };
 
-    // Ações
+    // Ação Fechar
     closeBtn.onclick = () => {
         if (animationRefs) togglePopupAnimation(false, animationRefs);
         if (onCloseCallback) onCloseCallback();
     };
 
-    // --- HELP OVERLAY ---
-    const overlay = createHelpOverlay(popupElement, titleText, versionText);
+    // --- HELP OVERLAY (Passando a descrição dinâmica) ---
+    const overlay = createHelpOverlay(popupElement, titleText, versionText, helpDescription);
     
     helpBtn.onclick = () => {
         const isVisible = overlay.style.opacity === "1";
@@ -111,7 +107,6 @@ export function createStandardHeader(popupElement, titleText, versionText, anima
 
     rightDiv.appendChild(helpBtn);
     rightDiv.appendChild(closeBtn);
-
     contentRow.appendChild(leftDiv);
     contentRow.appendChild(rightDiv);
     header.appendChild(contentRow);
@@ -119,7 +114,7 @@ export function createStandardHeader(popupElement, titleText, versionText, anima
     return header;
 }
 
-function createHelpOverlay(parentPopup, title, version) {
+function createHelpOverlay(parentPopup, title, version, description) {
     const overlay = document.createElement("div");
     Object.assign(overlay.style, styleHelpOverlay);
     overlay.style.top = "50px"; 
@@ -131,7 +126,7 @@ function createHelpOverlay(parentPopup, title, version) {
         <div style="color: #5f6368; font-size: 14px; margin-bottom: 24px;">Versão ${version}</div>
         
         <div style="color: #5f6368; font-size: 13px; max-width: 80%; line-height: 1.6;">
-            Ferramenta de produtividade para otimizar o fluxo de trabalho de consultoria.
+            ${description}
         </div>
 
         <div style="margin-top: 32px; font-size: 12px; color: #9aa0a6;">

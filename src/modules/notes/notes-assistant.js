@@ -89,13 +89,13 @@ export function initCaseNotesAssistant() {
     const animRefs = { popup, btnContainer, googleLine: null };
     let visible = false;
 
-
-    const header = createStandardHeader(
-        popup,                  
-        "Case Notes Assistant", 
-        CURRENT_VERSION,        
-        animRefs,               
-        () => { togglePopup(false); } 
+const header = createStandardHeader(
+        popup,
+        "Case Notes Assistant",
+        CURRENT_VERSION,
+        "Gera notas padronizadas automaticamente. Selecione o status, as tasks realizadas e preencha os detalhes para inserir no caso.", // <--- NOVO
+        animRefs,
+        () => { togglePopup(false); }
     );
 
     const headerContainer = header.lastElementChild; 

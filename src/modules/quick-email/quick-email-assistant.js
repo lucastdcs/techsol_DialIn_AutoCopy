@@ -138,12 +138,13 @@ export function initQuickEmailAssistant() {
     let visible = false;
 
     // 1. HEADER (Criado pela Factory)
-    const header = createStandardHeader(
-        popup,                  
-        "Emails Rápidos",       
-        CURRENT_VERSION,        
-        animRefs, // Passa refs para a Factory injetar a googleLine
-        () => { visible = false; } 
+const header = createStandardHeader(
+        popup,
+        "Emails Rápidos",
+        CURRENT_VERSION,
+        "Templates de e-mail prontos para uso (NRP, Contato, Agendamento). Clique no olho para visualizar ou na linha para inserir.", // <--- NOVO
+        animRefs,
+        () => { visible = false; }
     );
     
     // 2. TOOLBAR (Busca + Chips)

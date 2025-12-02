@@ -152,10 +152,11 @@ export function initFeedbackAssistant() {
     let visible = false;
 
     // 1. HEADER (Factory)
-    const header = createStandardHeader(
+const header = createStandardHeader(
         popup,
         "Links Úteis",
         CURRENT_VERSION,
+        "Acesso rápido a formulários internos (Ocorrências, Bugs) e documentações oficiais de suporte.", // <--- NOVO
         animRefs,
         () => { visible = false; }
     );

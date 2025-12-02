@@ -83,10 +83,11 @@ export function initCallScriptAssistant() {
     let csaVisible = false;
 
     // 1. HEADER (Factory)
-    const csaHeader = createStandardHeader(
+const csaHeader = createStandardHeader(
         csaPopup,
         "Call Script Assistant",
         CURRENT_VERSION,
+        "Checklists guiados para início e fim de chamada em PT, ES e EN. Marque os itens conforme fala com o cliente.", // <--- NOVO
         animRefs,
         () => { csaVisible = false; }
     );
