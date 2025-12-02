@@ -349,23 +349,15 @@ export function initQuickEmailAssistant() {
         renderEmailList();
     });
 
-    let visible = false;
+let visible = false;
     btn.onclick = () => {
-        if (btnContainer.getAttribute('data-dragging') === 'true') {
-            return; 
-        }
+        if (btnContainer.getAttribute('data-dragging') === 'true') return; 
 
         visible = !visible;
         
-        // Chama a animação centralizada
-        togglePopupAnimation(visible, { 
-            popup, 
-            btnContainer, 
-            googleLine, 
-            focusElement: searchInput 
-        });
-    };
+        // Adiciona o input ao objeto de animação para focar nele ao abrir
+        animRefs.focusElement = searchInput;
 
-    renderTabs();
-    renderEmailList();
+        togglePopupAnimation(visible, animRefs);
+    };
 }
