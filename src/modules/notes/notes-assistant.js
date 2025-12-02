@@ -105,15 +105,28 @@ export function initCaseNotesAssistant() {
         expandBtn.textContent = "↔";
         expandBtn.classList.add('no-drag'); 
         
-        // Usa estilo do NoteStyles se disponível, senão usa fallback local
+       
         const btnStyle = (typeof NoteStyles !== 'undefined' && NoteStyles.styleExpandButton) 
-            ? NoteStyles.styleExpandButton 
-            : { fontSize: "18px", color: "#5f6368", cursor: "pointer", padding: "4px", borderRadius: "50%", zIndex: "10" };
+            ? { ...NoteStyles.styleExpandButton } 
+            : { color: "#5f6368", cursor: "pointer", borderRadius: "50%", zIndex: "10" };
+            
+
+        Object.assign(btnStyle, {
+            fontSize: "20px",  
+            padding: "8px",    
+            display: "flex", 
+            alignItems: "center", 
+            justifyContent: "center"
+        });
             
         Object.assign(expandBtn.style, btnStyle);
         
-        expandBtn.style.marginRight = "8px"; // Espaço do X
-        expandBtn.style.marginLeft = "auto"; // Força ir para a direita (Flexbox)
+        expandBtn.style.marginRight = "4px"; 
+        expandBtn.style.marginLeft = "auto"; 
+
+        // --- UX: TOOLTIP NATIVO ---
+        expandBtn.title = "Expandir/Contrair Janela"; 
+        // --------------------------
         
         expandBtn.onmouseover = () => expandBtn.style.backgroundColor = '#e8eaed';
         expandBtn.onmouseout = () => expandBtn.style.backgroundColor = 'transparent';
@@ -127,17 +140,14 @@ export function initCaseNotesAssistant() {
             popup.style.width = isExpanded ? `${expandedWidth}px` : `${initialWidth}px`;
         };
         
-        // Pega o botão de fechar (que sabemos ser o último elemento adicionado pela Factory)
         const closeBtn = headerContainer.lastElementChild;
         
-        // Insere o expandir ANTES do botão de fechar
         if (closeBtn) {
             headerContainer.insertBefore(expandBtn, closeBtn);
         } else {
             headerContainer.appendChild(expandBtn);
         }
     }
-    // ---------------------------------
 
     popup.appendChild(header);
 
