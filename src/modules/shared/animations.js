@@ -53,7 +53,7 @@ export function togglePopupAnimation(show, elements) {
     // Garante que o CSS da borda colorida exista na página
     // (Pode importar 'injectGoogleAnimationStyles' do utils ou chamar 'triggerGoogleAnimation' uma vez)
     // Se não conseguir importar, o CSS deve estar garantido pelo init do app.
-
+injectGoogleAnimationStyles();
     if (show) {
         // --- ABRIR ---
         if (btn) {
