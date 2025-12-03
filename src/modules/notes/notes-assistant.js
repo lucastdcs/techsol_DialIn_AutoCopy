@@ -16,20 +16,21 @@ import { runEmailAutomation } from '../email/email-automation.js';
 import { createStandardHeader } from '../shared/header-factory.js';
 import { animationStyles, togglePopupAnimation } from '../shared/animations.js';
 import { copyHtmlToClipboard, ensureNoteCardIsOpen, triggerInputEvents } from './notes-bridge.js';
+
+// MÓDULOS DE LÓGICA
 import { createTagSupportModule } from './tag-support.js'; 
-import { createStepTasksComponent } from './components/step-tasks.js'; // <--- O Componente de Tasks
+import { createStepTasksComponent } from './components/step-tasks.js'; // O "Steps"
 
 export function initCaseNotesAssistant() {
     const CURRENT_VERSION = "v3.6.0"; 
     
-    // --- ESTADO GLOBAL ---
     let currentCaseType = 'bau';
     let currentLang = 'pt'; 
     let isPortugalCase = false;
     let visible = false;
 
     // =========================================================================
-    // 1. ESTILOS LOCAIS (Apenas os necessários para o esqueleto)
+    // 1. ESTILOS LOCAIS (Para a UI construída manualmente)
     // =========================================================================
     const styles = {
         input: { width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #dadce0", fontSize: "14px", marginBottom: "12px", boxSizing: "border-box", fontFamily: "'Poppins', sans-serif", transition: "border-color 0.2s ease, box-shadow 0.2s ease" },
@@ -46,26 +47,28 @@ export function initCaseNotesAssistant() {
     };
 
     // =========================================================================
-    // 2. INICIALIZAÇÃO DE MÓDULOS
+    // 2. INICIALIZAÇÃO DE COMPONENTES
     // =========================================================================
     
     const tagSupport = createTagSupportModule();
 
-    // Inicializa o Componente de Tasks (Step Tasks)
-    const taskComponent = createStepTasksComponent(() => {
-        // Callback: Sempre que uma task muda, atualiza a visibilidade do Tag Support
-        const checked = taskComponent.getCheckedElements().map(c => c.value);
+    // O componente "Steps" que cuida da lista e dos prints
+    const stepTasks = createStepTasksComponent(() => {
+        // Callback: Sempre que uma task muda, atualiza o Tag Support
+        // Usamos o método público do componente para pegar o que está marcado
+        const checkedElements = stepTasks.getCheckedElements();
+        const checkedValues = checkedElements.map(c => c.value);
         
-        // Só atualiza se já tivermos um status selecionado
         if (subStatusSelect && subStatusSelect.value) {
-            tagSupport.updateVisibility(subStatusSelect.value, checked);
+            tagSupport.updateVisibility(subStatusSelect.value, checkedValues);
         }
     });
 
     // =========================================================================
-    // 3. CONSTRUÇÃO DA UI
+    // 3. CONSTRUÇÃO DA UI (Manual)
     // =========================================================================
     
+    // --- Botão Flutuante ---
     const btnContainer = document.createElement("div"); 
     Object.assign(btnContainer.style, { position: "fixed", bottom: "40%", right: "24px", zIndex: "9999", display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px", cursor: "pointer" });
     const btn = document.createElement("button");
@@ -79,6 +82,7 @@ export function initCaseNotesAssistant() {
     btnContainer.onmouseleave = () => { btn.style.transform = "scale(1)"; tooltip.style.opacity = "0"; };
     btnContainer.appendChild(btn); btnContainer.appendChild(tooltip); document.body.appendChild(btnContainer); makeDraggable(btnContainer); 
 
+    // --- Popup ---
     const popup = document.createElement("div");
     popup.id = "autofill-popup";
     Object.assign(popup.style, stylePopup, { 
@@ -89,15 +93,17 @@ export function initCaseNotesAssistant() {
 
     const animRefs = { popup, btnContainer, googleLine: null };
 
+    // Header (Factory)
     const header = createStandardHeader(
         popup,
         "Case Notes Assistant",
         CURRENT_VERSION,
-        "Gera notas padronizadas automaticamente.",
+        "Gera notas padronizadas automaticamente. Selecione o status, as tasks realizadas e preencha os detalhes para inserir no caso.",
         animRefs,
         () => { togglePopup(false); } 
     );
 
+    // Botão Expandir no Header
     const headerContainer = header.lastElementChild; 
     if (headerContainer) {
         const expandBtn = document.createElement("div");
@@ -117,11 +123,13 @@ export function initCaseNotesAssistant() {
     const popupContent = document.createElement("div");
     Object.assign(popupContent.style, { padding: "0 16px 16px 16px", overflowY: "auto", flexGrow: "1" });
     popup.appendChild(popupContent);
+
     const credit = document.createElement("div");
     credit.textContent = "created by lucaste@";
     Object.assign(credit.style, styleCredit);
     popup.appendChild(credit);
 
+    // --- STEP -1: Idioma ---
     const langToggleDiv = document.createElement("div"); langToggleDiv.id = "step-lang-type"; 
     const langLabel = document.createElement("label"); Object.assign(langLabel.style, styles.label); langToggleDiv.appendChild(langLabel);
     const langContainer = document.createElement("div"); Object.assign(langContainer.style, { display: 'flex', borderRadius: '8px', border: '1px solid #dadce0', overflow: 'hidden', marginBottom: '16px' });
@@ -130,6 +138,7 @@ export function initCaseNotesAssistant() {
     langPT.onclick = () => setLanguage('pt'); langES.onclick = () => setLanguage('es');
     langContainer.appendChild(langPT); langContainer.appendChild(langES); langToggleDiv.appendChild(langContainer); popupContent.appendChild(langToggleDiv);
 
+    // --- STEP 0: Tipo ---
     const step0Div = document.createElement("div"); step0Div.id = "step-0-case-type"; 
     const typeLabel = document.createElement("label"); Object.assign(typeLabel.style, styles.label); step0Div.appendChild(typeLabel);
     const typeContainer = document.createElement("div"); Object.assign(typeContainer.style, { display: 'flex', borderRadius: '8px', border: '1px solid #dadce0', overflow: 'hidden', marginBottom: '16px' });
@@ -138,6 +147,7 @@ export function initCaseNotesAssistant() {
     typeBAU.onclick = () => setCaseType('bau'); typeLM.onclick = () => setCaseType('lm');
     typeContainer.appendChild(typeBAU); typeContainer.appendChild(typeLM); step0Div.appendChild(typeContainer); popupContent.appendChild(step0Div);
 
+    // --- STEP 1: Status ---
     const step1Div = document.createElement("div"); step1Div.id = "step-1-selection";
     const mainStatusLabel = document.createElement("label"); Object.assign(mainStatusLabel.style, styles.label);
     const mainStatusSelect = document.createElement("select"); mainStatusSelect.id = "main-status"; Object.assign(mainStatusSelect.style, styleSelect); mainStatusSelect.innerHTML = `<option value="">-- Selecione --</option><option value="NI">NI - Need Info</option><option value="SO">SO - Solution Offered</option><option value="IN">IN - Inactive</option><option value="AS">AS - Assigned</option>`;
@@ -153,6 +163,7 @@ export function initCaseNotesAssistant() {
     const subStatusSelect = document.createElement("select"); subStatusSelect.id = "sub-status"; Object.assign(subStatusSelect.style, styleSelect); subStatusSelect.disabled = true;
     step1Div.appendChild(mainStatusLabel); step1Div.appendChild(mainStatusSelect); step1Div.appendChild(subStatusHeader); step1Div.appendChild(subStatusSelect); popupContent.appendChild(step1Div);
 
+    // --- STEPS OCULTOS ---
     const stepPortugalDiv = document.createElement("div"); stepPortugalDiv.id = "step-1-1-portugal"; Object.assign(stepPortugalDiv.style, styles.stepBlock, { display: 'none' });
     const portugalLabel = document.createElement("label"); Object.assign(portugalLabel.style, styles.label); stepPortugalDiv.appendChild(portugalLabel);
     const portugalRadioGroup = document.createElement("div"); Object.assign(portugalRadioGroup.style, styles.radioContainer);
@@ -182,17 +193,19 @@ export function initCaseNotesAssistant() {
     consentRadioGroup.appendChild(divCSim); consentRadioGroup.appendChild(divCNao); stepConsentDiv.appendChild(consentRadioGroup); popupContent.appendChild(stepConsentDiv);
 
     const stepSnippetsDiv = document.createElement("div"); stepSnippetsDiv.id = "step-1-5-snippets"; Object.assign(stepSnippetsDiv.style, styles.stepBlock, { display: 'none' });
-    const stepSnippetsTitle = document.createElement("h3"); Object.assign(stepSnippetsTitle.style, styles.h3); snippetContainer.id = "snippet-container"; stepSnippetsDiv.appendChild(stepSnippetsTitle); stepSnippetsDiv.appendChild(snippetContainer); popupContent.appendChild(stepSnippetsDiv);
+    const stepSnippetsTitle = document.createElement("h3"); Object.assign(stepSnippetsTitle.style, styles.h3);
+    const snippetContainer = document.createElement("div"); snippetContainer.id = "snippet-container"; 
+    stepSnippetsDiv.appendChild(stepSnippetsTitle); stepSnippetsDiv.appendChild(snippetContainer); popupContent.appendChild(stepSnippetsDiv);
 
-    // --- STEP 2: TASKS (Usando o Componente) ---
+    // --- STEP 2: TASKS (Integrado com Componente) ---
     const step2Div = document.createElement("div"); step2Div.id = "step-2-tasks"; Object.assign(step2Div.style, styles.stepBlock, { display: 'none' });
     const optionalTaskBtn = document.createElement("button"); optionalTaskBtn.textContent = "+ Gostaria de selecionar uma task?"; Object.assign(optionalTaskBtn.style, styles.optionalBtn);
     optionalTaskBtn.onmouseover = () => { optionalTaskBtn.style.background = '#e8f0fe'; }; optionalTaskBtn.onmouseout = () => { optionalTaskBtn.style.background = 'white'; };
     const step2Title = document.createElement("h3"); Object.assign(step2Title.style, styles.h3);
     
     step2Div.appendChild(optionalTaskBtn); 
-    step2Div.appendChild(step2Title);
-    step2Div.appendChild(taskComponent.selectionElement); // <--- INJEÇÃO DO COMPONENTE DE TASKS
+    step2Div.appendChild(step2Title); 
+    step2Div.appendChild(stepTasks.selectionElement); // <--- ELEMENTO DO COMPONENTE AQUI
     popupContent.appendChild(step2Div);
 
     // --- STEP 3: FORMS ---
@@ -200,12 +213,13 @@ export function initCaseNotesAssistant() {
     const step3Title = document.createElement("h3"); Object.assign(step3Title.style, styles.h3); step3Div.appendChild(step3Title);
     const dynamicFormFieldsContainer = document.createElement("div"); dynamicFormFieldsContainer.id = "dynamic-form-fields-container"; step3Div.appendChild(dynamicFormFieldsContainer);
     
-    // Injeta Tag Support e Screenshots do Componente
-    step3Div.appendChild(tagSupport.element);
-    step3Div.appendChild(taskComponent.screenshotsElement); // <--- INJEÇÃO DE PRINTS DO COMPONENTE
-    
+    // Injeta Módulos
+    step3Div.appendChild(tagSupport.element); // Tag Support
+    step3Div.appendChild(stepTasks.screenshotsElement); // Screenshots do Componente
+
     popupContent.appendChild(step3Div);
 
+    // Email
     const emailAutomationDiv = document.createElement("div"); emailAutomationDiv.id = "step-4-email"; Object.assign(emailAutomationDiv.style, { display: "none", marginTop: "16px", paddingTop: "12px", borderTop: "1px solid #eee" });
     const emailLabel = document.createElement("label"); emailLabel.style.display = "flex"; emailLabel.style.alignItems = "center"; emailLabel.style.cursor = "pointer"; emailLabel.style.fontSize = "14px";
     const emailCheckbox = document.createElement("input"); emailCheckbox.type = "checkbox"; emailCheckbox.checked = true; Object.assign(emailCheckbox.style, styles.checkboxInput);
@@ -219,7 +233,7 @@ export function initCaseNotesAssistant() {
     document.body.appendChild(popup);
 
     // =========================================================================
-    // 5. LÓGICA FUNCIONAL
+    // 4. LÓGICA DE NEGÓCIO
     // =========================================================================
 
     function setCaseType(type) {
@@ -235,7 +249,6 @@ export function initCaseNotesAssistant() {
         }
         if (subStatusSelect.value) { subStatusSelect.dispatchEvent(new Event('change')); }
     }
-    setCaseType('bau'); 
 
     function t(key) {
         try {
@@ -277,7 +290,6 @@ export function initCaseNotesAssistant() {
         if (subStatusSelect.value) { subStatusSelect.dispatchEvent(new Event('change')); }
     }
 
-    // --- LÓGICA DOS CAMPOS ---
     function enableAutoBullet(textarea) {
         if(textarea.value.trim() === '' || textarea.value.trim() === '•') { textarea.value = '• '; }
         textarea.onkeydown = function(e) {
@@ -298,6 +310,48 @@ export function initCaseNotesAssistant() {
         };
     }
 
+    function updateFieldsFromScenarios() {
+        const activeScenarioInputs = snippetContainer.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
+        const targetFieldsContent = {};
+        const activeLinkedTasks = new Set();
+
+        activeScenarioInputs.forEach(input => {
+            const scenarioId = input.id;
+            const snippets = scenarioSnippets[scenarioId];
+            if (snippets) {
+                for (const fieldId in snippets) {
+                    if (fieldId !== 'linkedTask' && fieldId !== 'type') {
+                        if (!targetFieldsContent[fieldId]) targetFieldsContent[fieldId] = [];
+                        if (!targetFieldsContent[fieldId].includes(snippets[fieldId])) targetFieldsContent[fieldId].push(snippets[fieldId]);
+                    } else if (fieldId === 'linkedTask') {
+                         activeLinkedTasks.add(snippets.linkedTask);
+                    }
+                }
+            }
+        });
+        const allPossibleTargetFields = new Set();
+        Object.values(scenarioSnippets).forEach(snippets => { Object.keys(snippets).forEach(key => { if(key !== 'linkedTask' && key !== 'type') allPossibleTargetFields.add(key); }); });
+        allPossibleTargetFields.forEach(fieldId => {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                const combinedTextArray = targetFieldsContent[fieldId] || [];
+                let finalValue = "";
+                if (textareaListFields.includes(fieldId.replace('field-', ''))) {
+                    finalValue = combinedTextArray.map(line => line.startsWith('• ') ? line : '• ' + line).join('\n');
+                    if (finalValue === '') { finalValue = '• '; } else if (!finalValue.endsWith('\n• ')) { finalValue += '\n• '; }
+                } else { finalValue = combinedTextArray.join('\n\n'); }
+                if (finalValue.trim() !== '•' && finalValue.trim() !== '') field.value = finalValue;
+                else if (textareaListFields.includes(fieldId.replace('field-', ''))) field.value = '• ';
+                else field.value = '';
+                if (field.tagName === 'TEXTAREA' && textareaListFields.includes(fieldId.replace('field-', ''))) enableAutoBullet(field);
+             }
+        });
+
+        // Para selecionar tasks no componente, precisamos acessar o DOM dele (usando querySelector no elemento)
+        // Mas o componente não expõe um método para "setar" tasks, apenas o reset.
+        // Se precisar, teremos que implementar no step-tasks.js. Por enquanto, o link de cenários só preenche texto.
+    }
+
     mainStatusSelect.onchange = () => {
         const selectedStatus = mainStatusSelect.value;
         resetSteps(1.5);
@@ -307,7 +361,8 @@ export function initCaseNotesAssistant() {
             const template = SUBSTATUS_TEMPLATES[key];
             if (template.status === selectedStatus) {
                 const option = document.createElement('option');
-                option.value = key; option.textContent = template.name; subStatusSelect.appendChild(option);
+                option.value = key; option.textContent = template.name; 
+                subStatusSelect.appendChild(option);
             }
         }
         subStatusSelect.disabled = false;
@@ -318,9 +373,12 @@ export function initCaseNotesAssistant() {
         resetSteps(1.5);
         if (!selectedSubStatusKey) return;
 
+        // Atualiza o Componente de Tasks
+        stepTasks.updateSubStatus(selectedSubStatusKey);
+
         const templateData = SUBSTATUS_TEMPLATES[selectedSubStatusKey];
         snippetContainer.innerHTML = '';
-
+        
         const addSnippetInput = (scenario, type, container) => {
             const label = document.createElement('label'); Object.assign(label.style, styles.checkboxLabel);
             label.onmouseover = () => label.style.backgroundColor = '#e8eaed'; label.onmouseout = () => label.style.backgroundColor = '#f8f9fa';
@@ -332,24 +390,21 @@ export function initCaseNotesAssistant() {
         if (selectedSubStatusKey === 'NI_Awaiting_Inputs') { scenarios = [ { id: 'quickfill-ni-inicio-manual', text: 'Início 2/6 (Manual)'}, { id: 'quickfill-ni-cms-access', text: 'Início 2/6 (ADV sem acesso ao CMS)' }, { id: 'quickfill-ni-followup-bau', text: 'Follow-up 2/6 (BAU)' }, { id: 'quickfill-ni-followup-lm', text: 'Follow-up 2/6 (LM)' } ]; }
         else if (selectedSubStatusKey.startsWith('SO_')) { inputType = 'checkbox'; scenarios = [ { id: 'quickfill-gtm-install', text: 'Instalação do GTM' }, { id: 'quickfill-whatsapp', text: 'Conversão de WhatsApp' }, { id: 'quickfill-form', text: 'Conversão de Formulário (Padrão)' }, { id: 'quickfill-ecw4-close', text: 'Fechamento ECW4 (Pós 7 dias)' } ]; }
         else if (selectedSubStatusKey.startsWith('AS_')) { inputType = 'checkbox'; const reasonTitle = document.createElement('label'); reasonTitle.textContent = t('cenarios_comuns'); Object.assign(reasonTitle.style, styles.label); snippetContainer.appendChild(reasonTitle); scenarios = [ { id: 'quickfill-as-no-show', text: 'Anunciante não compareceu (respondeu e-mail)' }, { id: 'quickfill-as-insufficient-time', text: 'Tempo insuficiente' }, { id: 'quickfill-as-no-access', text: 'Anunciante sem acessos necessários' } ]; }
-        else if (selectedSubStatusKey.startsWith('IN_')) { scenarios = [ { id: 'quickfill-in-nrp-bau', text: 'NRP (BAU)' }, { id: 'quickfill-in-nrp-lm', text: 'No Show (LM)' }, { id: 'quickfill-in-no-show-bau', text: 'Finalização 2 Day Rule (BAU)' }, { id: 'quickfill-in-2-6-final', text: 'Finalização 2/6' }, { id: 'quickfill-in-manual', text: 'Outro (Manual)' } ]; }
+        else if (selectedSubStatusKey.startsWith('IN_')) { scenarios = [ { id: 'quickfill-in-nrp-bau', text: 'NRP (BAU - 3 tentativas)' }, { id: 'quickfill-in-nrp-lm', text: 'NRP (LM - Sem tentativas)' }, { id: 'quickfill-in-no-show-bau', text: 'No-Show (BAU - 3 tentativas)' }, { id: 'quickfill-in-2-6-final', text: 'Finalização 2/6 (Sem Resposta)' }, { id: 'quickfill-in-manual', text: 'Outro (Manual)' } ]; }
 
         const filteredScenarios = scenarios.filter(s => { const sd = scenarioSnippets[s.id]; return !sd.type || sd.type === 'all' || sd.type === currentCaseType; });
         filteredScenarios.forEach((scenario, index) => { const input = addSnippetInput(scenario, inputType, snippetContainer); if (inputType === 'radio') { input.name = "scenario-radio-group"; if (index === 0) input.checked = true; } });
-        if (filteredScenarios.length > 0) stepSnippetsDiv.style.display = 'block';
-
-        // --- ATUALIZA O TASK MANAGER ---
-        taskComponent.updateSubStatus(selectedSubStatusKey);
+        if(filteredScenarios.length > 0) stepSnippetsDiv.style.display = 'block';
 
         if (templateData.requiresTasks) {
             optionalTaskBtn.style.display = 'none'; 
             step2Title.style.display = 'block';
-            taskComponent.selectionElement.style.display = 'block'; 
+            stepTasks.selectionElement.style.display = 'block'; // Mostra
             step2Div.style.display = 'block';
         } else {
             optionalTaskBtn.style.display = 'block'; 
             step2Title.style.display = 'none';
-            taskComponent.selectionElement.style.display = 'none'; 
+            stepTasks.selectionElement.style.display = 'none'; // Esconde
             step2Div.style.display = 'block'; 
         }
 
@@ -378,21 +433,25 @@ export function initCaseNotesAssistant() {
             field.id = `field-${fieldName}`; dynamicFormFieldsContainer.appendChild(label); dynamicFormFieldsContainer.appendChild(field);
         });
 
+        const snippetInputs = snippetContainer.querySelectorAll('input[type="checkbox"], input[type="radio"]');
+        if (snippetInputs.length > 0) { snippetInputs.forEach(input => { input.removeEventListener('change', updateFieldsFromScenarios); input.addEventListener('change', updateFieldsFromScenarios); }); updateFieldsFromScenarios(); }
+
         step3Div.style.display = 'block';
         if (SUBSTATUS_SHORTCODES[selectedSubStatusKey]) emailAutomationDiv.style.display = 'block'; else emailAutomationDiv.style.display = 'none';
         buttonContainer.style.display = 'flex';
         
-        const checked = taskComponent.getCheckedElements().map(c => c.value);
+        // Atualiza Tag Support
+        const checked = stepTasks.getCheckedElements().map(c => c.value);
         tagSupport.updateVisibility(selectedSubStatusKey, checked);
     };
 
+    // Evento do botão opcional
     optionalTaskBtn.onclick = () => {
         optionalTaskBtn.style.display = 'none'; 
         step2Title.style.display = 'block';     
-        taskComponent.selectionElement.style.display = 'block'; 
+        stepTasks.selectionElement.style.display = 'block'; // Mostra a lista do componente
     };
 
-    // --- GERAÇÃO DO TEXTO FINAL ---
     function generateOutputHtml() {
         const selectedSubStatusKey = subStatusSelect.value;
         if (!selectedSubStatusKey) return null;
@@ -400,7 +459,8 @@ export function initCaseNotesAssistant() {
         let outputText = templateData.template.replace(/\n/g, "<br>");
         const ulStyle = "style=\"margin-bottom: 12px; padding-left: 30px;\"";
 
-        const selectedCheckboxes = taskComponent.getCheckedElements();
+        // USA O COMPONENTE PARA PEGAR DADOS
+        const selectedCheckboxes = stepTasks.getCheckedElements();
 
         if (templateData.requiresTasks || selectedCheckboxes.length > 0) {
             let tagNames = []; let screenshotsText = '';
@@ -411,18 +471,19 @@ export function initCaseNotesAssistant() {
                 const taskKey = checkbox.value;
                 const task = TASKS_DB[taskKey];
                 const count = parseInt(checkbox.closest('label').querySelector('.stepper-count').textContent);
+
                 if (count > 1) tagNames.push(`${task.name} (x${count})`); else tagNames.push(task.name);
                 
                 const screenshotList = task.screenshots ? (task.screenshots[screenshotType] || []) : [];
                 if (screenshotList.length > 0) {
                     for (let i = 1; i <= count; i++) {
-                        // Busca o input dentro do componente de tasks (usando querySelector global ou no container)
-                        const nameInput = taskComponent.screenshotsElement.querySelector(`#name-${taskKey}-${i}`);
+                        // Busca o input dentro do componente de prints
+                        const nameInput = stepTasks.screenshotsElement.querySelector(`#name-${taskKey}-${i}`);
                         const customName = nameInput ? nameInput.value : `${task.name} #${i}`;
                         screenshotsText += `<b>${customName}</b>`;
                         let itemsHtml = '';
                         screenshotList.forEach((reqPrint, index) => {
-                            const inputEl = taskComponent.screenshotsElement.querySelector(`#screen-${taskKey}-${i}-${index}`);
+                            const inputEl = stepTasks.screenshotsElement.querySelector(`#screen-${taskKey}-${i}-${index}`);
                             const displayValue = inputEl && inputEl.value.trim() ? ` ${inputEl.value.trim()}` : '';
                             itemsHtml += `<li>${reqPrint} -${displayValue}</li>`;
                         });
@@ -479,6 +540,8 @@ export function initCaseNotesAssistant() {
         
         outputText = outputText.replace(/{([A-Z0-9_]+)}/g, ''); 
         outputText = outputText.replace(/(<br>){3,}/g, '<br><br>');
+        
+        // ADICIONA TAG SUPPORT
         outputText += tagSupport.getOutput();
 
         return outputText;
@@ -520,8 +583,18 @@ export function initCaseNotesAssistant() {
 
     function resetSteps(startFrom = 1.5) {
         if (startFrom <= 1.5) { stepSnippetsDiv.style.display = 'none'; snippetContainer.innerHTML = ''; }
-        if (startFrom <= 2) { step2Div.style.display = 'none'; taskComponent.reset(); optionalTaskBtn.style.display = 'none'; }
-        if (startFrom <= 3) { step3Div.style.display = 'none'; dynamicFormFieldsContainer.innerHTML = ''; tagSupport.reset(); buttonContainer.style.display = 'none'; emailAutomationDiv.style.display = 'none'; }
+        if (startFrom <= 2) { 
+            step2Div.style.display = 'none'; 
+            stepTasks.reset(); // Reset Módulo
+            optionalTaskBtn.style.display = 'none'; 
+        }
+        if (startFrom <= 3) { 
+            step3Div.style.display = 'none'; 
+            dynamicFormFieldsContainer.innerHTML = ''; 
+            tagSupport.reset(); // Reset Módulo
+            buttonContainer.style.display = 'none'; 
+            emailAutomationDiv.style.display = 'none'; 
+        }
     }
     
     function togglePopup(show) {
@@ -535,5 +608,7 @@ export function initCaseNotesAssistant() {
         togglePopup(visible);
     };
     
-    setLanguage(currentLang);
+    // INICIALIZAÇÃO
+    setCaseType('bau'); 
+    setLanguage('pt');
 }
