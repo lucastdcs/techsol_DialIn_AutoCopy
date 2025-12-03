@@ -502,13 +502,23 @@ export function initCaseNotesAssistant() {
     function generateOutputHtml() {
         const selectedSubStatusKey = subStatusSelect.value;
         if (!selectedSubStatusKey) return null;
+        
         const templateData = SUBSTATUS_TEMPLATES[selectedSubStatusKey];
         let outputText = templateData.template.replace(/\n/g, "<br>");
         const ulStyle = "style=\"margin-bottom: 12px; padding-left: 30px;\"";
-const containerAlvo = typeof taskCheckboxesContainer !== 'undefined' 
-            ? taskCheckboxesContainer 
-            : document.getElementById('task-checkboxes-container');
 
+        // --- 1. DEFINIÇÃO SEGURA DO CONTAINER ---
+        // Tenta pegar do taskManager (se existir), senão tenta variável global, senão busca no DOM
+        let containerAlvo = null;
+        if (typeof taskManager !== 'undefined' && taskManager.selectionElement) {
+            containerAlvo = taskManager.selectionElement;
+        } else if (typeof taskCheckboxesContainer !== 'undefined') {
+            containerAlvo = taskCheckboxesContainer;
+        } else {
+            containerAlvo = document.getElementById('task-checkboxes-container');
+        }
+
+        // Se não achou container, assume que não tem tasks
         const hasCheckedTasks = containerAlvo 
             ? containerAlvo.querySelectorAll('.task-checkbox:checked').length > 0 
             : false;
@@ -516,16 +526,21 @@ const containerAlvo = typeof taskCheckboxesContainer !== 'undefined'
         let tagNames = [];
         let screenshotsText = '';
 
-        // --- 1. GERAÇÃO DO CONTEÚDO (TASKS E PRINTS) ---
+        // --- 2. GERAÇÃO DO CONTEÚDO (TASKS E PRINTS) ---
         if (templateData.requiresTasks || hasCheckedTasks) {
-            const selectedCheckboxes = taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked');
+            // CORREÇÃO: Usa containerAlvo garantido
+            const selectedCheckboxes = containerAlvo.querySelectorAll('.task-checkbox:checked');
+            
             const isEducation = selectedSubStatusKey.includes('Education');
             const screenshotType = isEducation ? 'education' : 'implementation';
             
             selectedCheckboxes.forEach(checkbox => {
                 const taskKey = checkbox.value;
                 const task = TASKS_DB[taskKey];
-                const count = parseInt(checkbox.closest('label').querySelector('.stepper-count').textContent);
+                
+                // Busca o stepper count relativo ao checkbox
+                const countSpan = checkbox.closest('label').querySelector('.stepper-count');
+                const count = countSpan ? parseInt(countSpan.textContent) : 1;
 
                 if (count > 1) tagNames.push(`${task.name} (x${count})`); 
                 else tagNames.push(task.name);
@@ -534,6 +549,7 @@ const containerAlvo = typeof taskCheckboxesContainer !== 'undefined'
                 
                 if (screenshotList.length > 0) {
                     for (let i = 1; i <= count; i++) {
+                        // Tenta pegar o nome personalizado pelo ID
                         const nameInput = document.getElementById(`name-${taskKey}-${i}`);
                         const customName = nameInput ? nameInput.value : `${task.name} #${i}`;
                         
@@ -543,8 +559,12 @@ const containerAlvo = typeof taskCheckboxesContainer !== 'undefined'
                         screenshotList.forEach((reqPrint, index) => {
                             const inputId = `screen-${taskKey}-${i}-${index}`;
                             const inputEl = document.getElementById(inputId);
+                            
+                            // Pega valor ou vazio
                             const userValue = inputEl ? inputEl.value.trim() : '';
+                            // Adiciona espaço antes se tiver valor
                             const displayValue = userValue ? ` ${userValue}` : '';
+                            
                             itemsHtml += `<li>${reqPrint} -${displayValue}</li>`;
                         });
                         screenshotsText += `<ul ${ulStyle}>${itemsHtml}</ul>`;
@@ -553,13 +573,12 @@ const containerAlvo = typeof taskCheckboxesContainer !== 'undefined'
             });
         }
 
-        // --- 2. INJEÇÃO INTELIGENTE (A CORREÇÃO ESTÁ AQUI) ---
+        // --- 3. INJEÇÃO INTELIGENTE ---
         
         // Tags Implemented
         if (outputText.includes('{TAGS_IMPLEMENTED}')) {
             outputText = outputText.replace(/{TAGS_IMPLEMENTED}/g, tagNames.join(', ') || 'N/A');
         } else if (tagNames.length > 0) {
-            // Se o template não tem o placeholder, mas tem tags, adiciona no final
             outputText += `<br><b>Tags:</b> ${tagNames.join(', ')}<br>`;
         }
 
@@ -567,12 +586,10 @@ const containerAlvo = typeof taskCheckboxesContainer !== 'undefined'
         if (outputText.includes('{SCREENSHOTS_LIST}')) {
             outputText = outputText.replace(/{SCREENSHOTS_LIST}/g, screenshotsText ? `${screenshotsText}` : 'N/A');
         } else if (screenshotsText !== '') {
-            // Se o template não tem o placeholder, mas tem prints, FORÇA a adição no final
             outputText += `<br>${screenshotsText}`;
         }
-        // -----------------------------------------------------
 
-        // 3. Campos de Portugal e Consentimento
+        // 4. Campos de Portugal e Consentimento
         if (currentLang === 'pt' && isPortugalCase) {
             const consentValue = consentRadioSim.checked ? t('sim') : t('nao');
             const consentHtml = `<br><b>${t('consentiu_gravacao')}</b> ${consentValue}<br><br>`;
@@ -586,7 +603,7 @@ const containerAlvo = typeof taskCheckboxesContainer !== 'undefined'
             outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, '');
         }
 
-        // 4. Campos Dinâmicos e Limpeza
+        // 5. Campos Dinâmicos e Limpeza
         const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
         inputs.forEach(input => {
             const fieldName = input.id.replace('field-', '');
@@ -608,7 +625,6 @@ const containerAlvo = typeof taskCheckboxesContainer !== 'undefined'
                 value = value.replace(/\n/g, '<br>'); 
             }
             
-            // Normalização
             const textContent = value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
             const isEmpty = textContent === '' || textContent === '•' || textContent.toLowerCase() === 'n/a' || textContent.toLowerCase() === 'na';
 
@@ -621,12 +637,13 @@ const containerAlvo = typeof taskCheckboxesContainer !== 'undefined'
             }
         });
         
-        // Limpeza final
         outputText = outputText.replace(/{([A-Z0-9_]+)}/g, ''); 
         outputText = outputText.replace(/(<br>){3,}/g, '<br><br>');
         
         // Tag Support
-        outputText += tagSupport.getOutput();
+        if (tagSupport && typeof tagSupport.getOutput === 'function') {
+            outputText += tagSupport.getOutput();
+        }
 
         return outputText;
     }
