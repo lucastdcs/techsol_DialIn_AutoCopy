@@ -358,45 +358,83 @@ export function initCaseNotesAssistant() {
     }
 
     function updateFieldsFromScenarios() {
-        const activeScenarioInputs = snippetContainer.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
+        // 1. Identifica quais cenários (radios/checkboxes) estão marcados
+        // Procura no container global ou no específico se existir
+        const container = typeof snippetContainer !== 'undefined' ? snippetContainer : document.getElementById('snippet-container');
+        if (!container) return;
+
+        const activeScenarioInputs = container.querySelectorAll('input[type="checkbox"]:checked, input[type="radio"]:checked');
+        
         const targetFieldsContent = {};
         const activeLinkedTasks = new Set();
 
+        // 2. Lê os dados dos cenários marcados
         activeScenarioInputs.forEach(input => {
             const scenarioId = input.id;
             const snippets = scenarioSnippets[scenarioId];
             if (snippets) {
                 for (const fieldId in snippets) {
-                    if (fieldId !== 'linkedTask' && fieldId !== 'type') {
-                        if (!targetFieldsContent[fieldId]) targetFieldsContent[fieldId] = [];
-                        if (!targetFieldsContent[fieldId].includes(snippets[fieldId])) targetFieldsContent[fieldId].push(snippets[fieldId]);
-                    } else if (fieldId === 'linkedTask') {
+                    // Se for linkedTask, guarda o ID da task para marcar depois
+                    if (fieldId === 'linkedTask') {
                          activeLinkedTasks.add(snippets.linkedTask);
+                    } 
+                    // Se for conteúdo de texto (ex: REASON_COMMENTS)
+                    else if (fieldId !== 'type') {
+                        if (!targetFieldsContent[fieldId]) targetFieldsContent[fieldId] = [];
+                        if (!targetFieldsContent[fieldId].includes(snippets[fieldId])) {
+                            targetFieldsContent[fieldId].push(snippets[fieldId]);
+                        }
                     }
                 }
             }
         });
+
+        // 3. Preenche os campos de texto (Textareas/Inputs)
         const allPossibleTargetFields = new Set();
-        Object.values(scenarioSnippets).forEach(snippets => { Object.keys(snippets).forEach(key => { if(key !== 'linkedTask' && key !== 'type') allPossibleTargetFields.add(key); }); });
+        Object.values(scenarioSnippets).forEach(snippets => { 
+            Object.keys(snippets).forEach(key => { 
+                if(key !== 'linkedTask' && key !== 'type') allPossibleTargetFields.add(key); 
+            }); 
+        });
+
         allPossibleTargetFields.forEach(fieldId => {
             const field = document.getElementById(fieldId);
             if (field) {
                 const combinedTextArray = targetFieldsContent[fieldId] || [];
                 let finalValue = "";
+
                 if (textareaListFields.includes(fieldId.replace('field-', ''))) {
                     finalValue = combinedTextArray.map(line => line.startsWith('• ') ? line : '• ' + line).join('\n');
-                    if (finalValue === '') { finalValue = '• '; } else if (!finalValue.endsWith('\n• ')) { finalValue += '\n• '; }
-                } else { finalValue = combinedTextArray.join('\n\n'); }
+                    if (finalValue === '') { finalValue = '• '; } 
+                    else if (!finalValue.endsWith('\n• ')) { finalValue += '\n• '; }
+                } else { 
+                    finalValue = combinedTextArray.join('\n\n'); 
+                }
+                
+                // Lógica de limpeza se vazio
                 if (finalValue.trim() !== '•' && finalValue.trim() !== '') field.value = finalValue;
                 else if (textareaListFields.includes(fieldId.replace('field-', ''))) field.value = '• ';
                 else field.value = '';
-                if (field.tagName === 'TEXTAREA' && textareaListFields.includes(fieldId.replace('field-', ''))) enableAutoBullet(field);
+
+                if (field.tagName === 'TEXTAREA' && typeof enableAutoBullet === 'function') enableAutoBullet(field);
              }
         });
 
-        // Para selecionar tasks no componente, precisamos acessar o DOM dele (usando querySelector no elemento)
-        // Mas o componente não expõe um método para "setar" tasks, apenas o reset.
-        // Se precisar, teremos que implementar no step-tasks.js. Por enquanto, o link de cenários só preenche texto.
+        // 4. (CORREÇÃO) Marca as Tasks Linkadas
+        // Busca globalmente por checkboxes com a classe .task-checkbox
+        const allCheckboxes = document.querySelectorAll('.task-checkbox');
+        
+        allCheckboxes.forEach(checkbox => {
+            // Se esta task está na lista de linkadas
+            if (activeLinkedTasks.has(checkbox.value)) {
+                if (!checkbox.checked) {
+                    checkbox.checked = true;
+                    // Dispara o evento para que o listener (taskManager ou populateTasks)
+                    // perceba a mudança e crie os inputs de print
+                    checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+        });
     }
 
     mainStatusSelect.onchange = () => {
@@ -506,84 +544,94 @@ function generateOutputHtml() {
         let outputText = templateData.template.replace(/\n/g, "<br>");
         const ulStyle = "style=\"margin-bottom: 12px; padding-left: 30px;\"";
 
-        // Container de tasks (Pega do DOM se a variável global falhar)
-        const containerTasks = typeof taskCheckboxesContainer !== 'undefined' ? taskCheckboxesContainer : document.getElementById('task-checkboxes-container');
-        const containerScreenshots = typeof screenshotsListDiv !== 'undefined' ? screenshotsListDiv : document.getElementById('screenshots-input-container')?.querySelector('div');
-
         let tagNames = [];
         let screenshotsText = '';
 
-        // --- 1. Nomes das Tags (Baseado nos Checkboxes) ---
-        if (containerTasks) {
-            const selectedCheckboxes = containerTasks.querySelectorAll('.task-checkbox:checked');
-            selectedCheckboxes.forEach(checkbox => {
+        // --- VARREDURA UNIVERSAL DE TASKS E PRINTS ---
+        
+        // 1. Pegar nomes das Tags (Checkboxes marcados)
+        const allCheckboxes = document.querySelectorAll('.task-checkbox:checked');
+        
+        if (allCheckboxes.length > 0) {
+            allCheckboxes.forEach(checkbox => {
                 const taskKey = checkbox.value;
                 const task = TASKS_DB[taskKey];
-                // Tenta achar o contador (pode estar no pai do pai dependendo da estrutura)
+                
+                // Tenta achar o contador visualmente próximo
+                // (Funciona tanto no TaskManager novo quanto na lista antiga)
                 const label = checkbox.closest('label');
-                const countSpan = label ? label.querySelector('.stepper-count') : null;
-                const count = countSpan ? parseInt(countSpan.textContent) : 1;
+                const stepper = label ? label.querySelector('.stepper-count') : null;
+                const count = stepper ? parseInt(stepper.textContent) : 1;
 
                 if (count > 1) tagNames.push(`${task.name} (x${count})`);
                 else tagNames.push(task.name);
             });
         }
 
-        // --- 1.5. VARREDURA DE PRINTS (O PULO DO GATO) ---
-        // Em vez de confiar apenas no template.requiresTasks, olhamos se existem inputs de print visíveis e preenchidos
-        if (containerScreenshots) {
-            // Pega todos os blocos de Task gerados na área de print
-            // A estrutura é: Container > Bloco Task > Card Instância > Input Nome
-            const nameInputs = Array.from(containerScreenshots.querySelectorAll('input[id^="name-"]'));
-            
-            nameInputs.forEach(nameInput => {
-                const customName = nameInput.value;
+        // 2. Pegar os Prints (Inputs visíveis na tela)
+        // Procura todos os inputs de "Nome da Instância" (ex: GTM #1)
+        // Eles têm IDs começando com "name-"
+        const nameInputs = Array.from(document.querySelectorAll('input[id^="name-"]'));
+        
+        // Filtra apenas os que estão visíveis (offsetParent !== null)
+        // Isso evita pegar inputs de módulos ocultos ou antigos
+        const visibleNameInputs = nameInputs.filter(i => i.offsetParent !== null);
+
+        if (visibleNameInputs.length > 0) {
+            visibleNameInputs.forEach(nameInput => {
+                const customName = nameInput.value; // Ex: "GTM Installation #1"
                 
-                // Acha o card pai desse input
+                // O card branco é o pai do wrapper do nome
+                // Estrutura: Card > NameWrapper > Input
                 const card = nameInput.closest('div').parentNode; 
                 
-                // Pega os inputs de link dentro desse card
+                // Busca os inputs de link (screen-...) DENTRO desse card
                 const printInputs = card.querySelectorAll('input[id^="screen-"]');
                 
-                // Se tiver prints, adiciona ao texto final
-                if (printInputs.length > 0) {
-                    screenshotsText += `<b>${customName}</b>`;
-                    let itemsHtml = '';
+                let hasPrints = false;
+                let itemsHtml = '';
+
+                printInputs.forEach(printInput => {
+                    const linkValue = printInput.value.trim();
+                    // O label é o irmão anterior
+                    const labelEl = printInput.previousElementSibling;
+                    const labelText = labelEl ? labelEl.textContent.replace('📷 ', '').replace(':', '') : 'Print';
+
+                    // Adiciona se tiver valor OU se for um campo mandatório que queremos mostrar vazio
+                    // Vamos mostrar sempre a linha, com ou sem valor, para padronizar
+                    const displayValue = linkValue ? ` ${linkValue}` : '';
                     
-                    printInputs.forEach(printInput => {
-                        // O label é o irmão anterior do input
-                        const labelEl = printInput.previousElementSibling;
-                        const labelText = labelEl ? labelEl.innerText.replace('📷 ', '').replace(':', '') : 'Print';
-                        const val = printInput.value.trim();
-                        const displayVal = val ? ` ${val}` : '';
-                        
-                        itemsHtml += `<li>${labelText} -${displayVal}</li>`;
-                    });
+                    itemsHtml += `<li>${labelText} -${displayValue}</li>`;
+                    hasPrints = true;
+                });
+
+                if (hasPrints) {
+                    screenshotsText += `<b>${customName}</b>`;
                     screenshotsText += `<ul ${ulStyle}>${itemsHtml}</ul>`;
                 }
             });
         }
 
-        // --- 2. INJEÇÃO NO TEMPLATE ---
+        // --- INJEÇÃO NO HTML ---
 
-        // Tags
-        const tagsString = tagNames.join(', ') || 'N/A';
+        // Tags Implemented
         if (outputText.includes('{TAGS_IMPLEMENTED}')) {
-            outputText = outputText.replace(/{TAGS_IMPLEMENTED}/g, tagsString);
+            outputText = outputText.replace(/{TAGS_IMPLEMENTED}/g, tagNames.join(', ') || 'N/A');
         } else if (tagNames.length > 0) {
-            // Se não tem placeholder mas tem tags, adiciona no final
-            outputText += `<br><b>Tags:</b> ${tagsString}<br>`;
+            // Se não tem placeholder, mas tem tags, adiciona no fim
+            outputText += `<br><b>Tags:</b> ${tagNames.join(', ')}<br>`;
         }
 
-        // Screenshots
+        // Screenshots List
         if (outputText.includes('{SCREENSHOTS_LIST}')) {
             outputText = outputText.replace(/{SCREENSHOTS_LIST}/g, screenshotsText ? `${screenshotsText}` : 'N/A');
         } else if (screenshotsText !== '') {
-            // Se não tem placeholder mas tem prints (caso Awaiting Inputs), adiciona no final
+            // Se não tem placeholder (caso Awaiting Inputs), FORÇA a adição no fim
             outputText += `<br>${screenshotsText}`;
         }
 
-        // 3. Campos de Portugal e Consentimento (Mantém igual)
+        // --- CAMPOS PADRÃO E DINÂMICOS ---
+        // (Mantém a lógica de Portugal, Consentimento e Inputs Dinâmicos igual)
         if (currentLang === 'pt' && isPortugalCase) {
             const consentValue = consentRadioSim.checked ? t('sim') : t('nao');
             outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, `<br><b>${t('consentiu_gravacao')}</b> ${consentValue}<br><br>`);
@@ -592,31 +640,26 @@ function generateOutputHtml() {
             outputText = outputText.replace(/{CASO_PORTUGAL}/g, `<br><b>${t('caso_portugal')}</b> ${t('nao')}<br>`);
             outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, ''); 
         } else {
-            outputText = outputText.replace(/{CASO_PORTUGAL}/g, '');
+            outputText = outputText.replace(/{CASO_PORTUGAL}/g, ''); 
             outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, '');
         }
 
-        // 4. Campos Dinâmicos e Limpeza Inteligente (Mantém igual)
-        const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
-        inputs.forEach(input => {
+        // Processa inputs de texto e textarea
+        const dynamicInputs = document.querySelectorAll('#dynamic-form-fields-container input, #dynamic-form-fields-container textarea');
+        dynamicInputs.forEach(input => {
             const fieldName = input.id.replace('field-', '');
             const placeholderRegex = new RegExp(`{${fieldName}}`, 'g');
             let value = input.value;
             
-            if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey.startsWith('NI_') || selectedSubStatusKey.startsWith('IN_'))) {
-                const checkedRadio = snippetContainer.querySelector('input[type="radio"]:checked');
-                if (checkedRadio && scenarioSnippets[checkedRadio.id]) value = scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS'];
-            }
-
+            // ... (Lógica de formatação de listas/parágrafos mantém igual) ...
             if (textareaListFields.includes(fieldName) && value.trim() !== '') {
                 const lines = value.split('\n').map(l => l.trim()).filter(l => l !== '' && l !== '•').map(l => l.startsWith('• ') ? l.substring(2) : l).map(l => `<li>${l}</li>`).join('');
                 value = lines ? `<ul ${ulStyle}>${lines}</ul>` : '';
             } else if (textareaParagraphFields.includes(fieldName)) {
                 value = value.split('\n').filter(l => l.trim() !== '').map(l => `<p style="margin: 0 0 8px 0;">${l}</p>`).join('');
-            } else if (input.tagName === 'TEXTAREA') { 
-                value = value.replace(/\n/g, '<br>'); 
-            }
-            
+            } else if (input.tagName === 'TEXTAREA') { value = value.replace(/\n/g, '<br>'); }
+
+            // Limpeza Inteligente
             const textContent = value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
             const isEmpty = textContent === '' || textContent === '•' || textContent.toLowerCase() === 'n/a';
 
@@ -629,10 +672,11 @@ function generateOutputHtml() {
             }
         });
         
+        // Limpeza Final
         outputText = outputText.replace(/{([A-Z0-9_]+)}/g, ''); 
         outputText = outputText.replace(/(<br>){3,}/g, '<br><br>');
         
-        // Tag Support (Se existir o objeto global ou módulo)
+        // Tag Support (Se existir)
         if (typeof tagSupport !== 'undefined' && tagSupport.getOutput) {
             outputText += tagSupport.getOutput();
         }
