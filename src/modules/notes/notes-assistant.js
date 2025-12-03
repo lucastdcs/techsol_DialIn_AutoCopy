@@ -507,126 +507,115 @@ export function initCaseNotesAssistant() {
         let outputText = templateData.template.replace(/\n/g, "<br>");
         const ulStyle = "style=\"margin-bottom: 12px; padding-left: 30px;\"";
 
-        // --- 1. DEFINIÇÃO SEGURA DO CONTAINER ---
-        // Tenta pegar do taskManager (se existir), senão tenta variável global, senão busca no DOM
-        let containerAlvo = null;
-        if (typeof taskManager !== 'undefined' && taskManager.selectionElement) {
-            containerAlvo = taskManager.selectionElement;
-        } else if (typeof taskCheckboxesContainer !== 'undefined') {
-            containerAlvo = taskCheckboxesContainer;
-        } else {
-            containerAlvo = document.getElementById('task-checkboxes-container');
-        }
-
-        // Se não achou container, assume que não tem tasks
-        const hasCheckedTasks = containerAlvo 
-            ? containerAlvo.querySelectorAll('.task-checkbox:checked').length > 0 
-            : false;
+        // --- 1. CAPTURA DE DADOS DIRETO DA TELA ---
+        // Em vez de recalcular da DB, olhamos o que o módulo desenhou na tela
+        const screenshotsContainer = document.getElementById('screenshots-input-container');
         
         let tagNames = [];
         let screenshotsText = '';
+        
+        // Pega todos os blocos de Task (divs cinzas)
+        // (A estrutura no step-tasks.js é: Container > Bloco Cinza > Cards Brancos)
+        // Mas para facilitar, vamos pegar as checkboxes marcadas para os Nomes das Tags
+        // e os Inputs Visíveis para os Prints.
 
-        // --- 2. GERAÇÃO DO CONTEÚDO (TASKS E PRINTS) ---
-        if (templateData.requiresTasks || hasCheckedTasks) {
-            // CORREÇÃO: Usa containerAlvo garantido
-            const selectedCheckboxes = containerAlvo.querySelectorAll('.task-checkbox:checked');
-            
-            const isEducation = selectedSubStatusKey.includes('Education');
-            const screenshotType = isEducation ? 'education' : 'implementation';
-            
-            selectedCheckboxes.forEach(checkbox => {
-                const taskKey = checkbox.value;
-                const task = TASKS_DB[taskKey];
+        // A. Nomes das Tags (via Checkbox para garantir a ordem/lista correta)
+        const selectedCheckboxes = document.querySelectorAll('.task-checkbox:checked');
+        selectedCheckboxes.forEach(cb => {
+            const taskName = TASKS_DB[cb.value].name;
+            const count = parseInt(cb.closest('label').querySelector('.stepper-count').textContent);
+            if (count > 1) tagNames.push(`${taskName} (x${count})`);
+            else tagNames.push(taskName);
+        });
+
+        // B. Screenshots (Via Varredura de Inputs Visíveis)
+        // Procura todos os inputs de NOME DE INSTÂNCIA (aqueles com ícone de lápis)
+        // IDs formato: name-{taskKey}-{i}
+        const nameInputs = Array.from(document.querySelectorAll('input[id^="name-"]'));
+        
+        // Filtra apenas os que estão dentro do container de screenshots e visíveis
+        const visibleNameInputs = nameInputs.filter(input => 
+            screenshotsContainer.contains(input) && input.offsetParent !== null
+        );
+
+        if (visibleNameInputs.length > 0) {
+            visibleNameInputs.forEach(nameInput => {
+                // 1. Pega o nome (ex: "GTM Installation #1")
+                const customName = nameInput.value;
+                screenshotsText += `<b>${customName}</b>`;
                 
-                // Busca o stepper count relativo ao checkbox
-                const countSpan = checkbox.closest('label').querySelector('.stepper-count');
-                const count = countSpan ? parseInt(countSpan.textContent) : 1;
-
-                if (count > 1) tagNames.push(`${task.name} (x${count})`); 
-                else tagNames.push(task.name);
-
-                const screenshotList = task.screenshots ? (task.screenshots[screenshotType] || []) : [];
+                // 2. Acha o "Card" pai desse input para pegar os prints DELE
+                const card = nameInput.closest('div').parentNode; // div.nameWrapper -> div.card
                 
-                if (screenshotList.length > 0) {
-                    for (let i = 1; i <= count; i++) {
-                        // Tenta pegar o nome personalizado pelo ID
-                        const nameInput = document.getElementById(`name-${taskKey}-${i}`);
-                        const customName = nameInput ? nameInput.value : `${task.name} #${i}`;
+                // 3. Pega os inputs de print DENTRO desse card
+                const printInputs = card.querySelectorAll('input[id^="screen-"]');
+                
+                if (printInputs.length > 0) {
+                    let itemsHtml = '';
+                    printInputs.forEach(printInput => {
+                        const labelText = printInput.previousElementSibling.innerText.replace('📷 ', '').replace(':', '');
+                        const userLink = printInput.value.trim();
+                        const displayValue = userLink ? ` ${userLink}` : '';
                         
-                        screenshotsText += `<b>${customName}</b>`;
-                        
-                        let itemsHtml = '';
-                        screenshotList.forEach((reqPrint, index) => {
-                            const inputId = `screen-${taskKey}-${i}-${index}`;
-                            const inputEl = document.getElementById(inputId);
-                            
-                            // Pega valor ou vazio
-                            const userValue = inputEl ? inputEl.value.trim() : '';
-                            // Adiciona espaço antes se tiver valor
-                            const displayValue = userValue ? ` ${userValue}` : '';
-                            
-                            itemsHtml += `<li>${reqPrint} -${displayValue}</li>`;
-                        });
-                        screenshotsText += `<ul ${ulStyle}>${itemsHtml}</ul>`;
-                    }
+                        itemsHtml += `<li>${labelText} -${displayValue}</li>`;
+                    });
+                    screenshotsText += `<ul ${ulStyle}>${itemsHtml}</ul>`;
                 }
             });
         }
-
-        // --- 3. INJEÇÃO INTELIGENTE ---
         
-        // Tags Implemented
+        // --- 2. INJEÇÃO NO TEMPLATE ---
+
+        // Tags
+        const tagsString = tagNames.join(', ') || 'N/A';
         if (outputText.includes('{TAGS_IMPLEMENTED}')) {
-            outputText = outputText.replace(/{TAGS_IMPLEMENTED}/g, tagNames.join(', ') || 'N/A');
+            outputText = outputText.replace(/{TAGS_IMPLEMENTED}/g, tagsString);
         } else if (tagNames.length > 0) {
-            outputText += `<br><b>Tags:</b> ${tagNames.join(', ')}<br>`;
+            // Se não tem placeholder mas tem tags, adiciona
+            outputText += `<br><b>Tags:</b> ${tagsString}<br>`;
         }
 
-        // Screenshots List
+        // Screenshots
         if (outputText.includes('{SCREENSHOTS_LIST}')) {
             outputText = outputText.replace(/{SCREENSHOTS_LIST}/g, screenshotsText ? `${screenshotsText}` : 'N/A');
         } else if (screenshotsText !== '') {
+            // Se não tem placeholder mas tem prints, adiciona no final
             outputText += `<br>${screenshotsText}`;
         }
-
-        // 4. Campos de Portugal e Consentimento
+        
+        // --- 3. CAMPOS PADRÃO (Portugal/Consentimento) ---
         if (currentLang === 'pt' && isPortugalCase) {
             const consentValue = consentRadioSim.checked ? t('sim') : t('nao');
-            const consentHtml = `<br><b>${t('consentiu_gravacao')}</b> ${consentValue}<br><br>`;
-            outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, consentHtml);
+            outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, `<br><b>${t('consentiu_gravacao')}</b> ${consentValue}<br><br>`);
             outputText = outputText.replace(/{CASO_PORTUGAL}/g, `<br><b>${t('caso_portugal')}</b> ${t('sim')}<br>`);
         } else if (currentLang === 'pt' && !isPortugalCase) {
             outputText = outputText.replace(/{CASO_PORTUGAL}/g, `<br><b>${t('caso_portugal')}</b> ${t('nao')}<br>`);
             outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, ''); 
         } else {
-            outputText = outputText.replace(/{CASO_PORTUGAL}/g, '');
-            outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, '');
+            outputText = outputText.replace(/{CASO_PORTUGAL}/g, ''); outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, '');
         }
 
-        // 5. Campos Dinâmicos e Limpeza
+        // --- 4. CAMPOS DINÂMICOS ---
         const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
         inputs.forEach(input => {
             const fieldName = input.id.replace('field-', '');
-            const placeholderStr = `{${fieldName}}`;
-            const placeholderRegex = new RegExp(placeholderStr, 'g');
+            const placeholderRegex = new RegExp(`{${fieldName}}`, 'g');
             let value = input.value;
             
             if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey.startsWith('NI_') || selectedSubStatusKey.startsWith('IN_'))) {
                 const checkedRadio = snippetContainer.querySelector('input[type="radio"]:checked');
                 if (checkedRadio && scenarioSnippets[checkedRadio.id]) value = scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS'];
             }
-
             if (textareaListFields.includes(fieldName) && value.trim() !== '') {
                 const lines = value.split('\n').map(l => l.trim()).filter(l => l !== '' && l !== '•').map(l => l.startsWith('• ') ? l.substring(2) : l).map(l => `<li>${l}</li>`).join('');
                 value = lines ? `<ul ${ulStyle}>${lines}</ul>` : '';
             } else if (textareaParagraphFields.includes(fieldName)) {
                 value = value.split('\n').filter(l => l.trim() !== '').map(l => `<p style="margin: 0 0 8px 0;">${l}</p>`).join('');
-            } else if (input.tagName === 'TEXTAREA') { 
-                value = value.replace(/\n/g, '<br>'); 
-            }
+            } else if (input.tagName === 'TEXTAREA') { value = value.replace(/\n/g, '<br>'); }
             
+            // Limpeza Inteligente
             const textContent = value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-            const isEmpty = textContent === '' || textContent === '•' || textContent.toLowerCase() === 'n/a' || textContent.toLowerCase() === 'na';
+            const isEmpty = textContent === '' || textContent === '•' || textContent.toLowerCase() === 'n/a';
 
             if (isEmpty) {
                 const lineRegex = new RegExp(`(?:<br>\\s*)?<[b|strong]+>[^<]+:\\s*<\\/[b|strong]+>\\s*\\{${fieldName}\\}(?:<br>\\s*)?`, 'gi');
@@ -641,9 +630,7 @@ export function initCaseNotesAssistant() {
         outputText = outputText.replace(/(<br>){3,}/g, '<br><br>');
         
         // Tag Support
-        if (tagSupport && typeof tagSupport.getOutput === 'function') {
-            outputText += tagSupport.getOutput();
-        }
+        outputText += tagSupport.getOutput();
 
         return outputText;
     }
