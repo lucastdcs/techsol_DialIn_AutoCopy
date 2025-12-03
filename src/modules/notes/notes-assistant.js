@@ -502,11 +502,15 @@ export function initCaseNotesAssistant() {
         let outputText = templateData.template.replace(/\n/g, "<br>");
         const ulStyle = "style=\"margin-bottom: 12px; padding-left: 30px;\"";
 
-        // USA O COMPONENTE PARA PEGAR DADOS
-        const selectedCheckboxes = stepTasks.getCheckedElements();
+        // Verifica se tem tasks marcadas (mesmo que não seja required)
+        const hasCheckedTasks = taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked').length > 0;
+        
+        let tagNames = [];
+        let screenshotsText = '';
 
-        if (templateData.requiresTasks || selectedCheckboxes.length > 0) {
-            let tagNames = []; let screenshotsText = '';
+        // --- 1. GERAÇÃO DO CONTEÚDO (TASKS E PRINTS) ---
+        if (templateData.requiresTasks || hasCheckedTasks) {
+            const selectedCheckboxes = taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked');
             const isEducation = selectedSubStatusKey.includes('Education');
             const screenshotType = isEducation ? 'education' : 'implementation';
             
@@ -515,62 +519,90 @@ export function initCaseNotesAssistant() {
                 const task = TASKS_DB[taskKey];
                 const count = parseInt(checkbox.closest('label').querySelector('.stepper-count').textContent);
 
-                if (count > 1) tagNames.push(`${task.name} (x${count})`); else tagNames.push(task.name);
-                
+                if (count > 1) tagNames.push(`${task.name} (x${count})`); 
+                else tagNames.push(task.name);
+
                 const screenshotList = task.screenshots ? (task.screenshots[screenshotType] || []) : [];
+                
                 if (screenshotList.length > 0) {
                     for (let i = 1; i <= count; i++) {
-                        // Busca o input dentro do componente de prints
-                        const nameInput = stepTasks.screenshotsElement.querySelector(`#name-${taskKey}-${i}`);
+                        const nameInput = document.getElementById(`name-${taskKey}-${i}`);
                         const customName = nameInput ? nameInput.value : `${task.name} #${i}`;
+                        
                         screenshotsText += `<b>${customName}</b>`;
+                        
                         let itemsHtml = '';
                         screenshotList.forEach((reqPrint, index) => {
-                            const inputEl = stepTasks.screenshotsElement.querySelector(`#screen-${taskKey}-${i}-${index}`);
-                            const displayValue = inputEl && inputEl.value.trim() ? ` ${inputEl.value.trim()}` : '';
+                            const inputId = `screen-${taskKey}-${i}-${index}`;
+                            const inputEl = document.getElementById(inputId);
+                            const userValue = inputEl ? inputEl.value.trim() : '';
+                            const displayValue = userValue ? ` ${userValue}` : '';
                             itemsHtml += `<li>${reqPrint} -${displayValue}</li>`;
                         });
                         screenshotsText += `<ul ${ulStyle}>${itemsHtml}</ul>`;
                     }
                 }
             });
-            outputText = outputText.replace(/{TAGS_IMPLEMENTED}/g, tagNames.join(', ') || 'N/A');
-            outputText = outputText.replace(/{SCREENSHOTS_LIST}/g, screenshotsText ? `${screenshotsText}` : 'N/A');
-        } else {
-             outputText = outputText.replace(/{TAGS_IMPLEMENTED}/g, 'N/A'); outputText = outputText.replace(/{SCREENSHOTS_LIST}/g, 'N/A');
         }
 
+        // --- 2. INJEÇÃO INTELIGENTE (A CORREÇÃO ESTÁ AQUI) ---
+        
+        // Tags Implemented
+        if (outputText.includes('{TAGS_IMPLEMENTED}')) {
+            outputText = outputText.replace(/{TAGS_IMPLEMENTED}/g, tagNames.join(', ') || 'N/A');
+        } else if (tagNames.length > 0) {
+            // Se o template não tem o placeholder, mas tem tags, adiciona no final
+            outputText += `<br><b>Tags:</b> ${tagNames.join(', ')}<br>`;
+        }
+
+        // Screenshots List
+        if (outputText.includes('{SCREENSHOTS_LIST}')) {
+            outputText = outputText.replace(/{SCREENSHOTS_LIST}/g, screenshotsText ? `${screenshotsText}` : 'N/A');
+        } else if (screenshotsText !== '') {
+            // Se o template não tem o placeholder, mas tem prints, FORÇA a adição no final
+            outputText += `<br>${screenshotsText}`;
+        }
+        // -----------------------------------------------------
+
+        // 3. Campos de Portugal e Consentimento
         if (currentLang === 'pt' && isPortugalCase) {
             const consentValue = consentRadioSim.checked ? t('sim') : t('nao');
-            outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, `<br><b>${t('consentiu_gravacao')}</b> ${consentValue}<br><br>`);
+            const consentHtml = `<br><b>${t('consentiu_gravacao')}</b> ${consentValue}<br><br>`;
+            outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, consentHtml);
             outputText = outputText.replace(/{CASO_PORTUGAL}/g, `<br><b>${t('caso_portugal')}</b> ${t('sim')}<br>`);
         } else if (currentLang === 'pt' && !isPortugalCase) {
             outputText = outputText.replace(/{CASO_PORTUGAL}/g, `<br><b>${t('caso_portugal')}</b> ${t('nao')}<br>`);
             outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, ''); 
         } else {
-            outputText = outputText.replace(/{CASO_PORTUGAL}/g, ''); outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, '');
+            outputText = outputText.replace(/{CASO_PORTUGAL}/g, '');
+            outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, '');
         }
 
+        // 4. Campos Dinâmicos e Limpeza
         const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
         inputs.forEach(input => {
             const fieldName = input.id.replace('field-', '');
-            const placeholderRegex = new RegExp(`{${fieldName}}`, 'g');
+            const placeholderStr = `{${fieldName}}`;
+            const placeholderRegex = new RegExp(placeholderStr, 'g');
             let value = input.value;
             
             if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey.startsWith('NI_') || selectedSubStatusKey.startsWith('IN_'))) {
                 const checkedRadio = snippetContainer.querySelector('input[type="radio"]:checked');
                 if (checkedRadio && scenarioSnippets[checkedRadio.id]) value = scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS'];
             }
+
             if (textareaListFields.includes(fieldName) && value.trim() !== '') {
-                const lines = value.split('\n').map(line => line.trim()).filter(l => l !== '' && l !== '•').map(l => l.startsWith('• ') ? l.substring(2) : l).map(l => `<li>${l}</li>`).join('');
+                const lines = value.split('\n').map(l => l.trim()).filter(l => l !== '' && l !== '•').map(l => l.startsWith('• ') ? l.substring(2) : l).map(l => `<li>${l}</li>`).join('');
                 value = lines ? `<ul ${ulStyle}>${lines}</ul>` : '';
             } else if (textareaParagraphFields.includes(fieldName)) {
                 value = value.split('\n').filter(l => l.trim() !== '').map(l => `<p style="margin: 0 0 8px 0;">${l}</p>`).join('');
-            } else if (input.tagName === 'TEXTAREA') { value = value.replace(/\n/g, '<br>'); }
+            } else if (input.tagName === 'TEXTAREA') { 
+                value = value.replace(/\n/g, '<br>'); 
+            }
             
-            // Limpeza Inteligente
+            // Normalização
             const textContent = value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
-            const isEmpty = textContent === '' || textContent === '•' || textContent.toLowerCase() === 'n/a';
+            const isEmpty = textContent === '' || textContent === '•' || textContent.toLowerCase() === 'n/a' || textContent.toLowerCase() === 'na';
 
             if (isEmpty) {
                 const lineRegex = new RegExp(`(?:<br>\\s*)?<[b|strong]+>[^<]+:\\s*<\\/[b|strong]+>\\s*\\{${fieldName}\\}(?:<br>\\s*)?`, 'gi');
@@ -581,10 +613,11 @@ export function initCaseNotesAssistant() {
             }
         });
         
+        // Limpeza final
         outputText = outputText.replace(/{([A-Z0-9_]+)}/g, ''); 
         outputText = outputText.replace(/(<br>){3,}/g, '<br><br>');
         
-        // ADICIONA TAG SUPPORT
+        // Tag Support
         outputText += tagSupport.getOutput();
 
         return outputText;
