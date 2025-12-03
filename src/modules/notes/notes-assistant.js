@@ -498,8 +498,7 @@ export function initCaseNotesAssistant() {
         step2Title.style.display = 'block';     
         stepTasks.selectionElement.style.display = 'block'; // Mostra a lista do componente
     };
-
-    function generateOutputHtml() {
+function generateOutputHtml() {
         const selectedSubStatusKey = subStatusSelect.value;
         if (!selectedSubStatusKey) return null;
         
@@ -507,63 +506,64 @@ export function initCaseNotesAssistant() {
         let outputText = templateData.template.replace(/\n/g, "<br>");
         const ulStyle = "style=\"margin-bottom: 12px; padding-left: 30px;\"";
 
-        // --- 1. CAPTURA DE DADOS DIRETO DA TELA ---
-        // Em vez de recalcular da DB, olhamos o que o módulo desenhou na tela
-        const screenshotsContainer = document.getElementById('screenshots-input-container');
-        
+        // Container de tasks (Pega do DOM se a variável global falhar)
+        const containerTasks = typeof taskCheckboxesContainer !== 'undefined' ? taskCheckboxesContainer : document.getElementById('task-checkboxes-container');
+        const containerScreenshots = typeof screenshotsListDiv !== 'undefined' ? screenshotsListDiv : document.getElementById('screenshots-input-container')?.querySelector('div');
+
         let tagNames = [];
         let screenshotsText = '';
-        
-        // Pega todos os blocos de Task (divs cinzas)
-        // (A estrutura no step-tasks.js é: Container > Bloco Cinza > Cards Brancos)
-        // Mas para facilitar, vamos pegar as checkboxes marcadas para os Nomes das Tags
-        // e os Inputs Visíveis para os Prints.
 
-        // A. Nomes das Tags (via Checkbox para garantir a ordem/lista correta)
-        const selectedCheckboxes = document.querySelectorAll('.task-checkbox:checked');
-        selectedCheckboxes.forEach(cb => {
-            const taskName = TASKS_DB[cb.value].name;
-            const count = parseInt(cb.closest('label').querySelector('.stepper-count').textContent);
-            if (count > 1) tagNames.push(`${taskName} (x${count})`);
-            else tagNames.push(taskName);
-        });
+        // --- 1. Nomes das Tags (Baseado nos Checkboxes) ---
+        if (containerTasks) {
+            const selectedCheckboxes = containerTasks.querySelectorAll('.task-checkbox:checked');
+            selectedCheckboxes.forEach(checkbox => {
+                const taskKey = checkbox.value;
+                const task = TASKS_DB[taskKey];
+                // Tenta achar o contador (pode estar no pai do pai dependendo da estrutura)
+                const label = checkbox.closest('label');
+                const countSpan = label ? label.querySelector('.stepper-count') : null;
+                const count = countSpan ? parseInt(countSpan.textContent) : 1;
 
-        // B. Screenshots (Via Varredura de Inputs Visíveis)
-        // Procura todos os inputs de NOME DE INSTÂNCIA (aqueles com ícone de lápis)
-        // IDs formato: name-{taskKey}-{i}
-        const nameInputs = Array.from(document.querySelectorAll('input[id^="name-"]'));
-        
-        // Filtra apenas os que estão dentro do container de screenshots e visíveis
-        const visibleNameInputs = nameInputs.filter(input => 
-            screenshotsContainer.contains(input) && input.offsetParent !== null
-        );
+                if (count > 1) tagNames.push(`${task.name} (x${count})`);
+                else tagNames.push(task.name);
+            });
+        }
 
-        if (visibleNameInputs.length > 0) {
-            visibleNameInputs.forEach(nameInput => {
-                // 1. Pega o nome (ex: "GTM Installation #1")
+        // --- 1.5. VARREDURA DE PRINTS (O PULO DO GATO) ---
+        // Em vez de confiar apenas no template.requiresTasks, olhamos se existem inputs de print visíveis e preenchidos
+        if (containerScreenshots) {
+            // Pega todos os blocos de Task gerados na área de print
+            // A estrutura é: Container > Bloco Task > Card Instância > Input Nome
+            const nameInputs = Array.from(containerScreenshots.querySelectorAll('input[id^="name-"]'));
+            
+            nameInputs.forEach(nameInput => {
                 const customName = nameInput.value;
-                screenshotsText += `<b>${customName}</b>`;
                 
-                // 2. Acha o "Card" pai desse input para pegar os prints DELE
-                const card = nameInput.closest('div').parentNode; // div.nameWrapper -> div.card
+                // Acha o card pai desse input
+                const card = nameInput.closest('div').parentNode; 
                 
-                // 3. Pega os inputs de print DENTRO desse card
+                // Pega os inputs de link dentro desse card
                 const printInputs = card.querySelectorAll('input[id^="screen-"]');
                 
+                // Se tiver prints, adiciona ao texto final
                 if (printInputs.length > 0) {
+                    screenshotsText += `<b>${customName}</b>`;
                     let itemsHtml = '';
+                    
                     printInputs.forEach(printInput => {
-                        const labelText = printInput.previousElementSibling.innerText.replace('📷 ', '').replace(':', '');
-                        const userLink = printInput.value.trim();
-                        const displayValue = userLink ? ` ${userLink}` : '';
+                        // O label é o irmão anterior do input
+                        const labelEl = printInput.previousElementSibling;
+                        const labelText = labelEl ? labelEl.innerText.replace('📷 ', '').replace(':', '') : 'Print';
+                        const val = printInput.value.trim();
+                        const displayVal = val ? ` ${val}` : '';
                         
-                        itemsHtml += `<li>${labelText} -${displayValue}</li>`;
+                        itemsHtml += `<li>${labelText} -${displayVal}</li>`;
                     });
                     screenshotsText += `<ul ${ulStyle}>${itemsHtml}</ul>`;
                 }
             });
         }
-        
+
         // --- 2. INJEÇÃO NO TEMPLATE ---
 
         // Tags
@@ -571,7 +571,7 @@ export function initCaseNotesAssistant() {
         if (outputText.includes('{TAGS_IMPLEMENTED}')) {
             outputText = outputText.replace(/{TAGS_IMPLEMENTED}/g, tagsString);
         } else if (tagNames.length > 0) {
-            // Se não tem placeholder mas tem tags, adiciona
+            // Se não tem placeholder mas tem tags, adiciona no final
             outputText += `<br><b>Tags:</b> ${tagsString}<br>`;
         }
 
@@ -579,11 +579,11 @@ export function initCaseNotesAssistant() {
         if (outputText.includes('{SCREENSHOTS_LIST}')) {
             outputText = outputText.replace(/{SCREENSHOTS_LIST}/g, screenshotsText ? `${screenshotsText}` : 'N/A');
         } else if (screenshotsText !== '') {
-            // Se não tem placeholder mas tem prints, adiciona no final
+            // Se não tem placeholder mas tem prints (caso Awaiting Inputs), adiciona no final
             outputText += `<br>${screenshotsText}`;
         }
-        
-        // --- 3. CAMPOS PADRÃO (Portugal/Consentimento) ---
+
+        // 3. Campos de Portugal e Consentimento (Mantém igual)
         if (currentLang === 'pt' && isPortugalCase) {
             const consentValue = consentRadioSim.checked ? t('sim') : t('nao');
             outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, `<br><b>${t('consentiu_gravacao')}</b> ${consentValue}<br><br>`);
@@ -592,10 +592,11 @@ export function initCaseNotesAssistant() {
             outputText = outputText.replace(/{CASO_PORTUGAL}/g, `<br><b>${t('caso_portugal')}</b> ${t('nao')}<br>`);
             outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, ''); 
         } else {
-            outputText = outputText.replace(/{CASO_PORTUGAL}/g, ''); outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, '');
+            outputText = outputText.replace(/{CASO_PORTUGAL}/g, '');
+            outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, '');
         }
 
-        // --- 4. CAMPOS DINÂMICOS ---
+        // 4. Campos Dinâmicos e Limpeza Inteligente (Mantém igual)
         const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
         inputs.forEach(input => {
             const fieldName = input.id.replace('field-', '');
@@ -606,14 +607,16 @@ export function initCaseNotesAssistant() {
                 const checkedRadio = snippetContainer.querySelector('input[type="radio"]:checked');
                 if (checkedRadio && scenarioSnippets[checkedRadio.id]) value = scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS'];
             }
+
             if (textareaListFields.includes(fieldName) && value.trim() !== '') {
                 const lines = value.split('\n').map(l => l.trim()).filter(l => l !== '' && l !== '•').map(l => l.startsWith('• ') ? l.substring(2) : l).map(l => `<li>${l}</li>`).join('');
                 value = lines ? `<ul ${ulStyle}>${lines}</ul>` : '';
             } else if (textareaParagraphFields.includes(fieldName)) {
                 value = value.split('\n').filter(l => l.trim() !== '').map(l => `<p style="margin: 0 0 8px 0;">${l}</p>`).join('');
-            } else if (input.tagName === 'TEXTAREA') { value = value.replace(/\n/g, '<br>'); }
+            } else if (input.tagName === 'TEXTAREA') { 
+                value = value.replace(/\n/g, '<br>'); 
+            }
             
-            // Limpeza Inteligente
             const textContent = value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
             const isEmpty = textContent === '' || textContent === '•' || textContent.toLowerCase() === 'n/a';
 
@@ -629,8 +632,10 @@ export function initCaseNotesAssistant() {
         outputText = outputText.replace(/{([A-Z0-9_]+)}/g, ''); 
         outputText = outputText.replace(/(<br>){3,}/g, '<br><br>');
         
-        // Tag Support
-        outputText += tagSupport.getOutput();
+        // Tag Support (Se existir o objeto global ou módulo)
+        if (typeof tagSupport !== 'undefined' && tagSupport.getOutput) {
+            outputText += tagSupport.getOutput();
+        }
 
         return outputText;
     }
