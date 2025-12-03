@@ -283,17 +283,25 @@ export function initCaseNotesAssistant() {
     // 4. LÓGICA DE NEGÓCIO
     // =========================================================================
 
-    function setCaseType(type) {
-        currentCaseType = type; 
-        if (type === 'bau') { 
-            Object.assign(typeBAU.style, { backgroundColor: '#e8f0fe', color: '#1967d2', borderColor: '#e8f0fe' });
-            Object.assign(typeLM.style, { backgroundColor: '#f8f9fa', color: '#5f6368', borderColor: '#dadce0' });
+function setCaseType(type) {
+        currentCaseType = type;
+        
+        // 1. Sorteia uma cor do Google
+        const activeStyle = getRandomGoogleStyle();
+
+        // 2. Reseta ambos para o padrão cinza
+        Object.assign(typeBAU.style, typeBtnStyle);
+        Object.assign(typeLM.style, typeBtnStyle);
+
+        // 3. Aplica a cor no selecionado e define o link
+        if (type === 'bau') {
+            Object.assign(typeBAU.style, activeStyle);
             subStatusHelpLink.href = "https://docs.google.com/presentation/d/1Jra4de31rYaFZ0JMH_CiVzr2S3F8J1qcUcJRaw0Lw5Q/edit?slide=id.g2fd98a4e46f_11_2657#slide=id.g2fd98a4e46f_11_2657";
-        } else { 
-            Object.assign(typeLM.style, { backgroundColor: '#e8f0fe', color: '#1967d2', borderColor: '#e8f0fe' });
-            Object.assign(typeBAU.style, { backgroundColor: '#f8f9fa', color: '#5f6368', borderColor: '#dadce0' });
+        } else {
+            Object.assign(typeLM.style, activeStyle);
             subStatusHelpLink.href = "https://docs.google.com/presentation/d/1CzrmfatUVReZWKAbwxHxcB3YXsH834xO6pPhTsZ7yjM/edit?slide=id.g1f1e626a09c_2_2243&resourcekey=0-KmtR4noMvEx3PODZk_ZvQw#slide=id.g1f1e626a09c_2_2243";
         }
+
         if (subStatusSelect.value) { subStatusSelect.dispatchEvent(new Event('change')); }
     }
 
@@ -322,17 +330,29 @@ export function initCaseNotesAssistant() {
         optionalTaskBtn.textContent = "+ " + (currentLang === 'pt' ? "Gostaria de selecionar uma task?" : "Quisiera seleccionar una tarea?");
     }
     
+
+
     function setLanguage(lang) {
         currentLang = lang;
+        
+        // 1. Sorteia uma cor do Google
+        const activeStyle = getRandomGoogleStyle();
+
+        // 2. Reseta ambos para o padrão cinza
+        Object.assign(langPT.style, typeBtnStyle);
+        Object.assign(langES.style, typeBtnStyle);
+
+        // 3. Aplica a cor no selecionado e gerencia visibilidade
         if (lang === 'pt') {
-            Object.assign(langPT.style, { backgroundColor: '#e8f0fe', color: '#1967d2', borderColor: '#e8f0fe' });
-            Object.assign(langES.style, { backgroundColor: '#f8f9fa', color: '#5f6368', borderColor: '#dadce0' });
-            stepPortugalDiv.style.display = 'block'; setPortugalCase(isPortugalCase); 
+            Object.assign(langPT.style, activeStyle);
+            stepPortugalDiv.style.display = 'block';
+            setPortugalCase(isPortugalCase);
         } else {
-            Object.assign(langES.style, { backgroundColor: '#e8f0fe', color: '#1967d2', borderColor: '#e8f0fe' });
-            Object.assign(langPT.style, { backgroundColor: '#f8f9fa', color: '#5f6368', borderColor: '#dadce0' });
-            stepPortugalDiv.style.display = 'none'; stepConsentDiv.style.display = 'none';  
+            Object.assign(langES.style, activeStyle);
+            stepPortugalDiv.style.display = 'none';
+            stepConsentDiv.style.display = 'none';
         }
+        
         updateUIText();
         if (subStatusSelect.value) { subStatusSelect.dispatchEvent(new Event('change')); }
     }
