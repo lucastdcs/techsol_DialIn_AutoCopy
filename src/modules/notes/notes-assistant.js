@@ -1,20 +1,6 @@
 import { createTagSupportModule } from "./tag-support.js";
-import {
-  showToast,
-  makeDraggable,
-  styleSelect,
-  styleLabel,
-  stylePopup,
-  stylePopupHeader,
-  stylePopupTitle,
-  stylePopupCloseBtn,
-  styleFloatingButton,
-  stylePopupVersion,
-  styleCredit,
-  styleExpandButton,
-  typeBtnStyle,
-  getRandomGoogleStyle,
-} from "../shared/utils.js";
+import { buildNotesUI } from "./notes-ui.js";
+import { showToast } from "../shared/utils.js";
 
 import {
   TASKS_DB,
@@ -45,553 +31,62 @@ export function initCaseNotesAssistant() {
   let currentLang = "pt";
   let isPortugalCase = false;
 
+  // 1. INICIALIZAÇÃO DE MÓDULOS AUXILIARES
   const tagSupport = createTagSupportModule();
 
-  const btnContainer = document.createElement("div");
-  Object.assign(btnContainer.style, {
-    position: "fixed",
-    bottom: "40%",
-    right: "24px",
-    zIndex: "9999",
-    display: "flex",
-    alignItems: "center",
-    flexDirection: "row-reverse",
-    gap: "12px",
-    cursor: "pointer",
-  });
+  // 2. CONSTRUÇÃO DA UI (Via Factory)
+  // Passamos a versão e o callback de fechar
+  const ui = buildNotesUI(CURRENT_VERSION, () => togglePopup(false));
 
-  const btn = document.createElement("button");
-  btn.id = "notes-floating-btn";
-  btn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
+  // 3. DESEMPACOTAMENTO (Mapeia a UI para as variáveis que sua lógica já usa)
+  // Isso evita que você tenha que renomear variáveis no arquivo todo.
 
-  const btnStyleLocal =
-    typeof NoteStyles !== "undefined" && NoteStyles.styleFloatingButton
-      ? NoteStyles.styleFloatingButton
-      : {
-          width: "48px",
-          height: "48px",
-          borderRadius: "50%",
-          background: "#1a73e8",
-          color: "white",
-          border: "none",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          boxShadow: "0 4px 12px rgba(26, 115, 232, 0.4)",
-          transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)",
-        };
-  Object.assign(btn.style, btnStyleLocal);
-
-  const tooltip = document.createElement("span");
-  tooltip.textContent = "Case Note";
-  Object.assign(tooltip.style, {
-    background: "rgba(0,0,0,0.7)",
-    color: "white",
-    padding: "4px 8px",
-    borderRadius: "4px",
-    fontSize: "12px",
-    opacity: "0",
-    pointerEvents: "none",
-    transition: "opacity 0.2s",
-    whiteSpace: "nowrap",
-    fontWeight: "500",
-  });
-
-  btnContainer.onmouseenter = () => {
-    btn.style.transform = "scale(1.1)";
-    tooltip.style.opacity = "1";
-  };
-  btnContainer.onmouseleave = () => {
-    btn.style.transform = "scale(1)";
-    tooltip.style.opacity = "0";
-  };
-
-  btnContainer.appendChild(btn);
-  btnContainer.appendChild(tooltip);
-  document.body.appendChild(btnContainer);
-  makeDraggable(btnContainer);
-
-  const popup = document.createElement("div");
-  popup.id = "autofill-popup";
-
-  Object.assign(
-    popup.style,
-    stylePopup,
-    {
-      right: "80px",
-      width: "380px",
-      borderRadius: "12px",
-      display: "flex",
-      flexDirection: "column",
-      boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
-    },
-    animationStyles.popupInitial
-  );
-
-  popup.style.transition += ", width 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)";
-
-  const animRefs = { popup, btnContainer, googleLine: null };
-  let visible = false;
-
-  const header = createStandardHeader(
+  const {
     popup,
-    "Case Notes Assistant",
-    CURRENT_VERSION,
-    "Gera notas padronizadas automaticamente. Selecione o status, as tasks realizadas e preencha os detalhes para inserir no caso.", // <--- NOVO
+    btn,
+    btnContainer,
     animRefs,
-    () => {
-      togglePopup(false);
-    }
-  );
+    emailCheckbox,
+    subStatusHelpLink,
+  } = ui;
 
-  const headerContainer = header.lastElementChild;
+  const { main: mainStatusSelect, sub: subStatusSelect } = ui.selects;
 
-  if (headerContainer) {
-    const expandBtn = document.createElement("div");
-    expandBtn.textContent = "↔";
-    expandBtn.classList.add("no-drag");
+  const {
+    tasks: taskCheckboxesContainer,
+    dynamicForms: dynamicFormFieldsContainer,
+    screenshots: screenshotsListDiv,
+    screenshotsRoot: screenshotsContainer,
+    snippet: snippetContainer,
+    tagSupportSlot, // O local reservado para o Tag Support
+  } = ui.containers;
 
-    const btnStyle =
-      typeof NoteStyles !== "undefined" && NoteStyles.styleExpandButton
-        ? { ...NoteStyles.styleExpandButton }
-        : {
-            color: "#5f6368",
-            cursor: "pointer",
-            borderRadius: "50%",
-            zIndex: "10",
-          };
+  const { copy: copyButton, generate: generateButton } = ui.buttons;
 
-    Object.assign(btnStyle, {
-      fontSize: "20px",
-      padding: "8px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    });
+  const {
+    portugalSim: portugalRadioSim,
+    portugalNao: portugalRadioNao,
+    consentSim: consentRadioSim,
+    consentNao: consentRadioNao,
+  } = ui.radios;
 
-    Object.assign(expandBtn.style, btnStyle);
+  const { typeBAU, typeLM, langPT, langES } = ui.toggleDivs;
 
-    expandBtn.style.marginRight = "4px";
-    expandBtn.style.marginLeft = "auto";
+  // Variáveis de Steps (para o resetSteps)
+  const {
+    snippets: stepSnippetsDiv,
+    tasks: step2Div,
+    forms: step3Div,
+    email: emailAutomationDiv,
+    buttons: buttonContainer,
+    optionalTaskBtn: optionalTaskBtn,
+  } = ui.steps;
 
-    // --- UX: TOOLTIP NATIVO ---
-    expandBtn.title = "Expandir/Contrair Janela";
-    // --------------------------
-
-    expandBtn.onmouseover = () => (expandBtn.style.backgroundColor = "#e8eaed");
-    expandBtn.onmouseout = () =>
-      (expandBtn.style.backgroundColor = "transparent");
-
-    let isExpanded = false;
-    const initialWidth = 380;
-    const expandedWidth = 700;
-
-    expandBtn.onclick = () => {
-      isExpanded = !isExpanded;
-      popup.style.width = isExpanded
-        ? `${expandedWidth}px`
-        : `${initialWidth}px`;
-    };
-
-    const closeBtn = headerContainer.lastElementChild;
-
-    if (closeBtn) {
-      headerContainer.insertBefore(expandBtn, closeBtn);
-    } else {
-      headerContainer.appendChild(expandBtn);
-    }
+  // 4. INJEÇÃO DE MÓDULOS EXTERNOS
+  // Agora que a UI existe, colocamos o Tag Support no lugar reservado
+  if (tagSupportSlot) {
+    tagSupportSlot.appendChild(tagSupport.element);
   }
-
-  popup.appendChild(header);
-
-  const popupContent = document.createElement("div");
-  Object.assign(popupContent.style, {
-    padding: "0 16px 16px 16px",
-    overflowY: "auto",
-    flexGrow: "1",
-  });
-  popup.appendChild(popupContent);
-  const credit = document.createElement("div");
-  credit.textContent = "created by lucaste@";
-  Object.assign(credit.style, styleCredit);
-  popup.appendChild(credit);
-
-  // Variáveis da UI
-  const langToggleDiv = document.createElement("div");
-  const langLabel = document.createElement("label");
-  const langPT = document.createElement("div");
-  const langES = document.createElement("div");
-  const step0Div = document.createElement("div");
-  const typeLabel = document.createElement("label");
-  const typeBAU = document.createElement("div");
-  const typeLM = document.createElement("div");
-  const step1Div = document.createElement("div");
-  const mainStatusLabel = document.createElement("label");
-  const subStatusLabel = document.createElement("label");
-  const stepPortugalDiv = document.createElement("div");
-  const portugalLabel = document.createElement("label");
-  const portugalRadioSim = document.createElement("input");
-  const portugalLabelSim = document.createElement("label");
-  const portugalRadioNao = document.createElement("input");
-  const portugalLabelNao = document.createElement("label");
-  const stepConsentDiv = document.createElement("div");
-  const consentLabel = document.createElement("label");
-  const consentRadioSim = document.createElement("input");
-  const consentLabelSim = document.createElement("label");
-  const consentRadioNao = document.createElement("input");
-  const consentLabelNao = document.createElement("label");
-  const stepSnippetsDiv = document.createElement("div");
-  const snippetContainer = document.createElement("div");
-  const stepSnippetsTitle = document.createElement("h3");
-
-  const step2Div = document.createElement("div");
-  const optionalTaskBtn = document.createElement("button");
-  optionalTaskBtn.textContent = "+ Gostaria de selecionar uma task?";
-  Object.assign(optionalTaskBtn.style, NoteStyles.styleOptionalBtn);
-  optionalTaskBtn.onmouseover = () => {
-    optionalTaskBtn.style.background = "#e8f0fe";
-  };
-  optionalTaskBtn.onmouseout = () => {
-    optionalTaskBtn.style.background = "white";
-  };
-
-  const taskCheckboxesContainer = document.createElement("div");
-  const step2Title = document.createElement("h3");
-
-  const step3Div = document.createElement("div");
-  const dynamicFormFieldsContainer = document.createElement("div");
-  const step3Title = document.createElement("h3");
-  const mainStatusSelect = document.createElement("select");
-  const subStatusSelect = document.createElement("select");
-  const emailAutomationDiv = document.createElement("div");
-  const emailLabel = document.createElement("label");
-  const emailCheckbox = document.createElement("input");
-  const buttonContainer = document.createElement("div");
-  const copyButton = document.createElement("button");
-  const generateButton = document.createElement("button");
-  const screenshotsContainer = document.createElement("div");
-  screenshotsContainer.id = "screenshots-input-container";
-  Object.assign(screenshotsContainer.style, {
-    marginTop: "16px",
-    borderTop: "1px dashed #ccc",
-    paddingTop: "12px",
-    display: "none",
-  });
-  const screenshotsTitle = document.createElement("h4");
-  screenshotsTitle.textContent = "Evidências / Screenshots";
-  Object.assign(screenshotsTitle.style, NoteStyles.styleH3);
-  screenshotsContainer.appendChild(screenshotsTitle);
-  const screenshotsListDiv = document.createElement("div");
-  screenshotsContainer.appendChild(screenshotsListDiv);
-
-  function t(key) {
-    if (
-      translations &&
-      translations[currentLang] &&
-      translations[currentLang][key]
-    ) {
-      return translations[currentLang][key];
-    }
-    if (translations && translations["pt"] && translations["pt"][key]) {
-      return translations["pt"][key];
-    }
-    return key;
-  }
-
-  function updateUIText() {
-    langLabel.textContent = t("idioma");
-    typeLabel.textContent = t("fluxo");
-    mainStatusLabel.textContent = t("status_principal");
-    subStatusLabel.textContent = t("substatus");
-    stepSnippetsTitle.textContent = t("cenarios_comuns");
-    step2Title.textContent = t("selecione_tasks");
-    step3Title.textContent = t("preencha_detalhes");
-    copyButton.textContent = t("copiar");
-    generateButton.textContent = t("preencher");
-    if (mainStatusSelect.querySelector('option[value=""]'))
-      mainStatusSelect.querySelector('option[value=""]').textContent =
-        t("select_status");
-    if (subStatusSelect.querySelector('option[value=""]'))
-      subStatusSelect.querySelector('option[value=""]').textContent =
-        t("select_substatus");
-    portugalLabel.textContent = t("caso_portugal");
-    portugalLabelSim.textContent = t("sim");
-    portugalLabelNao.textContent = t("nao");
-    consentLabel.textContent = t("consentiu_gravacao");
-    consentLabelSim.textContent = t("sim");
-    consentLabelNao.textContent = t("nao");
-    dynamicFormFieldsContainer.querySelectorAll("label").forEach((label) => {
-      const fieldName = label.nextElementSibling.id.replace("field-", "");
-      const translatedLabel = t(fieldName.toLowerCase());
-      if (translatedLabel !== fieldName.toLowerCase()) {
-        label.textContent = translatedLabel;
-      } else {
-        label.textContent =
-          fieldName
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (l) => l.toUpperCase()) + ":";
-      }
-    });
-    optionalTaskBtn.textContent = "+ Gostaria de selecionar uma task?";
-  }
-
-  function setLanguage(lang) {
-    currentLang = lang;
-    const newActiveStyle = getRandomGoogleStyle();
-    Object.assign(langPT.style, typeBtnStyle);
-    Object.assign(langES.style, typeBtnStyle);
-    if (lang === "pt") {
-      Object.assign(langPT.style, newActiveStyle);
-      stepPortugalDiv.style.display = "block";
-      setPortugalCase(isPortugalCase);
-    } else {
-      Object.assign(langES.style, newActiveStyle);
-      stepPortugalDiv.style.display = "none";
-      stepConsentDiv.style.display = "none";
-    }
-    updateUIText();
-    if (subStatusSelect.value) {
-      subStatusSelect.dispatchEvent(new Event("change"));
-    }
-  }
-
-  // Montagem UI
-  langToggleDiv.id = "step-lang-type";
-  Object.assign(langLabel.style, styleLabel);
-  langToggleDiv.appendChild(langLabel);
-  const langContainer = document.createElement("div");
-  Object.assign(langContainer.style, {
-    display: "flex",
-    borderRadius: "8px",
-    border: "1px solid #dadce0",
-    overflow: "hidden",
-    marginBottom: "16px",
-  });
-  langPT.textContent = "Português";
-  langPT.classList.add("no-drag");
-  langES.textContent = "Español";
-  langES.classList.add("no-drag");
-  Object.assign(langPT.style, typeBtnStyle);
-  Object.assign(langES.style, typeBtnStyle);
-  langPT.onclick = () => setLanguage("pt");
-  langES.onclick = () => setLanguage("es");
-  langContainer.appendChild(langPT);
-  langContainer.appendChild(langES);
-  langToggleDiv.appendChild(langContainer);
-  popupContent.appendChild(langToggleDiv);
-
-  step0Div.id = "step-0-case-type";
-  Object.assign(typeLabel.style, styleLabel);
-  step0Div.appendChild(typeLabel);
-  const typeContainer = document.createElement("div");
-  Object.assign(typeContainer.style, {
-    display: "flex",
-    borderRadius: "8px",
-    border: "1px solid #dadce0",
-    overflow: "hidden",
-    marginBottom: "16px",
-  });
-  typeBAU.textContent = "BAU";
-  typeBAU.classList.add("no-drag");
-  typeLM.textContent = "LM";
-  typeLM.classList.add("no-drag");
-  Object.assign(typeBAU.style, typeBtnStyle);
-  Object.assign(typeLM.style, typeBtnStyle);
-  function setCaseType(type) {
-    currentCaseType = type;
-    const newActiveStyle = getRandomGoogleStyle();
-    Object.assign(typeBAU.style, typeBtnStyle);
-    Object.assign(typeLM.style, typeBtnStyle);
-    if (type === "bau") {
-      Object.assign(typeBAU.style, newActiveStyle);
-    } else {
-      Object.assign(typeLM.style, newActiveStyle);
-    }
-    if (subStatusSelect.value) {
-      subStatusSelect.dispatchEvent(new Event("change"));
-    }
-  }
-  typeBAU.onclick = () => setCaseType("bau");
-  typeLM.onclick = () => setCaseType("lm");
-  typeContainer.appendChild(typeBAU);
-  typeContainer.appendChild(typeLM);
-  step0Div.appendChild(typeContainer);
-  popupContent.appendChild(step0Div);
-  setCaseType("bau");
-
-  step1Div.id = "step-1-selection";
-  Object.assign(mainStatusLabel.style, styleLabel);
-  mainStatusSelect.id = "main-status";
-  mainStatusSelect.innerHTML = `<option value="">-- Selecione --</option><option value="NI">NI - Need Info</option><option value="SO">SO - Solution Offered</option><option value="IN">IN - Inactive</option><option value="AS">AS - Assigned</option>`;
-  Object.assign(mainStatusSelect.style, styleSelect);
-  Object.assign(subStatusLabel.style, styleLabel);
-  subStatusSelect.id = "sub-status";
-  subStatusSelect.innerHTML = `<option value="">-- Selecione o Status --</option>`;
-  Object.assign(subStatusSelect.style, styleSelect);
-  subStatusSelect.disabled = true;
-  step1Div.appendChild(mainStatusLabel);
-  step1Div.appendChild(mainStatusSelect);
-  step1Div.appendChild(subStatusLabel);
-  step1Div.appendChild(subStatusSelect);
-  popupContent.appendChild(step1Div);
-
-  stepPortugalDiv.id = "step-1-1-portugal";
-  Object.assign(stepPortugalDiv.style, {
-    ...NoteStyles.styleStepBlock,
-    display: "none",
-  });
-  Object.assign(portugalLabel.style, styleLabel);
-  stepPortugalDiv.appendChild(portugalLabel);
-  const portugalRadioGroup = document.createElement("div");
-  Object.assign(portugalRadioGroup.style, NoteStyles.styleRadioContainer);
-  const divPtSim = document.createElement("div");
-  Object.assign(divPtSim.style, { display: "flex", alignItems: "center" });
-  portugalRadioSim.type = "radio";
-  portugalRadioSim.name = "portugal-group";
-  portugalRadioSim.value = "sim";
-  Object.assign(portugalRadioSim.style, NoteStyles.styleCheckboxInput);
-  portugalLabelSim.htmlFor = "portugal-sim";
-  Object.assign(portugalLabelSim.style, { cursor: "pointer" });
-  divPtSim.appendChild(portugalRadioSim);
-  divPtSim.appendChild(portugalLabelSim);
-  const divPtNao = document.createElement("div");
-  Object.assign(divPtNao.style, { display: "flex", alignItems: "center" });
-  portugalRadioNao.type = "radio";
-  portugalRadioNao.name = "portugal-group";
-  portugalRadioNao.value = "nao";
-  portugalRadioNao.checked = true;
-  Object.assign(portugalRadioNao.style, NoteStyles.styleCheckboxInput);
-  portugalLabelNao.htmlFor = "portugal-nao";
-  Object.assign(portugalLabelNao.style, { cursor: "pointer" });
-  divPtNao.appendChild(portugalRadioNao);
-  divPtNao.appendChild(portugalLabelNao);
-  portugalRadioGroup.appendChild(divPtSim);
-  portugalRadioGroup.appendChild(divPtNao);
-  stepPortugalDiv.appendChild(portugalRadioGroup);
-  popupContent.appendChild(stepPortugalDiv);
-  function setPortugalCase(isPT) {
-    isPortugalCase = isPT;
-    if (isPT) {
-      stepConsentDiv.style.display = "block";
-    } else {
-      stepConsentDiv.style.display = "none";
-    }
-  }
-  portugalRadioSim.onchange = () => setPortugalCase(true);
-  portugalRadioNao.onchange = () => setPortugalCase(false);
-
-  stepConsentDiv.id = "step-1-2-consent";
-  Object.assign(stepConsentDiv.style, {
-    ...NoteStyles.styleStepBlock,
-    display: "none",
-  });
-  Object.assign(consentLabel.style, styleLabel);
-  stepConsentDiv.appendChild(consentLabel);
-  const consentRadioGroup = document.createElement("div");
-  Object.assign(consentRadioGroup.style, NoteStyles.styleRadioContainer);
-  const divCSim = document.createElement("div");
-  Object.assign(divCSim.style, { display: "flex", alignItems: "center" });
-  consentRadioSim.type = "radio";
-  consentRadioSim.name = "consent-group";
-  consentRadioSim.value = "Sim";
-  consentRadioSim.checked = true;
-  Object.assign(consentRadioSim.style, NoteStyles.styleCheckboxInput);
-  consentLabelSim.htmlFor = "consent-sim";
-  Object.assign(consentLabelSim.style, { cursor: "pointer" });
-  divCSim.appendChild(consentRadioSim);
-  divCSim.appendChild(consentLabelSim);
-  const divCNao = document.createElement("div");
-  Object.assign(divCNao.style, { display: "flex", alignItems: "center" });
-  consentRadioNao.type = "radio";
-  consentRadioNao.name = "consent-group";
-  consentRadioNao.value = "Não";
-  Object.assign(consentRadioNao.style, NoteStyles.styleCheckboxInput);
-  consentLabelNao.htmlFor = "consent-nao";
-  Object.assign(consentLabelNao.style, { cursor: "pointer" });
-  divCNao.appendChild(consentRadioNao);
-  divCNao.appendChild(consentLabelNao);
-  consentRadioGroup.appendChild(divCSim);
-  consentRadioGroup.appendChild(divCNao);
-  stepConsentDiv.appendChild(consentRadioGroup);
-  popupContent.appendChild(stepConsentDiv);
-
-  stepSnippetsDiv.id = "step-1-5-snippets";
-  Object.assign(stepSnippetsDiv.style, {
-    ...NoteStyles.styleStepBlock,
-    display: "none",
-  });
-  Object.assign(stepSnippetsTitle.style, NoteStyles.styleH3);
-  snippetContainer.id = "snippet-container";
-  stepSnippetsDiv.appendChild(stepSnippetsTitle);
-  stepSnippetsDiv.appendChild(snippetContainer);
-  popupContent.appendChild(stepSnippetsDiv);
-
-  // Step 2 (Tasks) + Redundância
-  step2Div.id = "step-2-tasks";
-  Object.assign(step2Div.style, {
-    ...NoteStyles.styleStepBlock,
-    display: "none",
-  });
-  Object.assign(step2Title.style, NoteStyles.styleH3);
-  taskCheckboxesContainer.id = "task-checkboxes-container";
-  step2Div.appendChild(optionalTaskBtn);
-  step2Div.appendChild(step2Title);
-  step2Div.appendChild(taskCheckboxesContainer);
-  popupContent.appendChild(step2Div);
-
-  step3Div.id = "step-3-form";
-  Object.assign(step3Div.style, {
-    ...NoteStyles.styleStepBlock,
-    display: "none",
-  });
-  Object.assign(step3Title.style, NoteStyles.styleH3);
-  dynamicFormFieldsContainer.id = "dynamic-form-fields-container";
-  step3Div.appendChild(step3Title);
-  step3Div.appendChild(dynamicFormFieldsContainer);
-  step3Div.appendChild(tagSupport.element);
-  step3Div.appendChild(screenshotsContainer);
-  popupContent.appendChild(step3Div);
-
-  emailAutomationDiv.id = "step-4-email";
-  Object.assign(emailAutomationDiv.style, {
-    display: "none",
-    marginTop: "16px",
-    paddingTop: "12px",
-    borderTop: "1px solid #eee",
-  });
-  emailLabel.style.display = "flex";
-  emailLabel.style.alignItems = "center";
-  emailLabel.style.cursor = "pointer";
-  emailLabel.style.fontSize = "14px";
-  emailCheckbox.type = "checkbox";
-  emailCheckbox.checked = true;
-  Object.assign(emailCheckbox.style, NoteStyles.styleCheckboxInput);
-  emailLabel.appendChild(emailCheckbox);
-  emailLabel.appendChild(
-    document.createTextNode("Preencher email automaticamente?")
-  );
-  emailAutomationDiv.appendChild(emailLabel);
-  popupContent.appendChild(emailAutomationDiv);
-
-  Object.assign(buttonContainer.style, {
-    display: "none",
-    gap: "8px",
-    padding: "0",
-  });
-  popupContent.appendChild(buttonContainer);
-  Object.assign(copyButton.style, {
-    ...NoteStyles.styleButtonBase,
-    backgroundColor: "#5f6368",
-  });
-  buttonContainer.appendChild(copyButton);
-  Object.assign(generateButton.style, {
-    ...NoteStyles.styleButtonBase,
-    backgroundColor: "#1a73e8",
-  });
-  buttonContainer.appendChild(generateButton);
-
-  document.body.appendChild(popup);
 
   // --- FUNÇÕES DE LÓGICA (TASKS) ---
   function checkTagSupportVisibility() {
