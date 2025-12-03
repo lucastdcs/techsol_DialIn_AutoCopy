@@ -505,9 +505,13 @@ export function initCaseNotesAssistant() {
         const templateData = SUBSTATUS_TEMPLATES[selectedSubStatusKey];
         let outputText = templateData.template.replace(/\n/g, "<br>");
         const ulStyle = "style=\"margin-bottom: 12px; padding-left: 30px;\"";
+const containerAlvo = typeof taskCheckboxesContainer !== 'undefined' 
+            ? taskCheckboxesContainer 
+            : document.getElementById('task-checkboxes-container');
 
-        // Verifica se tem tasks marcadas (mesmo que não seja required)
-        const hasCheckedTasks = taskCheckboxesContainer.querySelectorAll('.task-checkbox:checked').length > 0;
+        const hasCheckedTasks = containerAlvo 
+            ? containerAlvo.querySelectorAll('.task-checkbox:checked').length > 0 
+            : false;
         
         let tagNames = [];
         let screenshotsText = '';
