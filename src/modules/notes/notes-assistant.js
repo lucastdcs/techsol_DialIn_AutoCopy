@@ -1,4 +1,5 @@
 import { createTagSupportModule } from "./tag-support.js";
+import { createStepTasksComponent } from './components/step-tasks.js';
 import {
   showToast,
   makeDraggable,
@@ -46,6 +47,11 @@ export function initCaseNotesAssistant() {
   let isPortugalCase = false;
 
   const tagSupport = createTagSupportModule();
+  const taskComponent = createStepTasksComponent(() => {
+    // Callback: Quando algo muda nas tasks, avisa o Tag Support
+    const checkedValues = taskComponent.getCheckedElements().map(c => c.value);
+    tagSupport.updateVisibility(subStatusSelect.value, checkedValues);
+});
 
   const btnContainer = document.createElement("div");
   Object.assign(btnContainer.style, {
@@ -538,6 +544,7 @@ export function initCaseNotesAssistant() {
   step2Div.appendChild(optionalTaskBtn);
   step2Div.appendChild(step2Title);
   step2Div.appendChild(taskCheckboxesContainer);
+  step2Div.appendChild(taskComponent.selectionElement);
   popupContent.appendChild(step2Div);
 
   step3Div.id = "step-3-form";
@@ -551,6 +558,7 @@ export function initCaseNotesAssistant() {
   step3Div.appendChild(dynamicFormFieldsContainer);
   step3Div.appendChild(tagSupport.element);
   step3Div.appendChild(screenshotsContainer);
+  step3Div.appendChild(taskComponent.screenshotsElement);
   popupContent.appendChild(step3Div);
 
   emailAutomationDiv.id = "step-4-email";
@@ -646,6 +654,7 @@ export function initCaseNotesAssistant() {
       tagSupport.style.display = "none";
     }
   }
+  
   function populateTaskCheckboxes() {
     taskCheckboxesContainer.innerHTML = "";
 
@@ -1456,6 +1465,7 @@ export function initCaseNotesAssistant() {
   };
 
   subStatusSelect.onchange = () => {
+    taskComponent.updateSubStatus(valor)
     const selectedSubStatusKey = subStatusSelect.value;
     resetSteps(1.5);
     if (!selectedSubStatusKey) return;
@@ -1734,6 +1744,7 @@ export function initCaseNotesAssistant() {
   };
 
   function resetSteps(startFrom = 1.5) {
+    taskComponent.reset()
     if (startFrom <= 1.5) {
       stepSnippetsDiv.style.display = "none";
       snippetContainer.innerHTML = "";
