@@ -14,7 +14,6 @@ import {
 
 import { runEmailAutomation } from "../email/email-automation.js";
 
-import { createStandardHeader } from "../shared/header-factory.js";
 import { animationStyles, togglePopupAnimation } from "../shared/animations.js";
 
 import * as NoteStyles from "./notes-styles.js";
@@ -31,63 +30,58 @@ export function initCaseNotesAssistant() {
   let currentLang = "pt";
   let isPortugalCase = false;
 
-  // 1. INICIALIZAÇÃO DE MÓDULOS AUXILIARES
-  const tagSupport = createTagSupportModule();
+// --- 1. INICIALIZAÇÃO (Módulos e UI) ---
+    const tagSupport = createTagSupportModule(); // Cria o módulo de Tag Support
 
-  // 2. CONSTRUÇÃO DA UI (Via Factory)
-  // Passamos a versão e o callback de fechar
-  const ui = buildNotesUI(CURRENT_VERSION, () => togglePopup(false));
+    // Constrói a Interface visual (Trazida do notes-ui.js)
+    const ui = buildNotesUI(CURRENT_VERSION, () => {
+        visible = false;
+        togglePopupAnimation(false, ui.animRefs);
+    });
 
-  // 3. DESEMPACOTAMENTO (Mapeia a UI para as variáveis que sua lógica já usa)
-  // Isso evita que você tenha que renomear variáveis no arquivo todo.
+    // --- 2. DESEMPACOTAMENTO (Mapeia a UI para as variáveis que sua lógica usa) ---
+    // Isso é vital: transformamos o objeto 'ui' nas variáveis soltas que o resto do seu código espera.
+    
+    const { 
+        popup, btn, btnContainer, animRefs, subStatusHelpLink, emailCheckbox 
+    } = ui;
 
-  const {
-    popup,
-    btn,
-    btnContainer,
-    animRefs,
-    emailCheckbox,
-    subStatusHelpLink,
-  } = ui;
+    const { main: mainStatusSelect, sub: subStatusSelect } = ui.selects;
+    
+    const { 
+        tasks: taskCheckboxesContainer, 
+        dynamicForms: dynamicFormFieldsContainer, 
+        screenshots: screenshotsListDiv, 
+        screenshotsRoot: screenshotsContainer, 
+        snippet: snippetContainer, 
+        tagSupportSlot 
+    } = ui.containers;
 
-  const { main: mainStatusSelect, sub: subStatusSelect } = ui.selects;
+    const { copy: copyButton, generate: generateButton } = ui.buttons;
+    
+    const { 
+        portugalSim: portugalRadioSim, portugalNao: portugalRadioNao, 
+        consentSim: consentRadioSim, consentNao: consentRadioNao 
+    } = ui.radios;
+    
+    const { typeBAU, typeLM, langPT, langES } = ui.toggleDivs;
 
-  const {
-    tasks: taskCheckboxesContainer,
-    dynamicForms: dynamicFormFieldsContainer,
-    screenshots: screenshotsListDiv,
-    screenshotsRoot: screenshotsContainer,
-    snippet: snippetContainer,
-    tagSupportSlot, // O local reservado para o Tag Support
-  } = ui.containers;
-
-  const { copy: copyButton, generate: generateButton } = ui.buttons;
-
-  const {
-    portugalSim: portugalRadioSim,
-    portugalNao: portugalRadioNao,
-    consentSim: consentRadioSim,
-    consentNao: consentRadioNao,
-  } = ui.radios;
-
-  const { typeBAU, typeLM, langPT, langES } = ui.toggleDivs;
-
-  // Variáveis de Steps (para o resetSteps)
-  const {
-    snippets: stepSnippetsDiv,
-    tasks: step2Div,
-    forms: step3Div,
-    email: emailAutomationDiv,
-    buttons: buttonContainer,
-    optionalTaskBtn: optionalTaskBtn,
-  } = ui.steps;
-
-  // 4. INJEÇÃO DE MÓDULOS EXTERNOS
-  // Agora que a UI existe, colocamos o Tag Support no lugar reservado
-  if (tagSupportSlot) {
-    tagSupportSlot.appendChild(tagSupport.element);
-  }
-
+    // Variáveis usadas no resetSteps
+    const {
+        snippets: stepSnippetsDiv,
+        tasks: step2Div,
+        forms: step3Div,
+        email: emailAutomationDiv,
+        buttons: buttonContainer,
+        optionalTaskBtn: optionalTaskBtn,
+        step2Title: step2Title
+    } = ui.steps;
+    
+    // --- 3. INJEÇÃO DE MÓDULOS EXTERNOS ---
+    // Agora que a UI existe, colocamos o Tag Support no slot reservado para ele
+    if (tagSupportSlot) {
+        tagSupportSlot.appendChild(tagSupport.element);
+    }
   // --- FUNÇÕES DE LÓGICA (TASKS) ---
   function checkTagSupportVisibility() {
     const selectedSubStatusKey = subStatusSelect.value;
