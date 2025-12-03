@@ -245,8 +245,12 @@ export function initCaseNotesAssistant() {
     const optionalTaskBtn = document.createElement("button"); optionalTaskBtn.textContent = "+ Gostaria de selecionar uma task?"; Object.assign(optionalTaskBtn.style, styles.optionalBtn);
     optionalTaskBtn.onmouseover = () => { optionalTaskBtn.style.background = '#e8f0fe'; }; optionalTaskBtn.onmouseout = () => { optionalTaskBtn.style.background = 'white'; };
     const step2Title = document.createElement("h3"); Object.assign(step2Title.style, styles.h3);
+
+    const taskCheckboxesContainer = document.createElement("div"); 
+    taskCheckboxesContainer.id = "task-checkboxes-container";
     
     step2Div.appendChild(optionalTaskBtn); 
+    step2Div.appendChild(taskCheckboxesContainer);
     step2Div.appendChild(step2Title); 
     step2Div.appendChild(stepTasks.selectionElement); // <--- ELEMENTO DO COMPONENTE AQUI
     popupContent.appendChild(step2Div);
