@@ -1,9 +1,9 @@
 // src/modules/shared/command-center.js
 
 const COLORS = {
-    glassBg: 'rgba(20, 20, 20, 0.85)', // Vidro escuro e sólido
+    glassBg: 'rgba(79, 78, 78, 0.77)', // Vidro escuro e sólido
     glassBorder: 'rgba(255, 255, 255, 0.15)',
-    glassActive: 'rgba(40, 40, 40, 0.95)', // Quando agarra
+    glassActive: 'rgba(79, 79, 79, 0.89)', // Quando agarra
     glassHighlight: 'rgba(255, 255, 255, 0.08)',
     iconIdle: '#9AA0A6',
     iconActive: '#FFFFFF',
