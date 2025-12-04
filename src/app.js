@@ -1,48 +1,55 @@
+// src/app.js
+
+// 1. Importação dos Módulos
 import { initCaseNotesAssistant } from './modules/notes/notes-assistant.js';
-import { initCallScriptAssistant } from './modules/call-script/call-script-assistant.js';
 import { initQuickEmailAssistant } from './modules/quick-email/quick-email-assistant.js';
-import { initFeedbackAssistant } from './modules/lm-report/lm-repot-assistant.js';
-import { initGlobalStylesAndFont, showToast } from './modules/shared/utils.js'; // <--- IMPORT AQUI
-import { playStartupAnimation } from './modules/shared/utils.js';
+import { initCallScriptAssistant } from './modules/call-script/call-script-assistant.js';
+import { initFeedbackAssistant } from './modules/feedback/feedback-assistant.js'; 
 
-// ... dentro de initApp ...
+// 2. Importação do Núcleo Compartilhado
+import { initCommandCenter } from './modules/shared/command-center.js';
+import { initGlobalStylesAndFont, playStartupAnimation, showToast } from './modules/shared/utils.js';
 
-// Roda a Splash Screen
-
-// ... continua inicializando os módulos ...
 function initApp() {
+    // Evita múltiplas inicializações
+    if (window.techSolInitialized) {
+        // Se clicar de novo, apenas roda a animação "bonitinha" novamente
+        playStartupAnimation();
+        return;
+    }
+    window.techSolInitialized = true;
+
     console.log('🚀 TechSol Suite Initializing...');
-playStartupAnimation();
 
-
-    // 1. Injeta Fonte e Estilos Globais
-    initGlobalStylesAndFont();
-
-    // 2. Roda a Animação de Abertura (Splash Screen)
-    playStartupAnimation(); // <--- CHAMADA AQUI
-
-    // 3. Inicializa os Módulos
     try {
-        initCaseNotesAssistant();
-        initCallScriptAssistant();
-        initQuickEmailAssistant();
-        initFeedbackAssistant();
-        
-        // Não precisamos mais do Toast inicial aqui, a animação já faz esse papel!
-        // showToast("TechSol Suite Carregado! 🚀"); 
+        // A. Injeta estilos globais (Fontes, Scrollbar)
+        initGlobalStylesAndFont();
+
+        // B. Roda a Animação de Entrada (Splash Screen)
+        playStartupAnimation();
+
+        // C. Inicializa os Módulos e Captura os Toggles
+        // IMPORTANTE: Agora esses módulos retornam uma função para abrir/fechar
+        // e NÃO criam mais seus próprios botões flutuantes.
+        const toggleNotes = initCaseNotesAssistant();
+        const toggleEmail = initQuickEmailAssistant();
+        const toggleScript = initCallScriptAssistant();
+        const toggleLinks = initFeedbackAssistant();
+
+        // D. Inicializa a Barra de Comando (Command Center)
+        // Passamos as funções de controle para os botões da barra
+        initCommandCenter({
+            toggleNotes,
+            toggleEmail,
+            toggleScript,
+            toggleLinks
+        });
 
     } catch (error) {
         console.error("Erro fatal na inicialização:", error);
-        showToast("Erro ao carregar TechSol. Verifique o console.", { error: true });
+        showToast("Erro crítico ao iniciar o Case Wizard.", { error: true });
     }
 }
 
-// Verifica se já rodou para não duplicar botões
-if (!window.techSolInitialized) {
-    window.techSolInitialized = true;
-    initApp();
-} else {
-    // Se o usuário clicar de novo no bookmarklet, podemos rodar a animação de novo
-    // ou apenas avisar que já está ativo.
-    playStartupAnimation(); 
-}
+// Ponto de entrada
+initApp();
