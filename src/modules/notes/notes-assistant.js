@@ -194,7 +194,7 @@ export function initCaseNotesAssistant() {
   );
   popup.style.transition += ", width 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)";
 
-  const animRefs = { popup, btnContainer, googleLine: null };
+  const animRefs = { popup, googleLine: null };
 
   // Header (Factory)
   const header = createStandardHeader(

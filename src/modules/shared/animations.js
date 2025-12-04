@@ -1,7 +1,6 @@
 // src/modules/shared/animations.js
-import { injectGoogleAnimationStyles } from './utils.js'; // Certifique-se de exportar essa função no utils.js se não estiver!
 
-// --- ESTILOS DE ANIMAÇÃO (Google Morph & Physics) ---
+// --- ESTILOS DE ANIMAÇÃO ---
 export const animationStyles = {
     // A linha colorida do Google
     googleLine: {
@@ -18,77 +17,47 @@ export const animationStyles = {
         opacity: "0",
         pointerEvents: "none",
         transform: "scale(0.05)", 
-        transformOrigin: "bottom right",
+        transformOrigin: "bottom right", // Nasce do canto (onde fica o Command Center)
         transition: "transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.2s linear",
-    },
-
-    // --- ESTADO ATIVO (CORREÇÃO: Pressionado) ---
-    // Não mudamos a cor (background), apenas a física do botão
-    btnActive: {
-        transform: "scale(0.90)",   // Encolhe levemente (efeito de pressionado)
-        filter: "brightness(0.9)",  // Escurece 10% para indicar "ativo"
-        boxShadow: "inset 0 2px 4px rgba(0,0,0,0.2)", // Sombra interna
-        pointerEvents: "auto",      // Permite clicar para fechar
-        transition: "all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)" // Transição suave
-    },
-    
-    // Estado Normal (Reset)
-    btnVisible: {
-        transform: "scale(1)",
-        filter: "brightness(1)",    // Brilho original
-        boxShadow: "0 4px 12px rgba(0,0,0,0.3)", // Sombra flutuante original (estimada)
-        opacity: "1",
-        pointerEvents: "auto",
-        transition: "all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)"
     }
 };
 
 /**
- * Gerencia a animação de abrir/fechar qualquer popup
+ * Gerencia a animação de abrir/fechar a JANELA (Popup) apenas.
+ * A animação do botão agora é responsabilidade do Command Center.
  */
 export function togglePopupAnimation(show, elements) {
-    const { popup, btnContainer, googleLine, focusElement } = elements;
-    const btn = btnContainer ? btnContainer.querySelector('button') : null;
+    const { popup, googleLine, focusElement } = elements;
 
-    // Garante que o CSS da borda colorida exista na página
-    // (Pode importar 'injectGoogleAnimationStyles' do utils ou chamar 'triggerGoogleAnimation' uma vez)
-    // Se não conseguir importar, o CSS deve estar garantido pelo init do app.
-injectGoogleAnimationStyles();
     if (show) {
         // --- ABRIR ---
-        if (btn) {
-            Object.assign(btn.style, animationStyles.btnActive);
-            // ADICIONA A CLASSE DA BORDA COLORIDA
-            btn.classList.add('google-active-state'); 
-        }
         
+        // 1. Expande o Popup
         popup.style.opacity = "1";
         popup.style.pointerEvents = "auto";
         popup.style.transform = "scale(1)";
 
+        // 2. Desenha a linha (com leve delay para acompanhar a expansão)
         if (googleLine) {
-            setTimeout(() => { googleLine.style.transform = "scaleX(1)"; }, 100);
+            setTimeout(() => {
+                googleLine.style.transform = "scaleX(1)";
+            }, 100);
         }
+
+        // 3. Foco (Acessibilidade e UX)
         if (focusElement) {
             setTimeout(() => focusElement.focus(), 100);
         }
 
     } else {
         // --- FECHAR ---
+
+        // 1. Recolhe a linha
         if (googleLine) googleLine.style.transform = "scaleX(0)";
 
+        // 2. Encolhe o Popup
         popup.style.opacity = "0";
         popup.style.pointerEvents = "none";
         popup.style.transform = "scale(0.05)"; 
-
-        if (btn) {
-            // REMOVE A CLASSE DA BORDA COLORIDA
-            btn.classList.remove('google-active-state');
-            
-            setTimeout(() => {
-                 Object.assign(btn.style, animationStyles.btnVisible);
-                 btn.style.boxShadow = ""; 
-            }, 100);
-        }
     }
 }

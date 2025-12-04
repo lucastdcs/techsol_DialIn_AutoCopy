@@ -152,7 +152,6 @@ export function initQuickEmailAssistant() {
   // Objeto de referências para a animação
   const animRefs = {
     popup,
-    btnContainer,
     googleLine: null,
     focusElement: null,
   };

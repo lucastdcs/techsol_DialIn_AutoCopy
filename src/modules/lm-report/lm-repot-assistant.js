@@ -188,7 +188,6 @@ export function initFeedbackAssistant() {
   // Refs para animação
   const animRefs = {
     popup,
-    btnContainer,
     googleLine: null,
     focusElement: null,
   };

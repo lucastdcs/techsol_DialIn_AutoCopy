@@ -39,7 +39,7 @@ export function initCallScriptAssistant() {
   );
 
   // Refs para animação
-  const animRefs = { popup: csaPopup, btnContainer, googleLine: null };
+  const animRefs = { popup: csaPopup, googleLine: null };
   let csaVisible = false;
 
   // 1. HEADER (Factory)
