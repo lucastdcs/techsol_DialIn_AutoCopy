@@ -9,7 +9,7 @@ const ICONS = {
 };
 
 const COLORS = {
-    // Dark Glass Premium
+    // TEMA DARK GLASS (O que você gostou)
     glassBg: 'rgba(28, 28, 30, 0.90)', 
     glassBorder: 'rgba(255, 255, 255, 0.15)',
     glassActive: 'rgba(40, 40, 40, 0.95)',
@@ -17,6 +17,7 @@ const COLORS = {
     
     iconIdle: '#E8EAED', 
     iconActive: '#FFFFFF',
+    
     gripColor: '#5F6368',
     gripActive: '#8AB4F8',
 
@@ -49,42 +50,44 @@ export function initCommandCenter(actions) {
                 z-index: 2147483647; cursor: grab;
                 user-select: none; width: 54px; box-sizing: border-box;
 
-                /* Estado Inicial (Escondido) */
+                /* Estado Inicial */
                 opacity: 0; transform: translateX(60px) scale(0.95);
                 
+                /* Transições Gerais */
                 transition: 
                     background 0.3s ease,
                     box-shadow 0.3s ease,
                     border-color 0.3s ease,
                     opacity 0.4s ease-out,
-                    transform 0.5s cubic-bezier(0.19, 1, 0.22, 1),
-                    top 0.1s linear, left 0.1s linear;
+                    transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
             }
 
-            /* Estado: DOCKED (Visível) */
+            /* DOCKED (Visível) */
             .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
-            /* Estado: SYSTEM READY (Pulso Verde) */
+            /* SYSTEM READY (Pulso Verde) */
             .cw-pill.system-ready { animation: systemReadyPulse 0.8s ease-out forwards; }
             @keyframes systemReadyPulse {
                 0% { border-color: ${COLORS.green}; box-shadow: 0 0 0 0 ${COLORS.readyGlow}; }
                 100% { border-color: ${COLORS.glassBorder}; box-shadow: 0 0 0 15px rgba(0,0,0,0); }
             }
 
-            /* Estado: DRAGGING */
+            /* DRAGGING (Visual) */
             .cw-pill.dragging {
                 cursor: grabbing; 
                 background: ${COLORS.glassActive}; 
                 transform: scale(1.05) !important; 
                 box-shadow: 0 20px 50px rgba(0,0,0,0.6);
                 border-color: rgba(255,255,255,0.3);
-                transition: background 0.2s, box-shadow 0.2s; /* Sem delay de movimento */
             }
             .cw-pill.dragging .cw-grip-bar { background-color: ${COLORS.gripActive}; width: 18px; }
 
-            /* Estado: SNAPPING */
+            /* SNAPPING (Movimento Suave ao Soltar) */
             .cw-pill.snapping { 
-                transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease; 
+                transition: 
+                    left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                    top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                    transform 0.4s ease; 
             }
 
             /* GRIP */
@@ -97,13 +100,9 @@ export function initCommandCenter(actions) {
                 width: 42px; height: 42px; border-radius: 50%; border: none; background: transparent;
                 display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative;
                 color: ${COLORS.iconIdle};
-                
-                /* Inicialmente invisível para animação em cascata */
                 opacity: 0; transform: scale(0.5);
                 transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
-            
-            /* Classe para mostrar o botão na animação */
             .cw-btn.popped { opacity: 1; transform: scale(1); }
 
             .cw-btn:hover { background: ${COLORS.glassHighlight}; color: ${COLORS.iconActive}; transform: scale(1.15); }
@@ -114,7 +113,7 @@ export function initCommandCenter(actions) {
             .cw-btn.script:hover { color: ${COLORS.purple}; text-shadow: 0 0 10px ${COLORS.purple}; }
             .cw-btn.links:hover { color: ${COLORS.green}; text-shadow: 0 0 10px ${COLORS.green}; }
 
-            /* SEPARATOR */
+            /* SEP */
             .cw-sep { width: 24px; height: 1px; background: rgba(255,255,255,0.1); margin: 2px 0; opacity: 0; transition: opacity 0.5s; }
             .cw-sep.visible { opacity: 1; }
 
@@ -132,19 +131,17 @@ export function initCommandCenter(actions) {
         document.head.appendChild(style);
     }
 
-    // 2. DOM STRUCTURE
+    // 2. DOM
     const pill = document.createElement('div');
     pill.className = 'cw-pill side-right';
-    
-    // Removemos a div divisora entre Notes e Email conforme pedido
     pill.innerHTML = `
         <div class="cw-grip-area" title="Arrastar">
             <div class="cw-grip-bar"></div>
         </div>
         <button class="cw-btn notes" data-label="Case Notes">${ICONS.notes}</button>
+        <div class="cw-sep"></div>
         <button class="cw-btn email" data-label="Quick Email">${ICONS.email}</button>
         <button class="cw-btn script" data-label="Call Script">${ICONS.script}</button>
-        <div class="cw-sep"></div>
         <button class="cw-btn links" data-label="Links">${ICONS.links}</button>
     `;
     document.body.appendChild(pill);
@@ -155,34 +152,31 @@ export function initCommandCenter(actions) {
     pill.querySelector('.script').onclick = (e) => { e.stopPropagation(); actions.toggleScript(); };
     pill.querySelector('.links').onclick = (e) => { e.stopPropagation(); actions.toggleLinks(); };
 
-    // 4. ANIMAÇÃO DE ENTRADA (System Ready)
+    // 4. ANIMAÇÃO DE ENTRADA
     async function animateEntry() {
-        // Espera a Splash Screen (2.6s) terminar sua saída
-        await esperar(2600);
+        await esperar(2600); // Espera a splash
 
-        // A. DOCKING (Barra desliza e atraca)
+        // Docking
         pill.classList.add('docked');
         await esperar(300);
 
-        // B. CASCATA (Ícones aparecem um a um)
+        // Cascata
         const items = pill.querySelectorAll('.cw-btn');
         const seps = pill.querySelectorAll('.cw-sep');
         seps.forEach(s => s.classList.add('visible'));
         
         for (let i = 0; i < items.length; i++) {
             items[i].classList.add('popped');
-            await esperar(60); // Ritmo rápido e mecânico
+            await esperar(60);
         }
 
-        // C. CONFIRMAÇÃO (Luz Verde na borda)
+        // System Ready
         await esperar(100);
         pill.classList.add('system-ready');
     }
-
-    // Inicia a animação
     animateEntry();
 
-    // 5. DRAG ENGINE
+    // 5. PHYSICS ENGINE (Corrigido)
     let isDragging = false;
     let startX, startY, initialLeft, initialTop;
     const DRAG_THRESHOLD = 3; 
@@ -195,14 +189,18 @@ export function initCommandCenter(actions) {
         const rect = pill.getBoundingClientRect();
         initialLeft = rect.left; initialTop = rect.top;
 
-        pill.classList.add('dragging');
-        pill.classList.remove('snapping', 'docked'); // Remove transitions lentas
+        // --- FIX CRUCIAL: MATAR TRANSIÇÕES ---
+        // Desativa qualquer animação CSS durante o arrasto manual
+        pill.style.transition = 'none'; 
+        pill.style.transform = 'none';
         
-        // Fix para não sumir: Zera transform e usa coordenadas absolutas
-        pill.style.transform = 'none'; 
+        // Define posição absoluta fixa
         pill.style.left = initialLeft + 'px';
         pill.style.top = initialTop + 'px';
-        pill.style.right = 'auto';
+        pill.style.right = 'auto'; 
+        
+        pill.classList.add('dragging');
+        pill.classList.remove('snapping', 'docked');
 
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
@@ -225,6 +223,9 @@ export function initCommandCenter(actions) {
             isDragging = false;
             pill.classList.remove('dragging');
             pill.classList.add('snapping');
+            
+            // RESTAURA TRANSIÇÕES DO CSS
+            pill.style.transition = ''; 
 
             const screenW = window.innerWidth;
             const screenH = window.innerHeight;
@@ -247,7 +248,6 @@ export function initCommandCenter(actions) {
             pill.style.left = `${targetLeft}px`;
             pill.style.top = `${targetTop}px`;
             
-            // Restaura transform para animações futuras
             setTimeout(() => pill.style.transform = '', 600);
         }
         document.removeEventListener('mousemove', onMouseMove);
