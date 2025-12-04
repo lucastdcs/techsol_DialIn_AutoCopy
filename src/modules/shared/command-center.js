@@ -141,5 +141,5 @@ export function initCommandCenter(actions) {
 
     // Entrada Suave (Pós Splash)
     // Aguarda um pouco e mostra
-    setTimeout(() => pill.classList.add('visible'), 2000);
+    setTimeout(() => pill.classList.add('visible'), 5000);
 }
