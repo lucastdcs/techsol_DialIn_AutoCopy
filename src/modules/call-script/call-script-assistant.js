@@ -257,8 +257,8 @@ export function initCallScriptAssistant() {
   }
 
   function toggleVisibility() {
-    visible = !visible;
-    togglePopupAnimation(visible, animRefs);
+    csaVisible = !csaVisible;
+    togglePopupAnimation(csaVisible, animRefs);
   }
 
   function setActiveType(type) {
