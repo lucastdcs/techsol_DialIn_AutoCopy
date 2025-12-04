@@ -1,22 +1,25 @@
 // No Topo:
-import { captureNameWithMagic, getSmartGreeting } from './page-data.js';
+import { captureNameWithMagic, getSmartGreeting } from "./page-data.js";
 
-
-let highestZIndex = 10000; 
+let highestZIndex = 10000;
 
 export function initGlobalStylesAndFont() {
-    if (document.getElementById('google-font-poppins') && document.getElementById('techsol-global-styles')) {
-        return;
-    }
-    const link = document.createElement('link');
-    link.id = 'google-font-poppins';
-    link.href = 'https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
+  if (
+    document.getElementById("google-font-poppins") &&
+    document.getElementById("techsol-global-styles")
+  ) {
+    return;
+  }
+  const link = document.createElement("link");
+  link.id = "google-font-poppins";
+  link.href =
+    "https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap";
+  link.rel = "stylesheet";
+  document.head.appendChild(link);
 
-    const style = document.createElement('style');
-    style.id = 'techsol-global-styles';
-    style.textContent = `
+  const style = document.createElement("style");
+  style.id = "techsol-global-styles";
+  style.textContent = `
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
@@ -45,108 +48,121 @@ export function initGlobalStylesAndFont() {
         .csa-li:hover { background-color: #f1f3f4; transform: scale(1.02); }
         .csa-li.csa-completed { text-decoration: line-through; color: #5f6368; transform: scale(0.98); }
     `;
-    document.head.appendChild(style);
+  document.head.appendChild(style);
 }
 
 export function showToast(message, opts = {}) {
-    const toast = document.createElement("div");
-    Object.assign(toast.style, {
-        position: "fixed", bottom: "24px", left: "50%",
-        transform: "translateX(-50%) translateY(20px)",
-        background: opts.error ? "#d93025" : "#323232",
-        color: "#fff", padding: "14px 24px", borderRadius: "4px",
-        boxShadow: "0 2px 8px rgba(0,0,0,.3)", fontFamily: "'Poppins', sans-serif",
-        fontSize: "14px", lineHeight: "20px", zIndex: "9999999",
-        opacity: "0", transition: "opacity .3s ease, transform .3s ease"
-    });
-    toast.textContent = message;
-    document.body.appendChild(toast);
-    requestAnimationFrame(() => {
-        toast.style.opacity = "1";
-        toast.style.transform = "translateX(-50%) translateY(0)";
-    });
-    setTimeout(() => {
-        toast.style.opacity = "0";
-        toast.style.transform = "translateX(-50%) translateY(20px)";
-        setTimeout(() => toast.remove(), 300);
-    }, opts.duration || 4000);
+  const toast = document.createElement("div");
+  Object.assign(toast.style, {
+    position: "fixed",
+    bottom: "24px",
+    left: "50%",
+    transform: "translateX(-50%) translateY(20px)",
+    background: opts.error ? "#d93025" : "#323232",
+    color: "#fff",
+    padding: "14px 24px",
+    borderRadius: "4px",
+    boxShadow: "0 2px 8px rgba(0,0,0,.3)",
+    fontFamily: "'Poppins', sans-serif",
+    fontSize: "14px",
+    lineHeight: "20px",
+    zIndex: "9999999",
+    opacity: "0",
+    transition: "opacity .3s ease, transform .3s ease",
+  });
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => {
+    toast.style.opacity = "1";
+    toast.style.transform = "translateX(-50%) translateY(0)";
+  });
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateX(-50%) translateY(20px)";
+    setTimeout(() => toast.remove(), 300);
+  }, opts.duration || 4000);
 }
 
 export function makeDraggable(element, handle = null) {
-    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-    const dragHandle = handle || element;
-    
-    dragHandle.onmousedown = dragMouseDown;
+  let pos1 = 0,
+    pos2 = 0,
+    pos3 = 0,
+    pos4 = 0;
+  const dragHandle = handle || element;
 
-    function dragMouseDown(e) {
-        // Ignora inputs e botões internos
-        if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(e.target.tagName) || 
-            e.target.classList.contains('no-drag')) {
-            return; 
-        }
+  dragHandle.onmousedown = dragMouseDown;
 
-        e = e || window.event;
-        e.preventDefault();
-
-        // === CORREÇÃO 1: O PULO ===
-        // Captura a posição visual ATUAL exata
-        const rect = element.getBoundingClientRect();
-        
-        // 1. Fixa a posição usando Left/Top ANTES de remover o Right
-        element.style.left = rect.left + "px";
-        element.style.top = rect.top + "px";
-        
-        // 2. Agora sim, remove as âncoras que causam conflito
-        element.style.right = 'auto';
-        element.style.bottom = 'auto';
-        
-        // 3. Fixa a largura para evitar deformação ao encostar na borda
-        element.style.width = rect.width + "px";
-        // ===========================
-
-        // Z-Index e Inicialização
-        highestZIndex++;
-        element.style.zIndex = highestZIndex;
-        pos3 = e.clientX;
-        pos4 = e.clientY;
-        
-        // Reseta flag de arrasto
-        element.setAttribute('data-dragging', 'false');
-        
-        document.onmouseup = closeDragElement;
-        document.onmousemove = elementDrag;
+  function dragMouseDown(e) {
+    // Ignora inputs e botões internos
+    if (
+      ["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(e.target.tagName) ||
+      e.target.classList.contains("no-drag")
+    ) {
+      return;
     }
 
-    function elementDrag(e) {
-        e = e || window.event;
-        e.preventDefault();
-        
-        // Calcula quanto moveu
-        pos1 = pos3 - e.clientX;
-        pos2 = pos4 - e.clientY;
-        pos3 = e.clientX;
-        pos4 = e.clientY;
+    e = e || window.event;
+    e.preventDefault();
 
-        // === CORREÇÃO 2: DETECTAR ARRASTO ===
-        // Se moveu, marca como 'arrastando' para não disparar o click depois
-        element.setAttribute('data-dragging', 'true');
-        // ====================================
-        
-        // Aplica nova posição
-        element.style.top = (element.offsetTop - pos2) + "px";
-        element.style.left = (element.offsetLeft - pos1) + "px";
-    }
+    // === CORREÇÃO 1: O PULO ===
+    // Captura a posição visual ATUAL exata
+    const rect = element.getBoundingClientRect();
 
-    function closeDragElement() {
-        document.onmouseup = null;
-        document.onmousemove = null;
-        
-        // Remove a flag de arrasto após um breve delay
-        // Isso permite que o evento 'click' verifique a flag antes dela sumir
-        setTimeout(() => {
-            element.setAttribute('data-dragging', 'false');
-        }, 100);
-    }
+    // 1. Fixa a posição usando Left/Top ANTES de remover o Right
+    element.style.left = rect.left + "px";
+    element.style.top = rect.top + "px";
+
+    // 2. Agora sim, remove as âncoras que causam conflito
+    element.style.right = "auto";
+    element.style.bottom = "auto";
+
+    // 3. Fixa a largura para evitar deformação ao encostar na borda
+    element.style.width = rect.width + "px";
+    // ===========================
+
+    // Z-Index e Inicialização
+    highestZIndex++;
+    element.style.zIndex = highestZIndex;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+
+    // Reseta flag de arrasto
+    element.setAttribute("data-dragging", "false");
+
+    document.onmouseup = closeDragElement;
+    document.onmousemove = elementDrag;
+  }
+
+  function elementDrag(e) {
+    e = e || window.event;
+    e.preventDefault();
+
+    // Calcula quanto moveu
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+
+    // === CORREÇÃO 2: DETECTAR ARRASTO ===
+    // Se moveu, marca como 'arrastando' para não disparar o click depois
+    element.setAttribute("data-dragging", "true");
+    // ====================================
+
+    // Aplica nova posição
+    element.style.top = element.offsetTop - pos2 + "px";
+    element.style.left = element.offsetLeft - pos1 + "px";
+  }
+
+  function closeDragElement() {
+    document.onmouseup = null;
+    document.onmousemove = null;
+
+    // Remove a flag de arrasto após um breve delay
+    // Isso permite que o evento 'click' verifique a flag antes dela sumir
+    setTimeout(() => {
+      element.setAttribute("data-dragging", "false");
+    }, 100);
+  }
 }
 
 // =========================================================
@@ -154,164 +170,166 @@ export function makeDraggable(element, handle = null) {
 // =========================================================
 
 export const styleFloatingButton = {
-    position: "fixed",
-    right: "20px",
-    width: "48px",
-    height: "48px",
-    borderRadius: "50%",
-    backgroundColor: "#1a73e8",
-    color: "#fff",
-    fontSize: "24px",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    cursor: "pointer",
-    boxShadow: "0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08)",
-    zIndex: "9999",
-    border: "none",
-    transition: "background-color 0.2s ease, transform 0.2s ease-out", 
-    transform: 'scale(1)', 
-    fontFamily: "'Poppins', sans-serif"
+  position: "fixed",
+  right: "20px",
+  width: "48px",
+  height: "48px",
+  borderRadius: "50%",
+  backgroundColor: "#1a73e8",
+  color: "#fff",
+  fontSize: "24px",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  cursor: "pointer",
+  boxShadow: "0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08)",
+  zIndex: "9999",
+  border: "none",
+  transition: "background-color 0.2s ease, transform 0.2s ease-out",
+  transform: "scale(1)",
+  fontFamily: "'Poppins', sans-serif",
 };
 
 export const stylePopup = {
-    position: "fixed",
-    top: "calc(50% - 250px)",
-    width: "380px", 
-    maxHeight: "90vh",
-    backgroundColor: "#fff",
-    borderRadius: "12px",
-    boxShadow: "0 8px 16px rgba(0,0,0,0.2), 0 0 4px rgba(0,0,0,0.08)",
-    zIndex: "9999",
-    overflow: "hidden", 
-    display: "flex",
-    flexDirection: "column",
-    transition: "opacity 0.2s ease-out, transform 0.2s ease-out, width 0.3s ease-out", 
-    opacity: "0",
-    transform: "scale(0.95)",
-    pointerEvents: "none",
-    fontFamily: "'Poppins', sans-serif"
+  position: "fixed",
+  top: "calc(50% - 250px)",
+  width: "380px",
+  maxHeight: "90vh",
+  backgroundColor: "#fff",
+  borderRadius: "12px",
+  boxShadow: "0 8px 16px rgba(0,0,0,0.2), 0 0 4px rgba(0,0,0,0.08)",
+  zIndex: "9999",
+  overflow: "hidden",
+  display: "flex",
+  flexDirection: "column",
+  transition:
+    "opacity 0.2s ease-out, transform 0.2s ease-out, width 0.3s ease-out",
+  opacity: "0",
+  transform: "scale(0.95)",
+  pointerEvents: "none",
+  fontFamily: "'Poppins', sans-serif",
 };
 
 export const stylePopupTitle = {
-    fontSize: "18px",
-    fontWeight: "600",
-    color: "#202124",
-    flexGrow: "1"
+  fontSize: "18px",
+  fontWeight: "600",
+  color: "#202124",
+  flexGrow: "1",
 };
 
 export const stylePopupVersion = {
-    fontSize: "12px",
-    fontWeight: "400",
-    color: "#70757a",
-    marginTop: "4px",
+  fontSize: "12px",
+  fontWeight: "400",
+  color: "#70757a",
+  marginTop: "4px",
 };
 
 export const stylePopupCloseBtn = {
-    fontSize: "20px",
-    color: "#5f6368",
-    cursor: "pointer",
-    padding: "4px",
-    borderRadius: "50%",
-    transition: "background-color 0.2s ease, color 0.2s ease",
-    lineHeight: "1",
-    zIndex: "10",
-    marginLeft: "8px"
+  fontSize: "20px",
+  color: "#5f6368",
+  cursor: "pointer",
+  padding: "4px",
+  borderRadius: "50%",
+  transition: "background-color 0.2s ease, color 0.2s ease",
+  lineHeight: "1",
+  zIndex: "10",
+  marginLeft: "8px",
 };
 
 export const styleLabel = {
-    display: "block",
-    fontSize: "14px",
-    fontWeight: "500",
-    color: "#3c4043",
-    marginBottom: "8px",
-    marginTop: "16px"
+  display: "block",
+  fontSize: "14px",
+  fontWeight: "500",
+  color: "#3c4043",
+  marginBottom: "8px",
+  marginTop: "16px",
 };
 
 export const styleSelect = {
-    width: "100%",
-    padding: "10px 36px 10px 12px", 
-    borderRadius: "8px",
-    border: "1px solid #dadce0",
-    backgroundColor: "#fff",
-    fontSize: "14px",
-    color: "#3c4043",
-    boxSizing: "border-box",
-    appearance: "none", 
-    backgroundImage: `url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%233c4043%22%20d%3D%22M287%20197.3l-116.5-116.5c-4.7-4.7-12.4-4.7-17.1%200L5.4%20197.3c-4.7%204.7-4.7%2012.4%200%2017.1l17.1%2017.1c4.7%204.7%2012.4%204.7%2017.1%200l94.3-94.3c4.7-4.7%2012.4-4.7%2017.1%200l94.3%2094.3c4.7%204.7%2012.4%204.7%2017.1%200l17.1-17.1c4.7-4.7%204.7-12.4%200-17.1z%22%2F%3E%3C%2Fsvg%3E')`,
-    backgroundRepeat: "no-repeat",
-    backgroundPosition: "right 12px center",
-    backgroundSize: "10px",
-    transition: "border-color 0.2s ease, box-shadow 0.2s ease",
-    fontFamily: "'Poppins', sans-serif"
+  width: "100%",
+  padding: "10px 36px 10px 12px",
+  borderRadius: "8px",
+  border: "1px solid #dadce0",
+  backgroundColor: "#fff",
+  fontSize: "14px",
+  color: "#3c4043",
+  boxSizing: "border-box",
+  appearance: "none",
+  backgroundImage: `url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%233c4043%22%20d%3D%22M287%20197.3l-116.5-116.5c-4.7-4.7-12.4-4.7-17.1%200L5.4%20197.3c-4.7%204.7-4.7%2012.4%200%2017.1l17.1%2017.1c4.7%204.7%2012.4%204.7%2017.1%200l94.3-94.3c4.7-4.7%2012.4-4.7%2017.1%200l94.3%2094.3c4.7%204.7%2012.4%204.7%2017.1%200l17.1-17.1c4.7-4.7%204.7-12.4%200-17.1z%22%2F%3E%3C%2Fsvg%3E')`,
+  backgroundRepeat: "no-repeat",
+  backgroundPosition: "right 12px center",
+  backgroundSize: "10px",
+  transition: "border-color 0.2s ease, box-shadow 0.2s ease",
+  fontFamily: "'Poppins', sans-serif",
 };
 
 export const styleButtonBase = {
-    flex: "1 1 0",
-    padding: "10px 0",
-    color: "#fff",
-    border: "none",
-    borderRadius: "8px",
-    fontSize: "14px",
-    fontWeight: "500",
-    cursor: "pointer",
-    marginTop: "16px",
-    transition: "background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease",
-    boxShadow: "0 2px 4px rgba(0,0,0,0.1)"
+  flex: "1 1 0",
+  padding: "10px 0",
+  color: "#fff",
+  border: "none",
+  borderRadius: "8px",
+  fontSize: "14px",
+  fontWeight: "500",
+  cursor: "pointer",
+  marginTop: "16px",
+  transition:
+    "background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease",
+  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
 };
 
 export const styleCredit = {
-    fontSize: "10px",
-    color: "#9aa0a6",
-    textAlign: "center",
-    padding: "8px 16px",
-    borderTop: "1px solid #eee",
-    marginTop: "16px"
+  fontSize: "10px",
+  color: "#9aa0a6",
+  textAlign: "center",
+  padding: "8px 16px",
+  borderTop: "1px solid #eee",
+  marginTop: "16px",
 };
 
 export const styleExpandButton = {
-    fontSize: "18px",
-    color: "#5f6368",
-    cursor: "pointer",
-    padding: "4px",
-    borderRadius: "50%",
-    transition: "background-color 0.2s ease, color 0.2s ease",
-    lineHeight: "1",
-    zIndex: "10"
+  fontSize: "18px",
+  color: "#5f6368",
+  cursor: "pointer",
+  padding: "4px",
+  borderRadius: "50%",
+  transition: "background-color 0.2s ease, color 0.2s ease",
+  lineHeight: "1",
+  zIndex: "10",
 };
 
 // ===== ESTILO COMPARTILHADO (BAU/LT/LM/PT/ES) =====
-export const typeBtnStyle = { 
-    padding: '6px 12px', 
-    cursor: 'pointer', 
-    fontSize: '14px', 
-    fontWeight: '500', 
-    color: '#5f6368', 
-    background: '#f8f9fa', 
-    transition: 'all 0.2s ease' ,
-    width: "100%",
-    textAlign: "center"
+export const typeBtnStyle = {
+  padding: "6px 12px",
+  cursor: "pointer",
+  fontSize: "14px",
+  fontWeight: "500",
+  color: "#5f6368",
+  background: "#f8f9fa",
+  transition: "all 0.2s ease",
+  width: "100%",
+  textAlign: "center",
 };
 
 // ===== CORES DO GOOGLE (Para sorteio) =====
 const GOOGLE_COLORS_LIST = [
-    { background: '#E8F0FE', color: '#1967D2' }, // Azul
-    { background: '#FCE8E6', color: '#C5221F' }, // Vermelho
-    { background: '#FEF7E0', color: '#F29900' }, // Amarelo
-    { background: '#E6F4EA', color: '#1E8E3E' }  // Verde
+  { background: "#E8F0FE", color: "#1967D2" }, // Azul
+  { background: "#FCE8E6", color: "#C5221F" }, // Vermelho
+  { background: "#FEF7E0", color: "#F29900" }, // Amarelo
+  { background: "#E6F4EA", color: "#1E8E3E" }, // Verde
 ];
 
 let lastColorIndex = -1;
 
 export function getRandomGoogleStyle() {
-    let newIndex = Math.floor(Math.random() * GOOGLE_COLORS_LIST.length);
-    
-    if (newIndex === lastColorIndex) {
-        newIndex = (newIndex + 1) % GOOGLE_COLORS_LIST.length;
-    }
-    
-    lastColorIndex = newIndex;
-    return GOOGLE_COLORS_LIST[newIndex]; 
+  let newIndex = Math.floor(Math.random() * GOOGLE_COLORS_LIST.length);
+
+  if (newIndex === lastColorIndex) {
+    newIndex = (newIndex + 1) % GOOGLE_COLORS_LIST.length;
+  }
+
+  lastColorIndex = newIndex;
+  return GOOGLE_COLORS_LIST[newIndex];
 }
 
 // =========================================
@@ -322,11 +340,12 @@ export function getRandomGoogleStyle() {
 let googleStylesInjected = false;
 
 export function injectGoogleAnimationStyles() {
-    if (googleStylesInjected || document.getElementById('techsol-google-styles')) return;
+  if (googleStylesInjected || document.getElementById("techsol-google-styles"))
+    return;
 
-    const style = document.createElement('style');
-    style.id = 'techsol-google-styles';
-   style.innerHTML = `
+  const style = document.createElement("style");
+  style.id = "techsol-google-styles";
+  style.innerHTML = `
         /* Animação de Pulso (Mantida) */
         @keyframes google-pulse-ring {
             0% { box-shadow: 0 0 0 0 rgba(66, 133, 244, 0.7); }
@@ -359,244 +378,94 @@ export function injectGoogleAnimationStyles() {
             filter: blur(3px); /* Difuso */
         }
     `;
-    document.head.appendChild(style);
-    googleStylesInjected = true;
+  document.head.appendChild(style);
+  googleStylesInjected = true;
 }
 
 // 2. Função que os módulos vão chamar para animar um botão
 export function triggerGoogleAnimation(element) {
-    // Garante que os estilos existem
-    injectGoogleAnimationStyles();
+  // Garante que os estilos existem
+  injectGoogleAnimationStyles();
 
-    // Remove a classe se já estiver rodando (para poder reiniciar)
-    element.classList.remove('google-animate-click');
+  // Remove a classe se já estiver rodando (para poder reiniciar)
+  element.classList.remove("google-animate-click");
 
-    // Força um "reflow" para o navegador perceber que removemos a classe
-    void element.offsetWidth; 
+  // Força um "reflow" para o navegador perceber que removemos a classe
+  void element.offsetWidth;
 
-    // Adiciona a classe que roda a animação
-    element.classList.add('google-animate-click');
+  // Adiciona a classe que roda a animação
+  element.classList.add("google-animate-click");
 
-    // Limpa a classe depois que a animação termina
-    setTimeout(() => {
-        element.classList.remove('google-animate-click');
-    }, 600); // O mesmo tempo da duração da animação no CSS
+  // Limpa a classe depois que a animação termina
+  setTimeout(() => {
+    element.classList.remove("google-animate-click");
+  }, 600); // O mesmo tempo da duração da animação no CSS
 }
 
-// =========================================
-// --- STARTUP ANIMATION (Splash Screen) ---
-// =========================================
-// =========================================
-// --- GOOGLE-STYLE STARTUP ANIMATION ---
-// =========================================
-export function playStartupAnimation() {
-    if (document.getElementById('techsol-splash-screen')) return;
 
-    // 1. Container (Overlay)
-    const splash = document.createElement('div');
-    splash.id = 'techsol-splash-screen';
-    Object.assign(splash.style, {
-        position: 'fixed', top: '0', left: '0', width: '100vw', height: '100vh',
-        backgroundColor: '#ffffff', 
-        zIndex: '2147483647',
-        display: 'flex', flexDirection: 'column', 
-        alignItems: 'center', justifyContent: 'center',
-        opacity: '0', transition: 'opacity 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)',
-        fontFamily: "'Poppins', 'Roboto', sans-serif"
-    });
-
-    // 2. Conteúdo Central
-    const content = document.createElement('div');
-    content.style.textAlign = 'center';
-    
-    // Logo "Cases Wizard"
-    const logoHTML = `
-        <div style="
-            font-size: 36px; 
-            font-weight: 500; 
-            color: #5f6368; 
-            margin-bottom: 24px; 
-            letter-spacing: -0.5px;
-            animation: slide-up 0.6s cubic-bezier(0.0, 0.0, 0.2, 1);
-        ">
-            Cases Wizard
-        </div>
-    `;
-
-    // Barra de Progresso (Agora colorida!)
-    const loaderHTML = `
-        <div class="google-material-loader">
-            <div class="indeterminate"></div>
-        </div>
-    `;
-    
-    content.innerHTML = logoHTML + loaderHTML;
-
-    // 3. Créditos
-    const credit = document.createElement('div');
-    credit.innerHTML = "created by <span style='color: #1a73e8; font-weight: 500;'>@lucaste</span>";
-    Object.assign(credit.style, {
-        position: 'absolute', bottom: '40px',
-        fontSize: '12px', color: '#9aa0a6',
-        opacity: '0', 
-        animation: 'fade-in 0.8s ease-out 0.5s forwards'
-    });
-
-    // 4. CSS (Com ciclo de cores)
-    const style = document.createElement('style');
-    style.innerHTML = `
-        /* Container da Barra */
-        .google-material-loader {
-            position: relative;
-            height: 4px;
-            display: block;
-            width: 240px;
-            background-color: #e0e0e0; /* Fundo cinza claro */
-            border-radius: 2px;
-            overflow: hidden;
-            margin: 0 auto;
-        }
-
-        /* O Elemento que se move */
-        .google-material-loader .indeterminate {
-            background-color: #4285F4; /* Começa Azul */
-        }
-        
-        .google-material-loader .indeterminate:before {
-            content: '';
-            position: absolute;
-            background-color: inherit;
-            top: 0; left: 0; bottom: 0;
-            will-change: left, right;
-            /* Animação de movimento E cor */
-            animation: 
-                indeterminate 2.1s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite,
-                google-colors 2.1s steps(4) infinite; /* Troca de cor */
-        }
-        
-        .google-material-loader .indeterminate:after {
-            content: '';
-            position: absolute;
-            background-color: inherit;
-            top: 0; left: 0; bottom: 0;
-            will-change: left, right;
-            /* Animação de movimento E cor (com delay) */
-            animation: 
-                indeterminate-short 2.1s cubic-bezier(0.165, 0.84, 0.44, 1) infinite,
-                google-colors 2.1s steps(4) infinite; /* Troca de cor */
-            animation-delay: 1.15s;
-        }
-
-        /* Ciclo de Cores Oficiais do Google */
-        @keyframes google-colors {
-            0% { background-color: #4285F4; } /* Azul */
-            25% { background-color: #EA4335; } /* Vermelho */
-            50% { background-color: #FBBC05; } /* Amarelo */
-            75% { background-color: #34A853; } /* Verde */
-            100% { background-color: #4285F4; } /* Volta ao Azul */
-        }
-
-        /* Movimento da Barra */
-        @keyframes indeterminate {
-            0% { left: -35%; right: 100%; }
-            60% { left: 100%; right: -90%; }
-            100% { left: 100%; right: -90%; }
-        }
-        @keyframes indeterminate-short {
-            0% { left: -200%; right: 100%; }
-            60% { left: 107%; right: -8%; }
-            100% { left: 107%; right: -8%; }
-        }
-
-        /* Animações de Entrada */
-        @keyframes slide-up {
-            from { transform: translateY(20px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        @keyframes fade-in {
-            to { opacity: 1; }
-        }
-    `;
-    
-    splash.appendChild(style);
-    splash.appendChild(content);
-    splash.appendChild(credit);
-    document.body.appendChild(splash);
-
-    // 5. Execução
-    requestAnimationFrame(() => {
-        splash.style.opacity = '1';
-    });
-
-    setTimeout(() => {
-        splash.style.opacity = '0'; 
-        setTimeout(() => {
-            if (splash.parentNode) splash.parentNode.removeChild(splash);
-        }, 400); 
-    }, 2500);
-}
 
 // Atualize o Header para ser Branco
 export const stylePopupHeader = {
-    display: "flex",
-    flexDirection: "column", 
-    alignItems: "stretch",   
-    padding: "0", 
-    backgroundColor: "#ffffff", 
-    cursor: "grab",
-    userSelect: "none",
-    borderRadius: "12px 12px 0 0",
-    flexShrink: "0",
-    position: "relative"
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "stretch",
+  padding: "0",
+  backgroundColor: "#ffffff",
+  cursor: "grab",
+  userSelect: "none",
+  borderRadius: "12px 12px 0 0",
+  flexShrink: "0",
+  position: "relative",
 };
 
 // Novo estilo para botões de ícone (Help, Close, Expand)
 export const styleIconBtn = {
-    width: "32px",
-    height: "32px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: "50%",
-    cursor: "pointer",
-    color: "#5f6368", // Cinza Google
-    fontSize: "18px", // Tamanho do ícone
-    transition: "background-color 0.2s ease",
-    marginLeft: "4px"
+  width: "32px",
+  height: "32px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: "50%",
+  cursor: "pointer",
+  color: "#5f6368", // Cinza Google
+  fontSize: "18px", // Tamanho do ícone
+  transition: "background-color 0.2s ease",
+  marginLeft: "4px",
 };
 
 // Estilo do Overlay de Ajuda (Backdrop)
 export const styleHelpOverlay = {
-    position: "absolute",
-    top: "0", left: "0", width: "100%", height: "100%",
-    backgroundColor: "rgba(255, 255, 255, 0.92)", // Branco translúcido
-    backdropFilter: "blur(4px)", // Desfoque chique
-    zIndex: "50", // Fica acima do conteúdo, abaixo do header
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    textAlign: "center",
-    padding: "20px",
-    boxSizing: "border-box",
-    opacity: "0",
-    transition: "opacity 0.3s ease",
-    pointerEvents: "none" // Começa invisível e não clicável
+  position: "absolute",
+  top: "0",
+  left: "0",
+  width: "100%",
+  height: "100%",
+  backgroundColor: "rgba(255, 255, 255, 0.92)", // Branco translúcido
+  backdropFilter: "blur(4px)", // Desfoque chique
+  zIndex: "50", // Fica acima do conteúdo, abaixo do header
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  textAlign: "center",
+  padding: "20px",
+  boxSizing: "border-box",
+  opacity: "0",
+  transition: "opacity 0.3s ease",
+  pointerEvents: "none", // Começa invisível e não clicável
 };
-
-
 
 // ... (resto do arquivo) ...
 
 // --- STARTUP ANIMATION ---
 export async function playStartupAnimation() {
-    if (document.getElementById('techsol-splash-screen')) return;
+  if (document.getElementById("techsol-splash-screen")) return;
 
-    // 1. CSS (Injetado apenas uma vez)
-    if (!document.getElementById('google-splash-style')) {
-        const style = document.createElement('style');
-        style.id = 'google-splash-style';
-        style.innerHTML = `
+  // 1. CSS (Injetado apenas uma vez)
+  if (!document.getElementById("google-splash-style")) {
+    const style = document.createElement("style");
+    style.id = "google-splash-style";
+    style.innerHTML = `
             @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap');
             .splash-container { font-family: 'Google Sans', sans-serif; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #202124; z-index: 2147483647; display: flex; flex-direction: column; alignItems: center; justifyContent: center; opacity: 0; }
             .splash-exit { animation: focusOut 0.9s cubic-bezier(0.4, 0.0, 0.2, 1) forwards; }
@@ -617,13 +486,13 @@ export async function playStartupAnimation() {
             @keyframes loadLine { 0% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
             @keyframes fadeInSimple { to { opacity: 1; } }
         `;
-        document.head.appendChild(style);
-    }
+    document.head.appendChild(style);
+  }
 
-    // 2. Estrutura HTML
-    const splash = document.createElement('div');
-    splash.className = 'splash-container';
-    splash.innerHTML = `
+  // 2. Estrutura HTML
+  const splash = document.createElement("div");
+  splash.className = "splash-container";
+  splash.innerHTML = `
         <div class="brand-logo">Case Wizard</div>
         <div id="w-icon"></div>
         <div class="sentence-wrapper">
@@ -637,72 +506,76 @@ export async function playStartupAnimation() {
         <div class="credit-pro">created by <span>@lucaste</span></div>
         <div class="loader-line"></div>
     `;
-    document.body.appendChild(splash);
+  document.body.appendChild(splash);
 
-    // 3. Execução
-    requestAnimationFrame(() => splash.style.opacity = '1');
-    
-    const esperar = (ms) => new Promise(r => setTimeout(r, ms));
+  // 3. Execução
+  requestAnimationFrame(() => (splash.style.opacity = "1"));
 
-    // Chama o Sherlock (Isso vai popular a variável cachedAgentName)
-    await esperar(200); 
-    const name = await captureNameWithMagic(); 
-    const data = getSmartGreeting(name);
+  const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 
-    const wIcon = document.getElementById('w-icon');
-    const el1 = document.getElementById('p1');
-    const el2 = document.getElementById('p2');
-    const el3 = document.getElementById('p3');
-    const elSextou = document.getElementById('p-sextou');
+  // Chama o Sherlock (Isso vai popular a variável cachedAgentName)
+  await esperar(200);
+  const name = await captureNameWithMagic();
+  const data = getSmartGreeting(name);
 
-    wIcon.innerHTML = data.icon;
-    el1.textContent = data.prefix;
-    el3.textContent = data.suffix;
+  const wIcon = document.getElementById("w-icon");
+  const el1 = document.getElementById("p1");
+  const el2 = document.getElementById("p2");
+  const el3 = document.getElementById("p3");
+  const elSextou = document.getElementById("p-sextou");
 
-    await esperar(300);
-    
-    // Ícone
-    const svg = wIcon.querySelector('svg');
-    if(svg) { svg.style.opacity = '1'; svg.style.transform = 'scale(1)'; }
-    
+  wIcon.innerHTML = data.icon;
+  el1.textContent = data.prefix;
+  el3.textContent = data.suffix;
+
+  await esperar(300);
+
+  // Ícone
+  const svg = wIcon.querySelector("svg");
+  if (svg) {
+    svg.style.opacity = "1";
+    svg.style.transform = "scale(1)";
+  }
+
+  await esperar(400);
+  el1.style.opacity = "1"; // Bom dia
+
+  // Typewriter
+  el2.style.opacity = "1";
+  el2.innerHTML = '<span class="cursor">|</span>';
+  const cursor = el2.querySelector(".cursor");
+  await esperar(300);
+  for (let i = 0; i < data.name.length; i++) {
+    const char = data.name.charAt(i);
+    const span = document.createElement("span");
+    span.textContent = char;
+    el2.insertBefore(span, cursor);
+    let speed = Math.floor(Math.random() * 60) + 30;
+    if (i === 0) speed = 150;
+    if (i > data.name.length - 3) speed = 30;
+    await esperar(speed);
+  }
+  await esperar(600);
+  cursor.style.display = "none";
+
+  // Frase final
+  el3.style.opacity = "1";
+  el3.style.transform = "translateY(0)";
+
+  // Sextou
+  if (data.isFriday) {
     await esperar(400);
-    el1.style.opacity = '1'; // Bom dia
+    elSextou.style.display = "block";
+    // Reflow
+    void elSextou.offsetWidth;
+    const badge = elSextou.querySelector(".sextou-badge");
+    badge.style.opacity = "1";
+    badge.style.transform = "scale(1)";
+  }
 
-    // Typewriter
-    el2.style.opacity = '1';
-    el2.innerHTML = '<span class="cursor">|</span>';
-    const cursor = el2.querySelector('.cursor');
-    await esperar(300);
-    for (let i = 0; i < data.name.length; i++) {
-        const char = data.name.charAt(i);
-        const span = document.createElement('span');
-        span.textContent = char;
-        el2.insertBefore(span, cursor);
-        let speed = Math.floor(Math.random() * 60) + 30; 
-        if (i===0) speed=150; if (i>data.name.length-3) speed=30;
-        await esperar(speed);
-    }
-    await esperar(600);
-    cursor.style.display = 'none';
-
-    // Frase final
-    el3.style.opacity = '1';
-    el3.style.transform = 'translateY(0)';
-
-    // Sextou
-    if (data.isFriday) {
-        await esperar(400);
-        elSextou.style.display = 'block';
-        // Reflow
-        void elSextou.offsetWidth;
-        const badge = elSextou.querySelector('.sextou-badge');
-        badge.style.opacity = '1';
-        badge.style.transform = 'scale(1)';
-    }
-
-    // Saída
-    await esperar(1500);
-    splash.classList.add('splash-exit');
-    await esperar(900);
-    splash.remove();
+  // Saída
+  await esperar(1500);
+  splash.classList.add("splash-exit");
+  await esperar(900);
+  splash.remove();
 }
