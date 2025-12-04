@@ -4,7 +4,7 @@
 import { initCaseNotesAssistant } from './modules/notes/notes-assistant.js';
 import { initQuickEmailAssistant } from './modules/quick-email/quick-email-assistant.js';
 import { initCallScriptAssistant } from './modules/call-script/call-script-assistant.js';
-import { initFeedbackAssistant } from './modules/feedback/feedback-assistant.js'; 
+import { initFeedbackAssistant } from './modules/lm-report/lm-repot-assistant.js'; 
 
 // 2. Importação do Núcleo Compartilhado
 import { initCommandCenter } from './modules/shared/command-center.js';
