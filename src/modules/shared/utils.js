@@ -375,38 +375,44 @@ async function humanTypeWriter(element, text) {
   await esperar(600);
   if (cursor) cursor.style.display = "none";
 }
-
 export async function playStartupAnimation() {
   if (document.getElementById("techsol-splash-screen")) return;
 
-  // 1. CSS Injetado (Corrigido Flex Direction)
-  if (!document.getElementById("google-splash-style")) {
+  // --- 1. ESTILOS (Google Pro Dark) ---
+  const styleId = "google-splash-style-v3";
+  if (!document.getElementById(styleId)) {
     const style = document.createElement("style");
-    style.id = "google-splash-style";
+    style.id = styleId;
     style.innerHTML = `
             @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap');
-            .splash-container { font-family: 'Google Sans', sans-serif; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #202124; z-index: 2147483647; display: flex; flex-direction: column; alignItems: center; justify-content: center; opacity: 0; }
-            .splash-exit { animation: focusOut 0.9s cubic-bezier(0.4, 0.0, 0.2, 1) forwards; }
-            @keyframes focusOut { 0% { opacity: 1; transform: scale(1); filter: blur(0); } 100% { opacity: 0; transform: scale(1.15); filter: blur(15px); } }
+            .splash-container { font-family: 'Google Sans', sans-serif; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #202124; z-index: 2147483647; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.5s cubic-bezier(0.4, 0.0, 0.2, 1); }
+            .splash-exit { animation: focus-out 0.9s cubic-bezier(0.4, 0.0, 0.2, 1) forwards; }
+            @keyframes focus-out { 0% { opacity: 1; transform: scale(1); filter: blur(0); } 100% { opacity: 0; transform: scale(1.15); filter: blur(15px); } }
+            
             .sentence-wrapper { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 10px; max-width: 80%; position: relative; }
             .text-part { font-size: 32px; color: #E8EAED; opacity: 0; transition: opacity 0.8s ease; }
             .text-name { font-size: 32px; font-weight: 700; background: linear-gradient(90deg, #8AB4F8, #C58AF9, #F28B82); -webkit-background-clip: text; -webkit-text-fill-color: transparent; opacity: 0; }
             .text-footer { font-size: 20px; color: #9AA0A6; font-weight: 400; width: 100%; text-align: center; margin-top: 12px; opacity: 0; transform: translateY(10px); transition: all 1s cubic-bezier(0.0, 0.0, 0.2, 1); }
+            
             .sextou-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; padding: 6px 16px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #F28B82; font-size: 14px; font-weight: 500; opacity: 0; transform: scale(0.8); transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
             .cursor { color: #8AB4F8; -webkit-text-fill-color: #8AB4F8; font-weight: 100; margin-left: 1px; animation: blink 1s infinite; }
-            .brand-logo { position: absolute; top: 40px; font-size: 20px; font-weight: 500; color: #5f6368; letter-spacing: 1px; text-transform: uppercase; opacity: 0; animation: fadeInDown 0.8s ease forwards; }
+            
+            .brand-logo { position: absolute; top: 40px; font-size: 20px; font-weight: 500; color: #5f6368; letter-spacing: 1px; text-transform: uppercase; opacity: 0; animation: fade-in-down 0.8s ease forwards; }
             .weather-icon { width: 42px; height: 42px; margin-bottom: 24px; opacity: 0; transform: scale(0.8); transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
-            .credit-pro { position: absolute; bottom: 30px; font-size: 11px; color: #5f6368; letter-spacing: 0.5px; opacity: 0; animation: fadeInSimple 1.5s ease 1s forwards; }
+            .credit-pro { position: absolute; bottom: 30px; font-size: 11px; color: #5f6368; letter-spacing: 0.5px; opacity: 0; animation: fade-in-simple 1.5s ease 1s forwards; }
             .credit-pro span { color: #8AB4F8; font-weight: 500; opacity: 0.9; }
-            .loader-line { position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(to right, #4285F4, #EA4335, #FBBC05, #34A853); transform: scaleX(0); transform-origin: left; animation: loadLine 4s linear forwards; }
+            
+            .loader-line { position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(to right, #4285F4, #EA4335, #FBBC05, #34A853); transform: scaleX(0); transform-origin: left; animation: load-line 4s linear forwards; }
+            
             @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-            @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-            @keyframes loadLine { 0% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
-            @keyframes fadeInSimple { to { opacity: 1; } }
+            @keyframes fade-in-down { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes load-line { 0% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
+            @keyframes fade-in-simple { to { opacity: 1; } }
         `;
     document.head.appendChild(style);
   }
 
+  // --- 2. DOM ---
   const splash = document.createElement("div");
   splash.className = "splash-container";
   splash.innerHTML = `
@@ -427,7 +433,9 @@ export async function playStartupAnimation() {
 
   requestAnimationFrame(() => (splash.style.opacity = "1"));
 
-  // Try/Catch Failsafe: Se algo quebrar, a tela sai
+  const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  // --- 3. ORQUESTRAÇÃO ---
   try {
     await esperar(200);
     const rawName = await captureNameWithMagic();
@@ -444,24 +452,46 @@ export async function playStartupAnimation() {
     if (el3) el3.textContent = data.suffix;
 
     await esperar(300);
-    if (wIcon) {
-      const s = wIcon.querySelector("svg");
-      if (s) {
-        s.style.opacity = "1";
-        s.style.transform = "scale(1)";
-      }
+
+    // Ícone
+    const svg = wIcon ? wIcon.querySelector("svg") : null;
+    if (svg) {
+      svg.style.opacity = "1";
+      svg.style.transform = "scale(1)";
     }
 
     await esperar(400);
-    if (el1) el1.style.opacity = "1";
+    if (el1) el1.style.opacity = "1"; // Bom dia
 
-    if (el2) await humanTypeWriter(el2, data.name);
+    // Typewriter Humano
+    if (el2) {
+      el2.style.opacity = "1";
+      el2.innerHTML = '<span class="cursor">|</span>';
+      const cursor = el2.querySelector(".cursor");
+      await esperar(300);
+      for (let i = 0; i < data.name.length; i++) {
+        const char = data.name.charAt(i);
+        const span = document.createElement("span");
+        span.textContent = char;
+        // INSERÇÃO SEGURA (Evita NotFoundError)
+        if (cursor && cursor.parentNode === el2) cursor.before(span);
+        else el2.appendChild(span);
+
+        let speed = Math.floor(Math.random() * 60) + 30;
+        if (i === 0) speed = 150;
+        if (i > data.name.length - 3) speed = 30;
+        await esperar(speed);
+      }
+      await esperar(600);
+      if (cursor) cursor.style.display = "none";
+    }
 
     if (el3) {
       el3.style.opacity = "1";
       el3.style.transform = "translateY(0)";
     }
 
+    // Sextou
     if (data.isFriday && elSextou) {
       await esperar(400);
       elSextou.style.display = "block";
@@ -477,7 +507,7 @@ export async function playStartupAnimation() {
   } catch (e) {
     console.warn("Animação falhou, pulando...", e);
   } finally {
-    // Garante que a tela sempre saia
+    // Saída Garantida
     splash.classList.add("splash-exit");
     await esperar(900);
     if (splash.parentNode) splash.parentNode.removeChild(splash);
