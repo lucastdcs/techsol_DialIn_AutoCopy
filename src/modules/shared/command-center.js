@@ -9,17 +9,16 @@ const ICONS = {
 };
 
 const COLORS = {
-    // TEMA DARK GLASS (Restaurado)
+    // Dark Glass Premium
     glassBg: 'rgba(28, 28, 30, 0.90)', 
     glassBorder: 'rgba(255, 255, 255, 0.15)',
-    glassActive: 'rgba(40, 40, 40, 0.95)', // Mais sólido ao arrastar
+    glassActive: 'rgba(40, 40, 40, 0.95)',
     glassHighlight: 'rgba(255, 255, 255, 0.1)',
     
-    iconIdle: '#E8EAED', // Branco Gelo
+    iconIdle: '#E8EAED', 
     iconActive: '#FFFFFF',
-    
     gripColor: '#5F6368',
-    gripActive: '#8AB4F8', // Azul ao agarrar
+    gripActive: '#8AB4F8',
 
     blue: '#8AB4F8', red: '#F28B82', purple: '#C58AF9', green: '#81C995',
     readyGlow: 'rgba(52, 168, 83, 0.8)'
@@ -28,8 +27,7 @@ const COLORS = {
 const esperar = (ms) => new Promise(r => setTimeout(r, ms));
 
 export function initCommandCenter(actions) {
-    // actions = { toggleNotes, toggleEmail, toggleScript, toggleLinks }
-
+    
     // 1. ESTILOS
     if (!document.getElementById('cw-command-center-style')) {
         const style = document.createElement('style');
@@ -42,56 +40,49 @@ export function initCommandCenter(actions) {
                 display: flex; flex-direction: column; align-items: center; gap: 12px;
                 padding: 12px 6px 16px 6px;
                 
-                /* Dark Glass Theme */
                 background: ${COLORS.glassBg};
                 backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
                 border: 1px solid ${COLORS.glassBorder}; 
                 border-radius: 50px;
                 
-                /* Sombra Profunda */
                 box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-                
                 z-index: 2147483647; cursor: grab;
-                user-select: none;
-                width: 54px; box-sizing: border-box;
+                user-select: none; width: 54px; box-sizing: border-box;
 
-                /* Estado Inicial */
-                opacity: 0; transform: translateX(40px) scale(0.95);
+                /* Estado Inicial (Escondido) */
+                opacity: 0; transform: translateX(60px) scale(0.95);
                 
-                /* Transições de UI (Hover, Cor) */
                 transition: 
                     background 0.3s ease,
                     box-shadow 0.3s ease,
                     border-color 0.3s ease,
-                    /* Transições de Posição (Entrada/Saída) */
                     opacity 0.4s ease-out,
                     transform 0.5s cubic-bezier(0.19, 1, 0.22, 1),
                     top 0.1s linear, left 0.1s linear;
             }
 
-            /* DOCKED */
+            /* Estado: DOCKED (Visível) */
             .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
-            /* SYSTEM READY (Pulso Verde) */
+            /* Estado: SYSTEM READY (Pulso Verde) */
             .cw-pill.system-ready { animation: systemReadyPulse 0.8s ease-out forwards; }
             @keyframes systemReadyPulse {
                 0% { border-color: ${COLORS.green}; box-shadow: 0 0 0 0 ${COLORS.readyGlow}; }
                 100% { border-color: ${COLORS.glassBorder}; box-shadow: 0 0 0 15px rgba(0,0,0,0); }
             }
 
-            /* DRAGGING (Crucial: Remove transições de movimento) */
+            /* Estado: DRAGGING */
             .cw-pill.dragging {
                 cursor: grabbing; 
                 background: ${COLORS.glassActive}; 
                 transform: scale(1.05) !important; 
                 box-shadow: 0 20px 50px rgba(0,0,0,0.6);
                 border-color: rgba(255,255,255,0.3);
-                /* Desativa transição de top/left para ficar 1:1 com o mouse */
-                transition: background 0.2s, box-shadow 0.2s; 
+                transition: background 0.2s, box-shadow 0.2s; /* Sem delay de movimento */
             }
             .cw-pill.dragging .cw-grip-bar { background-color: ${COLORS.gripActive}; width: 18px; }
 
-            /* SNAPPING */
+            /* Estado: SNAPPING */
             .cw-pill.snapping { 
                 transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease; 
             }
@@ -107,9 +98,12 @@ export function initCommandCenter(actions) {
                 display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative;
                 color: ${COLORS.iconIdle};
                 
+                /* Inicialmente invisível para animação em cascata */
                 opacity: 0; transform: scale(0.5);
                 transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
+            
+            /* Classe para mostrar o botão na animação */
             .cw-btn.popped { opacity: 1; transform: scale(1); }
 
             .cw-btn:hover { background: ${COLORS.glassHighlight}; color: ${COLORS.iconActive}; transform: scale(1.15); }
@@ -120,15 +114,14 @@ export function initCommandCenter(actions) {
             .cw-btn.script:hover { color: ${COLORS.purple}; text-shadow: 0 0 10px ${COLORS.purple}; }
             .cw-btn.links:hover { color: ${COLORS.green}; text-shadow: 0 0 10px ${COLORS.green}; }
 
-            /* SEP */
+            /* SEPARATOR */
             .cw-sep { width: 24px; height: 1px; background: rgba(255,255,255,0.1); margin: 2px 0; opacity: 0; transition: opacity 0.5s; }
             .cw-sep.visible { opacity: 1; }
 
-            /* TOOLTIPS (Dark Mode) */
+            /* TOOLTIPS */
             .cw-btn::after { 
                 content: attr(data-label); position: absolute; top: 50%; transform: translateY(-50%) scale(0.9); padding: 6px 12px; border-radius: 6px; 
-                background: #E8EAED; color: #202124; /* Fundo Claro p/ contraste */
-                font-family: 'Google Sans', sans-serif; font-size: 12px; font-weight: 500; opacity: 0; pointer-events: none; 
+                background: #E8EAED; color: #202124; font-family: 'Google Sans', sans-serif; font-size: 12px; font-weight: 500; opacity: 0; pointer-events: none; 
                 transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1); box-shadow: 0 4px 12px rgba(0,0,0,0.4); white-space: nowrap; 
             }
             .cw-pill.side-right .cw-btn::after { right: 60px; transform-origin: right center; }
@@ -139,17 +132,19 @@ export function initCommandCenter(actions) {
         document.head.appendChild(style);
     }
 
-    // 2. DOM
+    // 2. DOM STRUCTURE
     const pill = document.createElement('div');
     pill.className = 'cw-pill side-right';
+    
+    // Removemos a div divisora entre Notes e Email conforme pedido
     pill.innerHTML = `
         <div class="cw-grip-area" title="Arrastar">
             <div class="cw-grip-bar"></div>
         </div>
         <button class="cw-btn notes" data-label="Case Notes">${ICONS.notes}</button>
-        <div class="cw-sep"></div>
         <button class="cw-btn email" data-label="Quick Email">${ICONS.email}</button>
         <button class="cw-btn script" data-label="Call Script">${ICONS.script}</button>
+        <div class="cw-sep"></div>
         <button class="cw-btn links" data-label="Links">${ICONS.links}</button>
     `;
     document.body.appendChild(pill);
@@ -160,13 +155,38 @@ export function initCommandCenter(actions) {
     pill.querySelector('.script').onclick = (e) => { e.stopPropagation(); actions.toggleScript(); };
     pill.querySelector('.links').onclick = (e) => { e.stopPropagation(); actions.toggleLinks(); };
 
-    // 4. PHYSICS ENGINE (Drag & Snap)
+    // 4. ANIMAÇÃO DE ENTRADA (System Ready)
+    async function animateEntry() {
+        // Espera a Splash Screen (2.6s) terminar sua saída
+        await esperar(2600);
+
+        // A. DOCKING (Barra desliza e atraca)
+        pill.classList.add('docked');
+        await esperar(300);
+
+        // B. CASCATA (Ícones aparecem um a um)
+        const items = pill.querySelectorAll('.cw-btn');
+        const seps = pill.querySelectorAll('.cw-sep');
+        seps.forEach(s => s.classList.add('visible'));
+        
+        for (let i = 0; i < items.length; i++) {
+            items[i].classList.add('popped');
+            await esperar(60); // Ritmo rápido e mecânico
+        }
+
+        // C. CONFIRMAÇÃO (Luz Verde na borda)
+        await esperar(100);
+        pill.classList.add('system-ready');
+    }
+
+    // Inicia a animação
+    animateEntry();
+
+    // 5. DRAG ENGINE
     let isDragging = false;
     let startX, startY, initialLeft, initialTop;
     const DRAG_THRESHOLD = 3; 
-    const grip = pill.querySelector('.cw-grip-area');
 
-    // Drag em toda a barra (exceto botões)
     pill.onmousedown = (e) => {
         if (e.target.closest('button')) return;
         
@@ -175,11 +195,10 @@ export function initCommandCenter(actions) {
         const rect = pill.getBoundingClientRect();
         initialLeft = rect.left; initialTop = rect.top;
 
-        // --- FIX PARA NÃO SUMIR ---
         pill.classList.add('dragging');
-        pill.classList.remove('snapping', 'docked');
+        pill.classList.remove('snapping', 'docked'); // Remove transitions lentas
         
-        // Zera o transform para que left/top funcionem como coordenadas absolutas reais
+        // Fix para não sumir: Zera transform e usa coordenadas absolutas
         pill.style.transform = 'none'; 
         pill.style.left = initialLeft + 'px';
         pill.style.top = initialTop + 'px';
@@ -212,7 +231,6 @@ export function initCommandCenter(actions) {
             const rect = pill.getBoundingClientRect();
             const centerX = rect.left + (rect.width / 2);
 
-            // Snap Horizontal
             let targetLeft;
             if (centerX < screenW / 2) {
                 targetLeft = 24;
@@ -222,7 +240,6 @@ export function initCommandCenter(actions) {
                 pill.classList.remove('side-left'); pill.classList.add('side-right');
             }
 
-            // Snap Vertical
             let targetTop = rect.top;
             if (targetTop < 24) targetTop = 24;
             if (targetTop > screenH - rect.height - 24) targetTop = screenH - rect.height - 24;
@@ -230,38 +247,10 @@ export function initCommandCenter(actions) {
             pill.style.left = `${targetLeft}px`;
             pill.style.top = `${targetTop}px`;
             
-            // Re-ativa transform para animações futuras (opcional, mas bom para consistência)
-            setTimeout(() => {
-                pill.style.transform = ''; 
-            }, 600);
+            // Restaura transform para animações futuras
+            setTimeout(() => pill.style.transform = '', 600);
         }
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
     }
-
-    // 5. ANIMAÇÃO DE ENTRADA
-    async function animateEntry() {
-        // Espera a Splash Screen (2.6s)
-        await esperar(2600);
-
-        // 1. Docking
-        pill.classList.add('docked');
-        await esperar(300);
-
-        // 2. Cascata
-        const items = pill.querySelectorAll('.cw-btn');
-        const seps = pill.querySelectorAll('.cw-sep');
-        seps.forEach(s => s.classList.add('visible'));
-        
-        for (let i = 0; i < items.length; i++) {
-            items[i].classList.add('popped');
-            await esperar(60);
-        }
-
-        // 3. System Ready
-        await esperar(200);
-        pill.classList.add('system-ready');
-    }
-
-    animateEntry();
 }
