@@ -260,42 +260,44 @@
                 z-index: 2147483647; cursor: grab;
                 user-select: none; width: 54px; box-sizing: border-box;
 
-                /* Estado Inicial (Escondido) */
+                /* Estado Inicial */
                 opacity: 0; transform: translateX(60px) scale(0.95);
                 
+                /* Transi\xE7\xF5es Gerais */
                 transition: 
                     background 0.3s ease,
                     box-shadow 0.3s ease,
                     border-color 0.3s ease,
                     opacity 0.4s ease-out,
-                    transform 0.5s cubic-bezier(0.19, 1, 0.22, 1),
-                    top 0.1s linear, left 0.1s linear;
+                    transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
             }
 
-            /* Estado: DOCKED (Vis\xEDvel) */
+            /* DOCKED (Vis\xEDvel) */
             .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
-            /* Estado: SYSTEM READY (Pulso Verde) */
+            /* SYSTEM READY (Pulso Verde) */
             .cw-pill.system-ready { animation: systemReadyPulse 0.8s ease-out forwards; }
             @keyframes systemReadyPulse {
                 0% { border-color: ${$.green}; box-shadow: 0 0 0 0 ${$.readyGlow}; }
                 100% { border-color: ${$.glassBorder}; box-shadow: 0 0 0 15px rgba(0,0,0,0); }
             }
 
-            /* Estado: DRAGGING */
+            /* DRAGGING (Visual) */
             .cw-pill.dragging {
                 cursor: grabbing; 
                 background: ${$.glassActive}; 
                 transform: scale(1.05) !important; 
                 box-shadow: 0 20px 50px rgba(0,0,0,0.6);
                 border-color: rgba(255,255,255,0.3);
-                transition: background 0.2s, box-shadow 0.2s; /* Sem delay de movimento */
             }
             .cw-pill.dragging .cw-grip-bar { background-color: ${$.gripActive}; width: 18px; }
 
-            /* Estado: SNAPPING */
+            /* SNAPPING (Movimento Suave ao Soltar) */
             .cw-pill.snapping { 
-                transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease; 
+                transition: 
+                    left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                    top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                    transform 0.4s ease; 
             }
 
             /* GRIP */
@@ -308,13 +310,9 @@
                 width: 42px; height: 42px; border-radius: 50%; border: none; background: transparent;
                 display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative;
                 color: ${$.iconIdle};
-                
-                /* Inicialmente invis\xEDvel para anima\xE7\xE3o em cascata */
                 opacity: 0; transform: scale(0.5);
                 transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
-            
-            /* Classe para mostrar o bot\xE3o na anima\xE7\xE3o */
             .cw-btn.popped { opacity: 1; transform: scale(1); }
 
             .cw-btn:hover { background: ${$.glassHighlight}; color: ${$.iconActive}; transform: scale(1.15); }
@@ -325,7 +323,7 @@
             .cw-btn.script:hover { color: ${$.purple}; text-shadow: 0 0 10px ${$.purple}; }
             .cw-btn.links:hover { color: ${$.green}; text-shadow: 0 0 10px ${$.green}; }
 
-            /* SEPARATOR */
+            /* SEP */
             .cw-sep { width: 24px; height: 1px; background: rgba(255,255,255,0.1); margin: 2px 0; opacity: 0; transition: opacity 0.5s; }
             .cw-sep.visible { opacity: 1; }
 
@@ -344,8 +342,8 @@
             <div class="cw-grip-bar"></div>
         </div>
         <button class="cw-btn notes" data-label="Case Notes">${Ze.notes}</button>
+        <div class="cw-sep"></div>
         <button class="cw-btn email" data-label="Quick Email">${Ze.email}</button>
         <button class="cw-btn script" data-label="Call Script">${Ze.script}</button>
-        <div class="cw-sep"></div>
         <button class="cw-btn links" data-label="Links">${Ze.links}</button>
-    `,document.body.appendChild(e),e.querySelector(".notes").onclick=n=>{n.stopPropagation(),t.toggleNotes()},e.querySelector(".email").onclick=n=>{n.stopPropagation(),t.toggleEmail()},e.querySelector(".script").onclick=n=>{n.stopPropagation(),t.toggleScript()},e.querySelector(".links").onclick=n=>{n.stopPropagation(),t.toggleLinks()};async function o(){await Je(2600),e.classList.add("docked"),await Je(300);let n=e.querySelectorAll(".cw-btn");e.querySelectorAll(".cw-sep").forEach(c=>c.classList.add("visible"));for(let c=0;c<n.length;c++)n[c].classList.add("popped"),await Je(60);await Je(100),e.classList.add("system-ready")}o();let s=!1,a,i,r,l,m=3;e.onmousedown=n=>{if(n.target.closest("button"))return;n.preventDefault(),a=n.clientX,i=n.clientY;let u=e.getBoundingClientRect();r=u.left,l=u.top,e.classList.add("dragging"),e.classList.remove("snapping","docked"),e.style.transform="none",e.style.left=r+"px",e.style.top=l+"px",e.style.right="auto",document.addEventListener("mousemove",y),document.addEventListener("mouseup",p)};function y(n){if(!s&&Math.sqrt(Math.pow(n.clientX-a,2)+Math.pow(n.clientY-i,2))>m&&(s=!0),s){let u=n.clientX-a,c=n.clientY-i;e.style.left=`${r+u}px`,e.style.top=`${l+c}px`}}function p(n){if(s){s=!1,e.classList.remove("dragging"),e.classList.add("snapping");let u=window.innerWidth,c=window.innerHeight,h=e.getBoundingClientRect(),v=h.left+h.width/2,f;v<u/2?(f=24,e.classList.remove("side-right"),e.classList.add("side-left")):(f=u-h.width-24,e.classList.remove("side-left"),e.classList.add("side-right"));let x=h.top;x<24&&(x=24),x>c-h.height-24&&(x=c-h.height-24),e.style.left=`${f}px`,e.style.top=`${x}px`,setTimeout(()=>e.style.transform="",600)}document.removeEventListener("mousemove",y),document.removeEventListener("mouseup",p)}}function oo(){if(window.techSolInitialized){mt();return}window.techSolInitialized=!0,console.log("\u{1F680} TechSol Suite Initializing...");try{Tt(),mt();let t=Bt(),e=qt(),o=zt(),s=Vt();Ht({toggleNotes:t,toggleEmail:e,toggleScript:o,toggleLinks:s})}catch(t){console.error("Erro fatal na inicializa\xE7\xE3o:",t),q("Erro cr\xEDtico ao iniciar o Case Wizard.",{error:!0})}}oo();})();
+    `,document.body.appendChild(e),e.querySelector(".notes").onclick=n=>{n.stopPropagation(),t.toggleNotes()},e.querySelector(".email").onclick=n=>{n.stopPropagation(),t.toggleEmail()},e.querySelector(".script").onclick=n=>{n.stopPropagation(),t.toggleScript()},e.querySelector(".links").onclick=n=>{n.stopPropagation(),t.toggleLinks()};async function o(){await Je(2600),e.classList.add("docked"),await Je(300);let n=e.querySelectorAll(".cw-btn");e.querySelectorAll(".cw-sep").forEach(c=>c.classList.add("visible"));for(let c=0;c<n.length;c++)n[c].classList.add("popped"),await Je(60);await Je(100),e.classList.add("system-ready")}o();let s=!1,a,i,r,l,m=3;e.onmousedown=n=>{if(n.target.closest("button"))return;n.preventDefault(),a=n.clientX,i=n.clientY;let u=e.getBoundingClientRect();r=u.left,l=u.top,e.style.transition="none",e.style.transform="none",e.style.left=r+"px",e.style.top=l+"px",e.style.right="auto",e.classList.add("dragging"),e.classList.remove("snapping","docked"),document.addEventListener("mousemove",y),document.addEventListener("mouseup",p)};function y(n){if(!s&&Math.sqrt(Math.pow(n.clientX-a,2)+Math.pow(n.clientY-i,2))>m&&(s=!0),s){let u=n.clientX-a,c=n.clientY-i;e.style.left=`${r+u}px`,e.style.top=`${l+c}px`}}function p(n){if(s){s=!1,e.classList.remove("dragging"),e.classList.add("snapping"),e.style.transition="";let u=window.innerWidth,c=window.innerHeight,h=e.getBoundingClientRect(),v=h.left+h.width/2,f;v<u/2?(f=24,e.classList.remove("side-right"),e.classList.add("side-left")):(f=u-h.width-24,e.classList.remove("side-left"),e.classList.add("side-right"));let x=h.top;x<24&&(x=24),x>c-h.height-24&&(x=c-h.height-24),e.style.left=`${f}px`,e.style.top=`${x}px`,setTimeout(()=>e.style.transform="",600)}document.removeEventListener("mousemove",y),document.removeEventListener("mouseup",p)}}function oo(){if(window.techSolInitialized){mt();return}window.techSolInitialized=!0,console.log("\u{1F680} TechSol Suite Initializing...");try{Tt(),mt();let t=Bt(),e=qt(),o=zt(),s=Vt();Ht({toggleNotes:t,toggleEmail:e,toggleScript:o,toggleLinks:s})}catch(t){console.error("Erro fatal na inicializa\xE7\xE3o:",t),q("Erro cr\xEDtico ao iniciar o Case Wizard.",{error:!0})}}oo();})();
