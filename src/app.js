@@ -2,10 +2,18 @@ import { initCaseNotesAssistant } from './modules/notes/notes-assistant.js';
 import { initCallScriptAssistant } from './modules/call-script/call-script-assistant.js';
 import { initQuickEmailAssistant } from './modules/quick-email/quick-email-assistant.js';
 import { initFeedbackAssistant } from './modules/lm-report/lm-repot-assistant.js';
-import { initGlobalStylesAndFont, showToast, playStartupAnimation } from './modules/shared/utils.js'; // <--- IMPORT AQUI
+import { initGlobalStylesAndFont, showToast } from './modules/shared/utils.js'; // <--- IMPORT AQUI
+import { playStartupAnimation } from './modules/shared/utils.js';
 
+// ... dentro de initApp ...
+
+// Roda a Splash Screen
+
+// ... continua inicializando os módulos ...
 function initApp() {
     console.log('🚀 TechSol Suite Initializing...');
+playStartupAnimation();
+
 
     // 1. Injeta Fonte e Estilos Globais
     initGlobalStylesAndFont();

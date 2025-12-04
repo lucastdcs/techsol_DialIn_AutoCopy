@@ -1,3 +1,6 @@
+// No Topo:
+import { captureNameWithMagic, getSmartGreeting } from './page-data.js';
+
 
 let highestZIndex = 10000; 
 
@@ -580,3 +583,126 @@ export const styleHelpOverlay = {
     transition: "opacity 0.3s ease",
     pointerEvents: "none" // Começa invisível e não clicável
 };
+
+
+
+// ... (resto do arquivo) ...
+
+// --- STARTUP ANIMATION ---
+export async function playStartupAnimation() {
+    if (document.getElementById('techsol-splash-screen')) return;
+
+    // 1. CSS (Injetado apenas uma vez)
+    if (!document.getElementById('google-splash-style')) {
+        const style = document.createElement('style');
+        style.id = 'google-splash-style';
+        style.innerHTML = `
+            @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap');
+            .splash-container { font-family: 'Google Sans', sans-serif; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #202124; z-index: 2147483647; display: flex; flex-direction: column; alignItems: center; justifyContent: center; opacity: 0; }
+            .splash-exit { animation: focusOut 0.9s cubic-bezier(0.4, 0.0, 0.2, 1) forwards; }
+            @keyframes focusOut { 0% { opacity: 1; transform: scale(1); filter: blur(0); } 100% { opacity: 0; transform: scale(1.15); filter: blur(15px); } }
+            .sentence-wrapper { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 10px; max-width: 80%; position: relative; }
+            .text-part { font-size: 32px; color: #E8EAED; opacity: 0; transition: opacity 0.8s ease; }
+            .text-name { font-size: 32px; font-weight: 700; background: linear-gradient(90deg, #8AB4F8, #C58AF9, #F28B82); -webkit-background-clip: text; -webkit-text-fill-color: transparent; opacity: 0; }
+            .text-footer { font-size: 20px; color: #9AA0A6; font-weight: 400; width: 100%; text-align: center; margin-top: 12px; opacity: 0; transform: translateY(10px); transition: all 1s cubic-bezier(0.0, 0.0, 0.2, 1); }
+            .sextou-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 16px; padding: 6px 16px; border-radius: 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #F28B82; font-size: 14px; font-weight: 500; opacity: 0; transform: scale(0.8); transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+            .cursor { color: #8AB4F8; -webkit-text-fill-color: #8AB4F8; font-weight: 100; margin-left: 1px; animation: blink 1s infinite; }
+            .brand-logo { position: absolute; top: 40px; font-size: 20px; font-weight: 500; color: #5f6368; letter-spacing: 1px; text-transform: uppercase; opacity: 0; animation: fadeInDown 0.8s ease forwards; }
+            .weather-icon { width: 42px; height: 42px; margin-bottom: 24px; opacity: 0; transform: scale(0.8); transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+            .credit-pro { position: absolute; bottom: 30px; font-size: 11px; color: #5f6368; letter-spacing: 0.5px; opacity: 0; animation: fadeInSimple 1.5s ease 1s forwards; }
+            .credit-pro span { color: #8AB4F8; font-weight: 500; opacity: 0.9; }
+            .loader-line { position: absolute; bottom: 0; left: 0; width: 100%; height: 2px; background: linear-gradient(to right, #4285F4, #EA4335, #FBBC05, #34A853); transform: scaleX(0); transform-origin: left; animation: loadLine 4s linear forwards; }
+            @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+            @keyframes fadeInDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+            @keyframes loadLine { 0% { transform: scaleX(0); } 100% { transform: scaleX(1); } }
+            @keyframes fadeInSimple { to { opacity: 1; } }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // 2. Estrutura HTML
+    const splash = document.createElement('div');
+    splash.className = 'splash-container';
+    splash.innerHTML = `
+        <div class="brand-logo">Case Wizard</div>
+        <div id="w-icon"></div>
+        <div class="sentence-wrapper">
+            <div id="p1" class="text-part"></div>
+            <div id="p2" class="text-name"></div>
+            <div id="p3" class="text-footer"></div>
+            <div id="p-sextou" style="width: 100%; text-align: center; display: none;">
+                <div class="sextou-badge">🎉 Sextou!</div>
+            </div>
+        </div>
+        <div class="credit-pro">created by <span>@lucaste</span></div>
+        <div class="loader-line"></div>
+    `;
+    document.body.appendChild(splash);
+
+    // 3. Execução
+    requestAnimationFrame(() => splash.style.opacity = '1');
+    
+    const esperar = (ms) => new Promise(r => setTimeout(r, ms));
+
+    // Chama o Sherlock (Isso vai popular a variável cachedAgentName)
+    await esperar(200); 
+    const name = await captureNameWithMagic(); 
+    const data = getSmartGreeting(name);
+
+    const wIcon = document.getElementById('w-icon');
+    const el1 = document.getElementById('p1');
+    const el2 = document.getElementById('p2');
+    const el3 = document.getElementById('p3');
+    const elSextou = document.getElementById('p-sextou');
+
+    wIcon.innerHTML = data.icon;
+    el1.textContent = data.prefix;
+    el3.textContent = data.suffix;
+
+    await esperar(300);
+    
+    // Ícone
+    const svg = wIcon.querySelector('svg');
+    if(svg) { svg.style.opacity = '1'; svg.style.transform = 'scale(1)'; }
+    
+    await esperar(400);
+    el1.style.opacity = '1'; // Bom dia
+
+    // Typewriter
+    el2.style.opacity = '1';
+    el2.innerHTML = '<span class="cursor">|</span>';
+    const cursor = el2.querySelector('.cursor');
+    await esperar(300);
+    for (let i = 0; i < data.name.length; i++) {
+        const char = data.name.charAt(i);
+        const span = document.createElement('span');
+        span.textContent = char;
+        el2.insertBefore(span, cursor);
+        let speed = Math.floor(Math.random() * 60) + 30; 
+        if (i===0) speed=150; if (i>data.name.length-3) speed=30;
+        await esperar(speed);
+    }
+    await esperar(600);
+    cursor.style.display = 'none';
+
+    // Frase final
+    el3.style.opacity = '1';
+    el3.style.transform = 'translateY(0)';
+
+    // Sextou
+    if (data.isFriday) {
+        await esperar(400);
+        elSextou.style.display = 'block';
+        // Reflow
+        void elSextou.offsetWidth;
+        const badge = elSextou.querySelector('.sextou-badge');
+        badge.style.opacity = '1';
+        badge.style.transform = 'scale(1)';
+    }
+
+    // Saída
+    await esperar(1500);
+    splash.classList.add('splash-exit');
+    await esperar(900);
+    splash.remove();
+}

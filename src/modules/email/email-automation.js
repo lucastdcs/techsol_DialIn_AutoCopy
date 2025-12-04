@@ -1,6 +1,7 @@
 // src/modules/email/email-automation.js
 import { showToast } from '../shared/utils.js';
 import { getPageData } from '../shared/page-data.js'; 
+import { getAgentName } from '../shared/page-data.js';
 
 const esperar = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -279,6 +280,7 @@ export async function runQuickEmail(template) {
     showToast(`Preparando email...`, { duration: 3000 });
 
     const pageData = getPageData(); 
+    const agentName = getAgentName();
     const emailPronto = await openAndClearEmail(); 
     
     if (!emailPronto) return;
@@ -322,7 +324,7 @@ export async function runQuickEmail(template) {
         finalBody = finalBody.replace(/\[Nome do Cliente\]/g, pageData.advertiserName || "Cliente");
         finalBody = finalBody.replace(/\[INSERIR URL\]/g, pageData.websiteUrl || "seu site");
         finalBody = finalBody.replace(/\[URL\]/g, pageData.websiteUrl || "seu site");
-        finalBody = finalBody.replace(/\[Seu Nome\]/g, "Agente Google"); 
+        finalBody = finalBody.replace(/\[Seu Nome\]/g, agentName); 
         
         // Substitui o placeholder de data pela data calculada
         finalBody = finalBody.replace(/\[MM\/DD\/YYYY\]/g, dataFormatada);
