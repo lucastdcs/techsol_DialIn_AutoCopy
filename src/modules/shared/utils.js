@@ -385,7 +385,7 @@ export async function playStartupAnimation() {
     style.id = "google-splash-style";
     style.innerHTML = `
             @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&display=swap');
-            .splash-container { font-family: 'Google Sans', sans-serif; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #202124; z-index: 2147483647; display: flex; flex-direction: column; alignItems: center; justifyContent: center; opacity: 0; }
+            .splash-container { font-family: 'Google Sans', sans-serif; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #202124; z-index: 2147483647; display: flex; flex-direction: column; alignItems: center; justify-content: center; opacity: 0; }
             .splash-exit { animation: focusOut 0.9s cubic-bezier(0.4, 0.0, 0.2, 1) forwards; }
             @keyframes focusOut { 0% { opacity: 1; transform: scale(1); filter: blur(0); } 100% { opacity: 0; transform: scale(1.15); filter: blur(15px); } }
             .sentence-wrapper { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 10px; max-width: 80%; position: relative; }
