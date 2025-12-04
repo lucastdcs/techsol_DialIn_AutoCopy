@@ -5,8 +5,7 @@ const ICONS = {
     notes: `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`,
     email: `<svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>`,
     script: `<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`,
-    links: `<svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>`,
-    grip: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>`
+    links: `<svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>`
 };
 
 const COLORS = {
@@ -37,54 +36,74 @@ export function initCommandCenter(actions) {
                 position: fixed; top: 30%; right: 24px;
                 display: flex; flex-direction: column; align-items: center; gap: 12px;
                 padding: 12px 6px 16px 6px;
+                
                 background: ${COLORS.glassBg};
                 backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-                border: 1px solid ${COLORS.glassBorder}; border-radius: 50px;
+                border: 1px solid ${COLORS.glassBorder}; 
+                border-radius: 50px;
+                
                 box-shadow: 0 10px 30px rgba(0,0,0,0.5);
                 z-index: 2147483647; cursor: grab;
                 user-select: none; width: 54px; box-sizing: border-box;
+
+                /* Estado Inicial (Invisível) */
                 opacity: 0; transform: translateX(60px) scale(0.95);
                 
-                /* Transições Padrão (Só funcionam quando NÃO estamos arrastando) */
                 transition: 
                     background 0.3s ease,
                     box-shadow 0.3s ease,
+                    border-color 0.3s ease,
                     opacity 0.4s ease-out,
-                    transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+                    transform 0.5s cubic-bezier(0.19, 1, 0.22, 1),
+                    top 0.1s linear, left 0.1s linear;
             }
 
+            /* DOCKED: Visível e posicionado */
             .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
+
+            /* SYSTEM READY */
             .cw-pill.system-ready { animation: systemReadyPulse 0.8s ease-out forwards; }
-            
-            /* Estado DRAGGING: Trava as transições */
+            @keyframes systemReadyPulse {
+                0% { border-color: ${COLORS.green}; box-shadow: 0 0 0 0 ${COLORS.readyGlow}; }
+                100% { border-color: ${COLORS.glassBorder}; box-shadow: 0 0 0 15px rgba(0,0,0,0); }
+            }
+
+            /* DRAGGING - O FIX DA OPACIDADE ESTÁ AQUI */
             .cw-pill.dragging {
                 cursor: grabbing; 
                 background: ${COLORS.glassActive}; 
+                /* Garante que fique visível mesmo sem a classe .docked */
+                opacity: 1 !important; 
                 transform: scale(1.05) !important; 
                 box-shadow: 0 20px 50px rgba(0,0,0,0.6);
                 border-color: rgba(255,255,255,0.3);
-                /* A TRAVA DE SEGURANÇA: */
+                
+                /* Trava transições de movimento */
                 transition: none !important; 
             }
 
+            /* SNAPPING */
             .cw-pill.snapping { 
                 transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease; 
             }
 
+            /* GRIP */
             .cw-grip-area { width: 100%; height: 24px; display: flex; align-items: center; justify-content: center; cursor: grab; color: ${COLORS.gripColor}; opacity: 0.7; transition: opacity 0.2s; }
             .cw-grip-area:hover { opacity: 1; color: #E8EAED; }
             .cw-grip-area svg { width: 20px; height: 20px; fill: currentColor; }
 
+            /* BUTTONS */
             .cw-btn {
                 width: 42px; height: 42px; border-radius: 50%; border: none; background: transparent;
                 display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative;
-                color: ${COLORS.iconIdle}; opacity: 0; transform: scale(0.5);
+                color: ${COLORS.iconIdle};
+                opacity: 0; transform: scale(0.5);
                 transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
             .cw-btn.popped { opacity: 1; transform: scale(1); }
             .cw-btn:hover { background: ${COLORS.glassHighlight}; color: ${COLORS.iconActive}; transform: scale(1.15); }
             .cw-btn svg { width: 22px; height: 22px; fill: currentColor; }
-            
+
             .cw-btn.notes:hover { color: ${COLORS.blue}; text-shadow: 0 0 10px ${COLORS.blue}; }
             .cw-btn.email:hover { color: ${COLORS.red}; text-shadow: 0 0 10px ${COLORS.red}; }
             .cw-btn.script:hover { color: ${COLORS.purple}; text-shadow: 0 0 10px ${COLORS.purple}; }
@@ -102,11 +121,6 @@ export function initCommandCenter(actions) {
             .cw-pill.side-right .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
             .cw-pill.side-left .cw-btn::after { left: 60px; transform-origin: left center; }
             .cw-pill.side-left .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
-            
-            @keyframes systemReadyPulse {
-                0% { border-color: ${COLORS.green}; box-shadow: 0 0 0 0 ${COLORS.readyGlow}; }
-                100% { border-color: ${COLORS.glassBorder}; box-shadow: 0 0 0 15px rgba(0,0,0,0); }
-            }
         `;
         document.head.appendChild(style);
     }
@@ -114,8 +128,12 @@ export function initCommandCenter(actions) {
     // 2. DOM
     const pill = document.createElement('div');
     pill.className = 'cw-pill side-right';
+    
+    // Novo ícone de Grip (6 pontinhos)
+    const gripIcon = `<svg viewBox="0 0 24 24"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>`;
+
     pill.innerHTML = `
-        <div class="cw-grip-area" title="Arrastar">${ICONS.grip}</div>
+        <div class="cw-grip-area" title="Arrastar">${gripIcon}</div>
         <button class="cw-btn notes" data-label="Case Notes">${ICONS.notes}</button>
         <button class="cw-btn email" data-label="Quick Email">${ICONS.email}</button>
         <button class="cw-btn script" data-label="Call Script">${ICONS.script}</button>
@@ -132,7 +150,7 @@ export function initCommandCenter(actions) {
 
     // 4. ANIMAÇÃO DE ENTRADA
     async function animateEntry() {
-        await esperar(2600); 
+        await esperar(2600); // Espera Splash
 
         pill.classList.add('docked');
         await esperar(300);
@@ -151,40 +169,34 @@ export function initCommandCenter(actions) {
     }
     animateEntry();
 
-    // 5. PHYSICS ENGINE (Com Trava de Segurança)
+    // 5. DRAG ENGINE (Blindado)
     let isDragging = false;
     let startX, startY, initialLeft, initialTop;
     const DRAG_THRESHOLD = 3; 
 
     pill.onmousedown = (e) => {
-        // Se clicar num botão, não arrasta
         if (e.target.closest('button')) return;
         
         e.preventDefault();
-        
-        // Pega as coordenadas atuais
-        startX = e.clientX; 
-        startY = e.clientY;
+        startX = e.clientX; startY = e.clientY;
         const rect = pill.getBoundingClientRect();
-        initialLeft = rect.left; 
-        initialTop = rect.top;
+        initialLeft = rect.left; initialTop = rect.top;
 
-        // === A TRAVA DE SEGURANÇA ===
-        // 1. Desliga as animações
-        pill.style.transition = 'none';
-        pill.classList.add('dragging');
-        pill.classList.remove('snapping', 'docked');
+        // --- TRAVA DE SEGURANÇA DO CSS ---
+        pill.style.transition = 'none'; // Mata transição
+        pill.style.transform = 'none'; // Mata transform
         
-        // 2. Fixa a posição absoluta ANTES de mover
-        // Isso evita que ele pule para (0,0) ou suma
+        // Força posição absoluta
         pill.style.left = initialLeft + 'px';
         pill.style.top = initialTop + 'px';
-        pill.style.transform = 'none'; // Mata o translateX
-        pill.style.right = 'auto';     // Mata a âncora direita
+        pill.style.right = 'auto'; 
+        pill.style.opacity = '1'; // Garante visibilidade
         
-        // 3. Força o navegador a aplicar isso agora
+        pill.classList.add('dragging');
+        pill.classList.remove('snapping', 'docked'); // Remove classes que alteram opacity/transform
+        
+        // Reflow forçado
         void pill.offsetWidth;
-        // ============================
 
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
@@ -197,8 +209,6 @@ export function initCommandCenter(actions) {
         if (isDragging) {
             const dx = e.clientX - startX;
             const dy = e.clientY - startY;
-            
-            // Movimento puro, sem animação CSS atrapalhando
             pill.style.left = `${initialLeft + dx}px`;
             pill.style.top = `${initialTop + dy}px`;
         }
@@ -208,8 +218,9 @@ export function initCommandCenter(actions) {
         if (isDragging) {
             isDragging = false;
             
-            // Reativa animações para o "Snap"
+            // Restaura transições do CSS para o snap funcionar
             pill.style.transition = ''; 
+            
             pill.classList.remove('dragging');
             pill.classList.add('snapping');
 
@@ -233,6 +244,8 @@ export function initCommandCenter(actions) {
 
             pill.style.left = `${targetLeft}px`;
             pill.style.top = `${targetTop}px`;
+            
+            setTimeout(() => pill.style.transform = '', 600);
         }
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
