@@ -330,8 +330,8 @@
 
             /* ESTA \xC9 A REGRA QUE FALTAVA: */
             .cw-grip svg {
-                width: 24px; 
-                height: 24px; 
+                width: 30px; 
+                height: 36px; 
                 fill: currentColor;
             }
 
