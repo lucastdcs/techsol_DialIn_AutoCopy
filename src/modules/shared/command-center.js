@@ -1,11 +1,11 @@
 // src/modules/shared/command-center.js
 
 const COLORS = {
-  glassBg: "rgba(79, 78, 78, 0.77)", // Vidro escuro e sólido
+  glassBg: "rgba(61, 61, 61, 0.77)", // Vidro escuro e sólido
   glassBorder: "rgba(255, 255, 255, 0.15)",
   glassActive: "rgba(79, 79, 79, 0.89)", // Quando agarra
   glassHighlight: "rgba(255, 255, 255, 0.08)",
-  iconIdle: "#9AA0A6",
+  iconIdle: "#c2c5c8ff",
   iconActive: "#FFFFFF",
   // Cores para o "System Check"
   blue: "#8AB4F8",
@@ -154,7 +154,7 @@ export function initCommandCenter(actions) {
   pill.className = "cw-pill side-right";
   pill.innerHTML = `
         <div class="cw-grip" title="Arrastar">
-            ${ICONS.notes}
+            ${ICONS.grip}
         </div>
         <div class="cw-sep"></div>
         <button class="cw-btn notes" data-label="Case Notes">${ICONS.notes}</button>
