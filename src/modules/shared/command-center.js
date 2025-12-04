@@ -9,13 +9,22 @@ const ICONS = {
 };
 
 const COLORS = {
-    glassBg: 'rgba(20, 20, 20, 0.65)', 
-    glassBorder: 'rgba(255, 255, 255, 0.1)',
-    glassActive: 'rgba(40, 40, 40, 0.85)',
+    glassBg: 'rgba(20, 20, 20, 0.85)', // Vidro escuro
+    glassBorder: 'rgba(255, 255, 255, 0.15)',
+    glassActive: 'rgba(40, 40, 40, 0.95)', // Quando agarra
+    glassHighlight: 'rgba(255, 255, 255, 0.08)',
+    
     iconIdle: '#9AA0A6',
-    iconHover: '#FFFFFF',
-    blue: '#8AB4F8', red: '#F28B82', purple: '#C58AF9', green: '#81C995'
+    iconActive: '#FFFFFF',
+    
+    gripColor: '#5F6368',
+    gripActive: '#8AB4F8', // Azul ao agarrar
+
+    blue: '#8AB4F8', red: '#F28B82', purple: '#C58AF9', green: '#81C995',
+    readyGlow: 'rgba(52, 168, 83, 0.8)' // Luz verde
 };
+
+const esperar = (ms) => new Promise(r => setTimeout(r, ms));
 
 export function initCommandCenter(actions) {
     // actions = { toggleNotes, toggleEmail, toggleScript, toggleLinks }
@@ -26,40 +35,118 @@ export function initCommandCenter(actions) {
         style.id = 'cw-command-center-style';
         style.innerHTML = `
             @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@500&display=swap');
+
             .cw-pill {
                 position: fixed; top: 30%; right: 24px;
-                display: flex; flex-direction: column; align-items: center; gap: 16px;
-                padding: 20px 8px;
-                background: ${COLORS.glassBg}; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-                border: 1px solid ${COLORS.glassBorder}; border-radius: 50px;
-                box-shadow: 0 4px 24px rgba(0,0,0,0.25); z-index: 2147483647; cursor: grab;
-                transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+                display: flex; flex-direction: column; align-items: center; gap: 12px;
+                padding: 12px 6px 16px 6px; /* Espaço para o grip */
+                
+                background: ${COLORS.glassBg}; 
+                backdrop-filter: blur(12px) saturate(180%);
+                -webkit-backdrop-filter: blur(12px);
+                border: 1px solid ${COLORS.glassBorder}; 
+                border-radius: 50px;
+                
+                box-shadow: 0 8px 32px rgba(0,0,0,0.4); 
+                z-index: 2147483647; 
+                cursor: grab;
+                
+                /* Estado inicial de entrada */
+                opacity: 0; transform: translateX(60px); 
+                
+                transition: 
+                    background 0.3s ease, 
+                    box-shadow 0.3s ease, 
+                    opacity 0.4s ease-out,
+                    transform 0.5s cubic-bezier(0.19, 1, 0.22, 1),
+                    top 0.1s linear, left 0.1s linear;
+                
                 user-select: none;
-                opacity: 0; transform: translateX(60px); /* Estado inicial escondido */
             }
-            .cw-pill.visible { opacity: 1; transform: translateX(0); }
-            .cw-pill.dragging { cursor: grabbing; background: ${COLORS.glassActive}; transform: scale(1.05); box-shadow: 0 20px 40px rgba(0,0,0,0.4); border-color: rgba(255,255,255,0.2); }
-            .cw-pill.snapping { transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease; }
+
+            /* Estados Visuais */
+            .cw-pill.docked { opacity: 1; transform: translateX(0); }
             
-            .cw-grip { display: flex; gap: 4px; color: ${COLORS.iconIdle}; opacity: 0.5; pointer-events: none; }
-            .cw-dot { width: 4px; height: 4px; background: currentColor; border-radius: 50%; }
+            .cw-pill.dragging { 
+                cursor: grabbing; 
+                background: ${COLORS.glassActive}; 
+                transform: scale(1.05) !important; 
+                box-shadow: 0 20px 50px rgba(0,0,0,0.5); 
+                border-color: rgba(255,255,255,0.3);
+                transition: transform 0.1s ease, box-shadow 0.1s ease; 
+            }
+            .cw-pill.dragging .cw-grip-bar { background-color: ${COLORS.gripActive}; width: 18px; }
+
+            .cw-pill.snapping { 
+                transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease; 
+            }
             
-            .cw-btn { width: 42px; height: 42px; border-radius: 50%; border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; color: ${COLORS.iconIdle}; transition: all 0.2s ease; }
-            .cw-btn:hover { background: rgba(255,255,255,0.1); color: ${COLORS.iconHover}; transform: scale(1.1); }
+            /* Animação System Ready */
+            .cw-pill.system-ready { animation: systemReadyPulse 1s ease-out forwards; }
+            @keyframes systemReadyPulse {
+                0% { border-color: ${COLORS.green}; box-shadow: 0 0 0 0 ${COLORS.readyGlow}; }
+                100% { border-color: ${COLORS.glassBorder}; box-shadow: 0 0 0 15px rgba(0,0,0,0); }
+            }
+
+            /* --- GRIP (ALÇA) --- */
+            .cw-grip-area {
+                width: 100%; height: 20px;
+                display: flex; align-items: center; justify-content: center;
+                cursor: grab;
+                opacity: 0.6; transition: opacity 0.2s;
+            }
+            .cw-grip-area:hover { opacity: 1; }
+            
+            .cw-grip-bar {
+                width: 24px; height: 4px;
+                background-color: ${COLORS.gripColor};
+                border-radius: 4px;
+                transition: background 0.3s, width 0.3s;
+            }
+
+            /* --- ÍCONES --- */
+            .cw-btn { 
+                width: 42px; height: 42px; 
+                border-radius: 50%; border: none; background: transparent; 
+                display: flex; align-items: center; justify-content: center; 
+                cursor: pointer; position: relative; 
+                color: ${COLORS.iconIdle}; 
+                
+                /* Entrada */
+                opacity: 0; transform: scale(0.5);
+                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            
+            .cw-btn.popped { opacity: 1; transform: scale(1); }
+
+            .cw-btn:hover { 
+                background: ${COLORS.glassHighlight}; 
+                color: ${COLORS.iconActive}; 
+                transform: scale(1.15); 
+            }
             .cw-btn svg { width: 22px; height: 22px; fill: currentColor; }
             
-            .cw-btn.notes:hover { color: ${COLORS.blue}; filter: drop-shadow(0 0 5px rgba(138, 180, 248, 0.5)); }
-            .cw-btn.email:hover { color: ${COLORS.red}; filter: drop-shadow(0 0 5px rgba(242, 139, 130, 0.5)); }
-            .cw-btn.script:hover { color: ${COLORS.purple}; filter: drop-shadow(0 0 5px rgba(197, 138, 249, 0.5)); }
-            .cw-btn.links:hover { color: ${COLORS.green}; filter: drop-shadow(0 0 5px rgba(129, 201, 149, 0.5)); }
+            .cw-btn.notes:hover { color: ${COLORS.blue}; text-shadow: 0 0 10px ${COLORS.blue}; }
+            .cw-btn.email:hover { color: ${COLORS.red}; text-shadow: 0 0 10px ${COLORS.red}; }
+            .cw-btn.script:hover { color: ${COLORS.purple}; text-shadow: 0 0 10px ${COLORS.purple}; }
+            .cw-btn.links:hover { color: ${COLORS.green}; text-shadow: 0 0 10px ${COLORS.green}; }
             
-            .cw-btn::after { content: attr(data-label); position: absolute; top: 50%; transform: translateY(-50%) scale(0.9); padding: 6px 12px; border-radius: 8px; background: #202124; color: #fff; font-family: 'Google Sans', sans-serif; font-size: 12px; font-weight: 500; opacity: 0; pointer-events: none; transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1); border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: nowrap; }
+            /* Divisor */
+            .cw-sep { width: 24px; height: 1px; background: rgba(255,255,255,0.15); margin: 2px 0; opacity: 0; transition: opacity 0.5s; }
+            .cw-sep.visible { opacity: 1; }
+
+            /* Tooltips */
+            .cw-btn::after { 
+                content: attr(data-label); position: absolute; top: 50%; transform: translateY(-50%) scale(0.9); 
+                padding: 6px 12px; border-radius: 6px; background: #E8EAED; color: #202124; 
+                font-family: 'Google Sans', sans-serif; font-size: 12px; font-weight: 500; 
+                opacity: 0; pointer-events: none; transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1); 
+                box-shadow: 0 4px 12px rgba(0,0,0,0.4); white-space: nowrap; 
+            }
             .cw-pill.side-right .cw-btn::after { right: 60px; transform-origin: right center; }
             .cw-pill.side-right .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
             .cw-pill.side-left .cw-btn::after { left: 60px; transform-origin: left center; }
             .cw-pill.side-left .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
-            
-            .cw-divider { width: 24px; height: 1px; background: rgba(255,255,255,0.1); margin: 4px 0; }
         `;
         document.head.appendChild(style);
     }
@@ -68,17 +155,18 @@ export function initCommandCenter(actions) {
     const pill = document.createElement('div');
     pill.className = 'cw-pill side-right';
     pill.innerHTML = `
-        <div class="cw-grip"><div class="cw-dot"></div><div class="cw-dot"></div></div>
-        <div class="cw-divider"></div>
+        <div class="cw-grip-area" title="Arrastar">
+            <div class="cw-grip-bar"></div>
+        </div>
         <button class="cw-btn notes" data-label="Case Notes">${ICONS.notes}</button>
+        <div class="cw-sep"></div>
         <button class="cw-btn email" data-label="Quick Email">${ICONS.email}</button>
         <button class="cw-btn script" data-label="Call Script">${ICONS.script}</button>
-        <div class="cw-divider"></div>
         <button class="cw-btn links" data-label="Links">${ICONS.links}</button>
     `;
     document.body.appendChild(pill);
 
-    // 3. EVENTOS DE CLIQUE (Ligando aos módulos)
+    // 3. EVENTOS DE CLIQUE
     pill.querySelector('.notes').onclick = (e) => { e.stopPropagation(); actions.toggleNotes(); };
     pill.querySelector('.email').onclick = (e) => { e.stopPropagation(); actions.toggleEmail(); };
     pill.querySelector('.script').onclick = (e) => { e.stopPropagation(); actions.toggleScript(); };
@@ -88,9 +176,10 @@ export function initCommandCenter(actions) {
     let isDragging = false;
     let startX, startY, initialLeft, initialTop;
     const DRAG_THRESHOLD = 3; 
+    const grip = pill.querySelector('.cw-grip-area');
 
+    // Drag inicia no Grip ou na área vazia (mas não nos botões)
     pill.onmousedown = (e) => {
-        // Se clicar num botão, não inicia drag imediato
         if (e.target.closest('button')) return;
         
         e.preventDefault();
@@ -98,48 +187,88 @@ export function initCommandCenter(actions) {
         const rect = pill.getBoundingClientRect();
         initialLeft = rect.left; initialTop = rect.top;
 
+        pill.classList.add('dragging');
+        pill.classList.remove('snapping', 'docked'); // Remove transições lentas
+        pill.style.transform = 'none'; // Reseta transform para movimento absoluto
+        pill.style.left = initialLeft + 'px';
+        pill.style.top = initialTop + 'px';
+        pill.style.right = 'auto';
+
         document.addEventListener('mousemove', onMouseMove);
         document.addEventListener('mouseup', onMouseUp);
     };
 
     function onMouseMove(e) {
-        const dx = e.clientX - startX;
-        const dy = e.clientY - startY;
-        if (!isDragging && Math.sqrt(dx*dx + dy*dy) > DRAG_THRESHOLD) {
+        if (!isDragging && Math.sqrt(Math.pow(e.clientX - startX, 2) + Math.pow(e.clientY - startY, 2)) > DRAG_THRESHOLD) {
             isDragging = true;
-            pill.classList.add('dragging');
-            pill.classList.remove('snapping');
         }
         if (isDragging) {
+            const dx = e.clientX - startX;
+            const dy = e.clientY - startY;
             pill.style.left = `${initialLeft + dx}px`;
             pill.style.top = `${initialTop + dy}px`;
-            pill.style.right = 'auto'; pill.style.bottom = 'auto';
         }
     }
 
     function onMouseUp(e) {
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
         if (isDragging) {
             isDragging = false;
             pill.classList.remove('dragging');
             pill.classList.add('snapping');
+
             const screenW = window.innerWidth;
             const screenH = window.innerHeight;
             const rect = pill.getBoundingClientRect();
             const centerX = rect.left + (rect.width / 2);
-            let targetLeft = (centerX < screenW / 2) ? 24 : screenW - rect.width - 24;
-            if (centerX < screenW / 2) { pill.classList.remove('side-right'); pill.classList.add('side-left'); }
-            else { pill.classList.remove('side-left'); pill.classList.add('side-right'); }
+
+            // Snap Horizontal
+            let targetLeft;
+            if (centerX < screenW / 2) {
+                targetLeft = 24;
+                pill.classList.remove('side-right'); pill.classList.add('side-left');
+            } else {
+                targetLeft = screenW - rect.width - 24;
+                pill.classList.remove('side-left'); pill.classList.add('side-right');
+            }
+
+            // Snap Vertical
             let targetTop = rect.top;
             if (targetTop < 24) targetTop = 24;
             if (targetTop > screenH - rect.height - 24) targetTop = screenH - rect.height - 24;
+
             pill.style.left = `${targetLeft}px`;
             pill.style.top = `${targetTop}px`;
+            
+            setTimeout(() => pill.style.transform = '', 600);
         }
+        document.removeEventListener('mousemove', onMouseMove);
+        document.removeEventListener('mouseup', onMouseUp);
     }
 
-    // Entrada Suave (Pós Splash)
-    // Aguarda um pouco e mostra
-    setTimeout(() => pill.classList.add('visible'), 5000);
+    // 5. ANIMAÇÃO DE ENTRADA (Sequência)
+    async function animateEntry() {
+        // Espera a splash screen sair (tempo estimado 2.5s do app.js)
+        // Vamos esperar 2.6s para garantir que a tela está limpa
+        await esperar(2600);
+
+        // 1. Docking (Barra desliza)
+        pill.classList.add('docked');
+        await esperar(300);
+
+        // 2. Cascata de Ícones
+        const items = pill.querySelectorAll('.cw-btn');
+        const seps = pill.querySelectorAll('.cw-sep');
+        seps.forEach(s => s.classList.add('visible'));
+        
+        for (let i = 0; i < items.length; i++) {
+            items[i].classList.add('popped');
+            await esperar(60); // Ritmo rápido
+        }
+
+        // 3. System Ready (Pulso Verde)
+        await esperar(200);
+        pill.classList.add('system-ready');
+    }
+
+    animateEntry();
 }
