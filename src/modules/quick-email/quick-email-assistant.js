@@ -11,92 +11,83 @@ import { QUICK_EMAILS } from "./quick-email-data.js";
 import { runQuickEmail } from "../email/email-automation.js";
 
 export function initQuickEmailAssistant() {
-  const CURRENT_VERSION = "v3.0.0"; // Major update de UI
+  const CURRENT_VERSION = "v3.1.0"; // Versão Scalable UI
 
   // --- ESTADO ---
   let activeCategory = Object.keys(QUICK_EMAILS)[0];
   let searchTerm = "";
 
-  // --- 1. ESTILOS LOCAIS REFINADOS ---
+  // --- 1. ESTILOS REFINADOS ---
   
+  // Container de Filtros (Busca + Categoria)
+  const styleFilterBar = {
+      display: "flex", gap: "12px", padding: "16px 20px",
+      borderBottom: "1px solid #f1f3f4", background: "#fff",
+      alignItems: "center"
+  };
+
   const styleSearchInput = {
-    width: "100%", padding: "12px 12px 12px 44px", // Mais respiro no ícone
+    flexGrow: "1", padding: "10px 12px 10px 36px", 
     borderRadius: "8px", border: "1px solid #dadce0", background: "#f1f3f4",
     fontSize: "14px", color: "#202124", boxSizing: "border-box", outline: "none",
     transition: "all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)",
-    backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%235f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>')`,
-    backgroundRepeat: "no-repeat", backgroundPosition: "14px center", // Ícone mais para dentro
+    backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="%235f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>')`,
+    backgroundRepeat: "no-repeat", backgroundPosition: "10px center",
   };
 
-  const styleChipContainer = {
-    display: "flex", gap: "8px", overflowX: "auto",
-    padding: "4px 4px 12px 4px", marginBottom: "4px", scrollbarWidth: "none",
-    // Garante scroll suave no touch/trackpad
-    webkitOverflowScrolling: "touch", 
-  };
-
-  const styleChip = {
-    padding: "8px 16px", // Mais gordinho (Touch target Apple/Google)
-    borderRadius: "20px", 
-    border: "1px solid #dadce0",
-    background: "#ffffff", color: "#5f6368", fontSize: "13px", fontWeight: "500",
-    cursor: "pointer", whiteSpace: "nowrap", transition: "all 0.2s ease", userSelect: "none",
-    boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-    flexShrink: "0" // IMPEDE QUEBRA: O chip mantém sua largura ideal
-  };
-
-  const styleChipActive = {
-    background: "#e8f0fe", color: "#1967d2", borderColor: "#1967d2",
-    boxShadow: "0 1px 3px rgba(26, 115, 232, 0.2)"
+  // Select de Categoria (Substitui os Chips para Escalabilidade)
+  const styleCategorySelect = {
+      width: "160px", padding: "10px 32px 10px 12px",
+      borderRadius: "8px", border: "1px solid #dadce0", background: "#fff",
+      fontSize: "13px", fontWeight: "500", color: "#3c4043", cursor: "pointer",
+      outline: "none", appearance: "none", // Remove estilo nativo
+      backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="%235f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>')`,
+      backgroundRepeat: "no-repeat", backgroundPosition: "right 8px center",
+      transition: "background 0.2s ease, border-color 0.2s ease",
+      flexShrink: "0"
   };
 
   const styleRow = {
-    display: "flex", flexDirection: "column", marginBottom: "12px", // Mais espaço entre itens
+    display: "flex", flexDirection: "column", marginBottom: "12px",
     position: "relative", background: "transparent",
   };
 
   const styleButtonWrapper = {
     display: "flex", flexDirection: "row", alignItems: "stretch", width: "100%",
     boxShadow: "0 1px 3px rgba(60,64,67, 0.1), 0 2px 8px rgba(60,64,67, 0.05)", 
-    borderRadius: "8px", background: "#fff", transition: "box-shadow 0.2s ease",
-    overflow: "hidden" // Garante bordas arredondadas nos filhos
+    borderRadius: "8px", background: "#fff", 
+    // Transição suave para a borda voltar a ser redonda
+    transition: "box-shadow 0.2s ease, border-radius 0.3s ease", 
+    overflow: "hidden", zIndex: "2"
   };
 
-  // Botão Ação (CORRIGIDO ALINHAMENTO)
   const styleActionBtn = {
-    flexGrow: "1", 
-    display: "flex", 
-    flexDirection: "column", // Pilha vertical: Título em cima, Descrição embaixo
-    justifyContent: "center", // Centraliza o bloco de texto verticalmente
-    alignItems: "flex-start", // Alinha texto à esquerda
-    
-    textAlign: "left", padding: "14px 16px", // Mais área de respiro
+    flexGrow: "1", display: "flex", flexDirection: "column", 
+    justifyContent: "center", alignItems: "flex-start",
+    textAlign: "left", padding: "14px 16px",
     background: "transparent", border: "1px solid #dadce0", borderRight: "none",
-    borderRadius: "8px 0 0 8px", cursor: "pointer",
-    transition: "background 0.1s linear", zIndex: "2",
+    // Removemos border-radius fixo aqui, quem manda é o Wrapper
+    cursor: "pointer", color: "#3c4043", 
+    fontSize: "14px", fontWeight: "500",
+    transition: "background 0.1s linear", 
   };
 
   const stylePreviewBtn = {
-    width: "52px", // Mais largo para clique fácil
-    display: "flex", alignItems: "center", justifyContent: "center",
+    width: "52px", display: "flex", alignItems: "center", justifyContent: "center",
     background: "#f8f9fa", border: "1px solid #dadce0", borderLeft: "1px solid #f1f3f4",
-    borderRadius: "0 8px 8px 0", cursor: "pointer",
-    color: "#5f6368", transition: "all 0.2s ease", zIndex: "2", flexShrink: "0"
+    cursor: "pointer", color: "#5f6368", 
+    transition: "all 0.2s ease", flexShrink: "0"
   };
 
-  // Card de Preview (CORRIGIDO RENDERIZAÇÃO)
   const stylePreviewCard = {
     width: "100%", maxHeight: "0", opacity: "0", overflow: "hidden",
     background: "#ffffff", border: "1px solid #dadce0", borderTop: "none",
-    borderRadius: "0 0 8px 8px", marginTop: "-4px", padding: "0 20px",
+    borderRadius: "0 0 8px 8px", marginTop: "-1px", padding: "0 20px",
     fontSize: "13px", color: "#3c4043", lineHeight: "1.6", boxSizing: "border-box",
     transition: "all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)", 
     zIndex: "1", position: "relative",
     boxShadow: "inset 0 4px 6px -4px rgba(0,0,0,0.1)",
-    
-    // IMPORTANTE: Permite que o texto quebre e o HTML flua
-    whiteSpace: "normal", 
-    wordWrap: "break-word"
+    whiteSpace: "normal", wordWrap: "break-word"
   };
 
   // --- CRIAÇÃO DO POPUP ---
@@ -104,10 +95,9 @@ export function initQuickEmailAssistant() {
   const popup = document.createElement("div");
   popup.id = "quick-email-popup";
   
-  // AUMENTO DA LARGURA (Respiro Visual)
+  // LARGURA AUMENTADA PARA 500PX (Mais conforto)
   Object.assign(popup.style, stylePopup, { 
-      right: "100px", 
-      width: "460px", // Aumentado de 400px para 460px
+      right: "100px", width: "500px",
       boxShadow: "none", opacity: "0", pointerEvents: "none" 
   });
 
@@ -121,32 +111,37 @@ export function initQuickEmailAssistant() {
   // 1. Header
   const header = createStandardHeader(
     popup, "Emails Rápidos", CURRENT_VERSION,
-    "Templates prontos. Clique na linha para inserir, ou no olho para ver.",
+    "Selecione a categoria no dropdown e filtre. Clique na linha para inserir.",
     animRefs, () => toggleVisibility()
   );
 
-  // 2. Toolbar
+  // 2. Toolbar (Layout Novo: Search + Select)
   const toolbar = document.createElement("div");
-  Object.assign(toolbar.style, {
-    padding: "20px 20px 10px 20px", // Padding generoso
-    display: "flex", flexDirection: "column", gap: "12px",
-    borderBottom: "1px solid #f1f3f4", flexShrink: "0", backgroundColor: "#fff",
-  });
+  Object.assign(toolbar.style, styleFilterBar);
 
   const searchInput = document.createElement("input");
-  searchInput.placeholder = "Filtrar emails...";
+  searchInput.placeholder = "Buscar template...";
   Object.assign(searchInput.style, styleSearchInput);
   
-  searchInput.onfocus = () => { searchInput.style.background = "#fff"; searchInput.style.borderColor = "#1a73e8"; searchInput.style.boxShadow = "0 1px 4px rgba(26,115,232,0.2)"; };
-  searchInput.onblur = () => { searchInput.style.background = "#f1f3f4"; searchInput.style.borderColor = "#dadce0"; searchInput.style.boxShadow = "none"; };
-  
+  searchInput.onfocus = () => { searchInput.style.background = "#fff"; searchInput.style.borderColor = "#1a73e8"; };
+  searchInput.onblur = () => { searchInput.style.background = "#f1f3f4"; searchInput.style.borderColor = "#dadce0"; };
   animRefs.focusElement = searchInput;
 
-  const tabsContainer = document.createElement("div");
-  Object.assign(tabsContainer.style, styleChipContainer);
+  // Dropdown de Categorias (Escalável)
+  const categorySelect = document.createElement("select");
+  Object.assign(categorySelect.style, styleCategorySelect);
+  
+  categorySelect.onmouseenter = () => categorySelect.style.background = "#f8f9fa";
+  categorySelect.onmouseleave = () => categorySelect.style.background = "#fff";
+  categorySelect.onchange = (e) => {
+      activeCategory = e.target.value;
+      searchTerm = "";
+      searchInput.value = "";
+      renderEmailList();
+  };
 
   toolbar.appendChild(searchInput);
-  toolbar.appendChild(tabsContainer);
+  toolbar.appendChild(categorySelect);
 
   popup.appendChild(header);
   popup.appendChild(toolbar);
@@ -154,8 +149,9 @@ export function initQuickEmailAssistant() {
   // 3. Conteúdo
   const contentArea = document.createElement("div");
   Object.assign(contentArea.style, {
-    padding: "20px", // Padding consistente
-    overflowY: "auto", flexGrow: "1", position: "relative",
+    padding: "20px", overflowY: "auto", flexGrow: "1", position: "relative",
+    // Fundo levemente cinza para destacar os cartões brancos
+    background: "#FAFAFA" 
   });
   popup.appendChild(contentArea);
 
@@ -163,7 +159,7 @@ export function initQuickEmailAssistant() {
   const footer = document.createElement("div");
   Object.assign(footer.style, {
     padding: "12px 16px", borderTop: "1px solid #eee", textAlign: "center",
-    fontSize: "11px", color: "#9aa0a6", letterSpacing: "0.3px"
+    fontSize: "11px", color: "#9aa0a6", background: "#fff"
   });
   footer.textContent = "created by lucaste@";
   popup.appendChild(footer);
@@ -172,30 +168,15 @@ export function initQuickEmailAssistant() {
 
   // --- RENDERIZAÇÃO ---
 
-  function renderTabs() {
-    tabsContainer.innerHTML = "";
+  function renderCategories() {
+    categorySelect.innerHTML = "";
     Object.keys(QUICK_EMAILS).forEach((catKey) => {
-      const catData = QUICK_EMAILS[catKey];
-      const chip = document.createElement("div");
-      chip.textContent = catData.title;
-      Object.assign(chip.style, styleChip);
-      
-      if (activeCategory === catKey && searchTerm === "") {
-        Object.assign(chip.style, styleChipActive);
-      }
-      
-      chip.onmouseover = () => { if(activeCategory !== catKey) chip.style.background = "#f1f3f4"; };
-      chip.onmouseout = () => { if(activeCategory !== catKey) chip.style.background = "#fff"; };
-      
-      chip.onclick = () => {
-        activeCategory = catKey;
-        searchTerm = "";
-        searchInput.value = "";
-        renderTabs();
-        renderEmailList();
-      };
-      tabsContainer.appendChild(chip);
+        const option = document.createElement("option");
+        option.value = catKey;
+        option.textContent = QUICK_EMAILS[catKey].title;
+        categorySelect.appendChild(option);
     });
+    categorySelect.value = activeCategory;
   }
 
   function renderEmailList() {
@@ -216,7 +197,7 @@ export function initQuickEmailAssistant() {
     }
 
     if (emailsToShow.length === 0) {
-      contentArea.innerHTML = `<div style="text-align:center; padding:40px 20px; color:#9aa0a6; fontSize:14px">Nenhum email encontrado.</div>`;
+      contentArea.innerHTML = `<div style="text-align:center; padding:40px 20px; color:#9aa0a6; fontSize:14px">Nenhum template encontrado.</div>`;
       return;
     }
 
@@ -230,13 +211,11 @@ export function initQuickEmailAssistant() {
       const btnWrapper = document.createElement("div");
       Object.assign(btnWrapper.style, styleButtonWrapper);
 
-      // --- BOTÃO DE AÇÃO (Texto) ---
       const actionBtn = document.createElement("div");
       Object.assign(actionBtn.style, styleActionBtn);
       
-      const shortDesc = email.subject.length > 50 ? email.subject.substring(0, 50) + "..." : email.subject;
+      const shortDesc = email.subject.length > 55 ? email.subject.substring(0, 55) + "..." : email.subject;
 
-      // Layout Interno: Linha do Título e Linha da Descrição
       actionBtn.innerHTML = `
           <div style="display:flex; align-items:center; gap:8px; color:#202124; font-weight:600; fontSize:14px; margin-bottom: 2px;">
               <span style="color:#1a73e8; display:flex;">${iconSend}</span> ${email.name}
@@ -254,7 +233,6 @@ export function initQuickEmailAssistant() {
         toggleVisibility();
       };
 
-      // --- BOTÃO DE PREVIEW (Olho) ---
       const previewBtn = document.createElement("div");
       previewBtn.innerHTML = iconEye;
       Object.assign(previewBtn.style, stylePreviewBtn);
@@ -281,10 +259,10 @@ export function initQuickEmailAssistant() {
         const existingCard = row.querySelector(".preview-card");
         
         if (existingCard) {
-          // Fechar
+          // FECHAR (Animação de saída)
           existingCard.style.maxHeight = "0";
           existingCard.style.opacity = "0";
-          existingCard.style.padding = "0 20px"; // Mantém padding lateral para não pular
+          existingCard.style.padding = "0 20px";
           row.classList.remove("expanded");
           
           previewBtn.style.background = "#f8f9fa";
@@ -292,9 +270,16 @@ export function initQuickEmailAssistant() {
           actionBtn.style.background = "transparent";
           btnWrapper.style.boxShadow = "0 1px 3px rgba(60,64,67, 0.1), 0 2px 8px rgba(60,64,67, 0.05)";
           
-          setTimeout(() => existingCard.remove(), 300);
+          // AQUI ESTÁ O FIX DA BORDA QUADRADA:
+          // Só arredonda de volta quando a animação do card terminar (300ms)
+          // Isso evita que a borda "pule" antes do card sumir
+          setTimeout(() => {
+             btnWrapper.style.borderRadius = "8px"; 
+             existingCard.remove();
+          }, 300);
+
         } else {
-          // Abrir
+          // ABRIR
           row.classList.add("expanded");
           previewBtn.style.background = "#e8f0fe";
           previewBtn.style.color = "#1a73e8";
@@ -302,28 +287,30 @@ export function initQuickEmailAssistant() {
           
           btnWrapper.style.boxShadow = "0 4px 12px rgba(60,64,67, 0.15)";
           
-          actionBtn.style.borderRadius = "8px 0 0 0";
-          previewBtn.style.borderRadius = "0 8px 0 0";
+          // Deixa quadrado embaixo IMEDIATAMENTE para conectar com o card
           btnWrapper.style.borderRadius = "8px 8px 0 0";
 
           const card = document.createElement("div");
           card.className = "preview-card";
           Object.assign(card.style, stylePreviewCard);
           
-          // RENDERIZAÇÃO DO CONTEÚDO (HTML)
-          // Nota: Não usamos .replace(/</g) para que as tags funcionem!
           card.innerHTML = `
-            <div style="padding: 16px 0;">
+            <div style="padding: 20px 0;">
                 <div style="font-weight:600; margin-bottom:4px; color:#1a73e8; font-size:11px; text-transform:uppercase;">Assunto</div>
-                <div style="margin-bottom:16px; color:#202124; font-size:13px; font-weight:500;">${email.subject}</div>
-                <div style="font-weight:600; margin-bottom:4px; color:#1a73e8; font-size:11px; text-transform:uppercase; border-top:1px solid #eee; padding-top:8px;">Conteúdo</div>
-                <div style="color:#3c4043; font-size:13px; line-height:1.6;">${email.body}</div>
+                <div style="margin-bottom:16px; color:#202124; font-size:14px; font-weight:500;">${email.subject}</div>
+                
+                <div style="font-weight:600; margin-bottom:8px; color:#1a73e8; font-size:11px; text-transform:uppercase; border-top:1px solid #eee; padding-top:12px;">Conteúdo</div>
+                
+                <div style="color:#3c4043; font-size:13px; line-height:1.6; background:#f8f9fa; padding:12px; border-radius:8px; border:1px solid #eee;">
+                    ${email.body}
+                </div>
             </div>
           `;
           row.appendChild(card);
           
           requestAnimationFrame(() => {
-            card.style.maxHeight = "500px";
+            // max-height grande para garantir que mostre tudo
+            card.style.maxHeight = "1000px"; 
             card.style.opacity = "1";
           });
         }
@@ -342,17 +329,11 @@ export function initQuickEmailAssistant() {
   // Listeners
   searchInput.addEventListener("input", (e) => {
     searchTerm = e.target.value;
-    if (searchTerm !== "") {
-      Array.from(tabsContainer.children).forEach((child) => {
-        Object.assign(child.style, styleChip);
-      });
-    } else {
-      renderTabs();
-    }
+    // Se buscar, libera filtro de categoria visualmente
     renderEmailList();
   });
 
-  renderTabs();
+  renderCategories();
   renderEmailList();
 
   return toggleVisibility;
