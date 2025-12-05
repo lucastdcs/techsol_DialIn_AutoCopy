@@ -87,25 +87,32 @@ export function initCommandCenter(actions) {
             .cw-btn.email.active { color: ${COLORS.red} !important; background: rgba(242, 139, 130, 0.15); }
             .cw-btn.script.active { color: ${COLORS.purple} !important; background: rgba(197, 138, 249, 0.15); }
             .cw-btn.links.active { color: ${COLORS.green} !important; background: rgba(129, 201, 149, 0.15); }
-
-            /* INDICADOR DE LED (Aparece quando ativo) */
-            /* Usamos ::before para criar o ponto, já que ::after é o tooltip */
+            /* INDICADOR DE LED (Abaixo do Ícone) */
             .cw-btn::before {
                 content: '';
                 position: absolute;
-                right: 4px; /* Canto interno */
-                top: 50%; transform: translateY(-50%) scale(0);
+                
+                /* Posicionamento no Rodapé Central */
+                bottom: 2px; 
+                left: 50%; 
+                
+                /* Tamanho do Dot */
                 width: 4px; height: 4px;
                 border-radius: 50%;
-                background-color: currentColor; /* Pega a cor do ícone (Azul/Vermelho/etc) */
+                
+                background-color: currentColor; /* Pega a cor do ícone */
                 box-shadow: 0 0 6px currentColor; /* Glow */
-                transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                
+                /* Estado Inicial: Centralizado no X, invisível (Scale 0) */
+                transform: translateX(-50%) scale(0);
+                
+                transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Pop Elástico */
                 pointer-events: none;
             }
 
-            /* Quando ativo, o LED "pop" */
+            /* Quando ativo, o LED "pop" para tamanho real */
             .cw-btn.active::before {
-                transform: translateY(-50%) scale(1);
+                transform: translateX(-50%) scale(1);
             }
             
             .cw-btn svg { width: 22px; height: 22px; fill: currentColor; pointer-events: none; }
