@@ -1,16 +1,11 @@
 import {
-  makeDraggable,
   styleSelect,
   styleLabel,
   stylePopup,
-  stylePopupHeader,
-  stylePopupTitle,
-  stylePopupCloseBtn,
-  stylePopupVersion,
   styleCredit,
   typeBtnStyle,
   getRandomGoogleStyle,
-} from "../shared/utils.js";
+} from "../shared/utils.js"; // Removi imports não usados para limpar
 
 import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from "../shared/animations.js";
@@ -24,32 +19,32 @@ export function initCallScriptAssistant() {
   const csaCompletedTasks = {};
   let csaCurrentLang = "PT";
   let csaCurrentType = "BAU";
-  let csaVisible = false;
+  let csaVisible = false; // Variável de estado
 
   // --- POPUP (Com Animação) ---
   const csaPopup = document.createElement("div");
   csaPopup.id = "call-script-popup";
 
-  // Estilos base + Estado Inicial Animação
-  // Usamos a mesma lógica de "limpeza" que aplicamos nos outros módulos
+  // Estilos base + Preparação para Genie (Invisível)
   Object.assign(csaPopup.style, stylePopup, { 
         right: "100px",
-        width: "320px", // Largura um pouco menor para o script
-        display: "flex",
+        width: "340px",
+        display: "flex", 
         flexDirection: "column",
-        boxShadow: "none", 
-        opacity: "0",
+        boxShadow: "none", // A classe .open adiciona a sombra depois
+        opacity: "0",      // Começa invisível
         pointerEvents: "none"
-    });
-    
-  // Refs para animação
+  });
+
+  // Refs para animação (se precisar de linha colorida)
   const animRefs = { popup: csaPopup, googleLine: null };
 
-  // --- FUNÇÃO DE TOGGLE (Definida antes do Header) ---
+  // --- FUNÇÃO DE TOGGLE (CORRIGIDA) ---
   function toggleVisibility() {
     csaVisible = !csaVisible;
-    // CORREÇÃO 1: Usa a variável correta csaPopup
-    // CORREÇÃO 2: Usa o ID correto do botão (Script)
+    
+    // CORREÇÃO 1: Usar 'csaPopup', não 'popup'
+    // CORREÇÃO 2: Usar ID 'cw-btn-script' para sair do botão certo
     toggleGenieAnimation(csaVisible, csaPopup, 'cw-btn-script');
   }
 
@@ -58,9 +53,9 @@ export function initCallScriptAssistant() {
     csaPopup,
     "Call Script Assistant",
     CURRENT_VERSION,
-    "Checklists guiados para início e fim de chamada em PT, ES e EN. Marque os itens conforme fala com o cliente.", 
+    "Checklists guiados para início e fim de chamada.", 
     animRefs,
-    () => toggleVisibility() // Usa a função local
+    () => { toggleVisibility(); } // Callback do fechar
   );
   csaPopup.appendChild(csaHeader);
 
@@ -79,6 +74,7 @@ export function initCallScriptAssistant() {
   Object.assign(credit.style, styleCredit);
   csaPopup.appendChild(credit);
 
+  // --- CONTROLES (BAU/LT + IDIOMA) ---
   const csaControlsDiv = document.createElement("div");
   Object.assign(csaControlsDiv.style, {
     display: "flex",
@@ -107,19 +103,6 @@ export function initCallScriptAssistant() {
   csaTypeContainer.appendChild(csaTypeBAU);
   csaTypeContainer.appendChild(csaTypeLT);
 
-  csaTypeBAU.onmouseover = () => {
-    if (csaCurrentType !== "BAU") csaTypeBAU.style.backgroundColor = "#f1f3f4";
-  };
-  csaTypeBAU.onmouseout = () => {
-    if (csaCurrentType !== "BAU") csaTypeBAU.style.backgroundColor = "#f8f9fa";
-  };
-  csaTypeLT.onmouseover = () => {
-    if (csaCurrentType !== "LT") csaTypeLT.style.backgroundColor = "#f1f3f4";
-  };
-  csaTypeLT.onmouseout = () => {
-    if (csaCurrentType !== "LT") csaTypeLT.style.backgroundColor = "#f8f9fa";
-  };
-
   const csaLangSelect = document.createElement("select");
   Object.assign(csaLangSelect.style, styleSelect, {
     marginBottom: "0",
@@ -145,7 +128,8 @@ export function initCallScriptAssistant() {
   csaContent.appendChild(csaChecklistArea);
   document.body.appendChild(csaPopup);
 
-  // --- Lógica Auxiliar ---
+  // --- FUNÇÕES AUXILIARES ---
+
   function hexToRgba(hex, alpha) {
     const clean = hex.replace("#", "");
     const r = parseInt(clean.substring(0, 2), 16);
@@ -159,7 +143,7 @@ export function initCallScriptAssistant() {
 
     if (isCompleted) {
       li.style.borderColor = color;
-      li.style.backgroundColor = hexToRgba(color, 0.4);
+      li.style.backgroundColor = hexToRgba(color, 0.15); // Mais suave
       li.style.textDecorationLine = "line-through";
     } else {
       li.style.borderColor = "transparent";
@@ -190,7 +174,7 @@ export function initCallScriptAssistant() {
     const data = csaChecklistData[combinedKey];
 
     if (!data) {
-      csaChecklistArea.innerHTML = `<div style="padding: 10px; color: #5f6368; font-family: 'Poppins', sans-serif;">Script não disponível para esta combinação.</div>`;
+      csaChecklistArea.innerHTML = `<div style="padding: 10px; color: #5f6368;">Script não disponível.</div>`;
       return;
     }
 
@@ -207,26 +191,17 @@ export function initCallScriptAssistant() {
       const groupTitle = document.createElement("div");
       groupTitle.className = "csa-group-title";
       let titleText = groupKey === "inicio" ? "Início" : "Fim";
-      if (csaCurrentLang.includes("ES"))
-        titleText = groupKey === "inicio" ? "Inicio" : "Fin";
-      if (csaCurrentLang.includes("EN"))
-        titleText = groupKey === "inicio" ? "Start" : "End";
+      if (csaCurrentLang.includes("ES")) titleText = groupKey === "inicio" ? "Inicio" : "Fin";
+      if (csaCurrentLang.includes("EN")) titleText = groupKey === "inicio" ? "Start" : "End";
 
       groupTitle.textContent = titleText;
       Object.assign(groupTitle.style, styleLabel, {
-        fontWeight: "600",
-        fontSize: "14px",
-        textDecoration: "underline",
-        marginBottom: "8px",
+        fontWeight: "600", fontSize: "14px", textDecoration: "underline", marginBottom: "8px",
       });
       groupDiv.appendChild(groupTitle);
 
       const list = document.createElement("ul");
-      Object.assign(list.style, {
-        listStyle: "none",
-        paddingLeft: "0",
-        margin: "0",
-      });
+      Object.assign(list.style, { listStyle: "none", paddingLeft: "0", margin: "0" });
 
       items.forEach((item, index) => {
         const li = document.createElement("li");
@@ -255,7 +230,6 @@ export function initCallScriptAssistant() {
 
   function setActiveType(type) {
     csaCurrentType = type;
-
     const newActiveStyle = getRandomGoogleStyle();
 
     Object.assign(csaTypeBAU.style, typeBtnStyle);
@@ -280,5 +254,6 @@ export function initCallScriptAssistant() {
   // Carregamento inicial
   setActiveType(csaCurrentType);
 
+  // Retorna o toggle para o App.js usar no Command Center
   return toggleVisibility;
 }
