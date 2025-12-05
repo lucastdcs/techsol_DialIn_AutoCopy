@@ -179,25 +179,13 @@ export function initCaseNotesAssistant() {
   // --- Popup ---
   const popup = document.createElement("div");
   popup.id = "autofill-popup";
-Object.assign(
-    popup.style,
-    stylePopup,
-    {
-      // Posição base (longe da pílula para não sobrepor)
-      right: "100px", 
-      // Mantém as definições de layout
-      width: "380px",
-      borderRadius: "12px",
-      display: "flex",
-      flexDirection: "column",
-      // Sombra inicial pode ser nula, pois a classe .open adiciona a sombra correta
-      boxShadow: "none", 
-      // IMPORTANTE: Começa invisível e sem interação, mas SEM transform fixo
-      opacity: "0",
-      pointerEvents: "none"
-    }
-    // REMOVIDO: animationStyles.popupInitial (Isso causaria conflito)
-  );
+Object.assign(popup.style, stylePopup, { 
+        right: "100px", // Afastado da pílula
+        width: "400px",
+        boxShadow: "none", // A classe .open põe a sombra
+        opacity: "0", 
+        pointerEvents: "none" 
+    });
   popup.style.transition += ", width 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)";
 
   const animRefs = { popup, googleLine: null };
@@ -1298,10 +1286,10 @@ Object.assign(
     }
   }
 
-  function toggleVisibility() {
-    visible = !visible;
-    toggleGenieAnimation(visible, animRefs);
-  }
+function toggleVisibility() {
+        visible = !visible;
+        toggleGenieAnimation(visible, popup, 'cw-btn-notes'); 
+    }
   // INICIALIZAÇÃO
   setCaseType("bau");
   setLanguage("pt");

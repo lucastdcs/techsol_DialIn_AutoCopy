@@ -129,30 +129,16 @@ export function initQuickEmailAssistant() {
       "max-height 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s linear, padding 0.3s step-start",
   };
 
-  // --- POPUP (USANDO FACTORY E ANIMAÇÃO) ---
-  const popup = document.createElement("div");
-  popup.id = "quick-email-popup";
-
-  // Configura estilo + estado inicial da animação
-Object.assign(
-    popup.style,
-    stylePopup,
-    {
-      // Posição base (longe da pílula para não sobrepor)
-      right: "100px", 
-      // Mantém as definições de layout
-      width: "380px",
-      borderRadius: "12px",
-      display: "flex",
-      flexDirection: "column",
-      // Sombra inicial pode ser nula, pois a classe .open adiciona a sombra correta
-      boxShadow: "none", 
-      // IMPORTANTE: Começa invisível e sem interação, mas SEM transform fixo
-      opacity: "0",
-      pointerEvents: "none"
-    }
-    // REMOVIDO: animationStyles.popupInitial (Isso causaria conflito)
-  );
+  let visible = false;
+const popup = document.createElement("div");
+    popup.id = "quick-email-popup"; // ID único do módulo
+    Object.assign(popup.style, stylePopup, { 
+        right: "100px", // Afastado da pílula
+        width: "400px",
+        boxShadow: "none", // A classe .open põe a sombra
+        opacity: "0", 
+        pointerEvents: "none" 
+    });
 
   // Objeto de referências para a animação
   const animRefs = {
@@ -161,7 +147,6 @@ Object.assign(
     focusElement: null,
   };
 
-  let visible = false;
 
   // 1. HEADER (Criado pela Factory)
   const header = createStandardHeader(
@@ -378,10 +363,10 @@ Object.assign(
     renderEmailList();
   });
 
-  function toggleVisibility() {
-    visible = !visible;
-    toggleGenieAnimation(visible, animRefs);
-  }
+function toggleVisibility() {
+        visible = !visible;
+        toggleGenieAnimation(visible, popup, 'cw-btn-email'); 
+    }
 
   renderTabs();
   renderEmailList();

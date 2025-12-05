@@ -170,25 +170,15 @@ export function initFeedbackAssistant() {
   // --- POPUP (Com Animação) ---
   const popup = document.createElement("div");
   popup.id = "feedback-popup";
- Object.assign(
-    popup.style,
-    stylePopup,
-    {
-      // Posição base (longe da pílula para não sobrepor)
-      right: "100px", 
-      // Mantém as definições de layout
-      width: "380px",
-      borderRadius: "12px",
-      display: "flex",
-      flexDirection: "column",
-      // Sombra inicial pode ser nula, pois a classe .open adiciona a sombra correta
-      boxShadow: "none", 
-      // IMPORTANTE: Começa invisível e sem interação, mas SEM transform fixo
-      opacity: "0",
-      pointerEvents: "none"
-    }
-    // REMOVIDO: animationStyles.popupInitial (Isso causaria conflito)
-  );
+    Object.assign(popup.style, stylePopup, { 
+        right: "100px", // Afastado da pílula
+        width: "400px",
+        boxShadow: "none", // A classe .open põe a sombra
+        opacity: "0", 
+        pointerEvents: "none" 
+    });
+
+
 
   // Refs para animação
   const animRefs = {
@@ -467,10 +457,10 @@ export function initFeedbackAssistant() {
     renderList();
   });
 
-  function toggleVisibility() {
-    visible = !visible;
-    toggleGenieAnimation(visible, animRefs);
-  }
+function toggleVisibility() {
+        visible = !visible;
+        toggleGenieAnimation(visible, popup, 'cw-btn-links'); 
+    }
 
   renderTabs();
   renderList();
