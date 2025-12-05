@@ -1300,7 +1300,7 @@ Object.assign(
 
   function toggleVisibility() {
     visible = !visible;
-    togglePopupAnimation(visible, animRefs);
+    toggleGenieAnimation(visible, animRefs);
   }
   // INICIALIZAÇÃO
   setCaseType("bau");
