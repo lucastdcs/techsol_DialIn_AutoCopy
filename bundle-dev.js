@@ -355,7 +355,7 @@
             .cw-grip:active { cursor: grabbing; color: #fff; }
             
             /* Anima\xE7\xE3o de "Sistema Pronto" (Luz verde corre) */
-            .cw-dot.system-check {
+            .cw-pill.system-check {
                 background: #81C995; /* Verde Suave */
                 box-shadow: 0 0 8px #81C995;
             }
