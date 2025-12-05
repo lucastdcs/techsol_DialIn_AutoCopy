@@ -139,7 +139,7 @@ export function initCommandCenter(actions) {
             .cw-grip:active { cursor: grabbing; color: #fff; }
             
             /* Animação de "Sistema Pronto" (Luz verde corre) */
-            .cw-dot.system-check {
+            .cw-pill.system-check {
                 background: #81C995; /* Verde Suave */
                 box-shadow: 0 0 8px #81C995;
             }
@@ -227,9 +227,7 @@ export function initCommandCenter(actions) {
 
     // ETAPA 3: Confirmação (Luz Verde)
     await esperar(200);
-    // Como não temos os IDs dot1 e dot2 no HTML, essa parte precisa ser ajustada ou removida se não houver dots no novo ícone de grip
-    // Se o novo ícone de grip for um SVG único, talvez a animação de luz verde deva ser aplicada a ele ou à borda da pílula.
-    // Vou assumir que a animação de "System Ready" na borda da pílula (já definida no CSS) é o suficiente.
+
     pill.classList.add("system-check");
   })();
 
