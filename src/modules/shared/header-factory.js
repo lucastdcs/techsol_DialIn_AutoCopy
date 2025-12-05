@@ -55,7 +55,7 @@ export function createStandardHeader(popupElement, titleText, versionText, helpD
     header.appendChild(gradientLine);
     
     // Salva ref se precisar animar
- if (animRefs) {
+    if (animRefs) {
         animRefs.googleLine = gradientLine;
     }
 

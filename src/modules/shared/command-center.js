@@ -55,12 +55,12 @@ export function initCommandCenter(actions) {
                 100% { border-color: ${COLORS.glassBorder}; box-shadow: 0 0 0 15px rgba(0,0,0,0); }
             }
 
-            .cw-pill.dragging {
-                cursor: grabbing; background: ${COLORS.glassActive}; opacity: 1 !important; transform: scale(1.05) !important;
-                box-shadow: 0 20px 50px rgba(0,0,0,0.6); border-color: rgba(255,255,255,0.3);
-                transition: none !important; 
-            }
-            .cw-pill.dragging .cw-grip-bar { color: ${COLORS.gripActive}; }
+            // .cw-pill.dragging {
+            //     cursor: grabbing; background: ${COLORS.glassActive}; opacity: 1 !important; transform: scale(1.05) !important;
+            //     box-shadow: 0 20px 50px rgba(0,0,0,0.6); border-color: rgba(255,255,255,0.3);
+            //     transition: none !important; 
+            // }
+            // .cw-pill.dragging .cw-grip-bar { color: ${COLORS.gripActive}; }
             .cw-pill.snapping { transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease; }
 
             .cw-grip-area { width: 100%; height: 20px; display: flex; align-items: center; justify-content: center; cursor: grab; color: ${COLORS.gripColor}; opacity: 0.7; transition: opacity 0.2s; margin-bottom: 2px; }
