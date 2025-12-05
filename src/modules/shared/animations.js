@@ -56,26 +56,22 @@ if (!document.getElementById('cw-module-styles')) {
  */
 export function toggleGenieAnimation(show, popup, buttonId) {
     const btn = document.getElementById(buttonId);
-    if (!btn) return; // Segurança
+    if (!btn) {
+        console.error(`Botão com ID '${buttonId}' não encontrado na Pílula.`);
+        return; 
+    }
 
-    // Adiciona a classe base se não tiver
     if (!popup.classList.contains('cw-module-window')) {
         popup.classList.add('cw-module-window');
     }
 
-    // Função para calcular origem
     const updateOrigin = () => {
         const btnRect = btn.getBoundingClientRect();
         const popupRect = popup.getBoundingClientRect();
         
-        // Centro do Botão
         const startX = btnRect.left + (btnRect.width / 2);
         const startY = btnRect.top + (btnRect.height / 2);
         
-        // Canto do Popup (Se estiver scale(0), usamos offsetLeft/Top para garantir)
-        // Mas getBoundingClientRect é melhor se o elemento já tiver posição fixa
-        // Como o popup tem posição fixa, o BoundingRect deve funcionar. 
-        // Se der erro, usamos: const endX = popup.offsetLeft;
         const endX = popup.offsetLeft; 
         const endY = popup.offsetTop;
         
@@ -85,22 +81,28 @@ export function toggleGenieAnimation(show, popup, buttonId) {
         popup.style.transformOrigin = `${originX}px ${originY}px`;
     };
 
-    // SEMPRE calcula antes de animar
     updateOrigin();
-    
-    // Força reflow
-    void popup.offsetWidth;
+    void popup.offsetWidth; // Reflow
 
     if (show) {
+        // --- FIX DO SUMIÇO ---
+        // Removemos os estilos inline que forçam invisibilidade
+        // para que a classe CSS '.open' possa assumir o controle.
+        popup.style.opacity = ''; 
+        popup.style.pointerEvents = ''; 
+        popup.style.transform = ''; // Limpa escala inline antiga se houver
+        
         popup.classList.add('open');
         popup.classList.remove('idle');
         btn.classList.add('active');
         
-        // Sistema de Foco (Listener global para Idle)
         setupIdleListener(popup, btn);
     } else {
         popup.classList.remove('open');
         btn.classList.remove('active');
+        
+        // Opcional: Se quiser garantir que fique oculto após a animação (timeout)
+        // mas geralmente a classe CSS sem .open já resolve (opacity: 0)
     }
 }
 
