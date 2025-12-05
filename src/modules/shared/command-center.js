@@ -99,29 +99,41 @@ export function initCommandCenter(actions) {
             }
             .cw-sep.visible { opacity: 1; }
 
-          /* --- O GRIP (System Check) --- */
             .cw-grip {
+                width: 100%; 
+                height: 24px; /* Área de toque confortável */
                 display: flex; 
-                align-items: center; /* Centraliza */
-                justify-content: center; /* Centraliza */
-                color: ${COLORS.iconIdle}; 
-                opacity: 0.5; 
-                cursor: grab; /* Cursor de mãozinha */
-                pointer-events: auto; /* Garante que o mouse pegue aqui */
-                padding-bottom: 4px; /* Espaço extra embaixo */;
-                padding-top: 4px; /* Espaço extra embaixo */
-                width: 100%;
+                align-items: center; 
+                justify-content: center; 
+                cursor: grab;
+                /* Removemos padding excessivo para manter alinhamento ótico */
+                margin-bottom: 2px; 
             }
-            .cw-grip-bar { width: 27px; height: 4px; background-color: ${COLORS.iconIdle}; border-radius: 4px; transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); }
-            .cw-grip-area:hover .cw-grip-bar { background-color: #E8EAED; }
-            .cw-pill.dragging .cw-grip-bar { background-color: ${COLORS.iconActive}; width: 18px; }
 
+            /* A Barra Visual */
+            .cw-grip-bar { 
+                width: 24px; /* Largura padrão Google */
+                height: 4px; 
+                background-color: ${COLORS.iconIdle}; 
+                border-radius: 4px; /* Pílula perfeita */
+                opacity: 0.4; /* Discreto em repouso */
+                transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); /* Standard Easing */
+            }
 
-            /* ESTA É A REGRA QUE FALTAVA: */
-            .cw-grip svg {
-                width: 30px; 
-                height: 36px; 
-                fill: currentColor;
+            /* Hover: Fica nítido e branco */
+            .cw-grip:hover .cw-grip-bar { 
+                opacity: 1; 
+                background-color: #FFFFFF; 
+                transform: scaleY(1.2); /* Engrossa levemente */
+            }
+
+            /* Active/Dragging: Feedback de "Agarrou" */
+            .cw-grip:active { cursor: grabbing; }
+            
+            .cw-pill.dragging .cw-grip-bar { 
+                background-color: ${COLORS.blue}; /* Azul Google de Ação */
+                width: 16px; /* Encolhe horizontalmente (tensão física) */
+                opacity: 1;
             }
 
             .cw-grip:active { cursor: grabbing; color: #fff; }
@@ -210,7 +222,7 @@ export function initCommandCenter(actions) {
     // Loop de "Pop" dos botões
     for (let i = 0; i < items.length; i++) {
       items[i].classList.add("popped");
-      await esperar(60); // O ritmo "tec-tec-tec-tec"
+      await esperar(90); // O ritmo "tec-tec-tec-tec"
     }
 
     // ETAPA 3: Confirmação (Luz Verde)
@@ -218,7 +230,7 @@ export function initCommandCenter(actions) {
     // Como não temos os IDs dot1 e dot2 no HTML, essa parte precisa ser ajustada ou removida se não houver dots no novo ícone de grip
     // Se o novo ícone de grip for um SVG único, talvez a animação de luz verde deva ser aplicada a ele ou à borda da pílula.
     // Vou assumir que a animação de "System Ready" na borda da pílula (já definida no CSS) é o suficiente.
-    pill.classList.add("system-ready");
+    pill.classList.add("system-check");
   })();
 
   // 4. FÍSICA DE ARRASTO (Exatamente a do seu código)
