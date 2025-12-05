@@ -224,7 +224,7 @@ export function initCommandCenter(actions) {
   // Envelopado em função async auto-executável para manter o escopo limpo
   (async function startAnimation() {
     // Simula o fim da splash screen
-    await esperar(2600);
+    await esperar(2800);
 
     // ETAPA 1: A Base "Atraca" (Dock)
     pill.classList.add("docked");
