@@ -138,10 +138,25 @@ export function initCommandCenter(actions) {
 
             .cw-grip:active { cursor: grabbing; color: #fff; }
             
-            /* Animação de "Sistema Pronto" (Luz verde corre) */
+           @keyframes successPop {
+                0% {
+                    box-shadow: 0 0 0 transparent;
+                    transform: scale(1);
+                }
+                50% {
+                    box-shadow: 0 0 15px #81C995; /* O brilho máximo */
+                    transform: scale(1.05); /* Um leve aumento para dar o efeito de pop */
+                    border-color: #81C995; /* Opcional: muda a borda também */
+                }
+                100% {
+                    box-shadow: 0 0 0 transparent;
+                    transform: scale(1);
+                }
+            }
+
             .cw-pill.system-check {
-                background: #81C995; /* Verde Suave */
-                box-shadow: 0 0 8px #81C995;
+                /* Executa a animação 'successPop' por 0.6 segundos */
+                animation: successPop 0.6s ease-out;
             }
             
             /* Tooltips */
@@ -177,7 +192,7 @@ export function initCommandCenter(actions) {
         <div class="cw-sep"></div>
         <button class="cw-btn notes" data-label="Case Notes">${ICONS.notes}</button>
         <button class="cw-btn email" data-label="Quick Email">${ICONS.email}</button>
-        <button class="cw-btn script" data-label="Call Script">${ICONS.script}</button>
+        <button class="cw-btn script" id="cw-btn-script" data-label="Call Script">${ICONS.script}</button>
         <div class="cw-sep"></div>
         <button class="cw-btn links" data-label="Links">${ICONS.links}</button>
     `;
