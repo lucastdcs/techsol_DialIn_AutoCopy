@@ -197,7 +197,8 @@ export function initFeedbackAssistant() {
     animRefs,
     () => {
       visible = false;
-    }
+    },
+    () => toggleVisibility()
   );
   popup.appendChild(header);
 

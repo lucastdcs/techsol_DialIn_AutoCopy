@@ -157,7 +157,8 @@ const popup = document.createElement("div");
     animRefs,
     () => {
       visible = false;
-    }
+    },
+    () => toggleVisibility()
   );
 
   // 2. TOOLBAR (Busca + Chips)

@@ -199,7 +199,8 @@ Object.assign(popup.style, stylePopup, {
     animRefs,
     () => {
       togglePopup(false);
-    }
+    },
+    () => toggleVisibility()
   );
 
   // Botão Expandir no Header
