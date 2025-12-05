@@ -431,9 +431,14 @@
             <div class="cw-grip-bar"></div>
         </div>
         <div class="cw-sep"></div>
-        <button class="cw-btn notes" data-label="Case Notes">${t.notes}</button>
-        <button class="cw-btn email" data-label="Quick Email">${t.email}</button>
+        
+        <button class="cw-btn notes" id="cw-btn-notes" data-label="Case Notes">${t.notes}</button>
+        
+        <button class="cw-btn email" id="cw-btn-email" data-label="Quick Email">${t.email}</button>
+        
         <button class="cw-btn script" id="cw-btn-script" data-label="Call Script">${t.script}</button>
+        
         <div class="cw-sep"></div>
-        <button class="cw-btn links" data-label="Links">${t.links}</button>
+        
+        <button class="cw-btn links" id="cw-btn-links" data-label="Links">${t.links}</button>
     `,document.body.appendChild(o),o.querySelector(".notes").onclick=c=>{c.stopPropagation(),e.toggleNotes()},o.querySelector(".email").onclick=c=>{c.stopPropagation(),e.toggleEmail()},o.querySelector(".script").onclick=c=>{c.stopPropagation(),e.toggleScript()},o.querySelector(".links").onclick=c=>{c.stopPropagation(),e.toggleLinks()},(async function(){await Qe(2600),o.classList.add("docked"),await Qe(300);let d=o.querySelectorAll(".cw-btn");o.querySelectorAll(".cw-sep").forEach(y=>y.classList.add("visible"));for(let y=0;y<d.length;y++)d[y].classList.add("popped"),await Qe(90);await Qe(200),o.classList.add("system-check")})();let l=!1,a,i,s,m,S=3;o.onmousedown=c=>{if(c.target.closest("button"))return;c.preventDefault(),a=c.clientX,i=c.clientY;let d=o.getBoundingClientRect();s=d.left,m=d.top,document.addEventListener("mousemove",p),document.addEventListener("mouseup",r)};function p(c){let d=c.clientX-a,f=c.clientY-i;!l&&Math.sqrt(d*d+f*f)>S&&(l=!0,o.style.transition="none"),l&&(o.style.left=`${s+d}px`,o.style.top=`${m+f}px`,o.style.right="auto",o.style.bottom="auto",o.style.transform="none")}function r(c){if(document.removeEventListener("mousemove",p),document.removeEventListener("mouseup",r),l){l=!1,o.style.transition="left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease";let d=window.innerWidth,f=window.innerHeight,y=o.getBoundingClientRect(),h=y.left+y.width/2,C;h<d/2?(C=24,o.classList.remove("side-right"),o.classList.add("side-left")):(C=d-y.width-24,o.classList.remove("side-left"),o.classList.add("side-right"));let E=y.top;E<24&&(E=24),E>f-y.height-24&&(E=f-y.height-24),o.style.left=`${C}px`,o.style.top=`${E}px`,setTimeout(()=>{},600)}else{let d=c.target.closest("button");d&&(d.style.transform="scale(0.9)",setTimeout(()=>d.style.transform="",150))}}}function Jt(){if(window.techSolInitialized){dt();return}window.techSolInitialized=!0,console.log("\u{1F680} TechSol Suite Initializing...");try{At(),dt();let e=Mt(),n=Dt(),t=Gt(),o=Pt();jt({toggleNotes:e,toggleEmail:n,toggleScript:t,toggleLinks:o})}catch(e){console.error("Erro fatal na inicializa\xE7\xE3o:",e),z("Erro cr\xEDtico ao iniciar o Case Wizard.",{error:!0})}}Jt();})();
