@@ -24,135 +24,57 @@ export function initQuickEmailAssistant() {
 
   // --- ESTILOS LOCAIS ---
  // --- 1. BUSCA (Estilo Material Input) ---
-  const styleSearchInput = {
-    width: "100%",
-    padding: "12px 12px 12px 40px", // Mais espaço para o ícone
-    borderRadius: "8px",
-    border: "1px solid #dadce0",
-    background: "#f1f3f4", // Fundo cinza claro google padrão para inputs
-    fontSize: "14px",
-    color: "#202124",
-    boxSizing: "border-box",
-    outline: "none",
-    transition: "all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)",
-    marginBottom: "16px",
-    // Ícone SVG otimizado (Lupa cinza escuro)
-    backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%235f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>')`,
-    backgroundRepeat: "no-repeat",
-    backgroundPosition: "12px center",
-  };
-
-  // --- 2. CHIPS (Tags de Filtro) ---
-  const styleChipContainer = {
-    display: "flex",
-    gap: "8px",
-    overflowX: "auto",
-    padding: "4px 4px 12px 4px", // Espaço para a sombra não cortar
-    marginBottom: "4px",
-    scrollbarWidth: "none", // Esconde scrollbar (Firefox)
-    // borderBottom removido para limpar o visual
-  };
-
-  const styleChip = {
-    padding: "6px 14px", // Levemente mais compacto
-    borderRadius: "18px", // Pílula perfeita
-    border: "1px solid #dadce0",
-    background: "#ffffff",
-    color: "#5f6368",
-    fontSize: "13px",
-    fontWeight: "500",
-    cursor: "pointer",
-    whiteSpace: "nowrap",
-    transition: "all 0.2s ease",
-    userSelect: "none",
-    // Sombra sutil ao repousar
-    boxShadow: "0 1px 2px rgba(0,0,0,0.05)" 
-  };
-
-  const styleChipActive = {
-    background: "#e8f0fe", // Azul Google muito claro
-    color: "#1967d2",      // Azul Google texto
-    borderColor: "#1967d2", // Borda azul sólida (foco)
-    boxShadow: "0 1px 3px rgba(26, 115, 232, 0.2)"
-  };
-
-  // --- 3. LISTA (O Container da Linha) ---
-  const styleRow = {
-    display: "flex",
-    flexDirection: "column", // Mudança: Column para o card expandir para baixo naturalmente
-    marginBottom: "8px",
-    position: "relative",
-    background: "transparent",
-    // Removemos transições aqui para evitar lags de layout
-  };
-
-  // Wrapper para os botões (A linha de cima)
+// 1. O WRAPPER (Garante que os dois botões fiquem lado a lado na mesma altura)
   const styleButtonWrapper = {
     display: "flex",
+    flexDirection: "row", // Lado a lado
+    alignItems: "stretch", // Força o botão de texto e o de olho a terem a mesma altura
     width: "100%",
-    boxShadow: "0 1px 3px rgba(60,64,67, 0.1), 0 2px 8px rgba(60,64,67, 0.05)", // Elevation 1
+    boxShadow: "0 1px 3px rgba(60,64,67, 0.1), 0 2px 8px rgba(60,64,67, 0.05)",
     borderRadius: "8px",
     transition: "box-shadow 0.2s ease",
+    background: "#fff", // Fundo base
   };
 
-  // --- 4. BOTÃO DE AÇÃO (Esquerda/Texto) ---
+  // 2. O BOTÃO DE TEXTO (Esquerda)
   const styleActionBtn = {
-    flexGrow: "1",
+    flexGrow: "1",         // Ocupa todo o espaço restante
+    display: "flex",       // Transforma o interior em Flex
+    alignItems: "center",  // <--- O SEGREDO: Centraliza o texto verticalmente
+    justifyContent: "flex-start", // Alinha texto à esquerda
     textAlign: "left",
-    padding: "12px 16px",
-    background: "#ffffff",
+    padding: "12px 16px",  // Padding confortável
+    
+    background: "transparent", // Transparente para não cobrir o wrapper (ou #fff)
     border: "1px solid #dadce0",
-    borderRight: "1px solid #f1f3f4", // Divisória sutil interna
-    borderRadius: "8px 0 0 8px", // Cantos arredondados só na esquerda
+    borderRight: "none",   // Sem borda na direita (conecta com o olho)
+    borderRadius: "8px 0 0 8px",
+    
     cursor: "pointer",
     color: "#3c4043",
     fontSize: "14px",
     fontWeight: "500",
-    transition: "background 0.1s linear, color 0.1s linear",
-    position: "relative",
+    transition: "background 0.1s linear",
     zIndex: "2",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
   };
 
-  // --- 5. BOTÃO DE PREVIEW (Direita/Olho) ---
+  // 3. O BOTÃO DE PREVIEW/OLHO (Direita)
   const stylePreviewBtn = {
-    width: "48px", // Touch target melhor
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    background: "#f8f9fa", // Levemente cinza para indicar função secundária
+    width: "48px",         // Largura fixa
+    display: "flex",       // Flex para centralizar o ícone
+    alignItems: "center",  // Centraliza verticalmente
+    justifyContent: "center", // Centraliza horizontalmente
+    
+    background: "#f8f9fa", // Cor levemente diferente
     border: "1px solid #dadce0",
-    borderLeft: "none", // Evita borda dupla com o botão de ação
-    borderRadius: "0 8px 8px 0", // Cantos arredondados só na direita
+    borderLeft: "1px solid #f1f3f4", // Divisória sutil
+    borderRadius: "0 8px 8px 0",
+    
     cursor: "pointer",
     color: "#5f6368",
     transition: "all 0.2s ease",
     zIndex: "2",
-  };
-
-  // --- 6. CARD DE PREVIEW (Expandível) ---
-  const stylePreviewCard = {
-    width: "100%",
-    maxHeight: "0",
-    opacity: "0",
-    overflow: "hidden",
-    background: "#ffffff", // Fundo branco para leitura
-    border: "1px solid #dadce0",
-    borderTop: "none", // Conecta com o botão de cima
-    borderRadius: "0 0 8px 8px",
-    marginTop: "-4px", // Sobe um pouco para ficar "atrás" dos botões
-    padding: "0 16px", // Padding lateral (vertical controlado pela animação)
-    fontSize: "13px",
-    color: "#3c4043",
-    lineHeight: "1.6",
-    boxSizing: "border-box",
-    // Animação profissional "Ease Out"
-    transition: "all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)", 
-    zIndex: "1", // Fica atrás dos botões
-    position: "relative",
-    boxShadow: "inset 0 4px 6px -4px rgba(0,0,0,0.1)" // Sombra interna no topo
+    flexShrink: "0", // Garante que o botão não encolha se o texto for grande
   };
 
   let visible = false;
@@ -187,7 +109,7 @@ const popup = document.createElement("div");
   // 2. TOOLBAR (Busca + Chips)
   const toolbar = document.createElement("div");
   Object.assign(toolbar.style, {
-    padding: "0 16px 16px 16px",
+    padding: "16px",
     display: "flex",
     flexDirection: "column",
     gap: "12px",
