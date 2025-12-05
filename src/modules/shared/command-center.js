@@ -6,6 +6,8 @@ const COLORS = {
   glassActive: "rgba(79, 79, 79, 0.89)", // Quando agarra
   glassHighlight: "rgba(255, 255, 255, 0.08)",
   iconIdle: "#c2c5c8ff",
+  gripColor: 'linear-gradient(to right, #4285F4, #EA4335, #FBBC05, #34A853)',
+  gripActive:"linear-gradient(to left, #4285F4, #EA4335, #FBBC05, #34A853)",
   iconActive: "#FFFFFF",
   // Cores para o "System Check"
   blue: "#8AB4F8",
