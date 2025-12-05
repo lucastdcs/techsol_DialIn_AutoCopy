@@ -215,7 +215,7 @@ async function humanTypeWriter(element, text) {
     element.innerHTML = '<span class="cursor">|</span>';
     const cursor = element.querySelector('.cursor');
     
-    await esperar(100);
+    await esperar(200);
 
     for (let i = 0; i < text.length; i++) {
         const char = text.charAt(i);
