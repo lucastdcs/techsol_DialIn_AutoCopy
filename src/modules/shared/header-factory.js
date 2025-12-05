@@ -1,124 +1,168 @@
 // src/modules/shared/header-factory.js
 
-import { 
-    stylePopupHeader, 
-    stylePopupTitle, 
-    styleIconBtn, 
-    styleHelpOverlay,
-    makeDraggable 
-} from './utils.js';
+import { makeDraggable } from './utils.js';
+// Removi imports de estilos antigos (stylePopupHeader, etc) pois vamos definir o novo tema aqui
 
-import { animationStyles, togglePopupAnimation } from './animations.js';
+// Configuração Visual do Header (Dark Glass)
+const HEADER_STYLE = {
+    height: '56px',
+    padding: '0 16px',
+    // Fundo Escuro (Igual à Pílula)
+    backgroundColor: 'rgba(28, 28, 32, 0.95)', 
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    // Texto Claro
+    color: '#E8EAED', 
+    fontFamily: "'Google Sans', Roboto, sans-serif",
+    fontWeight: '500',
+    letterSpacing: '0.5px',
+    cursor: 'grab',
+    position: 'relative',
+    // Cantos arredondados apenas em cima
+    borderRadius: '16px 16px 0 0', 
+    flexShrink: '0',
+    userSelect: 'none',
+    boxSizing: 'border-box'
+};
 
-/**
- * Cria um Header padrão Google Style com suporte a animação e drag.
- */
-export function createStandardHeader(popupElement, titleText, versionText, helpDescription, animationRefs, onCloseCallback) {
+const BTN_STYLE = {
+    width: '32px', 
+    height: '32px', 
+    display: 'flex', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    borderRadius: '50%', 
+    cursor: 'pointer', 
+    color: '#9AA0A6', // Cinza claro
+    transition: 'all 0.2s ease'
+};
+
+export function createStandardHeader(popupElement, titleText, versionText, helpDescription, animRefs, onCloseCallback) {
     const header = document.createElement("div");
-    Object.assign(header.style, stylePopupHeader);
+    Object.assign(header.style, HEADER_STYLE);
     
-    // 1. APLICA O DRAG (Sem sobrescrever depois!)
+    // 1. Aplica Drag
     makeDraggable(popupElement, header);
 
-    // 2. Linha Colorida
-    const googleLine = document.createElement("div");
-    Object.assign(googleLine.style, animationStyles.googleLine);
-    header.appendChild(googleLine);
-    
-    if (animationRefs) animationRefs.googleLine = googleLine;
-
-    // 3. Container Interno
-    const contentRow = document.createElement("div");
-    Object.assign(contentRow.style, { 
-        display: "flex", justifyContent: "space-between", alignItems: "center", 
-        width: "100%", padding: "12px 16px", boxSizing: "border-box"
+    // 2. A Linha Gradiente (A Ponte Visual)
+    const gradientLine = document.createElement("div");
+    Object.assign(gradientLine.style, {
+        position: 'absolute', bottom: '0', left: '0', width: '100%', height: '2px',
+        background: 'linear-gradient(to right, #4285F4, #EA4335, #FBBC05, #34A853)',
+        zIndex: '10', opacity: '0.8'
     });
+    header.appendChild(gradientLine);
+    
+    // Salva ref se precisar animar
+    if (animationRefs) animationRefs.googleLine = gradientLine;
 
-    // --- LADO ESQUERDO ---
+    // 3. Lado Esquerdo (Logo + Título)
     const leftDiv = document.createElement("div");
     Object.assign(leftDiv.style, { display: 'flex', alignItems: 'center', gap: '12px' });
 
     const logo = document.createElement("img");
     logo.src = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
-    Object.assign(logo.style, { width: "22px", height: "22px", pointerEvents: "none" });
+    Object.assign(logo.style, { width: "20px", height: "20px", pointerEvents: "none" });
 
     const title = document.createElement("span");
     title.textContent = titleText;
-    Object.assign(title.style, stylePopupTitle, { fontSize: "16px", fontWeight: "500", color: "#202124", pointerEvents: "none" });
-
+    
     leftDiv.appendChild(logo);
     leftDiv.appendChild(title);
 
-    // --- LADO DIREITO ---
+    // 4. Lado Direito (Botões)
     const rightDiv = document.createElement("div");
-    Object.assign(rightDiv.style, { display: 'flex', alignItems: 'center' });
+    Object.assign(rightDiv.style, { display: 'flex', alignItems: 'center', gap: '4px' });
+
+    // Ícones SVG
+    const helpIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
+    const closeIcon = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
 
     // Botão Ajuda
     const helpBtn = document.createElement("div");
-    helpBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`;
-    Object.assign(helpBtn.style, styleIconBtn);
-    helpBtn.title = "Sobre este módulo";
+    helpBtn.innerHTML = helpIcon;
+    Object.assign(helpBtn.style, BTN_STYLE);
+    helpBtn.title = "Sobre";
+    helpBtn.classList.add('no-drag');
     
+    helpBtn.onmouseenter = () => { helpBtn.style.background = 'rgba(255,255,255,0.1)'; helpBtn.style.color = '#FFF'; };
+    helpBtn.onmouseleave = () => { 
+        // Só reseta se o overlay não estiver aberto (lógica simples visual)
+        if (helpBtn.style.color !== 'rgb(138, 180, 248)') { // #8AB4F8
+            helpBtn.style.background = 'transparent'; helpBtn.style.color = '#9AA0A6'; 
+        }
+    };
+
     // Botão Fechar
     const closeBtn = document.createElement("div");
-    closeBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
-    Object.assign(closeBtn.style, styleIconBtn);
+    closeBtn.innerHTML = closeIcon;
+    Object.assign(closeBtn.style, BTN_STYLE);
     closeBtn.title = "Fechar";
+    closeBtn.classList.add('no-drag');
 
-    // Efeitos Hover (Com stopPropagation para não arrastar ao clicar no botão)
-    [helpBtn, closeBtn].forEach(btn => {
-        btn.classList.add('no-drag'); 
-        btn.onmouseenter = () => btn.style.backgroundColor = "#f1f3f4";
-        btn.onmouseleave = () => btn.style.backgroundColor = "transparent";
-        btn.onmousedown = (e) => e.stopPropagation(); // CRUCIAL: Impede que o clique no botão inicie o drag do header
-    });
-    closeBtn.onmouseenter = () => { closeBtn.style.backgroundColor = "#fee2e2"; closeBtn.style.color = "#c5221f"; };
+    closeBtn.onmouseenter = () => { closeBtn.style.background = 'rgba(242, 139, 130, 0.2)'; closeBtn.style.color = '#F28B82'; }; // Vermelho suave
+    closeBtn.onmouseleave = () => { closeBtn.style.background = 'transparent'; closeBtn.style.color = '#9AA0A6'; };
+    
+    // Previne que o clique no botão inicie o drag
+    closeBtn.onmousedown = (e) => e.stopPropagation(); 
+    helpBtn.onmousedown = (e) => e.stopPropagation();
 
-    // Ação Fechar
-    closeBtn.onclick = () => {
-        if (animationRefs) togglePopupAnimation(false, animationRefs);
-        if (onCloseCallback) onCloseCallback();
-    };
+    closeBtn.onclick = onCloseCallback;
 
     // --- HELP OVERLAY ---
     const overlay = createHelpOverlay(popupElement, titleText, versionText, helpDescription);
     
-    helpBtn.onclick = () => {
+    helpBtn.onclick = (e) => {
+        e.stopPropagation();
         const isVisible = overlay.style.opacity === "1";
         if (isVisible) {
             overlay.style.opacity = "0";
             overlay.style.pointerEvents = "none";
-            helpBtn.style.color = "#5f6368";
-            helpBtn.style.backgroundColor = "transparent";
+            helpBtn.style.color = "#9AA0A6";
+            helpBtn.style.background = "transparent";
         } else {
             overlay.style.opacity = "1";
             overlay.style.pointerEvents = "auto";
-            helpBtn.style.color = "#1a73e8";
-            helpBtn.style.backgroundColor = "#e8f0fe";
+            helpBtn.style.color = "#8AB4F8"; // Azul Google
+            helpBtn.style.background = "rgba(138, 180, 248, 0.1)";
         }
     };
 
     rightDiv.appendChild(helpBtn);
     rightDiv.appendChild(closeBtn);
-    contentRow.appendChild(leftDiv);
-    contentRow.appendChild(rightDiv);
-    header.appendChild(contentRow);
+    
+    header.appendChild(leftDiv);
+    header.appendChild(rightDiv);
 
     return header;
 }
 
 function createHelpOverlay(parentPopup, title, version, description) {
     const overlay = document.createElement("div");
-    Object.assign(overlay.style, styleHelpOverlay);
-    overlay.style.top = "50px"; 
-    overlay.style.height = "calc(100% - 50px)";
-    overlay.style.borderRadius = "0 0 12px 12px";
+    
+    // Estilo do Overlay (Light Glass sobre o corpo branco)
+    Object.assign(overlay.style, {
+        position: "absolute",
+        top: "56px", // Altura do header
+        left: "0",
+        width: "100%",
+        height: "calc(100% - 56px)",
+        backgroundColor: "rgba(255, 255, 255, 0.95)", // Fundo claro quase sólido
+        backdropFilter: "blur(5px)",
+        zIndex: "50",
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        textAlign: "center", padding: "24px", boxSizing: "border-box",
+        opacity: "0", transition: "opacity 0.2s ease",
+        pointerEvents: "none",
+        borderRadius: "0 0 16px 16px"
+    });
 
     overlay.innerHTML = `
         <div style="color: #202124; font-size: 18px; font-weight: 600; margin-bottom: 8px;">${title}</div>
         <div style="color: #5f6368; font-size: 14px; margin-bottom: 24px;">Versão ${version}</div>
         
-        <div style="color: #5f6368; font-size: 13px; max-width: 80%; line-height: 1.6;">
+        <div style="color: #3c4043; font-size: 14px; max-width: 90%; line-height: 1.6;">
             ${description}
         </div>
 
@@ -139,6 +183,8 @@ function createHelpOverlay(parentPopup, title, version, description) {
             btn.onclick = () => {
                 overlay.style.opacity = "0";
                 overlay.style.pointerEvents = "none";
+                // Tenta resetar a cor do botão de ajuda no header (acesso via parent)
+                // (Opcional, o usuário clica fora ou no botão de novo)
             };
         }
     }, 0);

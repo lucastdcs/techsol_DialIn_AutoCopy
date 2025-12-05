@@ -1,63 +1,134 @@
 // src/modules/shared/animations.js
 
-// --- ESTILOS DE ANIMAÇÃO ---
-export const animationStyles = {
-    // A linha colorida do Google
-    googleLine: {
-        height: "3px",
-        width: "100%",
-        background: "linear-gradient(to right, #4285F4, #EA4335, #FBBC05, #34A853)",
-        transform: "scaleX(0)", // Começa escondida
-        transformOrigin: "left center",
-        transition: "transform 0.4s cubic-bezier(0.4, 0.0, 0.2, 1)"
-    },
-    
-    // Estado inicial do Popup (Fechado e pequeno)
-    popupInitial: {
-        opacity: "0",
-        pointerEvents: "none",
-        transform: "scale(0.05)", 
-        transformOrigin: "bottom right", // Nasce do canto (onde fica o Command Center)
-        transition: "transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.2s linear",
-    }
-};
+// Injeta os estilos do Módulo (Ceramic Glass & Genie Transitions)
+// Isso garante que todos os módulos (Notes, Email, etc) tenham o mesmo visual
+if (!document.getElementById('cw-module-styles')) {
+    const style = document.createElement('style');
+    style.id = 'cw-module-styles';
+    style.innerHTML = `
+        /* MÓDULO BASE (Comportamento Genie) */
+        .cw-module-window {
+            /* Animação Apple Spring */
+            transition: 
+                opacity 0.3s ease,
+                transform 0.45s cubic-bezier(0.25, 1, 0.5, 1), 
+                filter 0.3s ease,
+                box-shadow 0.3s ease;
+            
+            opacity: 0; 
+            pointer-events: none;
+            transform: scale(0.05); /* Começa minúsculo */
+            
+            /* Visual Ceramic Light */
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        /* ESTADO ABERTO */
+        .cw-module-window.open {
+            opacity: 1; 
+            transform: scale(1); 
+            pointer-events: auto;
+            filter: brightness(1);
+        }
+
+        /* ESTADO IDLE (Segundo Plano) */
+        .cw-module-window.idle {
+            transform: scale(0.97) translateY(2px);
+            opacity: 0.95;
+            filter: brightness(0.97) saturate(0.9); /* Levemente apagado, mas legível */
+            box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.2);
+            cursor: pointer;
+        }
+    `;
+    document.head.appendChild(style);
+}
 
 /**
- * Gerencia a animação de abrir/fechar a JANELA (Popup) apenas.
- * A animação do botão agora é responsabilidade do Command Center.
+ * Gerencia a animação Genie (Ida e Volta)
+ * @param {boolean} show - Abrir ou Fechar
+ * @param {HTMLElement} popup - A janela do módulo
+ * @param {string} buttonId - O ID do botão na pílula (ex: 'cw-btn-notes')
  */
-export function togglePopupAnimation(show, elements) {
-    const { popup, googleLine, focusElement } = elements;
+export function toggleGenieAnimation(show, popup, buttonId) {
+    const btn = document.getElementById(buttonId);
+    if (!btn) return; // Segurança
+
+    // Adiciona a classe base se não tiver
+    if (!popup.classList.contains('cw-module-window')) {
+        popup.classList.add('cw-module-window');
+    }
+
+    // Função para calcular origem
+    const updateOrigin = () => {
+        const btnRect = btn.getBoundingClientRect();
+        const popupRect = popup.getBoundingClientRect();
+        
+        // Centro do Botão
+        const startX = btnRect.left + (btnRect.width / 2);
+        const startY = btnRect.top + (btnRect.height / 2);
+        
+        // Canto do Popup (Se estiver scale(0), usamos offsetLeft/Top para garantir)
+        // Mas getBoundingClientRect é melhor se o elemento já tiver posição fixa
+        // Como o popup tem posição fixa, o BoundingRect deve funcionar. 
+        // Se der erro, usamos: const endX = popup.offsetLeft;
+        const endX = popup.offsetLeft; 
+        const endY = popup.offsetTop;
+        
+        const originX = startX - endX;
+        const originY = startY - endY;
+        
+        popup.style.transformOrigin = `${originX}px ${originY}px`;
+    };
+
+    // SEMPRE calcula antes de animar
+    updateOrigin();
+    
+    // Força reflow
+    void popup.offsetWidth;
 
     if (show) {
-        // --- ABRIR ---
+        popup.classList.add('open');
+        popup.classList.remove('idle');
+        btn.classList.add('active');
         
-        // 1. Expande o Popup
-        popup.style.opacity = "1";
-        popup.style.pointerEvents = "auto";
-        popup.style.transform = "scale(1)";
-
-        // 2. Desenha a linha (com leve delay para acompanhar a expansão)
-        if (googleLine) {
-            setTimeout(() => {
-                googleLine.style.transform = "scaleX(1)";
-            }, 100);
-        }
-
-        // 3. Foco (Acessibilidade e UX)
-        if (focusElement) {
-            setTimeout(() => focusElement.focus(), 100);
-        }
-
+        // Sistema de Foco (Listener global para Idle)
+        setupIdleListener(popup, btn);
     } else {
-        // --- FECHAR ---
-
-        // 1. Recolhe a linha
-        if (googleLine) googleLine.style.transform = "scaleX(0)";
-
-        // 2. Encolhe o Popup
-        popup.style.opacity = "0";
-        popup.style.pointerEvents = "none";
-        popup.style.transform = "scale(0.05)"; 
+        popup.classList.remove('open');
+        btn.classList.remove('active');
     }
+}
+
+// Gerenciador de Foco (Singleton simples)
+function setupIdleListener(popup, btn) {
+    // Remove listener anterior se houver (para não duplicar)
+    const handler = (e) => {
+        if (!popup.classList.contains('open')) {
+            document.removeEventListener('mousedown', handler);
+            return;
+        }
+
+        const clickInModule = popup.contains(e.target);
+        const clickInPill = document.getElementById('techsol-command-center')?.contains(e.target);
+
+        if (clickInModule) {
+            popup.classList.remove('idle');
+            popup.style.zIndex = '2147483648'; // Traz p/ frente
+        } else if (clickInPill) {
+            // Nada (o click na pill gerencia o toggle)
+        } else {
+            popup.classList.add('idle');
+            popup.style.zIndex = '2147483646'; // Recua
+        }
+    };
+    
+    // Adiciona apenas se não existir (ou remove e adiciona)
+    document.removeEventListener('mousedown', popup._idleHandler);
+    popup._idleHandler = handler;
+    document.addEventListener('mousedown', handler);
 }

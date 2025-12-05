@@ -13,7 +13,8 @@ import {
 } from "../shared/utils.js";
 
 import { createStandardHeader } from "../shared/header-factory.js";
-import { animationStyles, togglePopupAnimation } from "../shared/animations.js";
+import { animationStyles, togglePopupAnimation, toggleGenieAnimation } from "../shared/animations.js";
+
 import { csaChecklistData } from "./call-script-data.js";
 
 export function initCallScriptAssistant() {
@@ -258,7 +259,7 @@ export function initCallScriptAssistant() {
 
   function toggleVisibility() {
     csaVisible = !csaVisible;
-    togglePopupAnimation(csaVisible, animRefs);
+    toggleGenieAnimation(csaVisible, popup, 'cw-btn-notes');
   }
 
   function setActiveType(type) {
