@@ -23,7 +23,7 @@ export function initCommandCenter(actions) {
   if (!document.getElementById(styleId)) {
     const style = document.createElement("style");
     style.id = styleId;
-    style.innerHTML = `
+   style.innerHTML = `
             @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@500&display=swap');
 
             /* --- A BASE (O Vidro) --- */
@@ -31,89 +31,113 @@ export function initCommandCenter(actions) {
                 position: fixed; top: 30%; right: 24px;
                 display: flex; flex-direction: column; align-items: center; gap: 12px;
                 padding: 16px 8px;
+                
                 background: ${COLORS.glassBg};
-                backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
                 border: 1px solid ${COLORS.glassBorder};
                 border-radius: 50px;
                 box-shadow: 0 8px 32px rgba(0,0,0,0.4);
                 z-index: 2147483647;
+
+                /* ESTADO INICIAL: Fora da tela (Direita) e levemente menor */
+                opacity: 0;
+                transform: translateX(40px) scale(0.95);
                 
-                /* Inicial */
-                opacity: 0; transform: translateX(40px) scale(0.95);
-                
+                /* A Transição de Entrada "Firme" */
                 transition: 
                     opacity 0.4s ease-out,
-                    transform 0.5s cubic-bezier(0.19, 1, 0.22, 1),
-                    top 0.1s linear, left 0.1s linear;
+                    transform 0.5s cubic-bezier(0.19, 1, 0.22, 1); /* Curva Exponencial */
             }
 
-            .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
+            /* ESTADO FINAL */
+            .cw-pill.docked {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
 
-            /* --- CORREÇÃO DE DRAG --- */
-            .cw-pill.dragging {
-                cursor: grabbing;
-                background: ${COLORS.glassActive};
-                transform: scale(1.05) !important;
-                box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-                border-color: rgba(255,255,255,0.25);
+            /* --- OS ÍCONES (As Ferramentas) --- */
+            .cw-btn {
+                width: 40px; height: 40px;
+                display: flex; align-items: center; justify-content: center;
+                color: ${COLORS.iconIdle};
+                background: transparent; border: none; cursor: pointer; position: relative;
                 
-                /* FIX: Garante visibilidade e movimento instantâneo */
-                opacity: 1 !important;
-                transition: none !important; 
+                /* Começam invisíveis e pequenos */
+                opacity: 0;
+                transform: scale(0.5);
+                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Efeito de "Pop" elástico */
+            }
+
+            .cw-btn.popped {
+                opacity: 1;
+                transform: scale(1);
             }
             
-            /* Feedback no Grip ao arrastar */
-            .cw-pill.dragging .cw-grip-bar {
-                background: ${COLORS.gripActive}; /* Seu gradiente invertido */
-                width: 16px; /* Encolhe */
-                opacity: 1;
+            .cw-btn:hover { 
+                background: ${COLORS.glassHighlight}; 
+                color: ${COLORS.iconActive}; 
+                transform: scale(1.15);
             }
 
-            .cw-pill.snapping { 
-                transition: left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease; 
-            }
-
-            /* --- ÍCONES --- */
-            .cw-btn {
-                width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;
-                color: ${COLORS.iconIdle}; background: transparent; border: none; cursor: pointer; position: relative;
-                opacity: 0; transform: scale(0.5);
-                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-            }
-            .cw-btn.popped { opacity: 1; transform: scale(1); }
-            .cw-btn:hover { background: ${COLORS.glassHighlight}; color: ${COLORS.iconActive}; transform: scale(1.15); }
             .cw-btn svg { width: 22px; height: 22px; fill: currentColor; pointer-events: none; }
 
+            /* Cores de Marca */
             .cw-btn.notes:hover { color: ${COLORS.blue}; filter: drop-shadow(0 0 5px rgba(138, 180, 248, 0.5)); }
             .cw-btn.email:hover { color: ${COLORS.red}; filter: drop-shadow(0 0 5px rgba(242, 139, 130, 0.5)); }
             .cw-btn.script:hover { color: ${COLORS.purple}; filter: drop-shadow(0 0 5px rgba(197, 138, 249, 0.5)); }
             .cw-btn.links:hover { color: ${COLORS.green}; filter: drop-shadow(0 0 5px rgba(129, 201, 149, 0.5)); }
 
-            .cw-sep { width: 20px; height: 1px; background: rgba(255,255,255,0.2); opacity: 0; transition: opacity 0.5s ease; }
+            /* --- O DIVISOR --- */
+            .cw-sep {
+                width: 20px; height: 1px; background: rgba(255,255,255,0.2);
+                opacity: 0; transition: opacity 0.5s ease;
+            }
             .cw-sep.visible { opacity: 1; }
 
-            /* --- GRIP (Sua Configuração) --- */
             .cw-grip {
-                width: 100%; height: 24px; display: flex; align-items: center; justify-content: center;
-                cursor: grab; pointer-events: auto; margin-bottom: 2px;
+                width: 100%; 
+                height: 24px; /* Área de toque confortável */
+                display: flex; 
+                align-items: center; 
+                justify-content: center; 
+                cursor: grab;
+                /* Removemos padding excessivo para manter alinhamento ótico */
+                margin-bottom: 2px; 
             }
-            .cw-grip:active { cursor: grabbing; }
 
+            /* A Barra Visual */
             .cw-grip-bar { 
-                width: 24px; height: 4px; 
-                background: ${COLORS.gripColor}; /* Seu gradiente */
-                border-radius: 4px; opacity: 0.4;
-                transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+                width: 24px; /* Largura padrão Google */
+                height: 4px; 
+                background-color: ${COLORS.iconIdle}; 
+                border-radius: 4px; /* Pílula perfeita */
+                opacity: 0.4; /* Discreto em repouso */
+                transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); /* Standard Easing */
             }
-            .cw-grip:hover .cw-grip-bar { opacity: 1; transform: scaleY(1.2); }
 
-            /* System Check */
-            .cw-pill.system-check { 
-                animation: systemReadyPulse 0.8s ease-out forwards; 
+            /* Hover: Fica nítido e branco */
+            .cw-grip:hover .cw-grip-bar { 
+                opacity: 1; 
+                background-color: #FFFFFF; 
+                transform: scaleY(1.2); /* Engrossa levemente */
             }
-            @keyframes systemReadyPulse {
-                0% { border-color: ${COLORS.green}; box-shadow: 0 0 0 0 rgba(129, 201, 149, 0.6); }
-                100% { border-color: ${COLORS.glassBorder}; box-shadow: 0 0 0 10px rgba(0,0,0,0); }
+
+            /* Active/Dragging: Feedback de "Agarrou" */
+            .cw-grip:active { cursor: grabbing; }
+            
+            .cw-pill.dragging .cw-grip-bar { 
+                background-color: ${COLORS.blue}; /* Azul Google de Ação */
+                width: 16px; /* Encolhe horizontalmente (tensão física) */
+                opacity: 1;
+            }
+
+            .cw-grip:active { cursor: grabbing; color: #fff; }
+            
+            /* Animação de "Sistema Pronto" (Luz verde corre) */
+            .cw-pill.system-check {
+                background: #81C995; /* Verde Suave */
+                box-shadow: 0 0 8px #81C995;
             }
             
             /* Tooltips */
@@ -131,6 +155,7 @@ export function initCommandCenter(actions) {
         `;
     document.head.appendChild(style);
   }
+
 
   // 2. CONSTRUÇÃO DO DOM (Seu HTML Mantido)
   const ICONS = {
