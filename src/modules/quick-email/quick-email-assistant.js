@@ -23,110 +23,136 @@ export function initQuickEmailAssistant() {
   let searchTerm = "";
 
   // --- ESTILOS LOCAIS ---
+ // --- 1. BUSCA (Estilo Material Input) ---
   const styleSearchInput = {
     width: "100%",
-    padding: "10px 12px 10px 36px",
+    padding: "12px 12px 12px 40px", // Mais espaço para o ícone
     borderRadius: "8px",
     border: "1px solid #dadce0",
-    background: "#f8f9fa",
+    background: "#f1f3f4", // Fundo cinza claro google padrão para inputs
     fontSize: "14px",
+    color: "#202124",
     boxSizing: "border-box",
     outline: "none",
-    color: "#3c4043",
-    transition: "background 0.2s, border-color 0.2s",
-    marginBottom: "12px",
-    backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="%235f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>')`,
+    transition: "all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)",
+    marginBottom: "16px",
+    // Ícone SVG otimizado (Lupa cinza escuro)
+    backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%235f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>')`,
     backgroundRepeat: "no-repeat",
-    backgroundPosition: "10px center",
+    backgroundPosition: "12px center",
   };
 
+  // --- 2. CHIPS (Tags de Filtro) ---
   const styleChipContainer = {
     display: "flex",
     gap: "8px",
     overflowX: "auto",
-    paddingBottom: "8px",
-    marginBottom: "8px",
-    scrollbarWidth: "none",
-    borderBottom: "1px solid #f1f3f4",
+    padding: "4px 4px 12px 4px", // Espaço para a sombra não cortar
+    marginBottom: "4px",
+    scrollbarWidth: "none", // Esconde scrollbar (Firefox)
+    // borderBottom removido para limpar o visual
   };
 
   const styleChip = {
-    padding: "6px 16px",
-    borderRadius: "16px",
+    padding: "6px 14px", // Levemente mais compacto
+    borderRadius: "18px", // Pílula perfeita
     border: "1px solid #dadce0",
-    background: "#fff",
-    color: "#3c4043",
+    background: "#ffffff",
+    color: "#5f6368",
     fontSize: "13px",
     fontWeight: "500",
     cursor: "pointer",
     whiteSpace: "nowrap",
-    transition: "all 0.2s",
+    transition: "all 0.2s ease",
     userSelect: "none",
+    // Sombra sutil ao repousar
+    boxShadow: "0 1px 2px rgba(0,0,0,0.05)" 
   };
 
   const styleChipActive = {
-    background: "#e8f0fe",
-    color: "#1967d2",
-    borderColor: "#e8f0fe",
+    background: "#e8f0fe", // Azul Google muito claro
+    color: "#1967d2",      // Azul Google texto
+    borderColor: "#1967d2", // Borda azul sólida (foco)
+    boxShadow: "0 1px 3px rgba(26, 115, 232, 0.2)"
   };
 
+  // --- 3. LISTA (O Container da Linha) ---
   const styleRow = {
     display: "flex",
-    flexWrap: "wrap",
+    flexDirection: "column", // Mudança: Column para o card expandir para baixo naturalmente
     marginBottom: "8px",
     position: "relative",
-    alignItems: "stretch",
     background: "transparent",
-    borderRadius: "8px",
-    transition: "background 0.2s",
+    // Removemos transições aqui para evitar lags de layout
   };
 
+  // Wrapper para os botões (A linha de cima)
+  const styleButtonWrapper = {
+    display: "flex",
+    width: "100%",
+    boxShadow: "0 1px 3px rgba(60,64,67, 0.1), 0 2px 8px rgba(60,64,67, 0.05)", // Elevation 1
+    borderRadius: "8px",
+    transition: "box-shadow 0.2s ease",
+  };
+
+  // --- 4. BOTÃO DE AÇÃO (Esquerda/Texto) ---
   const styleActionBtn = {
     flexGrow: "1",
     textAlign: "left",
-    padding: "12px",
-    background: "#fff",
+    padding: "12px 16px",
+    background: "#ffffff",
     border: "1px solid #dadce0",
-    borderRight: "none",
-    borderRadius: "8px 0 0 8px",
+    borderRight: "1px solid #f1f3f4", // Divisória sutil interna
+    borderRadius: "8px 0 0 8px", // Cantos arredondados só na esquerda
     cursor: "pointer",
-    transition: "background 0.1s",
+    color: "#3c4043",
+    fontSize: "14px",
+    fontWeight: "500",
+    transition: "background 0.1s linear, color 0.1s linear",
+    position: "relative",
     zIndex: "2",
     display: "flex",
     flexDirection: "column",
     justifyContent: "center",
   };
 
+  // --- 5. BOTÃO DE PREVIEW (Direita/Olho) ---
   const stylePreviewBtn = {
-    width: "44px",
+    width: "48px", // Touch target melhor
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "#f8f9fa",
+    background: "#f8f9fa", // Levemente cinza para indicar função secundária
     border: "1px solid #dadce0",
-    borderLeft: "1px solid #f1f3f4",
-    borderRadius: "0 8px 8px 0",
+    borderLeft: "none", // Evita borda dupla com o botão de ação
+    borderRadius: "0 8px 8px 0", // Cantos arredondados só na direita
     cursor: "pointer",
-    transition: "all 0.2s",
     color: "#5f6368",
+    transition: "all 0.2s ease",
     zIndex: "2",
   };
 
+  // --- 6. CARD DE PREVIEW (Expandível) ---
   const stylePreviewCard = {
     width: "100%",
     maxHeight: "0",
     opacity: "0",
     overflow: "hidden",
-    background: "#f8f9fa",
+    background: "#ffffff", // Fundo branco para leitura
     border: "1px solid #dadce0",
-    borderTop: "none",
+    borderTop: "none", // Conecta com o botão de cima
     borderRadius: "0 0 8px 8px",
-    marginTop: "-1px",
-    fontSize: "12px",
+    marginTop: "-4px", // Sobe um pouco para ficar "atrás" dos botões
+    padding: "0 16px", // Padding lateral (vertical controlado pela animação)
+    fontSize: "13px",
     color: "#3c4043",
-    lineHeight: "1.5",
-    transition:
-      "max-height 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.3s linear, padding 0.3s step-start",
+    lineHeight: "1.6",
+    boxSizing: "border-box",
+    // Animação profissional "Ease Out"
+    transition: "all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)", 
+    zIndex: "1", // Fica atrás dos botões
+    position: "relative",
+    boxShadow: "inset 0 4px 6px -4px rgba(0,0,0,0.1)" // Sombra interna no topo
   };
 
   let visible = false;
