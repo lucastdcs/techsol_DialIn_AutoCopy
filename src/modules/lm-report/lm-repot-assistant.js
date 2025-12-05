@@ -12,7 +12,7 @@ import {
 } from "../shared/utils.js";
 
 import { createStandardHeader } from "../shared/header-factory.js";
-import { animationStyles, togglePopupAnimation } from "../shared/animations.js";
+import { toggleGenieAnimation } from '../shared/animations.js';
 
 // --- BANCO DE DADOS DE LINKS ---
 const LINKS_DB = {
@@ -170,20 +170,25 @@ export function initFeedbackAssistant() {
   // --- POPUP (Com Animação) ---
   const popup = document.createElement("div");
   popup.id = "feedback-popup";
-  Object.assign(
+ Object.assign(
     popup.style,
     stylePopup,
     {
-      right: "100px",
-      width: "420px",
-      maxHeight: "600px",
+      // Posição base (longe da pílula para não sobrepor)
+      right: "100px", 
+      // Mantém as definições de layout
+      width: "380px",
+      borderRadius: "12px",
       display: "flex",
       flexDirection: "column",
-      borderRadius: "12px",
-      boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
-    },
-    animationStyles.popupInitial
-  ); // <--- ANIMAÇÃO INICIAL
+      // Sombra inicial pode ser nula, pois a classe .open adiciona a sombra correta
+      boxShadow: "none", 
+      // IMPORTANTE: Começa invisível e sem interação, mas SEM transform fixo
+      opacity: "0",
+      pointerEvents: "none"
+    }
+    // REMOVIDO: animationStyles.popupInitial (Isso causaria conflito)
+  );
 
   // Refs para animação
   const animRefs = {

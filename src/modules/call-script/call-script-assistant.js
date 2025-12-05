@@ -13,7 +13,7 @@ import {
 } from "../shared/utils.js";
 
 import { createStandardHeader } from "../shared/header-factory.js";
-import { animationStyles, togglePopupAnimation, toggleGenieAnimation } from "../shared/animations.js";
+import {toggleGenieAnimation } from "../shared/animations.js";
 
 import { csaChecklistData } from "./call-script-data.js";
 
@@ -30,15 +30,9 @@ export function initCallScriptAssistant() {
   csaPopup.id = "call-script-popup";
 
   // Estilos base + Estado Inicial Animação
-  Object.assign(
-    csaPopup.style,
-    stylePopup,
-    {
-      right: "80px",
-    },
-    animationStyles.popupInitial
-  );
-
+Object.assign(csaPopup.style, stylePopup, { 
+        right: "100px"
+    });
   // Refs para animação
   const animRefs = { popup: csaPopup, googleLine: null };
   let csaVisible = false;

@@ -11,7 +11,7 @@ import {
 } from "../shared/utils.js";
 
 import { createStandardHeader } from "../shared/header-factory.js"; // <--- IMPORTANTE
-import { animationStyles, togglePopupAnimation } from "../shared/animations.js";
+import { toggleGenieAnimation } from '../shared/animations.js';
 import { QUICK_EMAILS } from "./quick-email-data.js";
 import { runQuickEmail } from "../email/email-automation.js";
 
@@ -134,20 +134,25 @@ export function initQuickEmailAssistant() {
   popup.id = "quick-email-popup";
 
   // Configura estilo + estado inicial da animação
-  Object.assign(
+Object.assign(
     popup.style,
     stylePopup,
     {
-      right: "80px",
-      width: "550px",
-      maxHeight: "85vh",
+      // Posição base (longe da pílula para não sobrepor)
+      right: "100px", 
+      // Mantém as definições de layout
+      width: "380px",
       borderRadius: "12px",
       display: "flex",
       flexDirection: "column",
-      boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
-    },
-    animationStyles.popupInitial
-  ); // <--- ANIMAÇÃO AQUI
+      // Sombra inicial pode ser nula, pois a classe .open adiciona a sombra correta
+      boxShadow: "none", 
+      // IMPORTANTE: Começa invisível e sem interação, mas SEM transform fixo
+      opacity: "0",
+      pointerEvents: "none"
+    }
+    // REMOVIDO: animationStyles.popupInitial (Isso causaria conflito)
+  );
 
   // Objeto de referências para a animação
   const animRefs = {

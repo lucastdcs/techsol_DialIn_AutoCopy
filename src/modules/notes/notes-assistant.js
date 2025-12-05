@@ -29,7 +29,7 @@ import {
 
 import { runEmailAutomation } from "../email/email-automation.js";
 import { createStandardHeader } from "../shared/header-factory.js";
-import { animationStyles, togglePopupAnimation } from "../shared/animations.js";
+import { toggleGenieAnimation } from '../shared/animations.js';
 import {
   copyHtmlToClipboard,
   ensureNoteCardIsOpen,
@@ -179,18 +179,24 @@ export function initCaseNotesAssistant() {
   // --- Popup ---
   const popup = document.createElement("div");
   popup.id = "autofill-popup";
-  Object.assign(
+Object.assign(
     popup.style,
     stylePopup,
     {
-      right: "80px",
+      // Posição base (longe da pílula para não sobrepor)
+      right: "100px", 
+      // Mantém as definições de layout
       width: "380px",
       borderRadius: "12px",
       display: "flex",
       flexDirection: "column",
-      boxShadow: "0 8px 24px rgba(0,0,0,0.2)",
-    },
-    animationStyles.popupInitial
+      // Sombra inicial pode ser nula, pois a classe .open adiciona a sombra correta
+      boxShadow: "none", 
+      // IMPORTANTE: Começa invisível e sem interação, mas SEM transform fixo
+      opacity: "0",
+      pointerEvents: "none"
+    }
+    // REMOVIDO: animationStyles.popupInitial (Isso causaria conflito)
   );
   popup.style.transition += ", width 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)";
 
