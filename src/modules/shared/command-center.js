@@ -189,7 +189,6 @@ export function initCommandCenter(actions) {
         <div class="cw-grip" title="Arrastar">
             <div class="cw-grip-bar"></div>
         </div>
-        <div class="cw-sep"></div>
         
         <button class="cw-btn notes" id="cw-btn-notes" data-label="Case Notes">${ICONS.notes}</button>
         
