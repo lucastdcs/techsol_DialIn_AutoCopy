@@ -6,26 +6,32 @@ import { makeDraggable } from './utils.js';
 // Configuração Visual do Header (Dark Glass)
 const HEADER_STYLE = {
     height: '56px',
-    padding: '0 16px',
-    // Fundo Escuro (Igual à Pílula)
-    backgroundColor: 'rgba(28, 28, 32, 0.95)', 
+    padding: '0 20px', // Aumentei levemente o padding lateral para ficar mais elegante
+    
+    // Fundo mais translúcido para o efeito vidro funcionar
+    backgroundColor: 'rgba(28, 28, 32, 0.85)', 
+    
+    // O segredo do Glassmorphism
+    backdropFilter: 'blur(12px)',
+    webkitBackdropFilter: 'blur(12px)', // Compatibilidade
+    
+    // Borda sutil apenas embaixo para separar do conteúdo
+    borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
+    
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    // Texto Claro
     color: '#E8EAED', 
     fontFamily: "'Google Sans', Roboto, sans-serif",
     fontWeight: '500',
     letterSpacing: '0.5px',
     cursor: 'grab',
     position: 'relative',
-    // Cantos arredondados apenas em cima
     borderRadius: '16px 16px 0 0', 
     flexShrink: '0',
     userSelect: 'none',
     boxSizing: 'border-box'
 };
-
 const BTN_STYLE = {
     width: '32px', 
     height: '32px', 

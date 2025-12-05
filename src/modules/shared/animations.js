@@ -19,10 +19,10 @@ if (!document.getElementById('cw-module-styles')) {
             transform: scale(0.05); /* Começa dentro do botão */
             
             /* Visual Ceramic Light */
-            background: rgba(255, 255, 255, 0.98); /* Quase sólido */
+            background: #F8F9FA;
             backdrop-filter: blur(12px);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(0,0,0,0.1);
+            box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.18);
+            border: 1px solid rgba(0, 0, 0, 0.12);
             border-radius: 16px;
             overflow: hidden;
             
@@ -48,7 +48,8 @@ if (!document.getElementById('cw-module-styles')) {
             
             /* O efeito vem daqui: */
             opacity: 0.9;
-            filter: grayscale(0.1); /* Perde um pouco a cor */
+            filter: brightness(0.96) saturate(0.5);
+            border-color: rgba(0, 0, 0, 0.2);
             box-shadow: 0 5px 15px rgba(0,0,0,0.1); /* Sombra cai (encostou na mesa) */
             
             cursor: pointer; /* Indica clicável */
