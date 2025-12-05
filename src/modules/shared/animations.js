@@ -1,14 +1,13 @@
 // src/modules/shared/animations.js
 
-// Injeta os estilos do Módulo (Ceramic Glass & Genie Transitions)
-// Isso garante que todos os módulos (Notes, Email, etc) tenham o mesmo visual
+// 1. INJEÇÃO DE ESTILOS (CSS do Módulo + Animações)
 if (!document.getElementById('cw-module-styles')) {
     const style = document.createElement('style');
     style.id = 'cw-module-styles';
     style.innerHTML = `
-        /* MÓDULO BASE (Comportamento Genie) */
+        /* MÓDULO BASE */
         .cw-module-window {
-            /* Animação Apple Spring */
+            /* Animação Apple Spring (Ida e Volta) */
             transition: 
                 opacity 0.3s ease,
                 transform 0.45s cubic-bezier(0.25, 1, 0.5, 1), 
@@ -17,57 +16,62 @@ if (!document.getElementById('cw-module-styles')) {
             
             opacity: 0; 
             pointer-events: none;
-            transform: scale(0.05); /* Começa minúsculo */
+            transform: scale(0.05); /* Começa dentro do botão */
             
             /* Visual Ceramic Light */
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.98); /* Quase sólido */
+            backdrop-filter: blur(12px);
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(0,0,0,0.1);
             border-radius: 16px;
             overflow: hidden;
+            
+            /* Fonte Base */
+            font-family: 'Google Sans', Roboto, sans-serif;
         }
 
-        /* ESTADO ABERTO */
+        /* ESTADO ABERTO (Ativo) */
         .cw-module-window.open {
             opacity: 1; 
             transform: scale(1); 
             pointer-events: auto;
             filter: brightness(1);
+            /* Sombra alta */
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
         }
 
         /* ESTADO IDLE (Segundo Plano) */
         .cw-module-window.idle {
-            transform: scale(0.97) translateY(2px);
-            opacity: 0.95;
-            filter: brightness(0.97) saturate(0.9); /* Levemente apagado, mas legível */
-            box-shadow: 0 8px 20px -5px rgba(0, 0, 0, 0.2);
-            cursor: pointer;
+            /* FIX DO DESLOCAMENTO: */
+            /* Scale muito sutil (0.99) para não "puxar" para o lado */
+            transform: scale(0.99); 
+            
+            /* O efeito vem daqui: */
+            opacity: 0.9;
+            filter: grayscale(0.1); /* Perde um pouco a cor */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1); /* Sombra cai (encostou na mesa) */
+            
+            cursor: pointer; /* Indica clicável */
         }
     `;
     document.head.appendChild(style);
 }
 
 /**
- * Gerencia a animação Genie (Ida e Volta)
- * @param {boolean} show - Abrir ou Fechar
- * @param {HTMLElement} popup - A janela do módulo
- * @param {string} buttonId - O ID do botão na pílula (ex: 'cw-btn-notes')
+ * Gerencia a animação Genie e o Foco
  */
 export function toggleGenieAnimation(show, popup, buttonId) {
     const btn = document.getElementById(buttonId);
-    if (!btn) {
-        console.error(`Botão com ID '${buttonId}' não encontrado na Pílula.`);
-        return; 
-    }
-
+    
+    // Adiciona classe base se faltar
     if (!popup.classList.contains('cw-module-window')) {
         popup.classList.add('cw-module-window');
     }
 
+    // Função matemática da origem
     const updateOrigin = () => {
+        if (!btn) return;
         const btnRect = btn.getBoundingClientRect();
-        const popupRect = popup.getBoundingClientRect();
         
         const startX = btnRect.left + (btnRect.width / 2);
         const startY = btnRect.top + (btnRect.height / 2);
@@ -81,56 +85,82 @@ export function toggleGenieAnimation(show, popup, buttonId) {
         popup.style.transformOrigin = `${originX}px ${originY}px`;
     };
 
-    updateOrigin();
-    void popup.offsetWidth; // Reflow
-
     if (show) {
-        // --- FIX DO SUMIÇO ---
-        // Removemos os estilos inline que forçam invisibilidade
-        // para que a classe CSS '.open' possa assumir o controle.
+        // --- ABRIR ---
+        
+        // 1. Calcula origem fresca
+        updateOrigin();
+        
+        // 2. Limpa estilos inline que possam bloquear (ex: opacity: 0 manual)
         popup.style.opacity = ''; 
         popup.style.pointerEvents = ''; 
-        popup.style.transform = ''; // Limpa escala inline antiga se houver
-        
+        popup.style.transform = ''; 
+
+        // 3. Aplica Classes
+        // Força reflow
+        void popup.offsetWidth;
         popup.classList.add('open');
         popup.classList.remove('idle');
-        btn.classList.add('active');
         
-        setupIdleListener(popup, btn);
+        if (btn) btn.classList.add('active');
+        
+        // 4. Liga o detector de Idle
+        setupIdleListener(popup, buttonId);
+
     } else {
-        popup.classList.remove('open');
-        btn.classList.remove('active');
+        // --- FECHAR ---
         
-        // Opcional: Se quiser garantir que fique oculto após a animação (timeout)
-        // mas geralmente a classe CSS sem .open já resolve (opacity: 0)
+        // 1. Recalcula origem (caso a pílula tenha movido)
+        updateOrigin();
+        
+        // 2. Limpa TUDO (Fix do botão não fechar)
+        popup.classList.remove('open');
+        popup.classList.remove('idle'); // Remove idle para não conflitar
+        
+        if (btn) btn.classList.remove('active');
+
+        // 3. Mata o listener de idle
+        removeIdleListener(popup);
     }
 }
 
-// Gerenciador de Foco (Singleton simples)
-function setupIdleListener(popup, btn) {
-    // Remove listener anterior se houver (para não duplicar)
+// --- GERENCIAMENTO DE FOCO (IDLE SYSTEM) ---
+
+function setupIdleListener(popup, buttonId) {
+    // Remove anterior para não acumular
+    removeIdleListener(popup);
+
     const handler = (e) => {
-        if (!popup.classList.contains('open')) {
-            document.removeEventListener('mousedown', handler);
-            return;
-        }
+        // Se o popup já fechou, aborta
+        if (!popup.classList.contains('open')) return;
 
         const clickInModule = popup.contains(e.target);
-        const clickInPill = document.getElementById('techsol-command-center')?.contains(e.target);
+        // Verifica se clicou na Pílula inteira (para não dar idle enquanto arrasta ou clica em outro)
+        const pill = document.querySelector('.cw-pill');
+        const clickInPill = pill && pill.contains(e.target);
 
         if (clickInModule) {
+            // Clicou no módulo: FOCA
             popup.classList.remove('idle');
-            popup.style.zIndex = '2147483648'; // Traz p/ frente
+            popup.style.zIndex = '2147483648'; // Traz pra frente
         } else if (clickInPill) {
-            // Nada (o click na pill gerencia o toggle)
+            // Clicou na pílula: 
+            // NÃO faz nada aqui. O evento de click do botão vai cuidar de fechar.
+            // Se colocarmos 'idle' aqui, ele briga com o toggle de fechar.
         } else {
+            // Clicou no vazio: IDLE
             popup.classList.add('idle');
             popup.style.zIndex = '2147483646'; // Recua
         }
     };
     
-    // Adiciona apenas se não existir (ou remove e adiciona)
-    document.removeEventListener('mousedown', popup._idleHandler);
     popup._idleHandler = handler;
     document.addEventListener('mousedown', handler);
+}
+
+function removeIdleListener(popup) {
+    if (popup._idleHandler) {
+        document.removeEventListener('mousedown', popup._idleHandler);
+        popup._idleHandler = null;
+    }
 }
