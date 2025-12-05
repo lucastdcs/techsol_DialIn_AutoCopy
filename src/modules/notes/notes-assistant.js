@@ -197,9 +197,6 @@ Object.assign(popup.style, stylePopup, {
     CURRENT_VERSION,
     "Gera notas padronizadas automaticamente. Selecione o status, as tasks realizadas e preencha os detalhes para inserir no caso.",
     animRefs,
-    () => {
-      togglePopup(false);
-    },
     () => toggleVisibility()
   );
 

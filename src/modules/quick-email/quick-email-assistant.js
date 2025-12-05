@@ -155,9 +155,6 @@ const popup = document.createElement("div");
     CURRENT_VERSION,
     "Templates de e-mail prontos para uso (NRP, Contato, Agendamento). Clique no olho para visualizar ou na linha para inserir.", // <--- NOVO
     animRefs,
-    () => {
-      visible = false;
-    },
     () => toggleVisibility()
   );
 

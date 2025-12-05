@@ -195,9 +195,6 @@ export function initFeedbackAssistant() {
     CURRENT_VERSION,
     "Acesso rápido a formulários internos (Ocorrências, Bugs) e documentações oficiais de suporte.", // <--- NOVO
     animRefs,
-    () => {
-      visible = false;
-    },
     () => toggleVisibility()
   );
   popup.appendChild(header);
