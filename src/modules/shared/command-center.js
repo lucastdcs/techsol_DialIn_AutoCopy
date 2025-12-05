@@ -108,12 +108,13 @@ export function initCommandCenter(actions) {
                 opacity: 0.5; 
                 cursor: grab; /* Cursor de mãozinha */
                 pointer-events: auto; /* Garante que o mouse pegue aqui */
-                padding-bottom: 4px; /* Espaço extra embaixo */
+                padding-bottom: 4px; /* Espaço extra embaixo */;
+                padding-top: 4px; /* Espaço extra embaixo */
                 width: 100%;
             }
-            .cw-grip-bar { width: 20px; height: 4px; background-color: ${COLORS.gripColor}; border-radius: 4px; transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); }
+            .cw-grip-bar { width: 27px; height: 4px; background-color: ${COLORS.iconIdle}; border-radius: 4px; transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); }
             .cw-grip-area:hover .cw-grip-bar { background-color: #E8EAED; }
-            .cw-pill.dragging .cw-grip-bar { background-color: ${COLORS.gripActive}; width: 18px; }
+            .cw-pill.dragging .cw-grip-bar { background-color: ${COLORS.iconActive}; width: 18px; }
 
 
             /* ESTA É A REGRA QUE FALTAVA: */
