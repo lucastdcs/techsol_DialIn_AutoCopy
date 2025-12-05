@@ -1,297 +1,318 @@
 // src/modules/shared/command-center.js
 
-const ICONS = {
-    notes: `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`,
-    email: `<svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>`,
-    script: `<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`,
-    links: `<svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>`,
-};
-
 const COLORS = {
-    glassBg: 'rgba(20, 20, 22, 0.85)', // Mais escuro para contraste
-    glassBorder: 'rgba(255, 255, 255, 0.12)',
-    glassActive: 'rgba(35, 35, 35, 0.95)',
-    glassHighlight: 'rgba(255, 255, 255, 0.08)',
-    
-    iconIdle: '#9AA0A6', 
-    iconActive: '#FFFFFF',
-    
-    gripColor: '#5F6368',
-    gripActive: '#8AB4F8',
-
-    blue: '#8AB4F8', red: '#F28B82', purple: '#C58AF9', green: '#81C995',
-    readyGlow: 'rgba(138, 180, 248, 0.6)' // Glow azulado mais tecnológico
+  glassBg: "rgba(61, 61, 61, 0.77)", // Vidro escuro e sólido
+  glassBorder: "rgba(255, 255, 255, 0.15)",
+  glassActive: "rgba(79, 79, 79, 0.89)", // Quando agarra
+  glassHighlight: "rgba(255, 255, 255, 0.08)",
+  iconIdle: "#c2c5c8ff",
+  iconActive: "#FFFFFF",
+  // Cores para o "System Check"
+  blue: "#8AB4F8",
+  red: "#F28B82",
+  purple: "#C58AF9",
+  green: "#81C995",
 };
 
-// --- MINI SHERLOCK (Database de Frases) ---
-const CONTEXT_PHRASES = {
-    dawn:     ["Turno da madrugada?", "O mundo dorme, nós codamos.", "Café reforçado necessário."], // 00h - 05h
-    morning:  ["Bom dia. Vamos produzir.", "Foco total hoje.", "Dia de resolver problemas."],        // 06h - 11h
-    lunch:    ["Hora da pausa?", "Recarregando energias.", "Mantenha o ritmo."],                     // 12h - 13h
-    afternoon:["Tarde produtiva.", "Na reta final.", "Ainda há muito a fazer."],                      // 14h - 18h
-    evening:  ["Encerrando por hoje?", "A noite é uma criança.", "Modo noturno ativado."],            // 19h - 23h
-    weekend:  ["Trabalhando no finde?", "A dedicação compensa.", "Não esqueça de viver um pouco."]
-};
-
-const esperar = (ms) => new Promise(r => setTimeout(r, ms));
+// Helper interno de tempo
+const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export function initCommandCenter(actions) {
-    
-    // 1. LÓGICA DO CONTEXTO (SHERLOCK)
-    const now = new Date();
-    const hour = now.getHours();
-    const day = now.getDay(); // 0 = Domingo, 6 = Sábado
-    
-    let timeKey = 'morning';
-    if (day === 0 || day === 6) timeKey = 'weekend';
-    else if (hour < 6) timeKey = 'dawn';
-    else if (hour < 12) timeKey = 'morning';
-    else if (hour < 14) timeKey = 'lunch';
-    else if (hour < 19) timeKey = 'afternoon';
-    else timeKey = 'evening';
+  // actions = { toggleNotes, toggleEmail, toggleScript, toggleLinks }
 
-    // Escolhe frase aleatória do array
-    const phrases = CONTEXT_PHRASES[timeKey];
-    const greeting = phrases[Math.floor(Math.random() * phrases.length)];
-
-    // Guardamos isso para usar nos emails depois
-    window.sherlockContext = {
-        greeting: greeting,
-        timeOfDay: timeKey,
-        timestamp: now
-    };
-
-    // 2. ESTILOS (Reforçados)
-    if (!document.getElementById('cw-command-center-style')) {
-        const style = document.createElement('style');
-        style.id = 'cw-command-center-style';
-        style.innerHTML = `
+  // 1. ESTILOS
+  const styleId = "cw-command-center-style";
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.innerHTML = `
             @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@500&display=swap');
 
+            /* --- A BASE (O Vidro) --- */
             .cw-pill {
                 position: fixed; top: 30%; right: 24px;
-                display: flex; flex-direction: column; align-items: center; gap: 10px;
-                padding: 10px 6px 14px 6px;
+                display: flex; flex-direction: column; align-items: center; gap: 12px;
+                padding: 16px 8px;
                 
                 background: ${COLORS.glassBg};
-                backdrop-filter: blur(20px) saturate(180%);
-                -webkit-backdrop-filter: blur(20px);
-                border: 1px solid ${COLORS.glassBorder}; 
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+                border: 1px solid ${COLORS.glassBorder};
                 border-radius: 50px;
-                
-                /* Sombra mais difusa e elegante */
-                box-shadow: 
-                    0 20px 40px -10px rgba(0,0,0,0.6),
-                    0 0 1px rgba(255,255,255,0.2) inset;
-                
-                z-index: 2147483647; 
-                user-select: none; width: 52px; box-sizing: border-box;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+                z-index: 2147483647;
 
-                opacity: 0; transform: translateX(60px) scale(0.95);
+                /* ESTADO INICIAL: Fora da tela (Direita) e levemente menor */
+                opacity: 0;
+                transform: translateX(40px) scale(0.95);
                 
+                /* A Transição de Entrada "Firme" */
                 transition: 
                     opacity 0.4s ease-out,
-                    transform 0.5s cubic-bezier(0.19, 1, 0.22, 1),
-                    top 0.1s linear, left 0.1s linear;
+                    transform 0.5s cubic-bezier(0.19, 1, 0.22, 1); /* Curva Exponencial */
             }
 
-            .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
-
-            /* --- CORREÇÃO DO BUG DE SUMIÇO --- */
-            /* Quando estiver arrastando, FORÇAMOS a opacidade */
-            .cw-pill.dragging {
-                opacity: 1 !important; 
-                cursor: grabbing; 
-                background: ${COLORS.glassActive}; 
-                transform: scale(1.02) !important; 
-                box-shadow: 0 25px 50px rgba(0,0,0,0.8);
-                border-color: rgba(255,255,255,0.2);
-                transition: none !important; /* Remove delay ao arrastar */
+            /* ESTADO FINAL */
+            .cw-pill.docked {
+                opacity: 1;
+                transform: translateX(0) scale(1);
             }
 
-            /* GRIP BARRA (Visual Clean) */
-            .cw-grip-area { 
-                width: 100%; height: 24px; 
-                display: flex; align-items: center; justify-content: center; 
-                cursor: grab; margin-bottom: 2px;
-                opacity: 0.5; transition: opacity 0.2s;
-            }
-            .cw-pill.dragging .cw-grip-area { cursor: grabbing; opacity: 1; }
-            .cw-grip-area:hover { opacity: 1; }
-            
-            .cw-grip-bar { 
-                width: 20px; height: 3px; 
-                background-color: ${COLORS.gripColor}; 
-                border-radius: 4px;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.3);
-            }
-            .cw-pill.dragging .cw-grip-bar { background-color: ${COLORS.gripActive}; width: 24px; box-shadow: 0 0 8px ${COLORS.gripActive}; }
-
-            /* ÍCONES */
+            /* --- OS ÍCONES (As Ferramentas) --- */
             .cw-btn {
-                width: 40px; height: 40px; 
-                border-radius: 50%;
-                border: none; background: transparent;
-                display: flex; align-items: center; justify-content: center; 
-                cursor: pointer; position: relative;
+                width: 40px; height: 40px;
+                display: flex; align-items: center; justify-content: center;
                 color: ${COLORS.iconIdle};
-                opacity: 0; transform: scale(0.5);
-                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                background: transparent; border: none; cursor: pointer; position: relative;
+                
+                /* Começam invisíveis e pequenos */
+                opacity: 0;
+                transform: scale(0.5);
+                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Efeito de "Pop" elástico */
             }
-            .cw-btn.popped { opacity: 1; transform: scale(1); }
+
+            .cw-btn.popped {
+                opacity: 1;
+                transform: scale(1);
+            }
+            
             .cw-btn:hover { 
                 background: ${COLORS.glassHighlight}; 
                 color: ${COLORS.iconActive}; 
                 transform: scale(1.15);
             }
-            .cw-btn svg { width: 20px; height: 20px; fill: currentColor; }
 
-            /* Separador */
-            .cw-sep { width: 20px; height: 1px; background: rgba(255,255,255,0.1); margin: 4px 0; opacity: 0; }
+            .cw-btn svg { width: 22px; height: 22px; fill: currentColor; pointer-events: none; }
+
+            /* Cores de Marca */
+            .cw-btn.notes:hover { color: ${COLORS.blue}; filter: drop-shadow(0 0 5px rgba(138, 180, 248, 0.5)); }
+            .cw-btn.email:hover { color: ${COLORS.red}; filter: drop-shadow(0 0 5px rgba(242, 139, 130, 0.5)); }
+            .cw-btn.script:hover { color: ${COLORS.purple}; filter: drop-shadow(0 0 5px rgba(197, 138, 249, 0.5)); }
+            .cw-btn.links:hover { color: ${COLORS.green}; filter: drop-shadow(0 0 5px rgba(129, 201, 149, 0.5)); }
+
+            /* --- O DIVISOR --- */
+            .cw-sep {
+                width: 20px; height: 1px; background: rgba(255,255,255,0.2);
+                opacity: 0; transition: opacity 0.5s ease;
+            }
             .cw-sep.visible { opacity: 1; }
 
-            /* Tooltips Inteligentes */
+          /* --- O GRIP (System Check) --- */
+            .cw-grip {
+                display: flex; 
+                align-items: center; /* Centraliza */
+                justify-content: center; /* Centraliza */
+                color: ${COLORS.iconIdle}; 
+                opacity: 0.5; 
+                cursor: grab; /* Cursor de mãozinha */
+                pointer-events: auto; /* Garante que o mouse pegue aqui */
+                padding-bottom: 4px; /* Espaço extra embaixo */
+                width: 100%;
+            }
+
+            /* ESTA É A REGRA QUE FALTAVA: */
+            .cw-grip svg {
+                width: 30px; 
+                height: 36px; 
+                fill: currentColor;
+            }
+
+            .cw-grip:active { cursor: grabbing; color: #fff; }
+            
+            /* Animação de "Sistema Pronto" (Luz verde corre) */
+            .cw-dot.system-check {
+                background: #81C995; /* Verde Suave */
+                box-shadow: 0 0 8px #81C995;
+            }
+            
+            /* Tooltips */
             .cw-btn::after { 
                 content: attr(data-label); position: absolute; top: 50%; transform: translateY(-50%) scale(0.9); 
-                padding: 6px 12px; border-radius: 8px; 
-                background: rgba(20,20,20, 0.9); border: 1px solid rgba(255,255,255,0.1);
-                color: #fff; font-family: 'Google Sans', sans-serif; font-size: 11px; font-weight: 500; 
-                opacity: 0; pointer-events: none; transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.5); 
-                white-space: nowrap; backdrop-filter: blur(4px);
+                padding: 6px 12px; border-radius: 6px; background: #202124; color: #fff; 
+                font-family: 'Google Sans', sans-serif; font-size: 12px; font-weight: 500; 
+                opacity: 0; pointer-events: none; transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1); 
+                box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: nowrap; border: 1px solid rgba(255,255,255,0.15);
             }
-            .cw-pill.side-right .cw-btn::after { right: 55px; transform-origin: right center; }
-            .cw-pill.side-left .cw-btn::after { left: 55px; transform-origin: left center; }
-            .cw-pill.side-right .cw-btn:hover::after, .cw-pill.side-left .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
+            .cw-pill.side-right .cw-btn::after { right: 60px; transform-origin: right center; }
+            .cw-pill.side-right .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
+            .cw-pill.side-left .cw-btn::after { left: 60px; transform-origin: left center; }
+            .cw-pill.side-left .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
         `;
-        document.head.appendChild(style);
-    }
+    document.head.appendChild(style);
+  }
 
-    // 3. CRIAÇÃO DO ELEMENTO
-    const pill = document.createElement('div');
-    pill.className = 'cw-pill side-right';
-    
-    // Injetamos a frase do Sherlock no título do grip
-    pill.innerHTML = `
-        <div class="cw-grip-area" title="${greeting}">
-            <div class="cw-grip-bar"></div>
+  // 2. CONSTRUÇÃO DO DOM
+  const ICONS = {
+    notes: `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`,
+    email: `<svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>`,
+    script: `<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`,
+    links: `<svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>`,
+    grip: `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="11" width="14" height="2" rx="1"/></svg>`,
+  };
+
+  const pill = document.createElement("div");
+  pill.className = "cw-pill side-right";
+  pill.innerHTML = `
+        <div class="cw-grip" title="Arrastar">
+            ${ICONS.grip}
         </div>
-        <button class="cw-btn notes" data-label="Notas">${ICONS.notes}</button>
-        <button class="cw-btn email" data-label="Email">${ICONS.email}</button>
-        <button class="cw-btn script" data-label="Script">${ICONS.script}</button>
         <div class="cw-sep"></div>
-        <button class="cw-btn links" data-label="Links Úteis">${ICONS.links}</button>
+        <button class="cw-btn notes" data-label="Case Notes">${ICONS.notes}</button>
+        <button class="cw-btn email" data-label="Quick Email">${ICONS.email}</button>
+        <button class="cw-btn script" data-label="Call Script">${ICONS.script}</button>
+        <div class="cw-sep"></div>
+        <button class="cw-btn links" data-label="Links">${ICONS.links}</button>
     `;
-    document.body.appendChild(pill);
+  document.body.appendChild(pill);
 
-    // Eventos de clique
-    pill.querySelector('.notes').onclick = (e) => { e.stopPropagation(); actions.toggleNotes(); };
-    pill.querySelector('.email').onclick = (e) => { e.stopPropagation(); actions.toggleEmail(); };
-    pill.querySelector('.script').onclick = (e) => { e.stopPropagation(); actions.toggleScript(); };
-    pill.querySelector('.links').onclick = (e) => { e.stopPropagation(); actions.toggleLinks(); };
+  // Ligando os eventos de clique (A única diferença do seu script)
+  pill.querySelector(".notes").onclick = (e) => {
+    e.stopPropagation();
+    actions.toggleNotes();
+  };
+  pill.querySelector(".email").onclick = (e) => {
+    e.stopPropagation();
+    actions.toggleEmail();
+  };
+  pill.querySelector(".script").onclick = (e) => {
+    e.stopPropagation();
+    actions.toggleScript();
+  };
+  pill.querySelector(".links").onclick = (e) => {
+    e.stopPropagation();
+    actions.toggleLinks();
+  };
 
-    // 4. ANIMAÇÃO DE ENTRADA (Sequenciada)
-    async function animateEntry() {
-        await esperar(500); // Pequeno delay inicial
-        pill.classList.add('docked');
-        
-        await esperar(200);
-        const items = pill.querySelectorAll('.cw-btn, .cw-sep');
-        for (let el of items) {
-            el.classList.add('visible', 'popped');
-            await esperar(50); // Efeito cascata rápido
-        }
-    }
-    animateEntry();
+  // 3. A COREOGRAFIA (Docking Sequence)
+  // Envelopado em função async auto-executável para manter o escopo limpo
+  (async function startAnimation() {
+    // Simula o fim da splash screen
+    await esperar(2600);
 
-    // 5. SISTEMA DE ARRASTO (DRAG & SNAP)
-    let isDragging = false;
-    let startX, startY, shiftX, shiftY;
-    const DRAG_THRESHOLD = 3; 
+    // ETAPA 1: A Base "Atraca" (Dock)
+    pill.classList.add("docked");
 
-    // O Grip é a área segura para arrastar
-    const gripArea = pill.querySelector('.cw-grip-area');
+    await esperar(300); // A base se estabiliza
 
-    gripArea.onmousedown = (e) => {
-        e.preventDefault(); // Previne seleção de texto
-        
-        startX = e.clientX; 
-        startY = e.clientY;
-        
-        const rect = pill.getBoundingClientRect();
-        shiftX = e.clientX - rect.left;
-        shiftY = e.clientY - rect.top;
+    // ETAPA 2: Ferramentas Carregam (Cascata)
+    const items = pill.querySelectorAll(".cw-btn");
+    const seps = pill.querySelectorAll(".cw-sep");
 
-        // Prepara o elemento para arrasto
-        pill.classList.add('dragging');
-        pill.classList.remove('snapping', 'docked'); // Remove docked, mas o CSS .dragging segura a opacity
-        
-        // Fixa a posição atual via JS para não pular
-        pill.style.left = rect.left + 'px';
-        pill.style.top = rect.top + 'px';
-        pill.style.transform = 'none'; // Reseta transforms para controle total via top/left
-        
-        document.addEventListener('mousemove', onMouseMove);
-        document.addEventListener('mouseup', onMouseUp);
-    };
+    // Mostra divisores
+    seps.forEach((s) => s.classList.add("visible"));
 
-    function onMouseMove(e) {
-        if (!isDragging && Math.sqrt(Math.pow(e.clientX - startX, 2) + Math.pow(e.clientY - startY, 2)) > DRAG_THRESHOLD) {
-            isDragging = true;
-        }
-
-        if (isDragging) {
-            let newLeft = e.clientX - shiftX;
-            let newTop = e.clientY - shiftY;
-            
-            // Limites da Tela (IMPORTANTE: Não deixa sair)
-            const maxLeft = window.innerWidth - pill.offsetWidth - 10; // 10px de margem
-            const maxTop = window.innerHeight - pill.offsetHeight - 10;
-            
-            newLeft = Math.max(10, Math.min(newLeft, maxLeft));
-            newTop = Math.max(10, Math.min(newTop, maxTop));
-
-            pill.style.left = newLeft + 'px';
-            pill.style.top = newTop + 'px';
-        }
+    // Loop de "Pop" dos botões
+    for (let i = 0; i < items.length; i++) {
+      items[i].classList.add("popped");
+      await esperar(60); // O ritmo "tec-tec-tec-tec"
     }
 
-    function onMouseUp(e) {
-        if (isDragging) {
-            isDragging = false;
-            
-            pill.classList.remove('dragging');
-            pill.classList.add('snapping', 'docked'); // Devolve o docked ao soltar
+    // ETAPA 3: Confirmação (Luz Verde)
+    await esperar(200);
+    const d1 = pill.querySelector("#dot1");
+    const d2 = pill.querySelector("#dot2");
 
-            // Lógica do Ímã (Snapping Lateral)
-            const screenW = window.innerWidth;
-            const screenH = window.innerHeight;
-            const rect = pill.getBoundingClientRect();
-            const centerX = rect.left + (rect.width / 2);
+    d1.classList.add("system-check");
+    await esperar(100);
+    d2.classList.add("system-check");
 
-            let targetLeft;
-            
-            // Decide se vai para esquerda ou direita
-            if (centerX < screenW / 2) {
-                targetLeft = 20; // Margem esquerda
-                pill.classList.remove('side-right'); pill.classList.add('side-left');
-            } else {
-                targetLeft = screenW - rect.width - 20; // Margem direita
-                pill.classList.remove('side-left'); pill.classList.add('side-right');
-            }
+    await esperar(400);
+    d1.classList.remove("system-check");
+    d2.classList.remove("system-check");
+  })();
 
-            // Garante que não fique preso no topo ou rodapé
-            let targetTop = rect.top;
-            if (targetTop < 20) targetTop = 20;
-            if (targetTop > screenH - rect.height - 20) targetTop = screenH - rect.height - 20;
+  // 4. FÍSICA DE ARRASTO (Exatamente a do seu código)
+  let isDragging = false;
+  let startX, startY, initialLeft, initialTop;
+  const DRAG_THRESHOLD = 3;
 
-            pill.style.left = `${targetLeft}px`;
-            pill.style.top = `${targetTop}px`;
-            
-            // Limpa o transform após a animação de snap
-            setTimeout(() => pill.style.transform = '', 600);
-        }
-        
-        document.removeEventListener('mousemove', onMouseMove);
-        document.removeEventListener('mouseup', onMouseUp);
+  pill.onmousedown = (e) => {
+    // Se clicar num botão, não inicia drag imediatamente
+    if (e.target.closest("button")) return;
+
+    e.preventDefault();
+
+    startX = e.clientX;
+    startY = e.clientY;
+    const rect = pill.getBoundingClientRect();
+    initialLeft = rect.left;
+    initialTop = rect.top;
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  };
+
+  function onMouseMove(e) {
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    if (!isDragging && Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD) {
+      isDragging = true;
+      // Remove transições durante o arrasto para não travar
+      pill.style.transition = "none";
     }
+
+    if (isDragging) {
+      // Movimento 1:1
+      pill.style.left = `${initialLeft + dx}px`;
+      pill.style.top = `${initialTop + dy}px`;
+
+      // Remove âncoras antigas
+      pill.style.right = "auto";
+      pill.style.bottom = "auto";
+      pill.style.transform = "none"; // Garante que o translate não some
+    }
+  }
+
+  function onMouseUp(e) {
+    document.removeEventListener("mousemove", onMouseMove);
+    document.removeEventListener("mouseup", onMouseUp);
+
+    if (isDragging) {
+      isDragging = false;
+
+      // Restaura as transições para o efeito magnético
+      pill.style.transition =
+        "left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease";
+
+      const screenW = window.innerWidth;
+      const screenH = window.innerHeight;
+      const rect = pill.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+
+      // 1. Define o lado (Magnetismo)
+      let targetLeft;
+      if (centerX < screenW / 2) {
+        targetLeft = 24;
+        pill.classList.remove("side-right");
+        pill.classList.add("side-left");
+      } else {
+        targetLeft = screenW - rect.width - 24;
+        pill.classList.remove("side-left");
+        pill.classList.add("side-right");
+      }
+
+      // 2. Limites Verticais
+      let targetTop = rect.top;
+      if (targetTop < 24) targetTop = 24;
+      if (targetTop > screenH - rect.height - 24)
+        targetTop = screenH - rect.height - 24;
+
+      // 3. Aplica o Pulo
+      pill.style.left = `${targetLeft}px`;
+      pill.style.top = `${targetTop}px`;
+
+      // Limpa estilos inline desnecessários após o snap
+      setTimeout(() => {
+        // Mantemos left/top, mas podemos limpar transform se necessário
+      }, 600);
+    } else {
+      // Clique estático (Click nos botões é tratado pelos event listeners acima)
+      const btn = e.target.closest("button");
+      if (btn) {
+        btn.style.transform = "scale(0.9)";
+        setTimeout(() => (btn.style.transform = ""), 150);
+      }
+    }
+  }
 }
