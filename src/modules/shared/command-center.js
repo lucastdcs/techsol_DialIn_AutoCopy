@@ -109,6 +109,10 @@ export function initCommandCenter(actions) {
                 padding-bottom: 4px; /* Espaço extra embaixo */
                 width: 100%;
             }
+            .cw-grip-bar { width: 20px; height: 4px; background-color: ${COLORS.gripColor}; border-radius: 4px; transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); }
+            .cw-grip-area:hover .cw-grip-bar { background-color: #E8EAED; }
+            .cw-pill.dragging .cw-grip-bar { background-color: ${COLORS.gripActive}; width: 18px; }
+
 
             /* ESTA É A REGRA QUE FALTAVA: */
             .cw-grip svg {
@@ -155,7 +159,7 @@ export function initCommandCenter(actions) {
   pill.className = "cw-pill side-right";
   pill.innerHTML = `
         <div class="cw-grip" title="Arrastar">
-            ${ICONS.grip}
+            <div class="cw-grip-bar"></div>
         </div>
         <div class="cw-sep"></div>
         <button class="cw-btn notes" data-label="Case Notes">${ICONS.notes}</button>
@@ -213,8 +217,7 @@ export function initCommandCenter(actions) {
     // Como não temos os IDs dot1 e dot2 no HTML, essa parte precisa ser ajustada ou removida se não houver dots no novo ícone de grip
     // Se o novo ícone de grip for um SVG único, talvez a animação de luz verde deva ser aplicada a ele ou à borda da pílula.
     // Vou assumir que a animação de "System Ready" na borda da pílula (já definida no CSS) é o suficiente.
-    pill.classList.add("system-ready"); 
-    
+    pill.classList.add("system-ready");
   })();
 
   // 4. FÍSICA DE ARRASTO (Exatamente a do seu código)
