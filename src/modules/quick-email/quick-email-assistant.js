@@ -33,7 +33,8 @@ export function initQuickEmailAssistant() {
 
   const styleViewPage = {
       width: "50%", height: "100%", display: "flex", flexDirection: "column",
-      overflow: "hidden"
+      overflow: "hidden",
+      position: "relative"
   };
 
   const styleSearchInput = {
@@ -161,24 +162,59 @@ export function initQuickEmailAssistant() {
       const iconBack = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`;
       const iconSendWhite = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
       
-      detailContent.innerHTML = `
-        <div style="position: sticky; top: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid #f1f3f4; padding: 10px 16px; z-index: 10; display: flex; align-items: center; gap: 8px;">
-            <button id="csa-back-btn" style="background:none; border:none; cursor:pointer; display:flex; align-items:center; justify-content: center; color:#5f6368; width: 32px; height: 32px; margin-left:-8px; border-radius:50%; transition:background 0.2s;">${iconBack}</button>
-            <div style="font-size:14px; font-weight:600; color:#202124; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${email.name}</div>
-        </div>
-        <div style="padding: 20px;">
-            <div style="margin-bottom: 20px;">
-                <div style="font-size:11px; font-weight:700; color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Assunto</div>
-                <div style="font-size:13px; font-weight:500; color:#202124; padding: 12px; background: #F8F9FA; border-radius: 8px; border: 1px solid #eee;">${email.subject}</div>
+     detailContent.innerHTML = `
+        <div style="
+            position: sticky; top: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
+            border-bottom: 1px solid #f1f3f4; padding: 12px 20px; z-index: 10;
+            display: flex; align-items: center; gap: 8px;
+        ">
+            <button id="csa-back-btn" style="
+                background:none; border:none; cursor:pointer; display:flex; align-items:center; justify-content: center;
+                color:#5f6368; width: 32px; height: 32px; margin-left:-8px; border-radius:50%; transition:background 0.2s;
+            ">
+                ${iconBack}
+            </button>
+            <div style="font-size:15px; font-weight:600; color:#202124; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                ${email.name}
             </div>
+        </div>
+
+        <div style="padding: 20px 20px 0 20px;">
+            <div style="margin-bottom: 16px;">
+                <div style="font-size:11px; font-weight:700; color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Assunto</div>
+                <div style="font-size:13px; font-weight:500; color:#202124; padding: 10px; background: #F8F9FA; border-radius: 8px; border: 1px solid #eee;">
+                    ${email.subject}
+                </div>
+            </div>
+            
             <div>
                 <div style="font-size:11px; font-weight:700; color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Mensagem</div>
-                <div style="font-size:13px; line-height:1.6; color:#3c4043; white-space: pre-wrap; padding: 0 4px;">${email.body}</div>
+                <div style="
+                    font-size:13px; 
+                    line-height:1.35; /* <--- AJUSTE DE ESPAÇAMENTO (Mais compacto) */
+                    color:#3c4043; 
+                    white-space: pre-wrap; 
+                    padding: 0 4px;
+                ">${email.body}</div>
             </div>
-            <div style="height: 80px;"></div>
         </div>
-        <div style="position: absolute; bottom: 20px; left: 0; width: 100%; padding: 0 20px; box-sizing: border-box; pointer-events: none;">
-            <button id="csa-insert-btn" style="pointer-events: auto; width: 100%; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3); display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.1s, background 0.2s;">${iconSendWhite} Inserir Template</button>
+
+        <div style="
+            position: sticky; bottom: 0; left: 0; width: 100%; 
+            padding: 20px; box-sizing: border-box;
+            background: linear-gradient(to top, #ffffff 80%, rgba(255,255,255,0)); /* Fade out no topo */
+            margin-top: auto; /* Empurra para o fim se sobrar espaço */
+        ">
+            <button id="csa-insert-btn" style="
+                width: 100%; padding: 12px; 
+                background: #1a73e8; color: white; border: none; border-radius: 8px; 
+                font-weight: 600; font-size: 14px; cursor: pointer; 
+                box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+                display: flex; align-items: center; justify-content: center; gap: 8px;
+                transition: transform 0.1s, background 0.2s;
+            ">
+                ${iconSendWhite} Inserir Template
+            </button>
         </div>
       `;
       const backBtn = detailContent.querySelector('#csa-back-btn');
