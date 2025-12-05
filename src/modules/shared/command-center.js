@@ -185,16 +185,21 @@ export function initCommandCenter(actions) {
 
   const pill = document.createElement("div");
   pill.className = "cw-pill side-right";
-  pill.innerHTML = `
+ pill.innerHTML = `
         <div class="cw-grip" title="Arrastar">
             <div class="cw-grip-bar"></div>
         </div>
         <div class="cw-sep"></div>
-        <button class="cw-btn notes" data-label="Case Notes">${ICONS.notes}</button>
-        <button class="cw-btn email" data-label="Quick Email">${ICONS.email}</button>
+        
+        <button class="cw-btn notes" id="cw-btn-notes" data-label="Case Notes">${ICONS.notes}</button>
+        
+        <button class="cw-btn email" id="cw-btn-email" data-label="Quick Email">${ICONS.email}</button>
+        
         <button class="cw-btn script" id="cw-btn-script" data-label="Call Script">${ICONS.script}</button>
+        
         <div class="cw-sep"></div>
-        <button class="cw-btn links" data-label="Links">${ICONS.links}</button>
+        
+        <button class="cw-btn links" id="cw-btn-links" data-label="Links">${ICONS.links}</button>
     `;
   document.body.appendChild(pill);
 
