@@ -13,7 +13,7 @@ import {
 } from "../shared/utils.js";
 
 import { createStandardHeader } from "../shared/header-factory.js";
-import {toggleGenieAnimation } from "../shared/animations.js";
+import { toggleGenieAnimation } from "../shared/animations.js";
 
 import { csaChecklistData } from "./call-script-data.js";
 
@@ -24,29 +24,43 @@ export function initCallScriptAssistant() {
   const csaCompletedTasks = {};
   let csaCurrentLang = "PT";
   let csaCurrentType = "BAU";
+  let csaVisible = false;
 
   // --- POPUP (Com Animação) ---
   const csaPopup = document.createElement("div");
   csaPopup.id = "call-script-popup";
 
   // Estilos base + Estado Inicial Animação
-Object.assign(csaPopup.style, stylePopup, { 
-        right: "100px"
+  // Usamos a mesma lógica de "limpeza" que aplicamos nos outros módulos
+  Object.assign(csaPopup.style, stylePopup, { 
+        right: "100px",
+        width: "320px", // Largura um pouco menor para o script
+        display: "flex",
+        flexDirection: "column",
+        boxShadow: "none", 
+        opacity: "0",
+        pointerEvents: "none"
     });
+    
   // Refs para animação
   const animRefs = { popup: csaPopup, googleLine: null };
-  let csaVisible = false;
+
+  // --- FUNÇÃO DE TOGGLE (Definida antes do Header) ---
+  function toggleVisibility() {
+    csaVisible = !csaVisible;
+    // CORREÇÃO 1: Usa a variável correta csaPopup
+    // CORREÇÃO 2: Usa o ID correto do botão (Script)
+    toggleGenieAnimation(csaVisible, csaPopup, 'cw-btn-script');
+  }
 
   // 1. HEADER (Factory)
   const csaHeader = createStandardHeader(
     csaPopup,
     "Call Script Assistant",
     CURRENT_VERSION,
-    "Checklists guiados para início e fim de chamada em PT, ES e EN. Marque os itens conforme fala com o cliente.", // <--- NOVO
+    "Checklists guiados para início e fim de chamada em PT, ES e EN. Marque os itens conforme fala com o cliente.", 
     animRefs,
-    () => {
-      csaVisible = false;
-    }
+    () => toggleVisibility() // Usa a função local
   );
   csaPopup.appendChild(csaHeader);
 
@@ -138,18 +152,6 @@ Object.assign(csaPopup.style, stylePopup, {
     const g = parseInt(clean.substring(2, 4), 16);
     const b = parseInt(clean.substring(4, 6), 16);
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  }
-
-  function csaTogglePopup(show) {
-    if (show) {
-      csaPopup.style.opacity = "1";
-      csaPopup.style.pointerEvents = "auto";
-      csaPopup.style.transform = "scale(1)";
-    } else {
-      csaPopup.style.opacity = "0";
-      csaPopup.style.pointerEvents = "none";
-      csaPopup.style.transform = "scale(0.95)";
-    }
   }
 
   function csaSetLiStyle(li, isCompleted, color) {
@@ -249,11 +251,6 @@ Object.assign(csaPopup.style, stylePopup, {
 
       checkGroupCompletion(combinedKey, groupKey, groupDiv);
     });
-  }
-
-  function toggleVisibility() {
-    csaVisible = !csaVisible;
-    toggleGenieAnimation(csaVisible, popup, 'cw-btn-notes');
   }
 
   function setActiveType(type) {
