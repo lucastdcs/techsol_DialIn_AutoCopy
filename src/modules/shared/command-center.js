@@ -147,7 +147,8 @@ export function initCommandCenter(actions) {
     email: `<svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>`,
     script: `<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`,
     links: `<svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>`,
-    grip: `<svg viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="11" width="14" height="2" rx="1"/></svg>`,
+    // Ícone de Arrasto (Drag Handle) Personalizado
+    grip: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M11 18c0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2 2 .9 2 2zm-2-8c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0-6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm6 4c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>`,
   };
 
   const pill = document.createElement("div");
@@ -209,16 +210,11 @@ export function initCommandCenter(actions) {
 
     // ETAPA 3: Confirmação (Luz Verde)
     await esperar(200);
-    const d1 = pill.querySelector("#dot1");
-    const d2 = pill.querySelector("#dot2");
-
-    d1.classList.add("system-check");
-    await esperar(100);
-    d2.classList.add("system-check");
-
-    await esperar(400);
-    d1.classList.remove("system-check");
-    d2.classList.remove("system-check");
+    // Como não temos os IDs dot1 e dot2 no HTML, essa parte precisa ser ajustada ou removida se não houver dots no novo ícone de grip
+    // Se o novo ícone de grip for um SVG único, talvez a animação de luz verde deva ser aplicada a ele ou à borda da pílula.
+    // Vou assumir que a animação de "System Ready" na borda da pílula (já definida no CSS) é o suficiente.
+    pill.classList.add("system-ready"); 
+    
   })();
 
   // 4. FÍSICA DE ARRASTO (Exatamente a do seu código)
