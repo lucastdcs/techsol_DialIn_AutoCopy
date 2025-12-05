@@ -55,7 +55,9 @@ export function createStandardHeader(popupElement, titleText, versionText, helpD
     header.appendChild(gradientLine);
     
     // Salva ref se precisar animar
-    if (animationRefs) animationRefs.googleLine = gradientLine;
+ if (animRefs) {
+        animRefs.googleLine = gradientLine;
+    }
 
     // 3. Lado Esquerdo (Logo + Título)
     const leftDiv = document.createElement("div");
