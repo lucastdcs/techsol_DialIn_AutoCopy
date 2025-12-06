@@ -30,6 +30,17 @@ export function initCommandCenter(actions) {
     style.innerHTML = `
             @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@500&display=swap');
 
+            /* --- FOCUS OVERLAY (Fundo Escuro) --- */
+            .cw-focus-backdrop {
+                position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+                background: rgba(0, 0, 0, 0.4); /* Escurece a tela */
+                backdrop-filter: blur(4px); /* Desfoca o CRM */
+                z-index: 2147483646; /* Logo abaixo da Pílula */
+                opacity: 0; pointer-events: none;
+                transition: opacity 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+            }
+            .cw-focus-backdrop.active { opacity: 1; pointer-events: auto; }
+
             /* --- A BASE (O Vidro) --- */
             .cw-pill {
                 position: fixed; top: 30%; right: 24px;
@@ -264,6 +275,9 @@ export function initCommandCenter(actions) {
             <div class="cw-check" id="cw-success" style="display:none;">${ICONS.check}</div>
         </div>
     `;
+    const overlay = document.createElement('div');
+    overlay.className = 'cw-focus-backdrop';
+    document.body.appendChild(overlay);
   document.body.appendChild(pill);
 
   // Ligando os eventos de clique (A única diferença do seu script)
@@ -410,29 +424,44 @@ export function initCommandCenter(actions) {
   }
 }
 
+// Nova versão com controle manual de fim e tempo mínimo
 export function triggerProcessingAnimation() {
     const pill = document.querySelector('.cw-pill');
+    const overlay = document.querySelector('.cw-focus-backdrop'); // Pega o overlay
     const loader = document.getElementById('cw-loader');
     const success = document.getElementById('cw-success');
     
-    if (!pill || !loader || !success) return;
+    if (!pill || !loader || !success) return () => {}; // Retorna função vazia se der erro
 
-    // 1. Inicia Processamento
+    // 1. Inicia Estado "Pensando"
+    const startTime = Date.now(); // Marca a hora que começou
     pill.classList.add('processing');
+    if (overlay) overlay.classList.add('active'); // Escurece a tela
+    
     loader.style.display = 'flex';
     success.style.display = 'none';
 
-    // 2. Simula tempo (1.5s) -> Sucesso
-    setTimeout(() => {
-        loader.style.display = 'none';
-        success.style.display = 'block';
-        // Força reflow para animar o SVG
-        void success.offsetWidth; 
-        pill.classList.add('success');
-        
-        // 3. Volta ao normal (2s depois do sucesso)
+    // RETORNA A FUNÇÃO "PRONTO" PARA QUEM CHAMOU USAR
+    return function finish() {
+        // Calcula quanto tempo passou desde o início
+        const elapsed = Date.now() - startTime;
+        // Se foi muito rápido, força esperar até completar pelo menos 1.5s (dopamina)
+        const remainingTime = Math.max(0, 1500 - elapsed);
+
         setTimeout(() => {
-            pill.classList.remove('processing', 'success');
-        }, 2000);
-    }, 1500);
+            // 2. Mostra o Sucesso (Check Verde)
+            loader.style.display = 'none';
+            success.style.display = 'block';
+            void success.offsetWidth; // Reflow p/ animação
+            
+            pill.classList.add('success');
+            
+            // 3. Encerramento (Depois de mostrar o check por 2s)
+            setTimeout(() => {
+                pill.classList.remove('processing', 'success');
+                if (overlay) overlay.classList.remove('active'); // Clareia a tela
+            }, 2000);
+
+        }, remainingTime);
+    };
 }

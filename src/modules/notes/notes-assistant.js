@@ -1221,23 +1221,33 @@ export function initCaseNotesAssistant() {
   generateButton.onclick = async () => {
     const selectedSubStatusKey = subStatusSelect.value;
     const htmlOutput = generateOutputHtml();
+    
     if (!htmlOutput) {
       showToast(t("selecione_substatus"), { error: true });
       return;
     }
 
+    // 1. Copia e Fecha a Janela (Efeito Gênio)
     copyHtmlToClipboard(htmlOutput);
     toggleVisibility();
 
-    triggerProcessingAnimation();
+    // 2. INICIA A ANIMAÇÃO e guarda o gatilho de fim
+    // A tela escurece e a pílula começa a "pensar"
+    const finishLoading = triggerProcessingAnimation();
+
+    // 3. Processamento
     const campo = await ensureNoteCardIsOpen();
+    
     if (campo) {
       try {
         campo.focus();
+        
+        // Lógica de Limpeza do Campo
         const isEmpty =
           campo.innerHTML.trim() === "<p><br></p>" ||
           campo.innerHTML.trim() === "<br>" ||
           campo.innerText.trim() === "";
+
         if (isEmpty) {
           const range = document.createRange();
           range.selectNodeContents(campo);
@@ -1255,39 +1265,40 @@ export function initCaseNotesAssistant() {
           document.execCommand("insertHTML", false, "<br><br>");
         }
 
+        // Inserção
         document.execCommand("insertHTML", false, htmlOutput);
         triggerInputEvents(campo);
-        setTimeout(() => {
-          showToast(t("inserido_copiado"));
-        }, 600);
+        
+        // Toast de backup (opcional, já que teremos o check verde)
+        setTimeout(() => { showToast(t("inserido_copiado")); }, 600);
 
-        const emailEnabled =
-          typeof emailCheckbox !== "undefined" && emailCheckbox
-            ? emailCheckbox.checked
-            : true;
-        if (
-          selectedSubStatusKey &&
-          SUBSTATUS_SHORTCODES[selectedSubStatusKey] &&
-          emailEnabled
-        ) {
+        // Email Automático
+        const emailEnabled = typeof emailCheckbox !== "undefined" && emailCheckbox ? emailCheckbox.checked : true;
+        
+        if (selectedSubStatusKey && SUBSTATUS_SHORTCODES[selectedSubStatusKey] && emailEnabled) {
           const emailCode = SUBSTATUS_SHORTCODES[selectedSubStatusKey];
           setTimeout(() => {
             runEmailAutomation(emailCode);
           }, 1000);
         }
 
+        // 4. SUCESSO! (Transforma os pontos em Check Verde)
+        finishLoading();
+
+        // Reset do Formulário
         resetSteps(1.5);
         mainStatusSelect.value = "";
-        subStatusSelect.innerHTML = `<option value="">${t(
-          "select_substatus"
-        )}</option>`;
+        subStatusSelect.innerHTML = `<option value="">${t("select_substatus")}</option>`;
         subStatusSelect.disabled = true;
+
       } catch (err) {
         console.error(err);
         showToast("Erro ao inserir.", { error: true });
+        finishLoading(); // Destrava a animação mesmo com erro
       }
     } else {
       showToast(t("campo_nao_encontrado"), { error: true, duration: 4000 });
+      finishLoading(); // Destrava a animação se não achar campo
     }
   };
 
