@@ -9,6 +9,7 @@ import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from '../shared/animations.js';
 import { QUICK_EMAILS } from "./quick-email-data.js";
 import { runQuickEmail } from "../email/email-automation.js";
+import { triggerProcessingAnimation } from "../shared/command-center.js";
 
 export function initQuickEmailAssistant() {
   const CURRENT_VERSION = "v4.0.0"; // Versão Master-Detail Final
@@ -224,11 +225,34 @@ export function initQuickEmailAssistant() {
       const insertBtn = detailContent.querySelector('#csa-insert-btn');
       insertBtn.onmouseover = () => insertBtn.style.backgroundColor = "#174ea6";
       insertBtn.onmouseout = () => insertBtn.style.backgroundColor = "#1a73e8";
-      insertBtn.onclick = () => {
+     insertBtn.onclick = async () => {
+          // 1. Feedback visual no botão (clique)
           insertBtn.style.transform = "scale(0.96)";
-          runQuickEmail(email);
+          
+          // 2. Fecha a janela (Efeito Gênio) imediatamente
           toggleVisibility();
-          setTimeout(() => { insertBtn.style.transform = "scale(1)"; showListView(); }, 300);
+          
+          // 3. Inicia a Animação na Pílula (Feedback de "Trabalhando...")
+          const finishLoading = triggerProcessingAnimation();
+
+          try {
+              // 4. Executa a automação (Await garante que só avança quando acabar)
+              // (Lembre-se que já colocamos as travas de tempo dentro do runQuickEmail)
+              await runQuickEmail(email);
+              
+              // 5. Finaliza com Check Verde
+              finishLoading();
+
+          } catch (error) {
+              console.error(error);
+              finishLoading(); // Destrava mesmo com erro
+          }
+          
+          // 6. Reseta o estado interno do módulo para a próxima vez
+          setTimeout(() => {
+              insertBtn.style.transform = "scale(1)";
+              showListView();
+          }, 300);
       };
   }
 
