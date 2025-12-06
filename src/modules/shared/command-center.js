@@ -202,12 +202,40 @@ export function initCommandCenter(actions) {
             .cw-pill.side-right .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
             .cw-pill.side-left .cw-btn::after { left: 60px; transform-origin: left center; }
             .cw-pill.side-left .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
+
+            /* Esconde os botões normais quando processando */
+            .cw-pill.processing > :not(.cw-status-container) {
+                opacity: 0; pointer-events: none; transform: scale(0.8);
+            }
+
+            /* Container do Loader/Success */
+            .cw-status-container {
+                position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                display: flex; align-items: center; justify-content: center;
+                opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+                width: 100%; height: 100%;
+            }
+            .cw-pill.processing .cw-status-container { opacity: 1; }
+
+            /* Google Dots Loader */
+            .cw-dots { display: flex; gap: 4px; }
+            .cw-dots span { width: 6px; height: 6px; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
+            .cw-dots span:nth-child(1) { background: ${COLORS.blue}; animation-delay: -0.32s; }
+            .cw-dots span:nth-child(2) { background: ${COLORS.red}; animation-delay: -0.16s; }
+            .cw-dots span:nth-child(3) { background: ${COLORS.green}; }
+            
+            @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+            /* Success Check Animado */
+            .cw-check svg { width: 28px; height: 28px; stroke-dasharray: 50; stroke-dashoffset: 50; transition: stroke-dashoffset 0.5s ease 0.2s; }
+            .cw-pill.success .cw-check svg { stroke-dashoffset: 0; }
         `;
     document.head.appendChild(style);
   }
 
   // 2. CONSTRUÇÃO DO DOM
   const ICONS = {
+    check: `<svg viewBox="0 0 24 24" fill="none" stroke="#81C995" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
     notes: `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`,
     email: `<svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>`,
     script: `<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`,
@@ -230,6 +258,11 @@ export function initCommandCenter(actions) {
         <div class="cw-sep"></div>
         
         <button class="cw-btn links" id="cw-btn-links" data-label="Links">${ICONS.links}</button>
+
+        <div class="cw-status-container">
+            <div class="cw-dots" id="cw-loader"><span></span><span></span><span></span></div>
+            <div class="cw-check" id="cw-success" style="display:none;">${ICONS.check}</div>
+        </div>
     `;
   document.body.appendChild(pill);
 
@@ -375,4 +408,31 @@ export function initCommandCenter(actions) {
       }
     }
   }
+}
+
+export function triggerProcessingAnimation() {
+    const pill = document.querySelector('.cw-pill');
+    const loader = document.getElementById('cw-loader');
+    const success = document.getElementById('cw-success');
+    
+    if (!pill || !loader || !success) return;
+
+    // 1. Inicia Processamento
+    pill.classList.add('processing');
+    loader.style.display = 'flex';
+    success.style.display = 'none';
+
+    // 2. Simula tempo (1.5s) -> Sucesso
+    setTimeout(() => {
+        loader.style.display = 'none';
+        success.style.display = 'block';
+        // Força reflow para animar o SVG
+        void success.offsetWidth; 
+        pill.classList.add('success');
+        
+        // 3. Volta ao normal (2s depois do sucesso)
+        setTimeout(() => {
+            pill.classList.remove('processing', 'success');
+        }, 2000);
+    }, 1500);
 }
