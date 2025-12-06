@@ -1014,199 +1014,155 @@ export function initCaseNotesAssistant() {
     step2Title.style.display = "block";
     stepTasks.selectionElement.style.display = "block"; // Mostra a lista do componente
   };
-  function generateOutputHtml() {
-    const selectedSubStatusKey = subStatusSelect.value;
-    if (!selectedSubStatusKey) return null;
+function generateOutputHtml() {
+        const selectedSubStatusKey = subStatusSelect.value;
+        if (!selectedSubStatusKey) return null;
+        
+        const templateData = SUBSTATUS_TEMPLATES[selectedSubStatusKey];
+        let outputText = templateData.template.replace(/\n/g, "<br>");
+        const ulStyle = "style=\"margin-bottom: 12px; padding-left: 30px;\"";
 
-    const templateData = SUBSTATUS_TEMPLATES[selectedSubStatusKey];
-    let outputText = templateData.template.replace(/\n/g, "<br>");
-    const ulStyle = 'style="margin-bottom: 12px; padding-left: 30px;"';
+        let tagNames = [];
+        let screenshotsText = '';
 
-    let tagNames = [];
-    let screenshotsText = "";
+        // --- 1. CAPTURA DE TAGS (Via Task Manager) ---
+        // O método retorna objetos { value: 'id', closest: ... } que simulam o DOM antigo
+        const checkedBoxes = taskManager.getCheckedElements();
+        
+        if (checkedBoxes.length > 0) {
+            checkedBoxes.forEach(cb => {
+                const taskKey = cb.value;
+                const task = TASKS_DB[taskKey];
+                
+                // Pega o valor do stepper (o método .closest() do mock retorna o elemento com textContent)
+                // Nota: No command-center.js, implementamos um mock que retorna { querySelector: ... }
+                const countSpan = cb.closest().querySelector('.stepper-count'); 
+                const count = countSpan ? parseInt(countSpan.textContent) : 1;
 
-    // --- VARREDURA UNIVERSAL DE TASKS E PRINTS ---
-
-    // 1. Pegar nomes das Tags (Checkboxes marcados)
-    const allCheckboxes = document.querySelectorAll(".task-checkbox:checked");
-
-    if (allCheckboxes.length > 0) {
-      allCheckboxes.forEach((checkbox) => {
-        const taskKey = checkbox.value;
-        const task = TASKS_DB[taskKey];
-
-        // Tenta achar o contador visualmente próximo
-        // (Funciona tanto no TaskManager novo quanto na lista antiga)
-        const label = checkbox.closest("label");
-        const stepper = label ? label.querySelector(".stepper-count") : null;
-        const count = stepper ? parseInt(stepper.textContent) : 1;
-
-        if (count > 1) tagNames.push(`${task.name} (x${count})`);
-        else tagNames.push(task.name);
-      });
-    }
-
-    // 2. Pegar os Prints (Inputs visíveis na tela)
-    // Procura todos os inputs de "Nome da Instância" (ex: GTM #1)
-    // Eles têm IDs começando com "name-"
-    const nameInputs = Array.from(
-      document.querySelectorAll('input[id^="name-"]')
-    );
-
-    // Filtra apenas os que estão visíveis (offsetParent !== null)
-    // Isso evita pegar inputs de módulos ocultos ou antigos
-    const visibleNameInputs = nameInputs.filter((i) => i.offsetParent !== null);
-
-    if (visibleNameInputs.length > 0) {
-      visibleNameInputs.forEach((nameInput) => {
-        const customName = nameInput.value; // Ex: "GTM Installation #1"
-
-        // O card branco é o pai do wrapper do nome
-        // Estrutura: Card > NameWrapper > Input
-        const card = nameInput.closest("div").parentNode;
-
-        // Busca os inputs de link (screen-...) DENTRO desse card
-        const printInputs = card.querySelectorAll('input[id^="screen-"]');
-
-        let hasPrints = false;
-        let itemsHtml = "";
-
-        printInputs.forEach((printInput) => {
-          const linkValue = printInput.value.trim();
-          // O label é o irmão anterior
-          const labelEl = printInput.previousElementSibling;
-          const labelText = labelEl
-            ? labelEl.textContent.replace("📷 ", "").replace(":", "")
-            : "Print";
-
-          // Adiciona se tiver valor OU se for um campo mandatório que queremos mostrar vazio
-          // Vamos mostrar sempre a linha, com ou sem valor, para padronizar
-          const displayValue = linkValue ? ` ${linkValue}` : "";
-
-          itemsHtml += `<li>${labelText} -${displayValue}</li>`;
-          hasPrints = true;
-        });
-
-        if (hasPrints) {
-          screenshotsText += `<b>${customName}</b>`;
-          screenshotsText += `<ul ${ulStyle}>${itemsHtml}</ul>`;
+                if (count > 1) tagNames.push(`${task.name} (x${count})`);
+                else tagNames.push(task.name);
+            });
         }
-      });
+
+        // --- 2. CAPTURA DE PRINTS (Via Container do Módulo) ---
+        // Busca apenas dentro do container de screenshots do Task Manager
+        const screenshotsContainer = taskManager.screenshotsElement;
+        
+        if (screenshotsContainer) {
+            const nameInputs = Array.from(screenshotsContainer.querySelectorAll('input[id^="name-"]'));
+            
+            // Filtra visíveis (embora dentro do container já devam ser os corretos)
+            const visibleNameInputs = nameInputs.filter(i => i.offsetParent !== null);
+
+            if (visibleNameInputs.length > 0) {
+                visibleNameInputs.forEach(nameInput => {
+                    const customName = nameInput.value;
+                    const card = nameInput.closest('div').parentNode; 
+                    const printInputs = card.querySelectorAll('input[id^="screen-"]');
+                    
+                    let hasPrints = false;
+                    let itemsHtml = '';
+
+                    printInputs.forEach(printInput => {
+                        const labelEl = printInput.previousElementSibling;
+                        // Limpa ícones do label se houver
+                        const labelText = labelEl ? labelEl.textContent.replace('📷 ', '').replace(':', '') : 'Print';
+                        const val = printInput.value.trim();
+                        const displayVal = val ? ` ${val}` : '';
+                        
+                        itemsHtml += `<li>${labelText} -${displayVal}</li>`;
+                        hasPrints = true;
+                    });
+
+                    if (hasPrints) {
+                        screenshotsText += `<b>${customName}</b>`;
+                        screenshotsText += `<ul ${ulStyle}>${itemsHtml}</ul>`;
+                    }
+                });
+            }
+        }
+
+        // --- 3. INJEÇÃO NO TEMPLATE ---
+
+        // Tags
+        if (outputText.includes('{TAGS_IMPLEMENTED}')) {
+            outputText = outputText.replace(/{TAGS_IMPLEMENTED}/g, tagNames.join(', ') || 'N/A');
+        } else if (tagNames.length > 0) {
+            outputText += `<br><b>Tags:</b> ${tagNames.join(', ')}<br>`;
+        }
+
+        // Screenshots
+        if (outputText.includes('{SCREENSHOTS_LIST}')) {
+            outputText = outputText.replace(/{SCREENSHOTS_LIST}/g, screenshotsText ? `${screenshotsText}` : 'N/A');
+        } else if (screenshotsText !== '') {
+            outputText += `<br>${screenshotsText}`;
+        }
+
+        // --- 4. CAMPOS PADRÃO (Portugal/Consentimento) ---
+        if (currentLang === 'pt' && isPortugalCase) {
+            const consentValue = consentRadioSim.checked ? t('sim') : t('nao');
+            outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, `<br><b>${t('consentiu_gravacao')}</b> ${consentValue}<br><br>`);
+            outputText = outputText.replace(/{CASO_PORTUGAL}/g, `<br><b>${t('caso_portugal')}</b> ${t('sim')}<br>`);
+        } else if (currentLang === 'pt' && !isPortugalCase) {
+            outputText = outputText.replace(/{CASO_PORTUGAL}/g, `<br><b>${t('caso_portugal')}</b> ${t('nao')}<br>`);
+            outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, ''); 
+        } else {
+            outputText = outputText.replace(/{CASO_PORTUGAL}/g, '');
+            outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, '');
+        }
+
+        // --- 5. CAMPOS DINÂMICOS ---
+        const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
+        inputs.forEach(input => {
+            const fieldName = input.id.replace('field-', '');
+            const placeholderRegex = new RegExp(`{${fieldName}}`, 'g');
+            let value = input.value;
+            
+            // Lógica de Radio Buttons (Snippets)
+            if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey.startsWith('NI_') || selectedSubStatusKey.startsWith('IN_'))) {
+                const checkedRadio = snippetContainer.querySelector('input[type="radio"]:checked');
+                if (checkedRadio && scenarioSnippets[checkedRadio.id]) {
+                    value = scenarioSnippets[checkedRadio.id]['field-REASON_COMMENTS'];
+                }
+            }
+
+            // Formatação de Lista/Parágrafo
+            if (textareaListFields.includes(fieldName) && value.trim() !== '') {
+                const lines = value.split('\n').map(l => l.trim()).filter(l => l !== '' && l !== '•')
+                    .map(l => l.startsWith('• ') ? l.substring(2) : l)
+                    .map(l => `<li>${l}</li>`).join('');
+                value = lines ? `<ul ${ulStyle}>${lines}</ul>` : '';
+            } else if (textareaParagraphFields.includes(fieldName)) {
+                value = value.split('\n').filter(l => l.trim() !== '').map(l => `<p style="margin: 0 0 8px 0;">${l}</p>`).join('');
+            } else if (input.tagName === 'TEXTAREA') { 
+                value = value.replace(/\n/g, '<br>'); 
+            }
+            
+            // Limpeza Inteligente (Remove linhas vazias do template)
+            const textContent = value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
+            const isEmpty = textContent === '' || textContent === '•' || textContent.toLowerCase() === 'n/a';
+
+            if (isEmpty) {
+                // Tenta remover a linha inteira (Label + Placeholder)
+                const lineRegex = new RegExp(`(?:<br>\\s*)?<[b|strong]+>[^<]+:\\s*<\\/[b|strong]+>\\s*\\{${fieldName}\\}(?:<br>\\s*)?`, 'gi');
+                if (lineRegex.test(outputText)) outputText = outputText.replace(lineRegex, '');
+                else outputText = outputText.replace(placeholderRegex, '');
+            } else {
+                outputText = outputText.replace(placeholderRegex, value.replace(/\$/g, '$$$$'));
+            }
+        });
+        
+        // Limpeza Final de Placeholders
+        outputText = outputText.replace(/{([A-Z0-9_]+)}/g, ''); 
+        outputText = outputText.replace(/(<br>){3,}/g, '<br><br>');
+        
+        // Tag Support
+        if (typeof tagSupport !== 'undefined' && tagSupport.getOutput) {
+            outputText += tagSupport.getOutput();
+        }
+
+        return outputText;
     }
-
-    // --- INJEÇÃO NO HTML ---
-
-    // Tags Implemented
-    if (outputText.includes("{TAGS_IMPLEMENTED}")) {
-      outputText = outputText.replace(
-        /{TAGS_IMPLEMENTED}/g,
-        tagNames.join(", ") || "N/A"
-      );
-    } else if (tagNames.length > 0) {
-      // Se não tem placeholder, mas tem tags, adiciona no fim
-      outputText += `<br><b>Tags:</b> ${tagNames.join(", ")}<br>`;
-    }
-
-    // Screenshots List
-    if (outputText.includes("{SCREENSHOTS_LIST}")) {
-      outputText = outputText.replace(
-        /{SCREENSHOTS_LIST}/g,
-        screenshotsText ? `${screenshotsText}` : "N/A"
-      );
-    } else if (screenshotsText !== "") {
-      // Se não tem placeholder (caso Awaiting Inputs), FORÇA a adição no fim
-      outputText += `<br>${screenshotsText}`;
-    }
-
-    // --- CAMPOS PADRÃO E DINÂMICOS ---
-    // (Mantém a lógica de Portugal, Consentimento e Inputs Dinâmicos igual)
-    if (currentLang === "pt" && isPortugalCase) {
-      const consentValue = consentRadioSim.checked ? t("sim") : t("nao");
-      outputText = outputText.replace(
-        /{CONSENTIU_GRAVACAO}/g,
-        `<br><b>${t("consentiu_gravacao")}</b> ${consentValue}<br><br>`
-      );
-      outputText = outputText.replace(
-        /{CASO_PORTUGAL}/g,
-        `<br><b>${t("caso_portugal")}</b> ${t("sim")}<br>`
-      );
-    } else if (currentLang === "pt" && !isPortugalCase) {
-      outputText = outputText.replace(
-        /{CASO_PORTUGAL}/g,
-        `<br><b>${t("caso_portugal")}</b> ${t("nao")}<br>`
-      );
-      outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, "");
-    } else {
-      outputText = outputText.replace(/{CASO_PORTUGAL}/g, "");
-      outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, "");
-    }
-
-    // Processa inputs de texto e textarea
-    const dynamicInputs = document.querySelectorAll(
-      "#dynamic-form-fields-container input, #dynamic-form-fields-container textarea"
-    );
-    dynamicInputs.forEach((input) => {
-      const fieldName = input.id.replace("field-", "");
-      const placeholderRegex = new RegExp(`{${fieldName}}`, "g");
-      let value = input.value;
-
-      // ... (Lógica de formatação de listas/parágrafos mantém igual) ...
-      if (textareaListFields.includes(fieldName) && value.trim() !== "") {
-        const lines = value
-          .split("\n")
-          .map((l) => l.trim())
-          .filter((l) => l !== "" && l !== "•")
-          .map((l) => (l.startsWith("• ") ? l.substring(2) : l))
-          .map((l) => `<li>${l}</li>`)
-          .join("");
-        value = lines ? `<ul ${ulStyle}>${lines}</ul>` : "";
-      } else if (textareaParagraphFields.includes(fieldName)) {
-        value = value
-          .split("\n")
-          .filter((l) => l.trim() !== "")
-          .map((l) => `<p style="margin: 0 0 8px 0;">${l}</p>`)
-          .join("");
-      } else if (input.tagName === "TEXTAREA") {
-        value = value.replace(/\n/g, "<br>");
-      }
-
-      // Limpeza Inteligente
-      const textContent = value
-        .replace(/<[^>]*>/g, "")
-        .replace(/&nbsp;/g, " ")
-        .trim();
-      const isEmpty =
-        textContent === "" ||
-        textContent === "•" ||
-        textContent.toLowerCase() === "n/a";
-
-      if (isEmpty) {
-        const lineRegex = new RegExp(
-          `(?:<br>\\s*)?<[b|strong]+>[^<]+:\\s*<\\/[b|strong]+>\\s*\\{${fieldName}\\}(?:<br>\\s*)?`,
-          "gi"
-        );
-        if (lineRegex.test(outputText))
-          outputText = outputText.replace(lineRegex, "");
-        else outputText = outputText.replace(placeholderRegex, "");
-      } else {
-        outputText = outputText.replace(
-          placeholderRegex,
-          value.replace(/\$/g, "$$$$")
-        );
-      }
-    });
-
-    // Limpeza Final
-    outputText = outputText.replace(/{([A-Z0-9_]+)}/g, "");
-    outputText = outputText.replace(/(<br>){3,}/g, "<br><br>");
-
-    // Tag Support (Se existir)
-    if (typeof tagSupport !== "undefined" && tagSupport.getOutput) {
-      outputText += tagSupport.getOutput();
-    }
-
-    return outputText;
-  }
 
   copyButton.onclick = () => {
     const htmlOutput = generateOutputHtml();
