@@ -6,40 +6,50 @@ import { captureNameWithMagic, getSmartGreeting } from "./page-data.js";
 let highestZIndex = 10000;
 
 export function initGlobalStylesAndFont() {
-  if (
-    document.getElementById("google-font-poppins") &&
-    document.getElementById("techsol-global-styles")
-  ) {
-    return;
-  }
-  const link = document.createElement("link");
-  link.id = "google-font-poppins";
-  link.href =
-    "https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap";
-  link.rel = "stylesheet";
-  document.head.appendChild(link);
+    // Evita duplicidade
+    if (document.getElementById('google-font-roboto') && document.getElementById('techsol-global-styles')) {
+        return;
+    }
 
-  const style = document.createElement("style");
-  style.id = "techsol-global-styles";
-  style.textContent = `
+    // 1. Carrega a ROBOTO do Google Fonts (Backup seguro e profissional)
+    const link = document.createElement('link');
+    link.id = 'google-font-roboto';
+    link.href = 'https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+
+    // 2. Define a Família de Fontes Global
+    const style = document.createElement('style');
+    style.id = 'techsol-global-styles';
+    style.textContent = `
+        /* Rollbar e Ajustes Globais */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        ::-webkit-scrollbar-thumb { background: #dadce0; border-radius: 10px; } /* Cinza Google */
+        ::-webkit-scrollbar-thumb:hover { background: #bdc1c6; }
         
+        /* FONTE GOOGLE OFICIAL */
+        body, button, input, select, textarea, .cw-pill, .cw-module, .cw-btn::after {
+            font-family: 'Google Sans', 'Roboto', sans-serif !important;
+        }
+
         input:focus, textarea:focus, select:focus {
-            outline: none !important; border-color: #1a73e8 !important; box-shadow: 0 0 0 1px #1a73e8 !important;
+            outline: none !important;
+            border-color: #1a73e8 !important;
+            box-shadow: 0 0 0 1px #1a73e8 !important;
         }
         button:active { transform: translateY(1px); }
         textarea.bullet-textarea { padding-left: 10px; }
         
+        /* Classes utilitárias do Script Assistant */
         .csa-group-container { border-left: 3px solid transparent; padding-left: 5px; transition: all 0.3s ease-out; }
         .csa-group-title { transition: color 0.3s ease-out; }
         .csa-group-container.csa-group-completed { border-left: 3px solid #34a853; }
         .csa-group-container.csa-group-completed .csa-group-title { color: #34a853; }
         
         .csa-li { 
-            margin: 8px 0 !important; padding: 8px 10px; border-radius: 6px; border: 2px solid transparent;
+            margin: 8px 0 !important; 
+            padding: 8px 10px; border-radius: 6px; border: 2px solid transparent;
             transition: all 0.2s ease; font-size: 14px; cursor: pointer; user-select: none;
             background-color: #f8f9fa; color: #202124; line-height: 1.4;
             text-decoration: none; transform: scale(1);
@@ -47,7 +57,7 @@ export function initGlobalStylesAndFont() {
         .csa-li:hover { background-color: #f1f3f4; transform: scale(1.02); }
         .csa-li.csa-completed { text-decoration: line-through; color: #5f6368; transform: scale(0.98); }
     `;
-  document.head.appendChild(style);
+    document.head.appendChild(style);
 }
 
 export function showToast(message, opts = {}) {
@@ -62,7 +72,7 @@ export function showToast(message, opts = {}) {
     padding: "14px 24px",
     borderRadius: "4px",
     boxShadow: "0 2px 8px rgba(0,0,0,.3)",
-    fontFamily: "'Poppins', sans-serif",
+    fontFamily: "'Google Sans', 'Roboto'",
     fontSize: "14px",
     lineHeight: "20px",
     zIndex: "9999999",
@@ -163,7 +173,7 @@ export const styleFloatingButton = {
   border: "none",
   transition: "background-color 0.2s ease, transform 0.2s ease-out",
   transform: "scale(1)",
-  fontFamily: "'Poppins', sans-serif",
+  fontFamily: "'Google Sans', 'Roboto'",
 };
 
 export const stylePopup = {
@@ -180,7 +190,7 @@ export const stylePopup = {
   opacity: "0",
   transform: "scale(0.05)", // Estado inicial compatível com Genie
   pointerEvents: "none",
-  fontFamily: "'Poppins', sans-serif",
+  fontFamily: "'Google Sans', 'Roboto'",
 };
 export const stylePopupHeader = {
   display: "flex",
@@ -241,7 +251,7 @@ export const styleSelect = {
   backgroundPosition: "right 12px center",
   backgroundSize: "10px",
   transition: "border-color 0.2s ease, box-shadow 0.2s ease",
-  fontFamily: "'Poppins', sans-serif",
+  fontFamily: "'Google Sans', 'Roboto'",
 };
 export const styleButtonBase = {
   flex: "1 1 0",

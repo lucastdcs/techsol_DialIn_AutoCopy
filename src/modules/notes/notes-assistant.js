@@ -60,7 +60,7 @@ export function initCaseNotesAssistant() {
       fontSize: "14px",
       marginBottom: "12px",
       boxSizing: "border-box",
-      fontFamily: "'Poppins', sans-serif",
+      fontFamily: "'Google Sans', Roboto, sans-serif",
       transition: "border-color 0.2s ease, box-shadow 0.2s ease",
     },
     textarea: {
@@ -71,7 +71,7 @@ export function initCaseNotesAssistant() {
       fontSize: "14px",
       marginBottom: "12px",
       boxSizing: "border-box",
-      fontFamily: "'Poppins', sans-serif",
+      fontFamily: "'Google Sans', Roboto, sans-serif",
       transition: "border-color 0.2s ease, box-shadow 0.2s ease",
       height: "100px",
       resize: "vertical",

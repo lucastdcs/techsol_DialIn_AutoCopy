@@ -1,6 +1,6 @@
 // src/modules/notes/notes-styles.js
 
-export const styleInput = { width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #dadce0", fontSize: "14px", marginBottom: "12px", boxSizing: "border-box", fontFamily: "'Poppins', sans-serif", transition: "border-color 0.2s ease, box-shadow 0.2s ease" };
+export const styleInput = { width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #dadce0", fontSize: "14px", marginBottom: "12px", boxSizing: "border-box", fontFamily: "'Google Sans', 'Roboto'", transition: "border-color 0.2s ease, box-shadow 0.2s ease" };
 export const styleTextarea = { ...styleInput, height: "100px", resize: "vertical" };
 export const styleH3 = { fontSize: "14px", fontWeight: "600", color: "#202124", margin: "0 0 12px 0" };
 export const styleCheckboxLabel = { display: "flex", alignItems: "center", marginBottom: "10px", fontSize: "14px", fontWeight: "400", cursor: "pointer", padding: "8px", background: "#f8f9fa", borderRadius: "6px", transition: "background-color 0.2s ease, box-shadow 0.2s ease", userSelect: "none" };
@@ -87,7 +87,7 @@ export const styleLinkButton = {
     gap: '6px',
     margin: '12px auto 0 auto',  // Centralizado com margem no topo
     transition: 'background-color 0.2s ease',
-    fontFamily: "'Poppins', sans-serif"
+    fontFamily: "'Google Sans', 'Roboto'"
 };
 
 // Container da lista de tasks (o "Drawer")
