@@ -1272,20 +1272,27 @@ export function initCaseNotesAssistant() {
         // Toast de backup (opcional, já que teremos o check verde)
         setTimeout(() => { showToast(t("inserido_copiado")); }, 600);
 
-        // Email Automático
+// 1. Verifica se vai ter email
         const emailEnabled = typeof emailCheckbox !== "undefined" && emailCheckbox ? emailCheckbox.checked : true;
-        
-        if (selectedSubStatusKey && SUBSTATUS_SHORTCODES[selectedSubStatusKey] && emailEnabled) {
-          const emailCode = SUBSTATUS_SHORTCODES[selectedSubStatusKey];
-          setTimeout(() => {
-            runEmailAutomation(emailCode);
-          }, 1000);
+        const hasEmailToRun = selectedSubStatusKey && SUBSTATUS_SHORTCODES[selectedSubStatusKey] && emailEnabled;
+
+        if (hasEmailToRun) {
+            const emailCode = SUBSTATUS_SHORTCODES[selectedSubStatusKey];
+            
+            // MUDANÇA AQUI: Adicionamos o 'await'
+            // O código PARA aqui e espera o email terminar o trabalho dele
+            await runEmailAutomation(emailCode);
+            
+            // Opcional: Um pequeno respiro extra pós-email para não ser brusco
+            await new Promise(r => setTimeout(r, 500)); 
         }
 
-        // 4. SUCESSO! (Transforma os pontos em Check Verde)
+        // 2. FINALIZA A ANIMAÇÃO
+        // Se teve email, chega aqui depois de tudo pronto.
+        // Se não teve, chega aqui rápido (e o timer interno do command-center segura a onda para ficar bonito).
         finishLoading();
 
-        // Reset do Formulário
+        // 3. Limpeza Final
         resetSteps(1.5);
         mainStatusSelect.value = "";
         subStatusSelect.innerHTML = `<option value="">${t("select_substatus")}</option>`;
@@ -1294,13 +1301,10 @@ export function initCaseNotesAssistant() {
       } catch (err) {
         console.error(err);
         showToast("Erro ao inserir.", { error: true });
-        finishLoading(); // Destrava a animação mesmo com erro
+        finishLoading(); // Destrava mesmo com erro
       }
-    } else {
-      showToast(t("campo_nao_encontrado"), { error: true, duration: 4000 });
-      finishLoading(); // Destrava a animação se não achar campo
-    }
   };
+}
 
   function resetSteps(startFrom = 1.5) {
     if (startFrom <= 1.5) {
