@@ -184,7 +184,8 @@ Object.assign(popup.style, stylePopup, {
         width: "400px",
         boxShadow: "none", // A classe .open põe a sombra
         opacity: "0", 
-        pointerEvents: "none" 
+        pointerEvents: "none" ,
+        transition: "width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease, transform 0.3s ease"
     });
   popup.style.transition += ", width 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)";
 
@@ -203,35 +204,45 @@ Object.assign(popup.style, stylePopup, {
   // Botão Expandir no Header
   const headerContainer = header.lastElementChild;
   if (headerContainer) {
-    const expandBtn = document.createElement("div");
-    expandBtn.textContent = "↔";
-    expandBtn.classList.add("no-drag");
-    Object.assign(expandBtn.style, {
-      fontSize: "20px",
-      color: "#5f6368",
-      cursor: "pointer",
-      padding: "8px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      marginRight: "4px",
-      marginLeft: "auto",
-      borderRadius: "50%",
-      transition: "background 0.2s",
-    });
-    expandBtn.title = "Expandir/Contrair Janela";
-    expandBtn.onmouseover = () => (expandBtn.style.backgroundColor = "#e8eaed");
-    expandBtn.onmouseout = () =>
-      (expandBtn.style.backgroundColor = "transparent");
-    let isExpanded = false;
-    expandBtn.onclick = () => {
-      isExpanded = !isExpanded;
-      popup.style.width = isExpanded ? "700px" : "380px";
-    };
-    const closeBtn = headerContainer.lastElementChild;
-    if (closeBtn) headerContainer.insertBefore(expandBtn, closeBtn);
-    else headerContainer.appendChild(expandBtn);
-  }
+        const expandBtn = document.createElement("div");
+        // Ícone inicial
+        expandBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>`;
+        expandBtn.classList.add('no-drag'); 
+        
+        Object.assign(expandBtn.style, { 
+            fontSize: "20px", color: "#5f6368", cursor: "pointer", 
+            padding: "8px", display: "flex", alignItems: "center", justifyContent: "center", 
+            marginRight: "4px", marginLeft: "auto", borderRadius: "50%", 
+            transition: "background 0.2s, transform 0.3s ease" // Adicione transform aqui
+        });
+        
+        expandBtn.title = "Expandir/Contrair Janela"; 
+        expandBtn.onmouseover = () => expandBtn.style.backgroundColor = '#e8eaed';
+        expandBtn.onmouseout = () => expandBtn.style.backgroundColor = 'transparent';
+        
+        let isExpanded = false;
+        
+        expandBtn.onclick = () => { 
+            isExpanded = !isExpanded;
+            
+            // 1. Gira o ícone para dar feedback visual
+            expandBtn.style.transform = isExpanded ? "rotate(180deg)" : "rotate(0deg)";
+            
+            // 2. Aplica a largura com a nova transição suave
+            popup.style.width = isExpanded ? "700px" : "380px";
+            
+            // (Opcional) Muda o ícone dependendo do estado
+            if(isExpanded) {
+                 expandBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7"/></svg>`; // Contrair
+            } else {
+                 expandBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>`; // Expandir
+            }
+        };
+        
+        const closeBtn = headerContainer.lastElementChild;
+        if (closeBtn) headerContainer.insertBefore(expandBtn, closeBtn); 
+        else headerContainer.appendChild(expandBtn);
+    }
   popup.appendChild(header);
 
   const popupContent = document.createElement("div");
