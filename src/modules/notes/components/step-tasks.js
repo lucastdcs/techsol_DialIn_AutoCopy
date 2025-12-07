@@ -147,9 +147,11 @@ export function createStepTasksComponent(onUpdateCallback) {
                 background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
                 border-top: 1px solid ${DS.border};
                 padding: 12px 24px; display: flex; align-items: center; justify-content: space-between;
-                box-shadow: ${DS.shadowFooter};
-                transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-                z-index: 10;
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+                box-sizing: border-box;
+                transform: translateY(100%); 
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+    z-index: 10;
             }
             .cw-smart-footer.visible { transform: translateY(0); }
             
@@ -201,6 +203,9 @@ export function createStepTasksComponent(onUpdateCallback) {
   // Layout Principal
   container.innerHTML = `
         <div class="cw-section-title">Acesso Rápido</div>
+        <div class="cw-section-subtitle" style="padding: 0 24px 10px 24px; font-size: 13px; color: #5F6368; font-weight: 400;">
+    As tarefas mais **frequentes** para acelerar seu atendimento.
+</div>
         <div class="cw-hero-grid"></div>
         <div class="cw-list-area">
             <div class="cw-search-box">
