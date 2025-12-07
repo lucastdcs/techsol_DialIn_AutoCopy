@@ -23,20 +23,20 @@ const DS = {
 };
 
 const ICONS = {
-    // Google Ads (O triângulo oficial)
+    // Google Ads (Triângulo Novo)
     ads: `<svg viewBox="0 0 192 192"><path fill="#F9AB00" d="M38.85 144.47l-26.27-26.28a12.72 12.72 0 0 1 0-17.92L106 5.86a12.72 12.72 0 0 1 17.92 0l26.28 26.27a12.72 12.72 0 0 1 0 17.92l-93.43 94.42a12.73 12.73 0 0 1-17.92 0z"/><path fill="#1A73E8" d="M165.73 100.27l-26.28-26.28a12.72 12.72 0 0 0-17.92 0L28.1 167.42a12.72 12.72 0 0 0 0 17.92l26.28 26.28a12.72 12.72 0 0 0 17.92 0l93.43-93.43a12.72 12.72 0 0 0 0-17.92z"/><path fill="#34A853" d="M38.85 144.47a12.63 12.63 0 0 1 0-17.92l54.58-54.58a12.72 12.72 0 0 1 17.92 0l-54.58 54.58 37.07 37.07a12.72 12.72 0 0 1 0 17.92l-37.07-37.07z"/></svg>`,
     
-    // GA4 (O gráfico de barras laranja)
+    // GA4 (Gráfico Laranja)
     ga4: `<svg viewBox="0 0 192 192"><path fill="#F9AB00" d="M22 138v28h28v-28H22z"/><path fill="#E37400" d="M66 84v82h28V84H66z"/><path fill="#E37400" d="M110 22v144h28V22h-28z"/></svg>`,
     
-    // GTM (A Tag azul com engrenagem)
+    // GTM (Tag Azul)
     gtm: `<svg viewBox="0 0 192 192"><path fill="#4285F4" d="M40 32h112c4.42 0 8 3.58 8 8v112c0 4.42-3.58 8-8 8H40c-4.42 0-8-3.58-8-8V40c0-4.42 3.58-8 8-8z"/><path fill="#8AB4F8" d="M136 76h-20v-20h-40v20H56v40h20v20h40v-20h20V76z"/><circle cx="96" cy="96" r="24" fill="#1967D2"/></svg>`,
     
-    // Merchant Center (A etiqueta de shopping)
+    // Merchant (Shopping Bag)
     gmc: `<svg viewBox="0 0 192 192"><path fill="#4285F4" d="M22 66l18-36h112l18 36v100H22V66z"/><path fill="#1967D2" d="M152 30H40L22 66h148l-18-36z"/><path fill="#8AB4F8" d="M40 30h112v36H40z"/></svg>`,
     
-    // Default (Cinza)
-    default: `<svg viewBox="0 0 24 24"><path fill="#5F6368" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>`
+    // Default
+    default: `<svg viewBox="0 0 24 24"><path fill="#5F6368" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>`
 };
 
 export function createStepTasksComponent(onUpdateCallback) {
@@ -201,90 +201,99 @@ export function createStepTasksComponent(onUpdateCallback) {
 
             @keyframes cwSlideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-/* --- SCREENSHOTS: BRAND IMMERSION --- */
+/* --- SCREENSHOTS: FINE & ELEGANT --- */
             
             .cw-screens-container {
-                display: flex; flex-direction: column; gap: 24px;
+                display: flex; flex-direction: column; gap: 12px; /* Gap menor = mais coeso */
                 padding: 4px 4px 40px 4px;
             }
 
-            /* CARD BASE */
+            /* CARTÃO FINO */
             .cw-screen-card {
                 background: #FFFFFF;
-                border: 1px solid #E0E0E0;
-                border-radius: 16px;
-                padding: 24px;
-                position: relative; overflow: hidden;
-                transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-                /* O segredo do "Fill": um pseudo-elemento invisível que aparece no foco */
-            }
-            
-            .cw-screen-card::before {
-                content: ''; position: absolute; inset: 0;
-                background: var(--brand-bg, #F8F9FA); /* Cor dinâmica */
-                opacity: 0; transition: opacity 0.3s ease;
-                z-index: 0; pointer-events: none;
+                border-radius: 12px; /* Radius menor para ser mais "técnico" */
+                /* Borda cinza muito sutil */
+                border: 1px solid #E5E7EB; 
+                /* Faixa lateral de identidade (Cor injetada via JS) */
+                border-left: 4px solid var(--brand-color);
+                
+                padding: 16px 20px; /* Padding reduzido, mais compacto */
+                position: relative;
+                transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+                
+                /* Sombra quase invisível, só para separar do fundo */
+                box-shadow: 0 1px 2px rgba(0,0,0,0.02);
             }
 
-            /* EFEITO DE FOCO (Imersão) */
+            /* Foco no Cartão (Elevação sutil) */
             .cw-screen-card:focus-within {
-                border-color: var(--brand-color, #DADCE0);
-                transform: scale(1.01) translateY(-2px);
-                box-shadow: 0 12px 32px -8px var(--brand-shadow, rgba(0,0,0,0.1));
+                border-color: #E5E7EB; /* Mantém cinza, o destaque é a esquerda */
+                border-left-width: 6px; /* A faixa engorda levemente */
+                background: #FFFFFF;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* Sombra difusa Apple */
+                transform: translateX(2px); /* Micro-movimento lateral */
             }
-            .cw-screen-card:focus-within::before { opacity: 0.3; } /* Mostra o fundo colorido */
 
-            /* HEADER */
+            /* HEADER (Compacto e Alinhado) */
             .cw-card-header {
-                position: relative; z-index: 1; /* Acima do fundo */
-                display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
+                display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
             }
             
-            /* ÍCONE GRANDE E BONITO */
+            /* ÍCONE (Sem fundo, apenas o logo) */
             .cw-card-icon {
-                width: 44px; height: 44px; border-radius: 12px;
-                background: #FFFFFF; /* Fundo branco para destacar o logo colorido */
-                border: 1px solid rgba(0,0,0,0.05);
+                width: 24px; height: 24px; /* Pequeno e discreto */
                 display: flex; align-items: center; justify-content: center;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+                flex-shrink: 0;
             }
-            .cw-card-icon svg { width: 28px; height: 28px; }
+            .cw-card-icon svg { width: 100%; height: 100%; } /* Ocupa tudo */
 
+            /* Título Editável (Parece texto normal) */
             .cw-card-title-input {
-                font-family: ${DS.font}; font-size: 16px; font-weight: 600; color: ${DS.textMain};
+                font-family: ${DS.font}; font-size: 14px; font-weight: 600; color: ${DS.textMain};
                 border: none; background: transparent; width: 100%; outline: none;
-                position: relative; z-index: 1;
+                padding: 0; margin: 0;
             }
 
-            /* INPUTS */
-            .cw-input-group { margin-bottom: 16px; position: relative; z-index: 1; }
+            /* INPUTS (Minimalistas) */
+            .cw-input-group { margin-bottom: 12px; position: relative; }
+            .cw-input-group:last-child { margin-bottom: 0; }
 
             .cw-input-label {
-                display: block; font-size: 11px; font-weight: 700; color: ${DS.textSub};
-                margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.8px;
+                display: block; font-size: 10px; font-weight: 700; color: ${DS.textSub};
+                margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;
             }
 
             .cw-input-field {
-                width: 100%; box-sizing: border-box; padding: 14px 16px;
-                border-radius: 12px; border: 1px solid #DADCE0;
-                background: #FFFFFF; font-size: 14px; color: #3C4043;
+                width: 100%; box-sizing: border-box;
+                padding: 10px 12px; /* Compacto */
+                border-radius: 8px;
+                border: 1px solid #E5E7EB; /* Borda bem clara */
+                background: #F9FAFB; /* Fundo cinza gelo */
+                font-size: 13px; color: #374151;
                 transition: all 0.2s ease; outline: none;
             }
 
-            /* Foco no Input: Usa a cor da marca */
+            /* Foco no Input (Branco e Borda da Marca) */
             .cw-input-field:focus {
-                border-color: var(--brand-color);
-                box-shadow: 0 0 0 3px var(--brand-bg); /* Anel de foco na cor da marca */
+                background: #FFFFFF;
+                border-color: var(--brand-color); /* Usa a cor do Ads/GA4 */
+                box-shadow: 0 0 0 2px var(--brand-bg); /* Anel suave da marca */
             }
             
+            /* Sucesso (Dopamina Sutil) */
             .cw-input-field.filled {
-                background-color: #E6F4EA; border-color: transparent; color: #137333; padding-right: 40px;
+                background-color: #F0FDF4; /* Verde muito claro */
+                border-color: #DCFCE7;
+                color: #166534;
+                padding-right: 36px;
             }
 
-            /* Check de Sucesso */
+            /* Check Icon */
             .cw-input-check {
-                position: absolute; right: 14px; bottom: 12px; color: #188038;
-                opacity: 0; transform: scale(0.5); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                position: absolute; right: 10px; bottom: 10px; 
+                color: #16A34A; width: 16px; height: 16px;
+                opacity: 0; transform: scale(0.5); 
+                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
             .cw-input-field.filled + .cw-input-check { opacity: 1; transform: scale(1); }
         `;
@@ -546,7 +555,7 @@ export function createStepTasksComponent(onUpdateCallback) {
     // Screenshots Logic (Adaptado)
 // --- LÓGICA DE RENDERIZAÇÃO DOS PRINTS ---
     // --- LÓGICA DE RENDERIZAÇÃO DOS PRINTS (Com Classes) ---
-    function renderScreenshots() {
+   function renderScreenshots() {
         screenList.innerHTML = "";
         const keys = Object.keys(selection);
         let hasAny = false;
@@ -560,8 +569,8 @@ export function createStepTasksComponent(onUpdateCallback) {
         keys.forEach(key => {
             const task = selection[key].data;
             const count = selection[key].count;
-            const brand = selection[key].brand; // Pega o objeto da marca (já tem cor e bg)
-            const prints = task.screenshots ? (task.screenshots[type] || []) : ['Link da Evidência'];
+            const brand = selection[key].brand;
+            const prints = task.screenshots ? (task.screenshots[type] || []) : ['Evidência'];
 
             if (prints.length > 0) {
                 hasAny = true;
@@ -570,20 +579,18 @@ export function createStepTasksComponent(onUpdateCallback) {
                     const card = document.createElement("div");
                     card.className = "cw-screen-card";
                     
-                    // --- AQUI ESTÁ O SEGREDO DO FILL ---
-                    // Injetamos as cores da marca como variáveis CSS locais neste cartão
+                    // INJEÇÃO DE VARIÁVEIS DE COR
+                    // A borda esquerda e o foco do input usarão isso
                     card.style.setProperty('--brand-color', brand.color);
-                    card.style.setProperty('--brand-bg', brand.bg); // Cor de fundo suave (ex: azul claro)
-                    // Cria uma sombra colorida baseada na cor da marca
-                    card.style.setProperty('--brand-shadow', brand.color + '40'); // 25% opacidade
+                    card.style.setProperty('--brand-bg', brand.bg); // Para o anel de foco
                     
-                    // 1. Header com Ícone Oficial
+                    // HEADER
                     const header = document.createElement("div");
                     header.className = "cw-card-header";
                     
+                    // Ícone (Puro, sem fundo)
                     const iconBox = document.createElement("div");
                     iconBox.className = "cw-card-icon";
-                    // O ícone agora é o SVG multicolorido oficial
                     iconBox.innerHTML = ICONS[brand.icon] || ICONS.default;
                     
                     const nameInput = document.createElement("input"); 
@@ -595,7 +602,7 @@ export function createStepTasksComponent(onUpdateCallback) {
                     header.appendChild(nameInput);
                     card.appendChild(header);
 
-                    // 2. Inputs
+                    // INPUTS
                     prints.forEach((req, idx) => {
                         const group = document.createElement("div");
                         group.className = "cw-input-group";
@@ -607,18 +614,18 @@ export function createStepTasksComponent(onUpdateCallback) {
                         const pInput = document.createElement("input");
                         pInput.className = "cw-input-field";
                         pInput.id = `screen-${key}-${i}-${idx}`; 
-                        pInput.placeholder = "Cole o link aqui...";
+                        pInput.placeholder = "Cole o link...";
                         pInput.setAttribute("autocomplete", "off");
 
-                        // Feedback Visual ao digitar
+                        const check = document.createElement("div");
+                        check.className = "cw-input-check";
+                        check.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:100%;height:100%"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+
+                        // Lógica de Sucesso
                         pInput.addEventListener('input', () => {
                             if(pInput.value.trim().length > 5) pInput.classList.add('filled');
                             else pInput.classList.remove('filled');
                         });
-
-                        const check = document.createElement("div");
-                        check.className = "cw-input-check";
-                        check.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
                         group.appendChild(label);
                         group.appendChild(pInput);
