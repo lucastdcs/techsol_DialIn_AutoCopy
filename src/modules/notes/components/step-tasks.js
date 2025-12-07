@@ -547,88 +547,87 @@ export function createStepTasksComponent(onUpdateCallback) {
 
     // Screenshots Logic (Adaptado)
 // --- LÓGICA DE RENDERIZAÇÃO DOS PRINTS ---
+    // --- LÓGICA DE RENDERIZAÇÃO DOS PRINTS (Com Classes) ---
     function renderScreenshots() {
-        // Limpa o container
         screenList.innerHTML = "";
-        
-        // Verifica se tem algo selecionado
         const keys = Object.keys(selection);
         let hasAny = false;
         const type = 'implementation'; // Default
 
-        // 1. Criação dos Cartões
+        if (keys.length === 0) {
+            screenList.innerHTML = `<div class="cw-empty-state">Selecione tarefas para gerar os campos de evidência.</div>`;
+            return;
+        }
+
         keys.forEach(key => {
             const task = selection[key].data;
             const count = selection[key].count;
-            // Pega prints do DB ou usa um padrão genérico se não tiver
             const prints = task.screenshots ? (task.screenshots[type] || []) : ['Evidência da Implementação'];
 
             if (prints.length > 0) {
                 hasAny = true;
                 
-                // Para cada instância (x1, x2...)
+                // Para cada instância (1, 2...)
                 for(let i=1; i<=count; i++) {
                     
-                    // Container do Cartão
+                    // 1. O Cartão (Card)
                     const card = document.createElement("div");
                     card.className = "cw-screen-card";
                     
-                    // --- HEADER DO CARTÃO (Título Editável) ---
+                    // 2. Header do Cartão
                     const header = document.createElement("div");
                     header.className = "cw-card-header";
                     
-                    // Input de Nome (Escondido como texto)
-                    const nameWrapper = document.createElement("div");
-                    nameWrapper.style.cssText = "flex: 1; display: flex; align-items: center;";
-                    
+                    // Input de Nome (ID name-key-i é vital)
                     const nameInput = document.createElement("input"); 
                     nameInput.className = "cw-card-title-input";
-                    nameInput.id = `name-${key}-${i}`; // ID Crucial para leitura
+                    nameInput.id = `name-${key}-${i}`; 
                     nameInput.value = `${task.name}${count > 1 ? ' #'+i : ''}`;
                     
+                    // Ícone de Edição (Decorativo)
                     const editIcon = document.createElement("span");
-                    editIcon.className = "cw-edit-icon";
-                    editIcon.textContent = "✎";
+                    editIcon.innerHTML = "✎";
+                    editIcon.style.cssText = "font-size:12px; color:#DADCE0; cursor:pointer; margin-left:8px";
                     editIcon.onclick = () => nameInput.focus();
 
-                    nameWrapper.appendChild(nameInput);
-                    nameWrapper.appendChild(editIcon);
-                    header.appendChild(nameWrapper);
+                    const headerWrap = document.createElement("div");
+                    headerWrap.style.cssText = "display:flex; align-items:center; width:100%";
+                    headerWrap.appendChild(nameInput);
+                    headerWrap.appendChild(editIcon);
+                    
+                    header.appendChild(headerWrap);
                     card.appendChild(header);
 
-                    // --- INPUTS DOS PRINTS ---
+                    // 3. Inputs dos Prints
                     prints.forEach((req, idx) => {
                         const group = document.createElement("div");
                         group.className = "cw-input-group";
 
                         const label = document.createElement("label");
                         label.className = "cw-input-label";
-                        // Remove emojis antigos se houver no DB para ficar clean
-                        label.textContent = req.replace('📷', '').trim();
+                        // Limpa emojis antigos do label se tiver
+                        label.textContent = req.replace(/📷|:|•/g, '').trim();
 
                         const pInput = document.createElement("input");
                         pInput.className = "cw-input-field";
-                        pInput.id = `screen-${key}-${i}-${idx}`; // ID Crucial
-                        pInput.placeholder = "Cole o link ou descreva...";
+                        pInput.id = `screen-${key}-${i}-${idx}`; // ID vital
+                        pInput.placeholder = "Cole o link aqui...";
                         pInput.setAttribute("autocomplete", "off");
 
-                        // Ícone de Check (Inicialmente oculto)
-                        const checkIcon = document.createElement("div");
-                        checkIcon.className = "cw-input-check";
-                        checkIcon.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                        // Check Icon
+                        const check = document.createElement("div");
+                        check.className = "cw-input-check";
+                        check.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:100%;height:100%"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
-                        // --- A MÁGICA DOPAMINÉRGICA ---
+                        // Lógica Visual (Verde ao preencher)
                         pInput.addEventListener('input', () => {
-                            if(pInput.value.trim().length > 5) {
-                                pInput.classList.add('filled'); // Fica verde
-                            } else {
-                                pInput.classList.remove('filled'); // Volta ao normal
-                            }
+                            if(pInput.value.trim().length > 5) pInput.classList.add('filled');
+                            else pInput.classList.remove('filled');
                         });
 
                         group.appendChild(label);
                         group.appendChild(pInput);
-                        group.appendChild(checkIcon);
+                        group.appendChild(check);
                         card.appendChild(group);
                     });
 
@@ -636,20 +635,12 @@ export function createStepTasksComponent(onUpdateCallback) {
                 }
             }
         });
-
-        // 2. Empty State (Se nada selecionado)
-        if (!hasAny) {
-            screenList.innerHTML = `
-                <div class="cw-empty-state">
-                    <div class="cw-empty-icon">📂</div>
-                    <div class="cw-empty-text">Selecione tasks no passo anterior para gerar os campos.</div>
-                </div>
-            `;
+        
+        if(!hasAny) {
+             screenList.innerHTML = `<div class="cw-empty-state">Esta tarefa não requer screenshots.</div>`;
         }
         
-        // Garante que o container esteja visível
-        // (Nota: agora usamos display block/none no screenList ou pai, dependendo de como você integrou no CSS)
-        // screenshotsContainer.style.display = "block"; 
+        screenshotsContainer.style.display = hasAny ? "block" : "none";
     }
 
     return {
