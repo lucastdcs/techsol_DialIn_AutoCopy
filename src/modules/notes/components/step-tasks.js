@@ -192,103 +192,111 @@ export function createStepTasksComponent(onUpdateCallback) {
 
             @keyframes cwSlideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-            /* --- SCREENSHOTS SECTION (Step 3) --- */
-            
-            /* Container Geral */
-            .cw-screens-container {
-                padding: 10px 4px 40px 4px; /* Espaço para scroll */
-                display: flex; flex-direction: column; gap: 16px;
-            }
+/* ... dentro de style.innerHTML ... */
 
-            /* O Cartão da Task */
-            .cw-screen-card {
-                background: #FFFFFF;
-                border-radius: 16px;
-                border: 1px solid rgba(0,0,0,0.06);
-                box-shadow: 0 4px 20px rgba(0,0,0,0.04); /* Sombra suave Apple */
-                padding: 20px;
-                transition: all 0.3s ease;
-                position: relative; overflow: hidden;
-            }
-            
-            /* Efeito de Foco no Cartão */
-            .cw-screen-card:focus-within {
-                border-color: ${DS.brands.ads.color}; /* Azul Google */
-                box-shadow: 0 8px 30px rgba(26, 115, 232, 0.12);
-                transform: translateY(-2px);
-            }
+/* --- SCREENSHOTS: THE LIQUID EXPERIENCE --- */
 
-            /* Header do Cartão */
-            .cw-card-header {
-                display: flex; align-items: center; justify-content: space-between;
-                margin-bottom: 16px; padding-bottom: 12px;
-                border-bottom: 1px dashed #F1F3F4;
-            }
-            
-            /* Input de Título (Editável) */
-            .cw-card-title-input {
-                font-family: ${DS.font}; font-size: 14px; font-weight: 600;
-                color: ${DS.textMain}; border: none; background: transparent;
-                width: 100%; outline: none; transition: color 0.2s;
-            }
-            .cw-card-title-input:focus { color: ${DS.brands.ads.color}; }
-            .cw-edit-icon { font-size: 12px; color: #DADCE0; margin-left: 8px; cursor: text; }
+.cw-screens-container {
+    display: flex; flex-direction: column; gap: 20px;
+    padding: 4px 4px 40px 4px; /* Respiro para sombras */
+}
 
-            /* Grupo de Input (Link) */
-            .cw-input-group { margin-bottom: 12px; position: relative; }
-            .cw-input-group:last-child { margin-bottom: 0; }
+/* O CARTÃO (Physical Material) */
+.cw-screen-card {
+    background: #FFFFFF;
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.08);
+    /* Sombra suave e difusa (Apple style) */
+    box-shadow: 0 4px 24px rgba(0,0,0,0.03);
+    padding: 24px;
+    position: relative; overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); /* Elastic Spring */
+}
 
-            .cw-input-label {
-                display: block; font-size: 11px; font-weight: 600; color: ${DS.textSub};
-                margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;
-            }
+/* Interação com o Cartão */
+.cw-screen-card:hover { transform: translateY(-2px); }
+.cw-screen-card:focus-within {
+    border-color: rgba(26, 115, 232, 0.4);
+    box-shadow: 0 12px 40px rgba(26, 115, 232, 0.15); /* Glow Azul Google */
+    transform: translateY(-4px) scale(1.01);
+}
 
-            /* O Campo de Input Moderno */
-            .cw-input-field {
-                width: 100%; box-sizing: border-box;
-                padding: 10px 12px 10px 12px;
-                border-radius: 8px;
-                border: 1px solid #E0E0E0;
-                background: #FAFAFA;
-                font-size: 13px; color: #3C4043;
-                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-                outline: none;
-            }
+/* Header Limpo */
+.cw-card-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
+}
+.cw-card-icon {
+    width: 32px; height: 32px; border-radius: 10px; background: #F1F3F4;
+    display: flex; align-items: center; justify-content: center; color: #5F6368;
+}
+.cw-card-title-input {
+    font-family: ${DS.font}; font-size: 15px; font-weight: 600; color: ${DS.textMain};
+    border: none; background: transparent; width: 100%; outline: none;
+}
 
-            /* Estados do Input */
-            .cw-input-field:focus {
-                background: #FFFFFF;
-                border-color: ${DS.brands.ads.color};
-                box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
-            }
-            
-            /* Estado Preenchido (Sucesso) */
-            .cw-input-field.filled {
-                background: #E6F4EA; /* Verde Google muito claro */
-                border-color: transparent;
-                color: #137333;
-                padding-right: 30px; /* Espaço pro check */
-            }
+/* GRUPO DE INPUTS */
+.cw-input-group { margin-bottom: 16px; position: relative; }
 
-            /* Ícone de Check Animado (Aparece quando cola) */
-            .cw-input-check {
-                position: absolute; right: 10px; bottom: 10px;
-                color: #188038; font-size: 16px;
-                opacity: 0; transform: scale(0.5);
-                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); /* Pop */
-                pointer-events: none;
-            }
-            .cw-input-field.filled + .cw-input-check {
-                opacity: 1; transform: scale(1);
-            }
-            
-            /* Empty State (Bonito) */
-            .cw-empty-state {
-                display: flex; flex-direction: column; align-items: center; justify-content: center;
-                height: 100%; color: #9AA0A6; gap: 12px; margin-top: 40px;
-            }
-            .cw-empty-icon { font-size: 40px; opacity: 0.5; }
-            .cw-empty-text { font-size: 14px; font-weight: 500; }
+.cw-input-label {
+    display: block; font-size: 11px; font-weight: 700; color: ${DS.textSub};
+    margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.8px;
+    transition: color 0.3s;
+}
+.cw-input-group:focus-within .cw-input-label { color: ${DS.brands.ads.color}; }
+
+/* O INPUT (A Estrela do Show) */
+.cw-input-wrapper { position: relative; width: 100%; }
+
+.cw-input-field {
+    width: 100%; box-sizing: border-box;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 2px solid #F1F3F4; /* Borda grossa e suave */
+    background: #F8F9FA;
+    font-size: 14px; color: #3C4043;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    outline: none;
+}
+
+/* Estado: Foco (Expansão) */
+.cw-input-field:focus {
+    background: #FFFFFF;
+    border-color: ${DS.brands.ads.color};
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    padding-left: 20px; /* Leve movimento para a direita */
+}
+
+/* Estado: Preenchido (Sucesso / Dopamina) */
+.cw-input-field.filled {
+    background-color: #E6F4EA; /* Verde Menta Suave */
+    border-color: transparent;
+    color: #137333;
+    font-weight: 500;
+    padding-right: 40px; /* Espaço pro ícone */
+}
+
+/* ÍCONE DE SUCESSO (Pop Animation) */
+.cw-success-icon {
+    position: absolute; right: 14px; top: 50%; transform: translateY(-50%) scale(0);
+    width: 20px; height: 20px;
+    background: #1E8E3E; /* Verde Google */
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    color: white; 
+    box-shadow: 0 2px 8px rgba(30, 142, 62, 0.3);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy Pop */
+    pointer-events: none;
+}
+.cw-success-icon svg { width: 12px; height: 12px; stroke-width: 3; }
+
+/* Gatilho da animação */
+.cw-input-field.filled + .cw-success-icon { transform: translateY(-50%) scale(1); }
+
+/* Empty State */
+.cw-empty-state {
+    padding: 60px 20px; text-align: center; color: #9AA0A6;
+    background: #FAFAFA; border-radius: 16px; border: 2px dashed #E0E0E0;
+}
         `;
         document.head.appendChild(style);
     }
@@ -555,79 +563,99 @@ export function createStepTasksComponent(onUpdateCallback) {
         const type = 'implementation'; // Default
 
         if (keys.length === 0) {
-            screenList.innerHTML = `<div class="cw-empty-state">Selecione tarefas para gerar os campos de evidência.</div>`;
+            screenList.innerHTML = `<div class="cw-empty-state">
+                <div style="font-size:24px; margin-bottom:8px">✨</div>
+                Selecione tarefas no passo anterior para liberar os campos.
+            </div>`;
             return;
         }
 
         keys.forEach(key => {
             const task = selection[key].data;
             const count = selection[key].count;
-            const prints = task.screenshots ? (task.screenshots[type] || []) : ['Evidência da Implementação'];
+            const brand = selection[key].brand; // Pega a cor da marca p/ detalhes
+            
+            const prints = task.screenshots ? (task.screenshots[type] || []) : ['Link da Evidência'];
 
             if (prints.length > 0) {
                 hasAny = true;
                 
-                // Para cada instância (1, 2...)
                 for(let i=1; i<=count; i++) {
                     
-                    // 1. O Cartão (Card)
+                    // 1. CARD
                     const card = document.createElement("div");
                     card.className = "cw-screen-card";
                     
-                    // 2. Header do Cartão
+                    // 2. HEADER (Ícone + Título)
                     const header = document.createElement("div");
                     header.className = "cw-card-header";
                     
-                    // Input de Nome (ID name-key-i é vital)
+                    // Ícone da Marca (Visual Anchor)
+                    const iconBox = document.createElement("div");
+                    iconBox.className = "cw-card-icon";
+                    iconBox.innerHTML = ICONS[brand.icon] || ICONS.default;
+                    iconBox.style.color = brand.color; // Pinta com a cor da marca
+                    iconBox.style.backgroundColor = brand.bg;
+
+                    // Título Editável
                     const nameInput = document.createElement("input"); 
                     nameInput.className = "cw-card-title-input";
                     nameInput.id = `name-${key}-${i}`; 
                     nameInput.value = `${task.name}${count > 1 ? ' #'+i : ''}`;
                     
-                    // Ícone de Edição (Decorativo)
-                    const editIcon = document.createElement("span");
-                    editIcon.innerHTML = "✎";
-                    editIcon.style.cssText = "font-size:12px; color:#DADCE0; cursor:pointer; margin-left:8px";
-                    editIcon.onclick = () => nameInput.focus();
-
-                    const headerWrap = document.createElement("div");
-                    headerWrap.style.cssText = "display:flex; align-items:center; width:100%";
-                    headerWrap.appendChild(nameInput);
-                    headerWrap.appendChild(editIcon);
-                    
-                    header.appendChild(headerWrap);
+                    header.appendChild(iconBox);
+                    header.appendChild(nameInput);
                     card.appendChild(header);
 
-                    // 3. Inputs dos Prints
+                    // 3. INPUTS
                     prints.forEach((req, idx) => {
                         const group = document.createElement("div");
                         group.className = "cw-input-group";
 
                         const label = document.createElement("label");
                         label.className = "cw-input-label";
-                        // Limpa emojis antigos do label se tiver
                         label.textContent = req.replace(/📷|:|•/g, '').trim();
+
+                        const wrapper = document.createElement("div");
+                        wrapper.className = "cw-input-wrapper";
 
                         const pInput = document.createElement("input");
                         pInput.className = "cw-input-field";
-                        pInput.id = `screen-${key}-${i}-${idx}`; // ID vital
+                        pInput.id = `screen-${key}-${i}-${idx}`; 
                         pInput.placeholder = "Cole o link aqui...";
                         pInput.setAttribute("autocomplete", "off");
 
-                        // Check Icon
-                        const check = document.createElement("div");
-                        check.className = "cw-input-check";
-                        check.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:100%;height:100%"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+                        // Bolinha de Check (Pula quando preenche)
+                        const successIcon = document.createElement("div");
+                        successIcon.className = "cw-success-icon";
+                        successIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
-                        // Lógica Visual (Verde ao preencher)
+                        // --- EVENT LISTENERS (FÍSICA) ---
+                        
+                        // Detecta colagem ou digitação
                         pInput.addEventListener('input', () => {
-                            if(pInput.value.trim().length > 5) pInput.classList.add('filled');
-                            else pInput.classList.remove('filled');
+                            const val = pInput.value.trim();
+                            if(val.length > 3) { // Critério mínimo
+                                pInput.classList.add('filled');
+                                // Som de sucesso (opcional, mas seria muito Apple)
+                            } else {
+                                pInput.classList.remove('filled');
+                            }
                         });
 
+                        // Efeito Focus no Label (Cor da Marca)
+                        pInput.addEventListener('focus', () => {
+                            label.style.color = brand.color;
+                        });
+                        pInput.addEventListener('blur', () => {
+                            label.style.color = DS.textSub;
+                        });
+
+                        wrapper.appendChild(pInput);
+                        wrapper.appendChild(successIcon);
+                        
                         group.appendChild(label);
-                        group.appendChild(pInput);
-                        group.appendChild(check);
+                        group.appendChild(wrapper);
                         card.appendChild(group);
                     });
 
@@ -636,10 +664,7 @@ export function createStepTasksComponent(onUpdateCallback) {
             }
         });
         
-        if(!hasAny) {
-             screenList.innerHTML = `<div class="cw-empty-state">Esta tarefa não requer screenshots.</div>`;
-        }
-        
+        // Garante visibilidade
         screenshotsContainer.style.display = hasAny ? "block" : "none";
     }
 
