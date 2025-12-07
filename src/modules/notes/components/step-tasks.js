@@ -56,7 +56,7 @@ export function createStepTasksComponent(onUpdateCallback) {
         groupedTasks[brand.label].tasks.push({ key, ...task });
     });
 
-    // --- INJEÇÃO DE CSS (Zen Style) ---
+    // --- INJEÇÃO DE CSS (Zen Style + Fixes) ---
     const styleId = 'cw-zen-tasks';
     if (!document.getElementById(styleId)) {
         const style = document.createElement('style');
@@ -75,7 +75,7 @@ export function createStepTasksComponent(onUpdateCallback) {
             .cw-hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
             .cw-helper-text { font-size: 12px; color: ${DS.textSub}; margin-top: 12px; line-height: 1.4; }
 
-            /* HERO CARD (Compacto & Tátil) */
+            /* HERO CARD */
             .cw-hero-card {
                 background: ${DS.white}; border-radius: 12px; padding: 10px 12px;
                 box-shadow: ${DS.shadowCard}; border: 1px solid transparent;
@@ -85,6 +85,9 @@ export function createStepTasksComponent(onUpdateCallback) {
             }
             .cw-hero-card:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.04); }
             .cw-hero-card:active { transform: scale(0.98); }
+            
+            /* CORREÇÃO DO GRID (Ímpar ocupa 2 espaços) */
+            .cw-hero-card:last-child:nth-child(odd) { grid-column: span 2; justify-content: center; }
             
             .cw-hero-icon { 
                 width: 32px; height: 32px; border-radius: 8px; background: #F3F4F6; color: ${DS.textSub};
@@ -98,7 +101,7 @@ export function createStepTasksComponent(onUpdateCallback) {
             .cw-hero-card.active .cw-hero-icon { background: ${DS.blue}; color: white; }
             .cw-hero-card.active .cw-hero-label { color: ${DS.blue}; font-weight: 600; }
 
-            /* Hero Stepper (Overlay) */
+            /* Hero Stepper */
             .cw-hero-stepper {
                 position: absolute; right: 4px; top: 4px; bottom: 4px;
                 background: ${DS.white}; border-radius: 8px; padding: 0 4px;
@@ -108,13 +111,6 @@ export function createStepTasksComponent(onUpdateCallback) {
                 transition: all 0.2s ease;
             }
             .cw-hero-card.active .cw-hero-stepper { opacity: 1; pointer-events: auto; transform: translateX(0); }
-            .cw-hero-card:last-child:nth-child(odd) {
-                grid-column: span 2;
-            }
-            /* Se ele esticar, centralizamos o conteúdo para ficar bonito */
-            .cw-hero-card:last-child:nth-child(odd) {
-                justify-content: center; /* Opcional: ou manter alinhado à esquerda */
-            }
 
             /* LIST SECTION */
             .cw-list-section { padding: 24px 24px; }
@@ -144,43 +140,28 @@ export function createStepTasksComponent(onUpdateCallback) {
 
             /* LIST ITEM */
             .cw-task-item {
-                /* Aumentamos o padding e alinhamento */
-                padding: 10px 16px; 
-                display: flex; align-items: center; gap: 12px; /* Gap entre icon e texto */
-                justify-content: space-between;
-                cursor: pointer; border-bottom: 1px solid #F3F4F6;
-                transition: background 0.1s;
-                min-height: 44px;
+                padding: 10px 16px; display: flex; align-items: center; justify-content: space-between;
+                cursor: pointer; border-bottom: 1px solid #F3F4F6; gap: 12px; min-height: 44px;
             }
+            .cw-task-item:last-child { border-bottom: none; }
+            .cw-task-item:hover { background: #F3F4F6; }
+            .cw-task-item.selected { background: ${DS.blueLight}; }
             
-            /* Container para Icon + Texto na lista */
             .cw-task-left { display: flex; align-items: center; gap: 12px; flex: 1; }
-
-            /* Ícone na Lista (Miniatura do Hero) */
             .cw-list-icon {
                 width: 32px; height: 32px; border-radius: 8px; 
                 display: flex; align-items: center; justify-content: center;
                 flex-shrink: 0; transition: all 0.2s;
             }
             .cw-list-icon svg { width: 18px; height: 18px; fill: currentColor; }
-
-            /* Stack de Ícones no Footer */
-            .cw-footer-icons { display: flex; flex-direction: row-reverse; padding-left: 8px; } 
-            
-            .cw-mini-icon { 
-                width: 24px; height: 24px; border-radius: 50%; color: white;
-                display: flex; align-items: center; justify-content: center; 
-                border: 2px solid #FFF; font-size: 10px;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.15);
-                margin-left: -8px; /* O segredo do empilhamento */
-                position: relative;
-            }
+            .cw-task-label { font-size: 13px; color: ${DS.textSub}; transition: color 0.1s; font-weight: 400; line-height: 1.3; }
+            .cw-task-item.selected .cw-task-label { color: ${DS.blue}; font-weight: 500; }
 
             /* LIST STEPPER */
             .cw-list-stepper { display: none; align-items: center; gap: 6px; }
             .cw-task-item.selected .cw-list-stepper { display: flex; }
 
-            /* BUTTONS (+ / -) */
+            /* BUTTONS */
             .cw-step-btn {
                 width: 24px; height: 24px; border-radius: 6px; background: #F3F4F6;
                 color: ${DS.textMain}; display: flex; align-items: center; justify-content: center;
@@ -200,13 +181,14 @@ export function createStepTasksComponent(onUpdateCallback) {
             }
             .cw-status-bar.visible { transform: translateY(0); }
             .cw-status-text { font-size: 13px; font-weight: 500; color: ${DS.textMain}; }
-            .cw-status-icons { display: flex; gap: -6px; }
-            .cw-status-mini { 
-                width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;
+            
+            .cw-footer-icons { display: flex; flex-direction: row-reverse; padding-left: 8px; }
+            .cw-mini-icon { 
+                width: 24px; height: 24px; border-radius: 50%; border: 2px solid white;
                 color: white; display: flex; align-items: center; justify-content: center;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+                box-shadow: 0 1px 2px rgba(0,0,0,0.15); position: relative; margin-left: -8px;
             }
-            .cw-status-mini svg { width: 12px; height: 12px; fill: currentColor; }
+            .cw-mini-icon svg { width: 12px; height: 12px; fill: currentColor; }
 
             @keyframes cwSlideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
         `;
@@ -217,9 +199,9 @@ export function createStepTasksComponent(onUpdateCallback) {
     const container = document.createElement('div');
     container.className = 'cw-zen-container';
     
-    // Container Invisível de Prints (Para lógica original)
+    // Container Invisível de Prints
     const screenshotsContainer = document.createElement("div");
-    Object.assign(screenshotsContainer.style, { display: "none" }); // Oculto mas funcional
+    Object.assign(screenshotsContainer.style, { display: "none" }); 
     const screenList = document.createElement("div");
     screenshotsContainer.appendChild(screenList);
 
@@ -242,7 +224,7 @@ export function createStepTasksComponent(onUpdateCallback) {
 
         <div class="cw-status-bar">
             <div class="cw-status-text">0 ações definidas</div>
-            <div class="cw-status-icons"></div>
+            <div class="cw-footer-icons"></div>
         </div>
     `;
 
@@ -252,11 +234,11 @@ export function createStepTasksComponent(onUpdateCallback) {
     const searchInput = container.querySelector('.cw-search-input');
     const statusBar = container.querySelector('.cw-status-bar');
     const statusText = container.querySelector('.cw-status-text');
-    const statusIcons = container.querySelector('.cw-status-icons');
+    const footerIcons = container.querySelector('.cw-footer-icons');
 
     // --- RENDERIZAÇÃO ---
 
-    // 1. Render Heroes
+    // 1. Heroes
     heroTasks.forEach(([key, task]) => {
         const brand = getBrand(task.name);
         const card = document.createElement('div');
@@ -273,27 +255,56 @@ export function createStepTasksComponent(onUpdateCallback) {
             </div>
         `;
         
-        // Zonas de Clique: Corpo = Toggle, Botões = Stepper
         card.onclick = (e) => {
             if(e.target.closest('.cw-step-btn')) return;
             const current = selection[key] ? selection[key].count : 0;
+            // Se já selecionado, zera (toggle off). Se não, 1.
             updateTask(key, current > 0 ? -current : 1, task);
         };
         card.querySelector('.minus').onclick = () => updateTask(key, -1, task);
         card.querySelector('.plus').onclick = () => updateTask(key, 1, task);
         
-        // Dados para estilo
         card.dataset.color = brand.color;
-        
         heroGrid.appendChild(card);
     });
 
-    // 2. Render Accordions
+    // 2. Helper para criar linhas da lista (Rica com Ícones)
+    function createListItem(key, task) {
+        const brand = getBrand(task.name);
+        const row = document.createElement('div');
+        row.className = 'cw-task-item';
+        row.dataset.id = key;
+        
+        row.innerHTML = `
+            <div class="cw-task-left">
+                <div class="cw-list-icon" style="background:${brand.bg}; color:${brand.color}">
+                    ${ICONS[brand.icon] || ICONS.default}
+                </div>
+                <div class="cw-task-label">${task.name}</div>
+            </div>
+            <div class="cw-list-stepper">
+                <div class="cw-step-btn minus">−</div>
+                <div class="cw-step-val">1</div>
+                <div class="cw-step-btn plus">+</div>
+            </div>
+        `;
+        
+        row.onclick = (e) => {
+            if(e.target.closest('.cw-step-btn')) return;
+            const current = selection[key] ? selection[key].count : 0;
+            updateTask(key, current > 0 ? -current : 1, task);
+        };
+        row.querySelector('.minus').onclick = () => updateTask(key, -1, task);
+        row.querySelector('.plus').onclick = () => updateTask(key, 1, task);
+
+        return row;
+    }
+
+    // 3. Render Accordions
     Object.entries(groupedTasks).forEach(([catName, data]) => {
         const group = document.createElement('div');
         group.className = 'cw-acc-group';
         
-        // Header
         const header = document.createElement('div');
         header.className = 'cw-acc-header';
         header.innerHTML = `
@@ -304,14 +315,12 @@ export function createStepTasksComponent(onUpdateCallback) {
             <div class="cw-acc-icon">▼</div>
         `;
         header.onclick = () => {
-            // Accordion Exclusivo: Fecha os outros
             accContainer.querySelectorAll('.cw-acc-group.open').forEach(g => {
                 if(g !== group) g.classList.remove('open');
             });
             group.classList.toggle('open');
         };
 
-        // Body
         const body = document.createElement('div');
         body.className = 'cw-acc-body';
         
@@ -325,41 +334,7 @@ export function createStepTasksComponent(onUpdateCallback) {
         accContainer.appendChild(group);
     });
 
-    // --- HELPERS ---
-
-    function createListItem(key, task) {
-        const brand = getBrand(task.name); // Pega a cor/ícone
-        const row = document.createElement('div');
-        row.className = 'cw-task-item';
-        row.dataset.id = key;
-        
-        // Estrutura Rica: Ícone + Texto à esquerda, Stepper à direita
-        row.innerHTML = `
-            <div class="cw-task-left">
-                <div class="cw-list-icon" style="background:${brand.bg}; color:${brand.color}">
-                    ${ICONS[brand.icon] || ICONS.default}
-                </div>
-                <div class="cw-task-label">${task.name}</div>
-            </div>
-            
-            <div class="cw-list-stepper">
-                <div class="cw-step-btn minus">−</div>
-                <div class="cw-step-val">1</div>
-                <div class="cw-step-btn plus">+</div>
-            </div>
-        `;
-        
-        // Lógica de Clique (Mantida)
-        row.onclick = (e) => {
-            if(e.target.closest('.cw-step-btn')) return;
-            const current = selection[key] ? selection[key].count : 0;
-            updateTask(key, current > 0 ? -current : 1, task);
-        };
-        row.querySelector('.minus').onclick = () => updateTask(key, -1, task);
-        row.querySelector('.plus').onclick = () => updateTask(key, 1, task);
-
-        return row;
-    }
+    // --- LÓGICA DE ATUALIZAÇÃO ---
 
     function updateTask(key, delta, taskData) {
         if (!selection[key]) selection[key] = { count: 0, data: taskData, brand: getBrand(taskData.name) };
@@ -394,7 +369,7 @@ export function createStepTasksComponent(onUpdateCallback) {
             }
         });
 
-        // 2. List Items (Accordion & Search)
+        // 2. List Items
         const allItems = container.querySelectorAll('.cw-task-item');
         allItems.forEach(row => {
             const key = row.dataset.id;
@@ -407,51 +382,38 @@ export function createStepTasksComponent(onUpdateCallback) {
             }
         });
 
-        // 3. Status Bar
-       const keys = Object.keys(selection);
-        
-        // A. Calcula Total Real
+        // 3. Status Bar (Real Count + Stack)
+        const keys = Object.keys(selection);
         let totalCount = 0;
-        const iconStack = []; // Array de marcas para exibir
+        const iconStack = [];
 
         keys.forEach(k => {
             const item = selection[k];
             totalCount += item.count;
-            
-            // Adiciona a marca ao stack N vezes (conforme o count)
-            // Limitamos a 6 ícones totais para não estourar o layout
+            // Adiciona ao stack N vezes
             for(let i=0; i < item.count; i++) {
-                if(iconStack.length < 6) {
-                    iconStack.push(item.brand);
-                }
+                if(iconStack.length < 6) iconStack.push(item.brand);
             }
         });
 
         if (totalCount > 0) {
-            footer.classList.add('visible');
-            
-            // Texto Pluralizado Corretamente
+            statusBar.classList.add('visible');
             const txtTask = totalCount > 1 ? 'Ações' : 'Ação';
             const txtDef = totalCount > 1 ? 'definidas' : 'definida';
-            footerCount.textContent = `${totalCount} ${txtTask} ${txtDef}`;
+            statusText.textContent = `${totalCount} ${txtTask} ${txtDef}`;
             
-            // Renderiza Bolinhas (Invertido pelo CSS row-reverse)
             footerIcons.innerHTML = '';
             iconStack.forEach(brand => {
-                const mini = document.createElement('div');
-                mini.className = 'cw-mini-icon';
-                mini.style.backgroundColor = brand.color;
-                // Usa o SVG oficial
-                mini.innerHTML = ICONS[brand.icon] || ICONS.default;
-                // Ajusta tamanho do SVG dentro da bolinha
-                const svg = mini.querySelector('svg');
+                const div = document.createElement('div');
+                div.className = 'cw-mini-icon';
+                div.style.backgroundColor = brand.color;
+                div.innerHTML = ICONS[brand.icon] || ICONS.default;
+                const svg = div.querySelector('svg');
                 if(svg) { svg.style.width = '12px'; svg.style.height = '12px'; }
-                
-                footerIcons.appendChild(mini);
+                footerIcons.appendChild(div);
             });
-            
         } else {
-            footer.classList.remove('visible');
+            statusBar.classList.remove('visible');
         }
     }
 
@@ -468,7 +430,6 @@ export function createStepTasksComponent(onUpdateCallback) {
                 if (task.name.toLowerCase().includes(term)) {
                     found = true;
                     const item = createListItem(key, task);
-                    // Re-apply state
                     if(selection[key]) {
                         item.classList.add('selected');
                         item.querySelector('.cw-step-val').textContent = selection[key].count;
@@ -483,11 +444,12 @@ export function createStepTasksComponent(onUpdateCallback) {
         }
     });
 
-    // Lógica de Prints (Inputs Ocultos para o Notes ler)
+    // Screenshots Logic (Adaptado)
     function renderScreenshots() {
         screenList.innerHTML = "";
         const keys = Object.keys(selection);
         let hasAny = false;
+        // Assume default por enquanto
         const type = 'implementation'; 
 
         keys.forEach(key => {
@@ -498,12 +460,15 @@ export function createStepTasksComponent(onUpdateCallback) {
             if (prints.length > 0) {
                 hasAny = true;
                 const block = document.createElement("div");
+                // Título discreto no bloco de prints
+                block.innerHTML = `<div style="margin-top:12px; font-size:12px; font-weight:bold; color:#1A73E8">${task.name} (${count})</div>`;
+                
                 for(let i=1; i<=count; i++) {
                     const card = document.createElement("div");
                     const nameInput = document.createElement("input"); 
                     nameInput.id = `name-${key}-${i}`;
                     nameInput.value = `${task.name}${count > 1 ? ' #'+i : ''}`;
-                    card.appendChild(nameInput); // Name precisa estar no DOM
+                    card.appendChild(nameInput); 
 
                     prints.forEach((req, idx) => {
                         const label = document.createElement("label"); label.textContent = req;
@@ -522,9 +487,8 @@ export function createStepTasksComponent(onUpdateCallback) {
     return {
         selectionElement: container,
         screenshotsElement: screenshotsContainer,
-        updateSubStatus: () => renderScreenshots(), // Pode refinar se precisar mudar tipo de print
+        updateSubStatus: () => renderScreenshots(),
         getCheckedElements: () => {
-            // Adapter para o notes-assistant
             return Object.keys(selection).map(key => ({
                 value: key,
                 closest: () => ({ querySelector: () => ({ textContent: selection[key].count }) })
