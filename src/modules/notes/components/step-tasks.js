@@ -23,11 +23,20 @@ const DS = {
 };
 
 const ICONS = {
-    ads: `<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>`,
-    ga4: `<svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2v-3h2v3zm4 0h-2v-5h2v5z"/></svg>`,
-    gtm: `<svg viewBox="0 0 24 24"><path d="M21.41 11.58l-9-9C12.05 2.22 11.55 2 11 2H4c-1.1 0-2 .9-2 2v7c0 .55.22 1.05.59 1.42l9 9c.36.36.86.58 1.41.58.55 0 1.05-.22 1.41-.59l7-7c.37-.36.59-.86.59-1.41 0-.55-.23-1.06-.59-1.42zM5.5 7C4.67 7 4 6.33 4 5.5S4.67 4 5.5 4 7 4.67 7 5.5 6.33 7 5.5 7z"/></svg>`,
-    gmc: `<svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>`,
-    default: `<svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>`
+    // Google Ads (O triângulo oficial)
+    ads: `<svg viewBox="0 0 192 192"><path fill="#F9AB00" d="M38.85 144.47l-26.27-26.28a12.72 12.72 0 0 1 0-17.92L106 5.86a12.72 12.72 0 0 1 17.92 0l26.28 26.27a12.72 12.72 0 0 1 0 17.92l-93.43 94.42a12.73 12.73 0 0 1-17.92 0z"/><path fill="#1A73E8" d="M165.73 100.27l-26.28-26.28a12.72 12.72 0 0 0-17.92 0L28.1 167.42a12.72 12.72 0 0 0 0 17.92l26.28 26.28a12.72 12.72 0 0 0 17.92 0l93.43-93.43a12.72 12.72 0 0 0 0-17.92z"/><path fill="#34A853" d="M38.85 144.47a12.63 12.63 0 0 1 0-17.92l54.58-54.58a12.72 12.72 0 0 1 17.92 0l-54.58 54.58 37.07 37.07a12.72 12.72 0 0 1 0 17.92l-37.07-37.07z"/></svg>`,
+    
+    // GA4 (O gráfico de barras laranja)
+    ga4: `<svg viewBox="0 0 192 192"><path fill="#F9AB00" d="M22 138v28h28v-28H22z"/><path fill="#E37400" d="M66 84v82h28V84H66z"/><path fill="#E37400" d="M110 22v144h28V22h-28z"/></svg>`,
+    
+    // GTM (A Tag azul com engrenagem)
+    gtm: `<svg viewBox="0 0 192 192"><path fill="#4285F4" d="M40 32h112c4.42 0 8 3.58 8 8v112c0 4.42-3.58 8-8 8H40c-4.42 0-8-3.58-8-8V40c0-4.42 3.58-8 8-8z"/><path fill="#8AB4F8" d="M136 76h-20v-20h-40v20H56v40h20v20h40v-20h20V76z"/><circle cx="96" cy="96" r="24" fill="#1967D2"/></svg>`,
+    
+    // Merchant Center (A etiqueta de shopping)
+    gmc: `<svg viewBox="0 0 192 192"><path fill="#4285F4" d="M22 66l18-36h112l18 36v100H22V66z"/><path fill="#1967D2" d="M152 30H40L22 66h148l-18-36z"/><path fill="#8AB4F8" d="M40 30h112v36H40z"/></svg>`,
+    
+    // Default (Cinza)
+    default: `<svg viewBox="0 0 24 24"><path fill="#5F6368" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>`
 };
 
 export function createStepTasksComponent(onUpdateCallback) {
@@ -192,111 +201,92 @@ export function createStepTasksComponent(onUpdateCallback) {
 
             @keyframes cwSlideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ... dentro de style.innerHTML ... */
+/* --- SCREENSHOTS: BRAND IMMERSION --- */
+            
+            .cw-screens-container {
+                display: flex; flex-direction: column; gap: 24px;
+                padding: 4px 4px 40px 4px;
+            }
 
-/* --- SCREENSHOTS: THE LIQUID EXPERIENCE --- */
+            /* CARD BASE */
+            .cw-screen-card {
+                background: #FFFFFF;
+                border: 1px solid #E0E0E0;
+                border-radius: 16px;
+                padding: 24px;
+                position: relative; overflow: hidden;
+                transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+                /* O segredo do "Fill": um pseudo-elemento invisível que aparece no foco */
+            }
+            
+            .cw-screen-card::before {
+                content: ''; position: absolute; inset: 0;
+                background: var(--brand-bg, #F8F9FA); /* Cor dinâmica */
+                opacity: 0; transition: opacity 0.3s ease;
+                z-index: 0; pointer-events: none;
+            }
 
-.cw-screens-container {
-    display: flex; flex-direction: column; gap: 20px;
-    padding: 4px 4px 40px 4px; /* Respiro para sombras */
-}
+            /* EFEITO DE FOCO (Imersão) */
+            .cw-screen-card:focus-within {
+                border-color: var(--brand-color, #DADCE0);
+                transform: scale(1.01) translateY(-2px);
+                box-shadow: 0 12px 32px -8px var(--brand-shadow, rgba(0,0,0,0.1));
+            }
+            .cw-screen-card:focus-within::before { opacity: 0.3; } /* Mostra o fundo colorido */
 
-/* O CARTÃO (Physical Material) */
-.cw-screen-card {
-    background: #FFFFFF;
-    border-radius: 16px;
-    border: 1px solid rgba(0,0,0,0.08);
-    /* Sombra suave e difusa (Apple style) */
-    box-shadow: 0 4px 24px rgba(0,0,0,0.03);
-    padding: 24px;
-    position: relative; overflow: hidden;
-    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); /* Elastic Spring */
-}
+            /* HEADER */
+            .cw-card-header {
+                position: relative; z-index: 1; /* Acima do fundo */
+                display: flex; align-items: center; gap: 16px; margin-bottom: 24px;
+            }
+            
+            /* ÍCONE GRANDE E BONITO */
+            .cw-card-icon {
+                width: 44px; height: 44px; border-radius: 12px;
+                background: #FFFFFF; /* Fundo branco para destacar o logo colorido */
+                border: 1px solid rgba(0,0,0,0.05);
+                display: flex; align-items: center; justify-content: center;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            }
+            .cw-card-icon svg { width: 28px; height: 28px; }
 
-/* Interação com o Cartão */
-.cw-screen-card:hover { transform: translateY(-2px); }
-.cw-screen-card:focus-within {
-    border-color: rgba(26, 115, 232, 0.4);
-    box-shadow: 0 12px 40px rgba(26, 115, 232, 0.15); /* Glow Azul Google */
-    transform: translateY(-4px) scale(1.01);
-}
+            .cw-card-title-input {
+                font-family: ${DS.font}; font-size: 16px; font-weight: 600; color: ${DS.textMain};
+                border: none; background: transparent; width: 100%; outline: none;
+                position: relative; z-index: 1;
+            }
 
-/* Header Limpo */
-.cw-card-header {
-    display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
-}
-.cw-card-icon {
-    width: 32px; height: 32px; border-radius: 10px; background: #F1F3F4;
-    display: flex; align-items: center; justify-content: center; color: #5F6368;
-}
-.cw-card-title-input {
-    font-family: ${DS.font}; font-size: 15px; font-weight: 600; color: ${DS.textMain};
-    border: none; background: transparent; width: 100%; outline: none;
-}
+            /* INPUTS */
+            .cw-input-group { margin-bottom: 16px; position: relative; z-index: 1; }
 
-/* GRUPO DE INPUTS */
-.cw-input-group { margin-bottom: 16px; position: relative; }
+            .cw-input-label {
+                display: block; font-size: 11px; font-weight: 700; color: ${DS.textSub};
+                margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.8px;
+            }
 
-.cw-input-label {
-    display: block; font-size: 11px; font-weight: 700; color: ${DS.textSub};
-    margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.8px;
-    transition: color 0.3s;
-}
-.cw-input-group:focus-within .cw-input-label { color: ${DS.brands.ads.color}; }
+            .cw-input-field {
+                width: 100%; box-sizing: border-box; padding: 14px 16px;
+                border-radius: 12px; border: 1px solid #DADCE0;
+                background: #FFFFFF; font-size: 14px; color: #3C4043;
+                transition: all 0.2s ease; outline: none;
+            }
 
-/* O INPUT (A Estrela do Show) */
-.cw-input-wrapper { position: relative; width: 100%; }
+            /* Foco no Input: Usa a cor da marca */
+            .cw-input-field:focus {
+                border-color: var(--brand-color);
+                box-shadow: 0 0 0 3px var(--brand-bg); /* Anel de foco na cor da marca */
+            }
+            
+            .cw-input-field.filled {
+                background-color: #E6F4EA; border-color: transparent; color: #137333; padding-right: 40px;
+            }
 
-.cw-input-field {
-    width: 100%; box-sizing: border-box;
-    padding: 14px 16px;
-    border-radius: 12px;
-    border: 2px solid #F1F3F4; /* Borda grossa e suave */
-    background: #F8F9FA;
-    font-size: 14px; color: #3C4043;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    outline: none;
-}
-
-/* Estado: Foco (Expansão) */
-.cw-input-field:focus {
-    background: #FFFFFF;
-    border-color: ${DS.brands.ads.color};
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    padding-left: 20px; /* Leve movimento para a direita */
-}
-
-/* Estado: Preenchido (Sucesso / Dopamina) */
-.cw-input-field.filled {
-    background-color: #E6F4EA; /* Verde Menta Suave */
-    border-color: transparent;
-    color: #137333;
-    font-weight: 500;
-    padding-right: 40px; /* Espaço pro ícone */
-}
-
-/* ÍCONE DE SUCESSO (Pop Animation) */
-.cw-success-icon {
-    position: absolute; right: 14px; top: 50%; transform: translateY(-50%) scale(0);
-    width: 20px; height: 20px;
-    background: #1E8E3E; /* Verde Google */
-    border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    color: white; 
-    box-shadow: 0 2px 8px rgba(30, 142, 62, 0.3);
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Bouncy Pop */
-    pointer-events: none;
-}
-.cw-success-icon svg { width: 12px; height: 12px; stroke-width: 3; }
-
-/* Gatilho da animação */
-.cw-input-field.filled + .cw-success-icon { transform: translateY(-50%) scale(1); }
-
-/* Empty State */
-.cw-empty-state {
-    padding: 60px 20px; text-align: center; color: #9AA0A6;
-    background: #FAFAFA; border-radius: 16px; border: 2px dashed #E0E0E0;
-}
+            /* Check de Sucesso */
+            .cw-input-check {
+                position: absolute; right: 14px; bottom: 12px; color: #188038;
+                opacity: 0; transform: scale(0.5); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            }
+            .cw-input-field.filled + .cw-input-check { opacity: 1; transform: scale(1); }
         `;
         document.head.appendChild(style);
     }
@@ -560,44 +550,42 @@ export function createStepTasksComponent(onUpdateCallback) {
         screenList.innerHTML = "";
         const keys = Object.keys(selection);
         let hasAny = false;
-        const type = 'implementation'; // Default
+        const type = 'implementation'; 
 
         if (keys.length === 0) {
-            screenList.innerHTML = `<div class="cw-empty-state">
-                <div style="font-size:24px; margin-bottom:8px">✨</div>
-                Selecione tarefas no passo anterior para liberar os campos.
-            </div>`;
+            screenList.innerHTML = `<div class="cw-empty-state">Selecione tarefas para ver os campos.</div>`;
             return;
         }
 
         keys.forEach(key => {
             const task = selection[key].data;
             const count = selection[key].count;
-            const brand = selection[key].brand; // Pega a cor da marca p/ detalhes
-            
+            const brand = selection[key].brand; // Pega o objeto da marca (já tem cor e bg)
             const prints = task.screenshots ? (task.screenshots[type] || []) : ['Link da Evidência'];
 
             if (prints.length > 0) {
                 hasAny = true;
                 
                 for(let i=1; i<=count; i++) {
-                    
-                    // 1. CARD
                     const card = document.createElement("div");
                     card.className = "cw-screen-card";
                     
-                    // 2. HEADER (Ícone + Título)
+                    // --- AQUI ESTÁ O SEGREDO DO FILL ---
+                    // Injetamos as cores da marca como variáveis CSS locais neste cartão
+                    card.style.setProperty('--brand-color', brand.color);
+                    card.style.setProperty('--brand-bg', brand.bg); // Cor de fundo suave (ex: azul claro)
+                    // Cria uma sombra colorida baseada na cor da marca
+                    card.style.setProperty('--brand-shadow', brand.color + '40'); // 25% opacidade
+                    
+                    // 1. Header com Ícone Oficial
                     const header = document.createElement("div");
                     header.className = "cw-card-header";
                     
-                    // Ícone da Marca (Visual Anchor)
                     const iconBox = document.createElement("div");
                     iconBox.className = "cw-card-icon";
+                    // O ícone agora é o SVG multicolorido oficial
                     iconBox.innerHTML = ICONS[brand.icon] || ICONS.default;
-                    iconBox.style.color = brand.color; // Pinta com a cor da marca
-                    iconBox.style.backgroundColor = brand.bg;
-
-                    // Título Editável
+                    
                     const nameInput = document.createElement("input"); 
                     nameInput.className = "cw-card-title-input";
                     nameInput.id = `name-${key}-${i}`; 
@@ -607,7 +595,7 @@ export function createStepTasksComponent(onUpdateCallback) {
                     header.appendChild(nameInput);
                     card.appendChild(header);
 
-                    // 3. INPUTS
+                    // 2. Inputs
                     prints.forEach((req, idx) => {
                         const group = document.createElement("div");
                         group.className = "cw-input-group";
@@ -616,46 +604,25 @@ export function createStepTasksComponent(onUpdateCallback) {
                         label.className = "cw-input-label";
                         label.textContent = req.replace(/📷|:|•/g, '').trim();
 
-                        const wrapper = document.createElement("div");
-                        wrapper.className = "cw-input-wrapper";
-
                         const pInput = document.createElement("input");
                         pInput.className = "cw-input-field";
                         pInput.id = `screen-${key}-${i}-${idx}`; 
                         pInput.placeholder = "Cole o link aqui...";
                         pInput.setAttribute("autocomplete", "off");
 
-                        // Bolinha de Check (Pula quando preenche)
-                        const successIcon = document.createElement("div");
-                        successIcon.className = "cw-success-icon";
-                        successIcon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
-
-                        // --- EVENT LISTENERS (FÍSICA) ---
-                        
-                        // Detecta colagem ou digitação
+                        // Feedback Visual ao digitar
                         pInput.addEventListener('input', () => {
-                            const val = pInput.value.trim();
-                            if(val.length > 3) { // Critério mínimo
-                                pInput.classList.add('filled');
-                                // Som de sucesso (opcional, mas seria muito Apple)
-                            } else {
-                                pInput.classList.remove('filled');
-                            }
+                            if(pInput.value.trim().length > 5) pInput.classList.add('filled');
+                            else pInput.classList.remove('filled');
                         });
 
-                        // Efeito Focus no Label (Cor da Marca)
-                        pInput.addEventListener('focus', () => {
-                            label.style.color = brand.color;
-                        });
-                        pInput.addEventListener('blur', () => {
-                            label.style.color = DS.textSub;
-                        });
+                        const check = document.createElement("div");
+                        check.className = "cw-input-check";
+                        check.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
-                        wrapper.appendChild(pInput);
-                        wrapper.appendChild(successIcon);
-                        
                         group.appendChild(label);
-                        group.appendChild(wrapper);
+                        group.appendChild(pInput);
+                        group.appendChild(check);
                         card.appendChild(group);
                     });
 
@@ -664,7 +631,6 @@ export function createStepTasksComponent(onUpdateCallback) {
             }
         });
         
-        // Garante visibilidade
         screenshotsContainer.style.display = hasAny ? "block" : "none";
     }
 
