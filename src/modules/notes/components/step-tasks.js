@@ -108,6 +108,13 @@ export function createStepTasksComponent(onUpdateCallback) {
                 transition: all 0.2s ease;
             }
             .cw-hero-card.active .cw-hero-stepper { opacity: 1; pointer-events: auto; transform: translateX(0); }
+            .cw-hero-card:last-child:nth-child(odd) {
+                grid-column: span 2;
+            }
+            /* Se ele esticar, centralizamos o conteúdo para ficar bonito */
+            .cw-hero-card:last-child:nth-child(odd) {
+                justify-content: center; /* Opcional: ou manter alinhado à esquerda */
+            }
 
             /* LIST SECTION */
             .cw-list-section { padding: 24px 24px; }
@@ -137,14 +144,37 @@ export function createStepTasksComponent(onUpdateCallback) {
 
             /* LIST ITEM */
             .cw-task-item {
-                padding: 10px 16px 10px 32px; display: flex; align-items: center; justify-content: space-between;
+                /* Aumentamos o padding e alinhamento */
+                padding: 10px 16px; 
+                display: flex; align-items: center; gap: 12px; /* Gap entre icon e texto */
+                justify-content: space-between;
                 cursor: pointer; border-bottom: 1px solid #F3F4F6;
+                transition: background 0.1s;
+                min-height: 44px;
             }
-            .cw-task-item:last-child { border-bottom: none; }
-            .cw-task-item:hover { background: #F3F4F6; }
-            .cw-task-item.selected { background: ${DS.blueLight}; }
-            .cw-task-label { font-size: 13px; color: ${DS.textSub}; transition: color 0.1s; font-weight: 400; }
-            .cw-task-item.selected .cw-task-label { color: ${DS.blue}; font-weight: 500; }
+            
+            /* Container para Icon + Texto na lista */
+            .cw-task-left { display: flex; align-items: center; gap: 12px; flex: 1; }
+
+            /* Ícone na Lista (Miniatura do Hero) */
+            .cw-list-icon {
+                width: 32px; height: 32px; border-radius: 8px; 
+                display: flex; align-items: center; justify-content: center;
+                flex-shrink: 0; transition: all 0.2s;
+            }
+            .cw-list-icon svg { width: 18px; height: 18px; fill: currentColor; }
+
+            /* Stack de Ícones no Footer */
+            .cw-footer-icons { display: flex; flex-direction: row-reverse; padding-left: 8px; } 
+            
+            .cw-mini-icon { 
+                width: 24px; height: 24px; border-radius: 50%; color: white;
+                display: flex; align-items: center; justify-content: center; 
+                border: 2px solid #FFF; font-size: 10px;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+                margin-left: -8px; /* O segredo do empilhamento */
+                position: relative;
+            }
 
             /* LIST STEPPER */
             .cw-list-stepper { display: none; align-items: center; gap: 6px; }
@@ -298,11 +328,20 @@ export function createStepTasksComponent(onUpdateCallback) {
     // --- HELPERS ---
 
     function createListItem(key, task) {
+        const brand = getBrand(task.name); // Pega a cor/ícone
         const row = document.createElement('div');
         row.className = 'cw-task-item';
         row.dataset.id = key;
+        
+        // Estrutura Rica: Ícone + Texto à esquerda, Stepper à direita
         row.innerHTML = `
-            <div class="cw-task-label">${task.name}</div>
+            <div class="cw-task-left">
+                <div class="cw-list-icon" style="background:${brand.bg}; color:${brand.color}">
+                    ${ICONS[brand.icon] || ICONS.default}
+                </div>
+                <div class="cw-task-label">${task.name}</div>
+            </div>
+            
             <div class="cw-list-stepper">
                 <div class="cw-step-btn minus">−</div>
                 <div class="cw-step-val">1</div>
@@ -310,6 +349,7 @@ export function createStepTasksComponent(onUpdateCallback) {
             </div>
         `;
         
+        // Lógica de Clique (Mantida)
         row.onclick = (e) => {
             if(e.target.closest('.cw-step-btn')) return;
             const current = selection[key] ? selection[key].count : 0;
@@ -368,24 +408,50 @@ export function createStepTasksComponent(onUpdateCallback) {
         });
 
         // 3. Status Bar
-        const keys = Object.keys(selection);
-        if (keys.length > 0) {
-            statusBar.classList.add('visible');
-            statusText.textContent = `${keys.length} ações definidas`;
-            statusIcons.innerHTML = '';
-            keys.slice(0, 5).forEach(k => {
-                const item = selection[k];
-                const div = document.createElement('div');
-                div.className = 'cw-status-mini';
-                div.style.backgroundColor = item.brand.color;
-                div.innerHTML = ICONS[item.brand.icon] || ICONS.default; // Reuso do SVG
-                // Ajuste de tamanho do SVG no mini
-                div.querySelector('svg').style.width = '12px';
-                div.querySelector('svg').style.height = '12px';
-                statusIcons.appendChild(div);
+       const keys = Object.keys(selection);
+        
+        // A. Calcula Total Real
+        let totalCount = 0;
+        const iconStack = []; // Array de marcas para exibir
+
+        keys.forEach(k => {
+            const item = selection[k];
+            totalCount += item.count;
+            
+            // Adiciona a marca ao stack N vezes (conforme o count)
+            // Limitamos a 6 ícones totais para não estourar o layout
+            for(let i=0; i < item.count; i++) {
+                if(iconStack.length < 6) {
+                    iconStack.push(item.brand);
+                }
+            }
+        });
+
+        if (totalCount > 0) {
+            footer.classList.add('visible');
+            
+            // Texto Pluralizado Corretamente
+            const txtTask = totalCount > 1 ? 'Ações' : 'Ação';
+            const txtDef = totalCount > 1 ? 'definidas' : 'definida';
+            footerCount.textContent = `${totalCount} ${txtTask} ${txtDef}`;
+            
+            // Renderiza Bolinhas (Invertido pelo CSS row-reverse)
+            footerIcons.innerHTML = '';
+            iconStack.forEach(brand => {
+                const mini = document.createElement('div');
+                mini.className = 'cw-mini-icon';
+                mini.style.backgroundColor = brand.color;
+                // Usa o SVG oficial
+                mini.innerHTML = ICONS[brand.icon] || ICONS.default;
+                // Ajusta tamanho do SVG dentro da bolinha
+                const svg = mini.querySelector('svg');
+                if(svg) { svg.style.width = '12px'; svg.style.height = '12px'; }
+                
+                footerIcons.appendChild(mini);
             });
+            
         } else {
-            statusBar.classList.remove('visible');
+            footer.classList.remove('visible');
         }
     }
 
