@@ -204,10 +204,11 @@ export function makeDraggable(element, handle = null) {
     document.onmousemove = null;
     dragHandle.style.cursor = "grab";
     
-    // Opcional: Restaura transições suaves (apenas opacidade) após soltar
-    // NÃO restaure 'transform' aqui, senão ele pula de volta!
+    // --- CORREÇÃO: Restaurar a Física Apple ---
+    // Antes estava apenas 'opacity 0.3s'. 
+    // Agora restauramos a curva completa para que o 'Expandir' funcione liso.
     setTimeout(() => {
-        element.style.transition = "opacity 0.3s ease";
+        element.style.transition = "all 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.3s ease";
         element.setAttribute("data-dragging", "false");
     }, 50);
   }
@@ -239,28 +240,30 @@ export const styleFloatingButton = {
 };
 
 export const stylePopup = {
+  // ... (mantenha position, top, left, width, zIndex, etc) ...
   position: "fixed",
   top: "50%",
   left: "50%",
   width: "400px",
   maxHeight: "85vh",
-
   zIndex: "99999",
   overflow: "hidden",
   display: "flex",
   flexDirection: "column",
-
-  // O Vidro Apple/Google
   backgroundColor: "rgba(255, 255, 255, 0.95)",
   backdropFilter: "blur(20px) saturate(180%)",
-  borderRadius: "20px", // Cantos suaves
+  borderRadius: "20px",
   boxShadow: "0 20px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)",
-
   opacity: "0",
-  transform: "translate(-50%, -50%) scale(0.95)", // Estado inicial para animação
   pointerEvents: "none",
   fontFamily: "'Google Sans', 'Roboto'",
-  transition: "opacity 0.3s ease, transform 0.3s cubic-bezier(0.19, 1, 0.22, 1)",
+  transform: "translate(-50%, -50%)", 
+
+  // --- MUDANÇA AQUI: Transição Total com Física Apple ---
+  // 'all' permite que top/left/width/height animem ao expandir
+  transition: "all 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.3s ease",
+  
+  willChange: "transform, opacity, width, height, top, left",
 };
 
 export const stylePopupHeader = {
