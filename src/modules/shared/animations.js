@@ -54,6 +54,23 @@ if (!document.getElementById('cw-module-styles')) {
             
             cursor: pointer; /* Indica clicável */
         }
+
+        /* Adicione isso ao seu bloco de estilos globais */
+
+.cw-module-window.expanded {
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    border-radius: 0 !important;
+    
+    /* A CHAVE DO PROBLEMA: Remove o deslocamento do Genie */
+    transform: none !important; 
+    
+    /* Garante que fique por cima de tudo */
+    z-index: 2147483647 !important; 
+}
     `;
     document.head.appendChild(style);
 }
@@ -134,9 +151,17 @@ export function toggleGenieAnimation(show, popup, buttonId) {
 
         // 2. A Animação
         requestAnimationFrame(() => {
-            popup.style.opacity = '0';
-            // Volta exatamente para as coordenadas do botão
-            popup.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px)) scale(0.1)`;
+            // A transição acontece...
+            popup.style.transition = "opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1)";
+            popup.style.opacity = '1';
+            popup.style.transform = "translate(-50%, -50%) scale(1)";
+            
+            // --- CORREÇÃO AQUI: LIMPEZA PÓS-ANIMAÇÃO ---
+            // Espera a animação acabar (500ms) e reseta a origem
+            setTimeout(() => {
+                // Devolve o ponto de pivô para o centro (para o expandir funcionar direito)
+                popup.style.transformOrigin = 'center center';
+            }, 500); 
         });
 
         // 3. Limpeza Final (Após a animação acabar)
