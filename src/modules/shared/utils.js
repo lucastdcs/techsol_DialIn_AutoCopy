@@ -250,7 +250,7 @@ export const stylePopup = {
   overflow: "hidden",
   display: "flex",
   flexDirection: "column",
-  backgroundColor: "rgba(248, 249, 250, 0.96)", // Cor #F8F9FA (Surface)
+backgroundColor: "rgba(248, 249, 250, 0.96)",
   backdropFilter: "blur(20px) saturate(180%)",
   borderRadius: "20px",
   boxShadow: "0 20px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)",
