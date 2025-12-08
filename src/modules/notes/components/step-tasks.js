@@ -79,49 +79,86 @@ export function createStepTasksComponent(onUpdateCallback) {
             /* SCROLL AREA */
             .cw-zen-content { flex: 1; overflow-y: auto; padding-bottom: 80px; } /* Espaço para o Status Bar */
 
-            /* HERO SECTION */
+          /* --- HERO SECTION (Refined) --- */
             .cw-hero-section { padding: 20px 24px 0 24px; }
-            .cw-hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+            .cw-hero-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
             .cw-helper-text { font-size: 12px; color: ${DS.textSub}; margin-top: 12px; line-height: 1.4; }
 
             /* HERO CARD */
             .cw-hero-card {
-                background: ${DS.white}; border-radius: 12px; padding: 10px 12px;
-                box-shadow: ${DS.shadowCard}; border: 1px solid transparent;
-                cursor: pointer; position: relative; height: 60px;
-                display: flex; align-items: center; gap: 10px;
-                transition: all 0.2s ease;
+                background: ${DS.white}; 
+                border: 1px solid #E5E7EB; 
+                border-radius: 16px; 
+                padding: 12px;
+                cursor: pointer; 
+                position: relative; 
+                height: 80px; /* Altura fixa confortável */
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+                box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+                overflow: hidden;
             }
-            .cw-hero-card:hover { transform: translateY(-1px); box-shadow: 0 4px 6px rgba(0,0,0,0.04); }
+            
+            /* Correção do Grid Ímpar */
+            .cw-hero-card:last-child:nth-child(odd) { grid-column: span 2; }
+
+            /* Interação */
+            .cw-hero-card:hover { border-color: #D1D5DB; box-shadow: 0 4px 8px rgba(0,0,0,0.03); }
             .cw-hero-card:active { transform: scale(0.98); }
-            
-            /* CORREÇÃO DO GRID (Ímpar ocupa 2 espaços) */
-            .cw-hero-card:last-child:nth-child(odd) { grid-column: span 2; justify-content: center; }
-            
+
+            /* HERO ACTIVE STATE (Borda Colorida Apenas) */
+            .cw-hero-card.active {
+                background: #FFFFFF; /* Fundo continua branco */
+                border-color: var(--hero-color); /* Cor da borda dinâmica */
+                box-shadow: 0 0 0 1px var(--hero-color), 0 4px 12px rgba(0,0,0,0.05);
+            }
+
+            /* CONTAINER DE CONTEÚDO (Para animação de deslize) */
+            .cw-hero-main {
+                display: flex; align-items: center; gap: 10px;
+                transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                width: 100%; justify-content: center;
+            }
+            /* Quando ativo, sobe um pouquinho para caber o stepper */
+            .cw-hero-card.active .cw-hero-main { transform: translateY(-12px); }
+
+            /* ÍCONE (Sempre Neutro) */
             .cw-hero-icon { 
-                width: 32px; height: 32px; border-radius: 8px; background: #F3F4F6; color: ${DS.textSub};
-                display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.2s;
+                width: 32px; height: 32px; border-radius: 8px; 
+                background: #F3F4F6; /* Cinza Apple Neutro */
+                display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+                transition: background 0.2s;
             }
-            .cw-hero-icon svg { width: 18px; height: 18px; fill: currentColor; }
-            .cw-hero-label { font-size: 12px; font-weight: 500; color: ${DS.textMain}; line-height: 1.2; }
+            /* Ícone SVG sempre visível */
+            .cw-hero-icon svg { width: 20px; height: 20px; }
+            
+            /* No active, o ícone pode ficar branco puro para destacar o logo */
+            .cw-hero-card.active .cw-hero-icon { background: #FFFFFF; border: 1px solid #F3F4F6; }
 
-            /* Hero Active */
-            .cw-hero-card.active { background: ${DS.white}; border-color: ${DS.blue}; }
-            .cw-hero-card.active .cw-hero-icon { background: ${DS.blue}; color: white; }
-            .cw-hero-card.active .cw-hero-label { color: ${DS.blue}; font-weight: 600; }
+            /* TEXTO */
+            .cw-hero-label { 
+                font-size: 12px; font-weight: 500; color: ${DS.textMain}; line-height: 1.2; 
+                text-align: left;
+            }
+            .cw-hero-card.active .cw-hero-label { font-weight: 600; color: var(--hero-color); }
 
-            /* Hero Stepper */
+            /* STEPPER (Surge de baixo) */
             .cw-hero-stepper {
-                position: absolute; right: 4px; top: 4px; bottom: 4px;
-                background: ${DS.white}; border-radius: 8px; padding: 0 4px;
-                display: flex; align-items: center; gap: 4px;
-                box-shadow: -2px 0 10px rgba(0,0,0,0.05);
-                opacity: 0; pointer-events: none; transform: translateX(10px);
-                transition: all 0.2s ease;
+                position: absolute; bottom: 8px; left: 0; right: 0;
+                display: flex; align-items: center; justify-content: center; gap: 12px;
+                opacity: 0; transform: translateY(10px);
+                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                pointer-events: none;
             }
-            .cw-hero-card.active .cw-hero-stepper { opacity: 1; pointer-events: auto; transform: translateX(0); }
-
-            /* LIST SECTION */
+            .cw-hero-card.active .cw-hero-stepper { opacity: 1; transform: translateY(0); pointer-events: auto; }
+            
+            /* Botões do Stepper */
+            .cw-step-btn {
+                width: 24px; height: 24px; border-radius: 50%; background: #F3F4F6;
+                color: ${DS.textMain}; display: flex; align-items: center; justify-content: center;
+                font-size: 14px; font-weight: bold; cursor: pointer; transition: background 0.1s;
+            }
+            .cw-step-btn:hover { background: #E5E7EB; color: var(--hero-color); }            /* LIST SECTION */
             .cw-list-section { padding: 24px 24px; }
             .cw-search-input {
                 width: 100%; box-sizing: border-box; padding: 10px 12px 10px 36px;
@@ -398,15 +435,22 @@ export function createStepTasksComponent(onUpdateCallback) {
     // --- RENDERIZAÇÃO ---
 
     // 1. Heroes
+// 1. Heroes
     heroTasks.forEach(([key, task]) => {
         const brand = getBrand(task.name);
         const card = document.createElement('div');
         card.className = 'cw-hero-card';
         card.id = `hero-${key}`;
         
+        // Injeção da cor da marca para o CSS usar
+        card.style.setProperty('--hero-color', brand.color);
+        
         card.innerHTML = `
-            <div class="cw-hero-icon">${ICONS[brand.icon]}</div>
-            <div class="cw-hero-label">${task.name}</div>
+            <div class="cw-hero-main">
+                <div class="cw-hero-icon">${ICONS[brand.icon]}</div>
+                <div class="cw-hero-label">${task.name}</div>
+            </div>
+            
             <div class="cw-hero-stepper">
                 <div class="cw-step-btn minus">−</div>
                 <div class="cw-step-val">1</div>
@@ -414,16 +458,18 @@ export function createStepTasksComponent(onUpdateCallback) {
             </div>
         `;
         
+        // Zonas de Clique: Corpo = Toggle, Botões = Stepper
         card.onclick = (e) => {
             if(e.target.closest('.cw-step-btn')) return;
             const current = selection[key] ? selection[key].count : 0;
-            // Se já selecionado, zera (toggle off). Se não, 1.
             updateTask(key, current > 0 ? -current : 1, task);
         };
         card.querySelector('.minus').onclick = () => updateTask(key, -1, task);
         card.querySelector('.plus').onclick = () => updateTask(key, 1, task);
         
-        card.dataset.color = brand.color;
+        // Dataset para updateUI (mantido para lógica legada se houver)
+        card.dataset.color = brand.color; 
+        
         heroGrid.appendChild(card);
     });
 
@@ -507,24 +553,19 @@ export function createStepTasksComponent(onUpdateCallback) {
 
     function updateUI() {
         // 1. Heroes
-        heroTasks.forEach(([key]) => {
+       heroTasks.forEach(([key]) => {
             const card = heroGrid.querySelector(`#hero-${key}`);
             if(!card) return;
             const sel = selection[key];
             
             if (sel) {
                 card.classList.add('active');
-                card.style.borderColor = card.dataset.color;
-                const icon = card.querySelector('.cw-hero-icon');
-                icon.style.backgroundColor = card.dataset.color;
-                icon.style.color = 'white';
+                // Removemos injeção de style direto, o CSS var(--hero-color) cuida disso
                 card.querySelector('.cw-step-val').textContent = sel.count;
+                // Cor do texto do count pode seguir a marca
+                card.querySelector('.cw-step-val').style.color = card.dataset.color;
             } else {
                 card.classList.remove('active');
-                card.style.borderColor = 'transparent';
-                const icon = card.querySelector('.cw-hero-icon');
-                icon.style.backgroundColor = '#F3F4F6';
-                icon.style.color = DS.textSub;
             }
         });
 

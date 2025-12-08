@@ -795,7 +795,7 @@ export function initCaseNotesAssistant() {
       if (activeLinkedTasks.has(checkbox.value)) {
         if (!checkbox.checked) {
           checkbox.checked = true;
-          // Dispara o evento para que o listener (taskManager ou populateTasks)
+          // Dispara o evento para que o listener (stepTasks ou populateTasks)
           // perceba a mudança e crie os inputs de print
           checkbox.dispatchEvent(new Event("change", { bubbles: true }));
         }
@@ -1027,7 +1027,7 @@ function generateOutputHtml() {
 
         // --- 1. CAPTURA DE TAGS (Via Task Manager) ---
         // O método retorna objetos { value: 'id', closest: ... } que simulam o DOM antigo
-        const checkedBoxes = taskManager.getCheckedElements();
+        const checkedBoxes = stepTasks.getCheckedElements();
         
         if (checkedBoxes.length > 0) {
             checkedBoxes.forEach(cb => {
@@ -1046,7 +1046,7 @@ function generateOutputHtml() {
 
         // --- 2. CAPTURA DE PRINTS (Via Container do Módulo) ---
         // Busca apenas dentro do container de screenshots do Task Manager
-        const screenshotsContainer = taskManager.screenshotsElement;
+        const screenshotsContainer = stepTasks.screenshotsElement;
         
         if (screenshotsContainer) {
             const nameInputs = Array.from(screenshotsContainer.querySelectorAll('input[id^="name-"]'));
