@@ -205,73 +205,76 @@ export function initCaseNotesAssistant() {
   );
 
   // Botão Expandir no Header
-  const headerContainer = header.lastElementChild;
+const headerActionContainer = header.querySelector('.cw-header-actions') || header.lastElementChild;
+
+if (headerActionContainer) {
+    const expandBtn = document.createElement("div");
+    expandBtn.className = "cw-expand-btn no-drag";
     
-    if (headerContainer) {
-        const expandBtn = document.createElement("div");
-        
-        // 1. ADICIONE UMA CLASSE PARA ENCONTRARMOS DEPOIS
-        expandBtn.className = "cw-expand-btn no-drag"; 
+    // Ícones
+    const iconExpand = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>`;
+    const iconContract = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7"/></svg>`;
 
-        // Ícone inicial (SVG Expandir)
-        const iconExpand = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>`;
-        const iconContract = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7"/></svg>`;
+    expandBtn.innerHTML = iconExpand;
 
-        expandBtn.innerHTML = iconExpand;
-
-        Object.assign(expandBtn.style, {
-            fontSize: "20px",
-            color: "#9AA0A6",
-            cursor: "pointer",
-            padding: "8px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: "4px",
-            marginLeft: "auto",
-            borderRadius: "50%",
-            transition: "background 0.2s, transform 0.3s ease",
-        });
-
-        expandBtn.title = "Expandir/Contrair Janela";
-        expandBtn.onmouseover = () => (expandBtn.style.backgroundColor = "#e8eaed");
-        expandBtn.onmouseout = () => (expandBtn.style.backgroundColor = "transparent");
-
-        let isExpanded = false;
-
-        // --- A MÁGICA: CRIAMOS UMA FUNÇÃO PÚBLICA NO ELEMENTO ---
-        expandBtn.resetState = () => {
-            isExpanded = false;
-            expandBtn.style.transform = "rotate(0deg)";
-            expandBtn.innerHTML = iconExpand;
-            // Remove largura inline para voltar ao CSS padrão (380px/400px)
-            popup.style.width = ""; 
-        };
-
-expandBtn.onclick = () => {
-    isExpanded = !isExpanded;
-
-    // 1. Gira
-    expandBtn.style.transform = isExpanded ? "rotate(180deg)" : "rotate(0deg)";
-
-    // 2. Aplica largura
-    popup.style.width = isExpanded ? "700px" : "400px"; 
-
-    // 3. Muda ícone
-    expandBtn.innerHTML = isExpanded ? iconContract : iconExpand;
-    
-    // --- CORREÇÃO AQUI ---
-    // Espera um micro-segundo para o navegador processar a nova largura (700px)
-    // E então verifica se vazou da tela.
-    requestAnimationFrame(() => {
-        constrainToViewport(popup);
+    Object.assign(expandBtn.style, {
+        fontSize: "20px", color: "#bdc1c6", cursor: "pointer",
+        padding: "8px", display: "flex", alignItems: "center", justifyContent: "center",
+        borderRadius: "50%", transition: "all 0.2s ease",
+        marginLeft: "auto", marginRight: "4px", width: "32px", height: "32px"
     });
-};
 
-        const closeBtn = headerContainer.lastElementChild;
-        if (closeBtn) headerContainer.insertBefore(expandBtn, closeBtn);
-        else headerContainer.appendChild(expandBtn);
-    }
+    // Hover state
+    expandBtn.onmouseenter = () => { expandBtn.style.background = "rgba(255,255,255,0.1)"; expandBtn.style.color = "#fff"; };
+    expandBtn.onmouseleave = () => { expandBtn.style.background = "transparent"; expandBtn.style.color = "#bdc1c6"; };
+
+    // --- CORREÇÃO 1: ESTADO INICIAL FORÇADO ---
+    let isExpanded = false;
+    // Garante que começa pequeno, removendo qualquer largura inline residual
+    popup.style.width = ""; 
+
+    // Função de Reset Pública (para o toggleVisibility usar)
+    expandBtn.resetState = () => {
+        isExpanded = false;
+        expandBtn.style.transform = "rotate(0deg)";
+        expandBtn.innerHTML = iconExpand;
+        popup.style.width = ""; // Volta ao CSS padrão
+    };
+
+    expandBtn.onclick = (e) => {
+        e.stopPropagation();
+        isExpanded = !isExpanded;
+
+        // 1. Feedback Visual no Botão
+        expandBtn.style.transform = isExpanded ? "rotate(180deg)" : "rotate(0deg)";
+        expandBtn.innerHTML = isExpanded ? iconContract : iconExpand;
+
+        // --- CORREÇÃO 2: GARANTIR A FÍSICA APPLE ---
+        // Antes de mudar a largura, REAPLICAMOS a transição elástica.
+        // Isso garante que, mesmo que o drag tenha removido a transição, ela volta agora.
+        // (Essa string deve ser a mesma definida no stylePopup do utils.js)
+        popup.style.transition = "all 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.3s ease";
+
+        // 2. Aplica a Largura (Dispara a animação)
+        // Se true, 700px. Se false, string vazia "" (volta ao padrão do CSS, ex: 400px)
+        popup.style.width = isExpanded ? "700px" : "";
+
+        // 3. Trava de Segurança (Opcional, mas recomendado)
+        // Importe constrainToViewport do utils.js se quiser usar.
+        // Usamos requestAnimationFrame para não interromper a transição que acabamos de iniciar.
+        /* requestAnimationFrame(() => {
+            if (typeof constrainToViewport === 'function') {
+                constrainToViewport(popup);
+            }
+        }); 
+        */
+    };
+
+    // Insere antes do botão fechar
+    const closeBtn = headerActionContainer.querySelector('.cw-close-btn') || headerActionContainer.lastElementChild;
+    headerActionContainer.insertBefore(expandBtn, closeBtn);
+}
+
   popup.appendChild(header);
 
   const popupContent = document.createElement("div");
