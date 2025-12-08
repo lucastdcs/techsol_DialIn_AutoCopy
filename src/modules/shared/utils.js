@@ -186,17 +186,38 @@ export function makeDraggable(element, handle = null) {
     document.onmousemove = elementDrag;
   }
 
-  function elementDrag(e) {
+function elementDrag(e) {
     e = e || window.event;
     e.preventDefault();
+    
+    // Calcula o deslocamento
     pos1 = pos3 - e.clientX;
     pos2 = pos4 - e.clientY;
     pos3 = e.clientX;
     pos4 = e.clientY;
-    
-    // Move baseando-se no delta
-    element.style.top = (element.offsetTop - pos2) + "px";
-    element.style.left = (element.offsetLeft - pos1) + "px";
+
+    // Posição desejada
+    let nextTop = element.offsetTop - pos2;
+    let nextLeft = element.offsetLeft - pos1;
+
+    // --- A TRAVA DE SEGURANÇA (HARD WALL) ---
+    const padding = 16; // Margem mínima da borda
+    const winW = window.innerWidth;
+    const winH = window.innerHeight;
+    const elW = element.offsetWidth;
+    const elH = element.offsetHeight;
+
+    // Trava Horizontal
+    if (nextLeft < padding) nextLeft = padding; // Borda Esquerda
+    else if (nextLeft + elW > winW - padding) nextLeft = winW - elW - padding; // Borda Direita
+
+    // Trava Vertical
+    if (nextTop < padding) nextTop = padding; // Topo
+    else if (nextTop + elH > winH - padding) nextTop = winH - elH - padding; // Base
+
+    // Aplica a posição travada
+    element.style.top = nextTop + "px";
+    element.style.left = nextLeft + "px";
   }
 
   function closeDragElement() {
@@ -649,4 +670,47 @@ export async function playStartupAnimation() {
     await esperar(900);
     if (splash.parentNode) splash.parentNode.removeChild(splash);
   }
+}
+
+// Função Utilitária: Garante que o elemento nunca saia da tela
+export function constrainToViewport(element) {
+    if (!element) return;
+
+    // 1. Pega as dimensões atuais
+    const rect = element.getBoundingClientRect();
+    const winW = window.innerWidth;
+    const winH = window.innerHeight;
+    const padding = 24; // Margem de segurança (respiro)
+
+    // 2. Calcula os limites máximos
+    // (A janela não pode estar mais à direita do que a largura da tela menos a largura dela mesma)
+    const maxLeft = winW - rect.width - padding;
+    const maxTop = winH - rect.height - padding;
+
+    // 3. Verifica e corrige (Matemática de "Clamp")
+    // Math.max(padding, ...) -> Não deixa passar da esquerda/topo
+    // Math.min(..., maxLeft) -> Não deixa passar da direita/baixo
+    
+    // Precisamos ler o left/top atuais baseados no style (para não quebrar lógica de drag)
+    // ou usar o rect.left se não tiver style definido.
+    let currentLeft = parseFloat(element.style.left) || rect.left;
+    let currentTop = parseFloat(element.style.top) || rect.top;
+
+    let newLeft = Math.max(padding, Math.min(currentLeft, maxLeft));
+    let newTop = Math.max(padding, Math.min(currentTop, maxTop));
+
+    // 4. Aplica a correção APENAS se necessário (para não acionar reflow à toa)
+    if (newLeft !== currentLeft || newTop !== currentTop) {
+        // Adiciona uma transição rápida para o "pulo" ser suave se for um resize
+        const originalTransition = element.style.transition;
+        element.style.transition = "left 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), top 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)";
+        
+        element.style.left = `${newLeft}px`;
+        element.style.top = `${newTop}px`;
+
+        // Restaura a transição original depois do pulo
+        setTimeout(() => {
+            element.style.transition = originalTransition;
+        }, 300);
+    }
 }

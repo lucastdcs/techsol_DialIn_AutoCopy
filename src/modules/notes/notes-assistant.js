@@ -31,6 +31,7 @@ import { runEmailAutomation } from "../email/email-automation.js";
 import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from "../shared/animations.js";
 import { triggerProcessingAnimation } from "../shared/command-center.js";
+import { constrainToViewport } from '../shared/utils.js';
 import {
   copyHtmlToClipboard,
   ensureNoteCardIsOpen,
@@ -247,18 +248,25 @@ export function initCaseNotesAssistant() {
             popup.style.width = ""; 
         };
 
-        expandBtn.onclick = () => {
-            isExpanded = !isExpanded;
+expandBtn.onclick = () => {
+    isExpanded = !isExpanded;
 
-            // 1. Gira
-            expandBtn.style.transform = isExpanded ? "rotate(180deg)" : "rotate(0deg)";
+    // 1. Gira
+    expandBtn.style.transform = isExpanded ? "rotate(180deg)" : "rotate(0deg)";
 
-            // 2. Aplica largura
-            popup.style.width = isExpanded ? "700px" : ""; // Vazio volta ao CSS original
+    // 2. Aplica largura
+    popup.style.width = isExpanded ? "700px" : ""; 
 
-            // 3. Muda ícone
-            expandBtn.innerHTML = isExpanded ? iconContract : iconExpand;
-        };
+    // 3. Muda ícone
+    expandBtn.innerHTML = isExpanded ? iconContract : iconExpand;
+    
+    // --- CORREÇÃO AQUI ---
+    // Espera um micro-segundo para o navegador processar a nova largura (700px)
+    // E então verifica se vazou da tela.
+    requestAnimationFrame(() => {
+        constrainToViewport(popup);
+    });
+};
 
         const closeBtn = headerContainer.lastElementChild;
         if (closeBtn) headerContainer.insertBefore(expandBtn, closeBtn);
@@ -1323,7 +1331,7 @@ function toggleVisibility() {
         }
     }
 
-    toggleGenieAnimation(visible, popup, "cw-btn-links"); // ou seu ID correto
+    toggleGenieAnimation(visible, popup, "cw-btn-notes"); // ou seu ID correto
   }
   // INICIALIZAÇÃO
   setCaseType("bau");
