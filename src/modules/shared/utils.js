@@ -314,6 +314,14 @@ export const styleButtonBase = {
   transition: "transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, background 0.2s",
   // IMPORTANTE: Adicionar no JS: element.onmousedown = () => el.style.transform = 'scale(0.96)'
 };
+export const styleLabel = {
+  display: "block",
+  fontSize: "13px",
+  fontWeight: "600",
+  color: COLORS.text,
+  marginBottom: "8px",
+  marginTop: "16px",
+};
 export const styleCredit = {
   fontSize: "10px",
   color: "#9aa0a6",
