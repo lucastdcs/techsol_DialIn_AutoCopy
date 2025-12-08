@@ -241,14 +241,13 @@ export function initCaseNotesAssistant() {
         : "rotate(0deg)";
 
       // 2. Aplica a largura com a nova transição suave
-      popup.style.width = isExpanded ? "750px" : "380px";
+      popup.style.width = isExpanded ? "700px" : "380px";
 
       // (Opcional) Muda o ícone dependendo do estado
       if (isExpanded) {
         expandBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7"/></svg>`; // Contrair
       } else {
         expandBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>`; // Expandir
-        popup.style.transform = "translate(-50%, -50%) scale(1)";  
       }
     };
 
@@ -337,7 +336,7 @@ export function initCaseNotesAssistant() {
   const mainStatusSelect = document.createElement("select");
   mainStatusSelect.id = "main-status";
   Object.assign(mainStatusSelect.style, styleSelect);
-  mainStatusSelect.innerHTML = `<option value="">Selecione</option><option value="NI">NI - Need Info</option><option value="SO">SO - Solution Offered</option><option value="IN">IN - Inactive</option><option value="AS">AS - Assigned</option>`;
+  mainStatusSelect.innerHTML = `<option value="">-- Selecione --</option><option value="NI">NI - Need Info</option><option value="SO">SO - Solution Offered</option><option value="IN">IN - Inactive</option><option value="AS">AS - Assigned</option>`;
 
   const subStatusHeader = document.createElement("div");
   Object.assign(subStatusHeader.style, {
