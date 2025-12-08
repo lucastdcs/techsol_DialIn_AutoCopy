@@ -314,24 +314,44 @@ export const styleLabel = {
   marginTop: "16px",
 };
 
+// Substitua o 'export const styleSelect = ...' antigo por este:
+
 export const styleSelect = {
   width: "100%",
-  padding: "12px 16px",
-  borderRadius: "12px",
+  // Espaço extra na direita (40px) para a seta não ficar em cima do texto
+  padding: "12px 40px 12px 16px",
+  
+  // Design Físico (Google Material 3)
+  borderRadius: "8px", 
   border: "1px solid #dadce0",
-  backgroundColor: "#f8f9fa", // Fundo Input Google
+  backgroundColor: "#ffffff", // Branco puro para destacar
+  
+  // Tipografia
+  fontFamily: "'Google Sans', 'Roboto', sans-serif",
   fontSize: "14px",
-  color: "#3c4043",
+  fontWeight: "500", // Peso médio para leitura clara
+  color: "#202124",  // Preto Google
+  
+  // O Segredo: Remove o estilo nativo feio do navegador
+  appearance: "none", 
+  "-webkit-appearance": "none",
+  "-moz-appearance": "none",
   boxSizing: "border-box",
-  appearance: "none",
-  // Seta SVG mais fina e moderna
-  backgroundImage: `url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%235f6368%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')`,
-  backgroundRepeat: "no-repeat",
-  backgroundPosition: "right 12px center",
-  backgroundSize: "16px",
-  transition: "border-color 0.2s ease, box-shadow 0.2s ease",
-  fontFamily: "'Google Sans', 'Roboto'",
   cursor: "pointer",
+  
+  // Seta Customizada (SVG via Data URI - Chevron Cinza Escuro)
+  backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%235f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>')`,
+  backgroundRepeat: "no-repeat",
+  backgroundPosition: "right 12px center", // Posicionado à direita
+  backgroundSize: "18px",
+  
+  // Transições Suaves
+  transition: "border-color 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s ease, background-color 0.2s",
+  outline: "none",
+  marginBottom: "16px",
+  
+  // Sombra sutil (Elevation 1)
+  boxShadow: "0 1px 2px rgba(0,0,0,0.05)"
 };
 
 export const styleButtonBase = {
