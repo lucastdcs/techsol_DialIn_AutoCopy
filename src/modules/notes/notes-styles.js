@@ -1,17 +1,17 @@
 // src/modules/notes/notes-styles.js
 
-// --- CONFIGURAÇÃO DE CORES (Brand Colors) ---
+// --- CONFIGURAÇÃO DE CORES (Design System Unificado) ---
 const COLORS = {
-  primary: "#1a73e8",
-  primaryBg: "#e8f0fe",
-  text: "#202124",
-  textSub: "#5f6368",
-  border: "#dadce0",
-  bgInput: "#f1f3f4", // Fundo cinza Google padrão para inputs
-  surface: "#ffffff",
-  success: "#1e8e3e",
-  warning: "#e37400",
-  error: "#d93025"
+  primary: "#1a73e8",       // Azul Google
+  primaryBg: "#e8f0fe",     // Fundo Azul Claro
+  text: "#202124",          // Preto Google
+  textSub: "#5f6368",       // Cinza Texto
+  border: "#dadce0",        // Borda Padrão
+  bgInput: "#f8f9fa",       // Fundo Input (Cinza Gelo)
+  surface: "#ffffff",       // Branco Puro
+  success: "#1e8e3e",       // Verde
+  warning: "#e37400",       // Laranja
+  error: "#d93025"          // Vermelho
 };
 
 // Curva de Animação "Líquida" (Apple Style)
@@ -22,18 +22,17 @@ const EASE = "cubic-bezier(0.25, 0.8, 0.25, 1)";
 // =========================================================
 export const styleInput = {
   width: "100%",
-  padding: "10px 12px",
+  padding: "12px 14px", // Mais espaço interno (Touch friendly)
   borderRadius: "8px",
-  border: "1px solid transparent", // Sem borda inicial (estilo Google)
+  border: `1px solid ${COLORS.border}`,
   backgroundColor: COLORS.bgInput,
   fontSize: "14px",
   color: COLORS.text,
   marginBottom: "16px",
   boxSizing: "border-box",
   fontFamily: "'Google Sans', 'Roboto', sans-serif",
-  transition: `all 0.2s ${EASE}`,
+  transition: `border-color 0.2s ${EASE}, box-shadow 0.2s ${EASE}, background-color 0.2s`,
   outline: "none",
-  // Nota: O foco (border azul) é gerenciado pelo CSS global ou injectStyles
 };
 
 export const styleTextarea = {
@@ -51,7 +50,7 @@ export const styleH3 = {
   fontWeight: "700",
   color: COLORS.textSub,
   textTransform: "uppercase",
-  letterSpacing: "0.5px",
+  letterSpacing: "0.6px",
   margin: "0 0 12px 0",
 };
 
@@ -70,8 +69,8 @@ export const styleWarningText = {
   marginTop: "6px",
   display: "flex",
   alignItems: "center",
-  gap: "4px",
-  fontWeight: "500"
+  gap: "6px",
+  fontWeight: "500",
 };
 
 export const styleHelpLink = {
@@ -98,14 +97,13 @@ export const styleCheckboxLabel = {
   fontWeight: "500",
   color: COLORS.text,
   cursor: "pointer",
-  padding: "10px 12px",
+  padding: "12px 14px", // Mais área de clique
   backgroundColor: COLORS.surface,
   border: `1px solid ${COLORS.border}`,
-  borderRadius: "8px",
+  borderRadius: "12px", // Arredondamento moderno
   transition: `all 0.2s ${EASE}`,
   userSelect: "none",
-  position: "relative",
-  // Hover e Checked devem ser tratados via CSS ou lógica JS para trocar bg
+  boxShadow: "0 1px 2px rgba(0,0,0,0.02)", // Sombra sutil
 };
 
 export const styleCheckboxInput = {
@@ -125,12 +123,12 @@ export const styleButtonBase = {
   color: "#fff",
   backgroundColor: COLORS.primary,
   border: "none",
-  borderRadius: "50px", // Pílula
+  borderRadius: "50px", // Botão Pílula (Apple/Google)
   fontSize: "14px",
   fontWeight: "600",
   cursor: "pointer",
   marginTop: "20px",
-  boxShadow: "0 2px 6px rgba(26, 115, 232, 0.3)",
+  boxShadow: "0 4px 12px rgba(26, 115, 232, 0.3)", // Glow Azul
   transition: `transform 0.1s ${EASE}, box-shadow 0.2s ${EASE}`,
   display: "flex",
   alignItems: "center",
@@ -149,7 +147,7 @@ export const styleOptionalBtn = {
   fontWeight: "600",
   fontSize: "13px",
   marginBottom: "12px",
-  transition: `background 0.2s ${EASE}`,
+  transition: `background-color 0.2s ${EASE}`,
 };
 
 export const styleLinkButton = {
@@ -174,13 +172,13 @@ export const styleLinkButton = {
 //           STEPPER (Controles Numéricos)
 // =========================================================
 export const styleStepper = {
-  display: "none", // JS controla display flex
+  display: "none", // Controlado por JS (flex/none)
   alignItems: "center",
   gap: "8px",
   marginLeft: "auto",
-  backgroundColor: "#f8f9fa",
+  backgroundColor: "#f1f3f4", // Container cinza
   padding: "2px",
-  borderRadius: "20px",
+  borderRadius: "20px", // Pílula container
 };
 
 export const styleStepperBtn = {
@@ -189,22 +187,22 @@ export const styleStepperBtn = {
   border: "none",
   borderRadius: "50%",
   backgroundColor: "#ffffff",
-  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
+  boxShadow: "0 1px 3px rgba(0,0,0,0.15)", // Sombra de elevação
   color: COLORS.text,
   cursor: "pointer",
   padding: "0",
   fontSize: "16px",
-  fontWeight: "bold",
+  fontWeight: "700",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   userSelect: "none",
-  transition: "transform 0.1s",
+  transition: "transform 0.1s ease",
 };
 
 export const styleStepperCount = {
   fontSize: "13px",
-  fontWeight: "600",
+  fontWeight: "700",
   color: COLORS.primary,
   minWidth: "20px",
   textAlign: "center",
@@ -215,16 +213,16 @@ export const styleStepperCount = {
 // =========================================================
 export const styleSearchInput = {
   width: "100%",
-  padding: "10px 12px 10px 36px",
-  borderRadius: "8px",
+  padding: "12px 12px 12px 40px", // Espaço maior para ícone
+  borderRadius: "12px",
   border: `1px solid ${COLORS.border}`,
   backgroundColor: COLORS.surface,
   fontSize: "14px",
-  marginBottom: "12px",
+  marginBottom: "16px",
   boxSizing: "border-box",
   backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="%235f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>')`,
   backgroundRepeat: "no-repeat",
-  backgroundPosition: "10px center",
+  backgroundPosition: "12px center",
   outline: "none",
   transition: `border-color 0.2s ${EASE}, box-shadow 0.2s ${EASE}`,
 };
@@ -234,11 +232,13 @@ export const styleChipContainer = {
   flexWrap: "wrap",
   gap: "8px",
   marginBottom: "20px",
+  paddingBottom: "12px",
+  borderBottom: `1px solid ${COLORS.bgInput}`,
 };
 
 export const styleChip = {
   padding: "6px 12px",
-  borderRadius: "8px", // Soft Square (Google Chips)
+  borderRadius: "8px", // Soft Square (Estilo Google atual)
   border: `1px solid ${COLORS.border}`,
   backgroundColor: COLORS.surface,
   color: COLORS.textSub,
@@ -264,13 +264,14 @@ export const styleChipRemove = {
   width: "16px",
   height: "16px",
   borderRadius: "50%",
-  display: "none",
+  display: "none", // JS controla
   alignItems: "center",
   justifyContent: "center",
-  fontSize: "12px",
-  color: COLORS.primary, // X azul
-  backgroundColor: "rgba(255,255,255,0.5)",
+  fontSize: "10px",
+  color: COLORS.primary,
+  backgroundColor: "rgba(255,255,255,0.6)",
   transition: "background 0.2s",
+  lineHeight: "1",
 };
 
 // =========================================================
@@ -278,7 +279,7 @@ export const styleChipRemove = {
 // =========================================================
 export const styleStepBlock = {
   borderTop: `1px solid ${COLORS.bgInput}`,
-  paddingTop: "16px",
+  paddingTop: "20px",
   marginTop: "16px",
 };
 
@@ -292,7 +293,7 @@ export const styleTagSupportContainer = {
   marginTop: "16px",
   marginBottom: "16px",
   padding: "12px 16px",
-  backgroundColor: "#fff8e1", // Amarelo suave
+  background: "#fff8e1", // Amarelo suave
   borderRadius: "8px",
   border: "1px solid #ffe082",
   color: "#b06000",
@@ -300,15 +301,15 @@ export const styleTagSupportContainer = {
   display: "none",
 };
 
-// Drawer Lista (Legado/Fallback)
+// Drawer Lista (Fallback/Legado)
 export const styleTaskListContainer = {
-  maxHeight: "220px",
+  maxHeight: "240px",
   overflowY: "auto",
   border: `1px solid ${COLORS.border}`,
-  borderRadius: "8px",
+  borderRadius: "12px",
   marginTop: "8px",
   backgroundColor: COLORS.surface,
-  boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+  boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
   display: "none",
 };
 
