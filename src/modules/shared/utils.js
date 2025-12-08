@@ -19,76 +19,111 @@ export function initGlobalStylesAndFont() {
     document.head.appendChild(link);
 
     // 2. Define a Família de Fontes Global
-    const style = document.createElement('style');
+  const style = document.createElement('style');
     style.id = 'techsol-global-styles';
     style.textContent = `
-        /* Rollbar e Ajustes Globais */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: #dadce0; border-radius: 10px; } /* Cinza Google */
-        ::-webkit-scrollbar-thumb:hover { background: #bdc1c6; }
-        
-        /* FONTE GOOGLE OFICIAL */
-        body, button, input, select, textarea, .cw-pill, .cw-module, .cw-btn::after {
-            font-family: 'Google Sans', 'Roboto', sans-serif !important;
+        :root {
+            --cw-primary: #1a73e8;
+            --cw-primary-hover: #1557b0;
+            --cw-surface: #ffffff;
+            --cw-surface-glass: rgba(255, 255, 255, 0.92);
+            --cw-border: #dadce0;
+            --cw-text: #202124;
+            --cw-text-sub: #5f6368;
+            --cw-shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            --cw-shadow-lg: 0 12px 28px rgba(0,0,0,0.12);
+            --cw-radius: 12px;
+            --cw-ease-elastic: cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
+        /* Scrollbar Moderno (Estilo Mac/Android) */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.4); }
+
+        /* Reset e Fonte */
+        body, button, input, select, textarea, .cw-pill, .cw-module {
+            font-family: 'Google Sans', 'Roboto', sans-serif !important;
+            -webkit-font-smoothing: antialiased; /* Renderização Apple */
+        }
+
+        /* Foco Acessível e Bonito (Anel Google) */
         input:focus, textarea:focus, select:focus {
             outline: none !important;
-            border-color: #1a73e8 !important;
-            box-shadow: 0 0 0 1px #1a73e8 !important;
+            border-color: var(--cw-primary) !important;
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2) !important;
         }
-        button:active { transform: translateY(1px); }
-        textarea.bullet-textarea { padding-left: 10px; }
-        
-        /* Classes utilitárias do Script Assistant */
-        .csa-group-container { border-left: 3px solid transparent; padding-left: 5px; transition: all 0.3s ease-out; }
-        .csa-group-title { transition: color 0.3s ease-out; }
-        .csa-group-container.csa-group-completed { border-left: 3px solid #34a853; }
-        .csa-group-container.csa-group-completed .csa-group-title { color: #34a853; }
-        
+
+        /* Feedback Tátil Global (Scale) */
+        .cw-clickable:active, button:active { 
+            transform: scale(0.96) !important; 
+            transition: transform 0.1s var(--cw-ease-elastic);
+        }
+
+        /* Utilitários do Script Assistant (Refinados) */
         .csa-li { 
-            margin: 8px 0 !important; 
-            padding: 8px 10px; border-radius: 6px; border: 2px solid transparent;
-            transition: all 0.2s ease; font-size: 14px; cursor: pointer; user-select: none;
-            background-color: #f8f9fa; color: #202124; line-height: 1.4;
-            text-decoration: none; transform: scale(1);
+            margin: 6px 0 !important; 
+            padding: 10px 12px; border-radius: 8px; 
+            border: 1px solid transparent;
+            transition: all 0.2s var(--cw-ease-elastic); 
+            font-size: 14px; cursor: pointer; user-select: none;
+            background-color: #f8f9fa; color: var(--cw-text);
         }
-        .csa-li:hover { background-color: #f1f3f4; transform: scale(1.02); }
-        .csa-li.csa-completed { text-decoration: line-through; color: #5f6368; transform: scale(0.98); }
+        .csa-li:hover { 
+            background-color: #e8f0fe; 
+            color: var(--cw-primary);
+            transform: translateX(4px); /* Movimento sutil à direita */
+        }
+        .csa-li.csa-completed { 
+            opacity: 0.6; 
+            text-decoration: line-through; 
+            background: transparent;
+            border: 1px dashed var(--cw-border);
+        }
     `;
     document.head.appendChild(style);
 }
 
 export function showToast(message, opts = {}) {
   const toast = document.createElement("div");
+  // Determina cor baseada no tipo (sucesso vs erro)
+  const bg = opts.error 
+    ? "rgba(217, 48, 37, 0.95)" // Vermelho Google com transparência
+    : "rgba(32, 33, 36, 0.90)"; // Cinza escuro Google com transparência
+
   Object.assign(toast.style, {
     position: "fixed",
-    bottom: "24px",
+    bottom: "32px", // Mais alto para respirar
     left: "50%",
-    transform: "translateX(-50%) translateY(20px)",
-    background: opts.error ? "#d93025" : "#323232",
+    transform: "translateX(-50%) scale(0.9)", // Começa menor (pop effect)
+    background: bg,
+    backdropFilter: "blur(8px)", // Efeito Glass (Apple)
     color: "#fff",
-    padding: "14px 24px",
-    borderRadius: "4px",
-    boxShadow: "0 2px 8px rgba(0,0,0,.3)",
-    fontFamily: "'Google Sans', 'Roboto'",
+    padding: "12px 24px",
+    borderRadius: "50px", // Pílula completa
+    boxShadow: "0 6px 16px rgba(0,0,0,0.2)", // Sombra difusa
+    fontFamily: "'Google Sans', sans-serif",
     fontSize: "14px",
-    lineHeight: "20px",
-    zIndex: "9999999",
+    fontWeight: "500",
+    zIndex: "2147483647",
     opacity: "0",
-    transition: "opacity .3s ease, transform .3s ease",
+    transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)", // Efeito "Spring" (Mola)
+    pointerEvents: "none" // Não bloqueia cliques embaixo
   });
+  
   toast.textContent = message;
   document.body.appendChild(toast);
+
   requestAnimationFrame(() => {
     toast.style.opacity = "1";
-    toast.style.transform = "translateX(-50%) translateY(0)";
+    toast.style.transform = "translateX(-50%) scale(1)"; // Pop!
   });
+
   setTimeout(() => {
     toast.style.opacity = "0";
-    toast.style.transform = "translateX(-50%) translateY(20px)";
-    setTimeout(() => toast.remove(), 300);
+    toast.style.transform = "translateX(-50%) scale(0.9) translateY(10px)";
+    setTimeout(() => toast.remove(), 400);
   }, opts.duration || 4000);
 }
 
@@ -155,117 +190,129 @@ export function makeDraggable(element, handle = null) {
 // =========================================================
 //           ESTILOS PADRÃO (UI Styles)
 // =========================================================
+// =========================================================
+//           ESTILOS UI (Refinados)
+// =========================================================
+
 export const styleFloatingButton = {
   position: "fixed",
-  right: "20px",
-  width: "48px",
-  height: "48px",
-  borderRadius: "50%",
-  backgroundColor: "#1a73e8",
+  right: "24px",
+  bottom: "24px", // Se certifique que tem bottom ou top definido
+  width: "56px", // Tamanho padrão FAB Google
+  height: "56px",
+  borderRadius: "16px", // Squircle (Apple style) ao invés de circulo perfeito fica mais moderno
+  background: "linear-gradient(135deg, #1a73e8, #0059c1)", // Profundidade sutil
   color: "#fff",
   fontSize: "24px",
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
   cursor: "pointer",
-  boxShadow: "0 4px 6px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.08)",
+  boxShadow: "0 4px 12px rgba(26, 115, 232, 0.4)", // Sombra colorida (Glow)
   zIndex: "9999",
   border: "none",
-  transition: "background-color 0.2s ease, transform 0.2s ease-out",
-  transform: "scale(1)",
-  fontFamily: "'Google Sans', 'Roboto'",
+  transition: "transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease",
+  fontFamily: "'Google Sans', sans-serif",
+  // Adicionar via JS no hover: transform: scale(1.05)
+  // Adicionar via JS no active: transform: scale(0.95)
 };
 
 export const stylePopup = {
   position: "fixed",
-  top: "calc(50% - 250px)",
-  width: "380px",
-  maxHeight: "90vh",
-
-  zIndex: "9999",
+  top: "50%",
+  left: "50%",
+  // Centralização perfeita via transform, ajustada depois pelo JS do drag
+  transform: "translate(-50%, -50%) scale(0.95)", 
+  width: "400px",
+  maxHeight: "85vh",
+  
+  zIndex: "99999",
   overflow: "hidden",
   display: "flex",
   flexDirection: "column",
 
+  // O "Vidro" Sólido
+  backgroundColor: "rgba(255, 255, 255, 0.95)",
+  backdropFilter: "blur(20px) saturate(180%)", // O segredo do visual Apple
+  borderRadius: "20px", // Cantos mais arredondados
+  boxShadow: "0 20px 40px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05)", // Borda sutil + Sombra profunda
+  
   opacity: "0",
-  transform: "scale(0.05)", // Estado inicial compatível com Genie
-  pointerEvents: "none",
-  fontFamily: "'Google Sans', 'Roboto'",
+  pointerEvents: "none", // Controlado pelo JS de animação
+  fontFamily: "'Google Sans', sans-serif",
+  transition: "opacity 0.3s ease, transform 0.3s cubic-bezier(0.19, 1, 0.22, 1)",
 };
+
 export const stylePopupHeader = {
   display: "flex",
-  flexDirection: "column",
-  alignItems: "stretch",
-  padding: "0",
-  backgroundColor: "#ffffff",
+  alignItems: "center", // Centralizado verticalmente
+  justifyContent: "space-between",
+  padding: "16px 20px",
+  background: "transparent", // Deixa o vidro do pai aparecer
+  borderBottom: "1px solid rgba(0,0,0,0.06)",
   cursor: "grab",
   userSelect: "none",
-  borderRadius: "12px 12px 0 0",
   flexShrink: "0",
-  position: "relative",
 };
 
 export const stylePopupTitle = {
-  fontSize: "18px",
+  fontSize: "16px", // Um pouco menor, mais elegante
   fontWeight: "600",
   color: "#202124",
-  flexGrow: "1",
+  letterSpacing: "-0.01em",
 };
-export const stylePopupVersion = {
-  fontSize: "12px",
-  fontWeight: "400",
-  color: "#70757a",
-  marginTop: "4px",
-};
+
 export const stylePopupCloseBtn = {
-  fontSize: "20px",
+  fontSize: "24px",
   color: "#5f6368",
   cursor: "pointer",
-  padding: "4px",
+  width: "28px",
+  height: "28px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
   borderRadius: "50%",
-  transition: "background-color 0.2s ease, color 0.2s ease",
-  lineHeight: "1",
-  zIndex: "10",
-  marginLeft: "8px",
+  background: "rgba(0,0,0,0.05)", // Fundo sutil
+  transition: "all 0.2s ease",
+  border: "none",
 };
-export const styleLabel = {
-  display: "block",
-  fontSize: "14px",
-  fontWeight: "500",
-  color: "#3c4043",
-  marginBottom: "8px",
-  marginTop: "16px",
-};
+
 export const styleSelect = {
   width: "100%",
-  padding: "10px 36px 10px 12px",
-  borderRadius: "8px",
+  padding: "12px 16px", // Mais gordinho (touch target)
+  borderRadius: "12px",
   border: "1px solid #dadce0",
-  backgroundColor: "#fff",
+  backgroundColor: "#f8f9fa", // Fundo levemente cinza (Input Google)
   fontSize: "14px",
   color: "#3c4043",
   boxSizing: "border-box",
   appearance: "none",
-  backgroundImage: `url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%233c4043%22%20d%3D%22M287%20197.3l-116.5-116.5c-4.7-4.7-12.4-4.7-17.1%200L5.4%20197.3c-4.7%204.7-4.7%2012.4%200%2017.1l17.1%2017.1c4.7%204.7%2012.4%204.7%2017.1%200l94.3-94.3c4.7-4.7%2012.4-4.7%2017.1%200l94.3%2094.3c4.7%204.7%2012.4%204.7%2017.1%200l17.1-17.1c4.7-4.7%204.7-12.4%200-17.1z%22%2F%3E%3C%2Fsvg%3E')`,
+  // SVG atualizado para uma seta mais fina
+  backgroundImage: `url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%235f6368%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')`,
   backgroundRepeat: "no-repeat",
   backgroundPosition: "right 12px center",
-  backgroundSize: "10px",
-  transition: "border-color 0.2s ease, box-shadow 0.2s ease",
-  fontFamily: "'Google Sans', 'Roboto'",
+  backgroundSize: "16px",
+  transition: "all 0.2s ease",
+  fontFamily: "'Google Sans', sans-serif",
+  cursor: "pointer",
 };
+
 export const styleButtonBase = {
-  flex: "1 1 0",
-  padding: "10px 0",
+  flex: "1",
+  padding: "12px 20px",
+  background: "#1a73e8",
   color: "#fff",
   border: "none",
-  borderRadius: "8px",
+  borderRadius: "100px", // Botão Pílula (Tendência Google/Apple atual)
   fontSize: "14px",
   fontWeight: "500",
+  letterSpacing: "0.25px",
   cursor: "pointer",
-  marginTop: "16px",
-  transition:
-    "background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease",
-  boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+  marginTop: "20px",
+  // Sombra suave, sem contorno preto duro
+  boxShadow: "0 2px 6px rgba(26, 115, 232, 0.3)",
+  transition: "transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, background 0.2s",
+  // IMPORTANTE: Adicionar no JS: element.onmousedown = () => el.style.transform = 'scale(0.96)'
 };
 export const styleCredit = {
   fontSize: "10px",
