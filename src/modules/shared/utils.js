@@ -240,7 +240,7 @@ export const styleFloatingButton = {
 };
 
 export const stylePopup = {
-  // ... (mantenha position, top, left, width, zIndex, etc) ...
+  // ... (mantenha position, top, left, width, zIndex, overflow, etc) ...
   position: "fixed",
   top: "50%",
   left: "50%",
@@ -250,34 +250,62 @@ export const stylePopup = {
   overflow: "hidden",
   display: "flex",
   flexDirection: "column",
-  backgroundColor: "rgba(255, 255, 255, 0.95)",
+
+  // --- MUDANÇA VISUAL AQUI (Descanso para os Olhos) ---
+  // Em vez de branco puro, usamos um "Cinza Google" muito suave com leve tom azulado.
+  // Isso separa o módulo do fundo branco do CRM sem ser escuro.
+  backgroundColor: "rgba(248, 249, 250, 0.96)", // Cor #F8F9FA (Surface)
+  
+  // O Blur continua (Vidro Fosco)
   backdropFilter: "blur(20px) saturate(180%)",
+  
+  // Borda mais delicada para definir o limite
   borderRadius: "20px",
-  boxShadow: "0 20px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)",
+  border: "1px solid rgba(255, 255, 255, 0.4)", // Borda interna de luz
+  boxShadow: 
+    "0 20px 50px -12px rgba(0,0,0,0.2), " + // Sombra profunda (Levitação)
+    "0 0 0 1px rgba(0,0,0,0.05), " +        // Borda externa sutil
+    "inset 0 1px 0 rgba(255,255,255,0.6)",  // Luz de topo (Apple feel)
+
   opacity: "0",
   pointerEvents: "none",
   fontFamily: "'Google Sans', 'Roboto'",
   transform: "translate(-50%, -50%)", 
 
-  // --- MUDANÇA AQUI: Transição Total com Física Apple ---
-  // 'all' permite que top/left/width/height animem ao expandir
+  // Física Apple (Mantida)
   transition: "all 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.3s ease",
-  
   willChange: "transform, opacity, width, height, top, left",
 };
 
 export const stylePopupHeader = {
   display: "flex",
-  flexDirection: "row", // Ajustado para alinhar itens
+  flexDirection: "row",
   alignItems: "center",
   justifyContent: "space-between",
   padding: "16px 24px",
-  backgroundColor: "transparent", // Transparente para ver o vidro
-  borderBottom: "1px solid rgba(0,0,0,0.05)",
+  
+  // --- MUDANÇA AQUI (DNA da Pill) ---
+  // Fundo escuro semi-transparente (Vidro Fumê)
+  backgroundColor: "rgba(50, 50, 50, 0.95)", 
+  
+  // Blur para manter o efeito de vidro Apple sobre o site atrás
+  backdropFilter: "blur(12px) saturate(180%)",
+  
+  // Uma linha sutil de luz na parte inferior para separar do conteúdo branco
+  borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+  
+  // Cores de Texto (Invertidas para contraste)
+  color: "#ffffff", 
+  
   cursor: "grab",
   userSelect: "none",
   flexShrink: "0",
   position: "relative",
+  
+  // Garante que o header respeite o arredondamento do topo da janela
+  // (Como o pai tem overflow hidden, isso é visualmente automático, mas bom garantir)
+  borderTopLeftRadius: "20px",
+  borderTopRightRadius: "20px",
 };
 
 export const stylePopupTitle = {
@@ -298,7 +326,10 @@ export const stylePopupVersion = {
 
 export const stylePopupCloseBtn = {
   fontSize: "20px",
-  color: "#5f6368",
+  
+  // Ícone claro
+  color: "#bdc1c6", 
+  
   cursor: "pointer",
   width: "28px",
   height: "28px",
@@ -306,8 +337,10 @@ export const stylePopupCloseBtn = {
   alignItems: "center",
   justifyContent: "center",
   borderRadius: "50%",
-  background: "rgba(0,0,0,0.05)",
-  transition: "background-color 0.2s ease, color 0.2s ease",
+  
+  // Fundo inicial transparente
+  background: "transparent", 
+  transition: "all 0.2s ease",
   lineHeight: "1",
   zIndex: "10",
   marginLeft: "12px",
