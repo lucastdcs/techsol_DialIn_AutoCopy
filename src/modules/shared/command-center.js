@@ -6,8 +6,8 @@ const COLORS = {
   glassActive: "rgba(79, 79, 79, 0.89)", // Quando agarra
   glassHighlight: "rgba(255, 255, 255, 0.08)",
   iconIdle: "#c2c5c8ff",
-  gripColor: "linear-gradient(to right, #4285F4, #EA4335, #FBBC05, #34A853)",
-  gripActive: "linear-gradient(to left, #4285F4, #EA4335, #FBBC05, #34A853)",
+  gripColor: 'linear-gradient(to right, #4285F4, #EA4335, #FBBC05, #34A853)',
+  gripActive:"linear-gradient(to left, #4285F4, #EA4335, #FBBC05, #34A853)",
   iconActive: "#FFFFFF",
   // Cores para o "System Check"
   blue: "#8AB4F8",
@@ -178,36 +178,36 @@ export function initCommandCenter(actions) {
                 opacity: 1;
             }
 
-            /* ESTADO COLAPSADO (Só o Grip visível) */
-          .cw-pill.collapsed {
-              /* Encolhe altura e largura para ficar só um "tic-tac" */
-              width: 40px; 
-              height: 12px; /* Altura do grip + padding mínimo */
-              padding: 8px 0;
-              gap: 0;
-              overflow: hidden; /* Esconde os botões */
-              border-radius: 20px; /* Mais arredondado */
-              background: rgba(61, 61, 61, 0.95); /* Menos transparente */
-          }
 
-          /* Esconde conteúdo interno quando colapsado */
-          .cw-pill.collapsed > button, 
-          .cw-pill.collapsed > .cw-sep,
-          .cw-pill.collapsed > .cw-status-container {
-              opacity: 0;
-              pointer-events: none;
-              transform: scale(0.8);
-              transition: opacity 0.2s, transform 0.2s; /* Rápido */
-          }
 
-          /* Ajusta o grip quando colapsado */
-          .cw-pill.collapsed .cw-grip {
-              margin-bottom: 0;
-          }
-          .cw-pill.collapsed .cw-grip-bar {
-              background-color: ${COLORS.blue}; /* Azul para indicar "estou aqui" */
-              opacity: 0.8;
-          }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             .cw-grip:active { cursor: grabbing; color: #fff; }
             
@@ -286,7 +286,7 @@ export function initCommandCenter(actions) {
 
   const pill = document.createElement("div");
   pill.className = "cw-pill side-right";
-  pill.innerHTML = `
+ pill.innerHTML = `
         <div class="cw-grip" title="Arrastar">
             <div class="cw-grip-bar"></div>
         </div>
@@ -306,9 +306,9 @@ export function initCommandCenter(actions) {
             <div class="cw-check" id="cw-success" style="display:none;">${ICONS.check}</div>
         </div>
     `;
-  const overlay = document.createElement("div");
-  overlay.className = "cw-focus-backdrop";
-  document.body.appendChild(overlay);
+    const overlay = document.createElement('div');
+    overlay.className = 'cw-focus-backdrop';
+    document.body.appendChild(overlay);
   document.body.appendChild(pill);
 
   // Ligando os eventos de clique (A única diferença do seu script)
@@ -333,13 +333,13 @@ export function initCommandCenter(actions) {
   // Envelopado em função async auto-executável para manter o escopo limpo
   (async function startAnimation() {
     // Simula o fim da splash screen
-    await esperar(2850);
+    await esperar(2800);
 
     // ETAPA 1: A Base "Atraca" (Dock)
     pill.classList.add("docked");
 
     await esperar(300); // A base se estabiliza
-    pill.style.transform = "none";
+
 
     // ETAPA 2: Ferramentas Carregam (Cascata)
     const items = pill.querySelectorAll(".cw-btn");
@@ -448,11 +448,11 @@ export function initCommandCenter(actions) {
     } else {
       // Clique estático (Click nos botões é tratado pelos event listeners acima)
 
-      // Se clicou no Grip (e não arrastou)
-      if (e.target.closest('.cw-grip')) {
-          pill.classList.toggle('collapsed');
-          return; // Para não processar clique de botão
-      }
+
+
+
+
+
 
       const btn = e.target.closest("button");
       if (btn) {
@@ -465,41 +465,42 @@ export function initCommandCenter(actions) {
 
 // Nova versão com controle manual de fim e tempo mínimo
 export function triggerProcessingAnimation() {
-  const pill = document.querySelector(".cw-pill");
-  const overlay = document.querySelector(".cw-focus-backdrop"); // Pega o overlay
-  const loader = document.getElementById("cw-loader");
-  const success = document.getElementById("cw-success");
+    const pill = document.querySelector('.cw-pill');
+    const overlay = document.querySelector('.cw-focus-backdrop'); // Pega o overlay
+    const loader = document.getElementById('cw-loader');
+    const success = document.getElementById('cw-success');
+    
+    if (!pill || !loader || !success) return () => {}; // Retorna função vazia se der erro
 
-  if (!pill || !loader || !success) return () => {}; // Retorna função vazia se der erro
+    // 1. Inicia Estado "Pensando"
+    const startTime = Date.now(); // Marca a hora que começou
+    pill.classList.add('processing');
+    if (overlay) overlay.classList.add('active'); // Escurece a tela
+    
+    loader.style.display = 'flex';
+    success.style.display = 'none';
 
-  // 1. Inicia Estado "Pensando"
-  const startTime = Date.now(); // Marca a hora que começou
-  pill.classList.add("processing");
-  if (overlay) overlay.classList.add("active"); // Escurece a tela
+    // RETORNA A FUNÇÃO "PRONTO" PARA QUEM CHAMOU USAR
+    return function finish() {
+        // Calcula quanto tempo passou desde o início
+        const elapsed = Date.now() - startTime;
+        // Se foi muito rápido, força esperar até completar pelo menos 1.5s (dopamina)
+        const remainingTime = Math.max(0, 1500 - elapsed);
 
-  loader.style.display = "flex";
-  success.style.display = "none";
+        setTimeout(() => {
+            // 2. Mostra o Sucesso (Check Verde)
+            loader.style.display = 'none';
+            success.style.display = 'block';
+            void success.offsetWidth; // Reflow p/ animação
+            
+            pill.classList.add('success');
+            
+            // 3. Encerramento (Depois de mostrar o check por 2s)
+            setTimeout(() => {
+                pill.classList.remove('processing', 'success');
+                if (overlay) overlay.classList.remove('active'); // Clareia a tela
+            }, 2000);
 
-  // RETORNA A FUNÇÃO "PRONTO" PARA QUEM CHAMOU USAR
-  return function finish() {
-    // Calcula quanto tempo passou desde o início
-    const elapsed = Date.now() - startTime;
-    // Se foi muito rápido, força esperar até completar pelo menos 1.5s (dopamina)
-    const remainingTime = Math.max(0, 1500 - elapsed);
-
-    setTimeout(() => {
-      // 2. Mostra o Sucesso (Check Verde)
-      loader.style.display = "none";
-      success.style.display = "block";
-      void success.offsetWidth; // Reflow p/ animação
-
-      pill.classList.add("success");
-
-      // 3. Encerramento (Depois de mostrar o check por 2s)
-      setTimeout(() => {
-        pill.classList.remove("processing", "success");
-        if (overlay) overlay.classList.remove("active"); // Clareia a tela
-      }, 2000);
-    }, remainingTime);
-  };
+        }, remainingTime);
+    };
 }
