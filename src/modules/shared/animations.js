@@ -64,64 +64,91 @@ if (!document.getElementById('cw-module-styles')) {
 export function toggleGenieAnimation(show, popup, buttonId) {
     const btn = document.getElementById(buttonId);
     
-    // Adiciona classe base se faltar
-    if (!popup.classList.contains('cw-module-window')) {
-        popup.classList.add('cw-module-window');
+    // --- CÁLCULO DA ROTA (DELTA) --
+    // Precisamos saber a distância exata entre o centro da tela e o botão
+    let deltaX = 0;
+    let deltaY = 0;
+
+    if (btn) {
+        const btnRect = btn.getBoundingClientRect();
+        const screenX = window.innerWidth / 2;
+        const screenY = window.innerHeight / 2;
+        
+        // Centro do botão
+        const btnX = btnRect.left + (btnRect.width / 2);
+        const btnY = btnRect.top + (btnRect.height / 2);
+
+        deltaX = btnX - screenX;
+        deltaY = btnY - screenY;
     }
 
-    // Função matemática da origem
-    const updateOrigin = () => {
-        if (!btn) return;
-        const btnRect = btn.getBoundingClientRect();
-        
-        const startX = btnRect.left + (btnRect.width / 2);
-        const startY = btnRect.top + (btnRect.height / 2);
-        
-        const endX = popup.offsetLeft; 
-        const endY = popup.offsetTop;
-        
-        const originX = startX - endX;
-        const originY = startY - endY;
-        
-        popup.style.transformOrigin = `${originX}px ${originY}px`;
-    };
-
     if (show) {
-        // --- ABRIR ---
-        
-        // 1. Calcula origem fresca
-        updateOrigin();
-        
-        // 2. Limpa estilos inline que possam bloquear (ex: opacity: 0 manual)
-        popup.style.opacity = ''; 
-        popup.style.pointerEvents = ''; 
-        popup.style.transform = ''; 
+        // --- ABRIR (Correção do Cold Start) ---
 
-        // 3. Aplica Classes
-        // Força reflow
-        void popup.offsetWidth;
-        popup.classList.add('open');
-        popup.classList.remove('idle');
+        // 1. GARANTE RENDERIZAÇÃO INICIAL (Invisível)
+        // Primeiro, garantimos que o elemento ocupa espaço no layout, mas totalmente transparente
+        popup.style.display = 'flex'; // Garante que não é 'none'
+        popup.style.opacity = '0';
+        popup.style.transition = 'none'; // Desliga animações para o teleporte
         
-        if (btn) btn.classList.add('active');
-        
-        // 4. Liga o detector de Idle
-        setupIdleListener(popup, buttonId);
+        // 2. TELEPORTE (Posição Inicial no Botão)
+        // Movemos ele para cima do botão instantaneamente
+        popup.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px)) scale(0.05)`;
+
+        // 3. FORÇA O REFLOW (Crucial!)
+        // Isso obriga o navegador a "aceitar" a posição acima antes de continuar.
+        // Acessar offsetWidth força o navegador a calcular o layout.
+        void popup.offsetWidth; 
+
+        // 4. A ANIMAÇÃO (Lançar)
+        // Usamos requestAnimationFrame DUPLO para garantir que o frame inicial foi pintado
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                // Agora ligamos a física
+                popup.style.transition = "opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1)";
+                popup.style.opacity = '1';
+                popup.style.pointerEvents = 'auto';
+                
+                // Destino final (Centro)
+                popup.style.transform = "translate(-50%, -50%) scale(1)";
+                
+                // Ativa estado visual do botão
+                if (btn) btn.classList.add('active');
+            });
+        });
+
+        // Liga listeners se existirem
+        if (typeof setupIdleListener === 'function') setupIdleListener(popup, buttonId);
 
     } else {
         // --- FECHAR ---
         
-        // 1. Recalcula origem (caso a pílula tenha movido)
-        updateOrigin();
-        
-        // 2. Limpa TUDO (Fix do botão não fechar)
-        popup.classList.remove('open');
-        popup.classList.remove('idle'); // Remove idle para não conflitar
-        
-        if (btn) btn.classList.remove('active');
+        // 1. Configura saída
+        popup.style.transition = "opacity 0.25s ease, transform 0.3s cubic-bezier(0.5, 0, 1, 1)";
+        popup.style.pointerEvents = 'none';
 
-        // 3. Mata o listener de idle
-        removeIdleListener(popup);
+        // 2. Anima de volta para o delta (Botão)
+        requestAnimationFrame(() => {
+            popup.style.opacity = '0';
+            popup.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px)) scale(0.1)`;
+        });
+
+        // 3. Limpeza
+        if (btn) btn.classList.remove('active');
+        
+        // Remove listener
+        if (typeof removeIdleListener === 'function') removeIdleListener(popup);
+
+        // Aguarda animação terminar para esconder/limpar
+        setTimeout(() => {
+            // Só esconde display none se necessário pela sua lógica de app, 
+            // mas manter opacity 0 é geralmente suficiente e mais performático.
+            // popup.style.display = 'none'; 
+            
+            // Limpa estilos inline para não atrapalhar o Drag & Drop depois
+            popup.style.transition = '';
+            popup.style.transform = ''; 
+        }, 300);
     }
 }
 
