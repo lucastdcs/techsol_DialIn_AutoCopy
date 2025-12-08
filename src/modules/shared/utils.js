@@ -136,10 +136,7 @@ export function showToast(message, opts = {}) {
 }
 
 export function makeDraggable(element, handle = null) {
-  let pos1 = 0,
-    pos2 = 0,
-    pos3 = 0,
-    pos4 = 0;
+  let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
   const dragHandle = handle || element;
 
   dragHandle.style.cursor = "grab";
@@ -147,28 +144,50 @@ export function makeDraggable(element, handle = null) {
 
   function dragMouseDown(e) {
     if (
-      ["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(e.target.tagName) ||
-      e.target.classList.contains("no-drag")
-    )
+      ["INPUT", "TEXTAREA", "SELECT", "BUTTON", "I"].includes(e.target.tagName) ||
+      e.target.classList.contains("no-drag") ||
+      e.target.closest('.cw-card-title-input') // Protege inputs do header
+    ) {
       return;
+    }
 
     e = e || window.event;
-    // e.preventDefault(); // Removido para permitir foco
+    // e.preventDefault(); // Manter comentado para permitir foco em inputs se houver
+    
     dragHandle.style.cursor = "grabbing";
 
+    // --- O PULO DO GATO (FIX DO "VOO") ---
+    // 1. Removemos a transição para o arrasto ser instantâneo (sem lag)
+    element.style.transition = "none";
+
+    // 2. Pegamos a posição visual exata atual na tela
     const rect = element.getBoundingClientRect();
+
+    // 3. Importante: Resetamos o transform! 
+    // O 'translate(-50%, -50%)' é o causador do pulo. Ao removê-lo aqui,
+    // garantimos que o left/top abaixo sejam absolutos e verdadeiros.
+    element.style.transform = "none";
+
+    // 4. Fixamos a posição em pixels exatos (substituindo o 50% do CSS)
     element.style.left = rect.left + "px";
     element.style.top = rect.top + "px";
+    
+    // 5. Limpa âncoras conflitantes
     element.style.right = "auto";
     element.style.bottom = "auto";
+    element.style.margin = "0";
+    
+    // Garante largura fixa para não encolher ao sair do 'center'
     if (!element.style.width) element.style.width = rect.width + "px";
+    // --------------------------------------
 
     highestZIndex++;
     element.style.zIndex = highestZIndex;
+    
     pos3 = e.clientX;
     pos4 = e.clientY;
 
-    element.setAttribute("data-dragging", "false");
+    element.setAttribute("data-dragging", "true"); // Marca que começou
     document.onmouseup = closeDragElement;
     document.onmousemove = elementDrag;
   }
@@ -176,22 +195,29 @@ export function makeDraggable(element, handle = null) {
   function elementDrag(e) {
     e = e || window.event;
     e.preventDefault();
+    
+    // Cálculo do Delta
     pos1 = pos3 - e.clientX;
     pos2 = pos4 - e.clientY;
     pos3 = e.clientX;
     pos4 = e.clientY;
-    element.setAttribute("data-dragging", "true");
-    element.style.top = element.offsetTop - pos2 + "px";
-    element.style.left = element.offsetLeft - pos1 + "px";
+
+    // Aplica nova posição
+    element.style.top = (element.offsetTop - pos2) + "px";
+    element.style.left = (element.offsetLeft - pos1) + "px";
   }
 
   function closeDragElement() {
     document.onmouseup = null;
     document.onmousemove = null;
     dragHandle.style.cursor = "grab";
+    
+    // Restaura a transição suave (opcional, para opacidade/outros)
+    // Mas mantém transform desligado para não pular de volta
     setTimeout(() => {
-      element.setAttribute("data-dragging", "false");
-    }, 100);
+        element.style.transition = "opacity 0.3s ease"; 
+        element.setAttribute("data-dragging", "false");
+    }, 50);
   }
 }
 
@@ -221,39 +247,32 @@ export const styleFloatingButton = {
 };
 
 export const stylePopup = {
+
   position: "fixed",
   top: "50%",
   left: "50%",
   width: "400px",
   maxHeight: "85vh",
-
   zIndex: "99999",
   overflow: "hidden",
   display: "flex",
   flexDirection: "column",
-
-  // O Vidro Apple/Google
   backgroundColor: "rgba(255, 255, 255, 0.95)",
   backdropFilter: "blur(20px) saturate(180%)",
-  borderRadius: "20px", // Cantos suaves
+  borderRadius: "20px",
   boxShadow: "0 20px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)",
-
   opacity: "0",
-
-
-  transform: "translate(-50%, -50%)", 
-  
   pointerEvents: "none",
   fontFamily: "'Google Sans', 'Roboto'",
-  
 
+  // Mantenha o transform inicial para centralizar
+  transform: "translate(-50%, -50%)", 
 
-  // --- A MÁGICA LÍQUIDA ---
-  // duration: 0.5s (nem rápido demais, nem lento)
-  // curve: cubic-bezier(0.19, 1, 0.22, 1) -> Começa rápido e tem um "pouso" longo e suave.
+  // --- ALTERAÇÃO AQUI ---
+  // Seja específico na transição. Anime apenas o que interessa para o "Genie Effect".
+  // NUNCA anime 'top', 'left' ou 'all' aqui, senão o drag fica "gelatinoso".
   transition: "opacity 0.4s ease, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1)",
   
-  // Dica: Adicione isso para evitar borrões de sub-pixel durante o movimento
   willChange: "transform, opacity",
 };
 
