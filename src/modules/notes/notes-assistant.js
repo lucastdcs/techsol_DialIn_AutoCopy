@@ -773,20 +773,40 @@ export function initCaseNotesAssistant() {
     });
 
     // 4. (CORREÇÃO) Marca as Tasks no Novo Componente
-    if (activeLinkedTasks.size > 0) {
-        // Pega o que já está selecionado visualmente
-        const currentSelection = stepTasks.getCheckedElements().map(i => i.value);
-        
-        activeLinkedTasks.forEach(taskId => {
-            // Se o cenário pede a task, e ela NÃO está marcada, marca ela.
-            if (!currentSelection.includes(taskId)) {
-                stepTasks.toggleTask(taskId, true); // true = Forçar ativar
+    const tasksToEnable = new Set();
+    const tasksToDisable = new Set();
+
+    // Varre TODOS os inputs de cenário disponíveis na tela (marcados ou não)
+    const allScenarioInputs = container.querySelectorAll('input[type="checkbox"], input[type="radio"]');
+
+    allScenarioInputs.forEach(input => {
+        const snippet = scenarioSnippets[input.id];
+        if (snippet && snippet.linkedTask) {
+            if (input.checked) {
+                // Se marcado, entra na lista para LIGAR
+                tasksToEnable.add(snippet.linkedTask);
+            } else {
+                // Se desmarcado, entra na lista para DESLIGAR
+                tasksToDisable.add(snippet.linkedTask);
             }
-        });
-        
-        // Opcional: Se quiser que ao DESMARCAR o cenário a task suma, precisaria de uma lógica de diff aqui.
-        // Por enquanto, o comportamento aditivo (só adiciona) é mais seguro para não apagar o que o usuário fez manual.
-    }
+        }
+    });
+
+    // LÓGICA DE APLICAÇÃO:
+    
+    // 1. Desliga o que foi desmarcado...
+    tasksToDisable.forEach(taskId => {
+        // ...MAS CUIDADO: Só desliga se a task NÃO estiver na lista de "Ligar".
+        // (Isso previne bugs se você tiver 2 checkboxes para a mesma task e apenas 1 estiver marcado)
+        if (!tasksToEnable.has(taskId)) {
+            stepTasks.toggleTask(taskId, false); // false = Forçar OFF
+        }
+    });
+
+    // 2. Liga o que foi marcado
+    tasksToEnable.forEach(taskId => {
+        stepTasks.toggleTask(taskId, true); // true = Forçar ON
+    });
   }
 
   mainStatusSelect.onchange = () => {
