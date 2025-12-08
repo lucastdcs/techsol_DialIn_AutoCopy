@@ -129,7 +129,7 @@ export function toggleGenieAnimation(show, popup, buttonId) {
         
         // 1. Configuração de Saída
         // Curva mais agressiva para dar a sensação de sucção rápida para dentro do botão
-        popup.style.transition = "opacity 0.3s ease, transform 0.45s cubic-bezier(0.5, 0, 1, 1)";
+        popup.style.transition = "opacity 0.3s ease, transform 0.30s cubic-bezier(0.5, 0, 1, 1)";
         popup.style.pointerEvents = 'none';
 
         // 2. A Animação
@@ -148,7 +148,7 @@ export function toggleGenieAnimation(show, popup, buttonId) {
             // Limpa estilos inline para não poluir
             popup.style.transition = '';
             popup.style.transform = ''; 
-        }, 450);
+        }, 300);
 
         // 4. Mata listeners
         if (typeof removeIdleListener === 'function') {
