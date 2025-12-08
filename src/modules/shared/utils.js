@@ -220,17 +220,19 @@ function elementDrag(e) {
     element.style.left = nextLeft + "px";
   }
 
-  function closeDragElement() {
+function closeDragElement() {
     document.onmouseup = null;
     document.onmousemove = null;
     dragHandle.style.cursor = "grab";
     
-    // --- CORREÇÃO: Restaurar a Física Apple ---
-    // Antes estava apenas 'opacity 0.3s'. 
-    // Agora restauramos a curva completa para que o 'Expandir' funcione liso.
     setTimeout(() => {
+        // ... (seu código existente de restaurar transition) ...
         element.style.transition = "all 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.3s ease";
         element.setAttribute("data-dragging", "false");
+
+        // --- ADICIONE ESTA LINHA ---
+        // Marca que o usuário escolheu uma posição personalizada
+        element.setAttribute("data-moved", "true"); 
     }, 50);
   }
 }

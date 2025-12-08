@@ -63,99 +63,119 @@ if (!document.getElementById('cw-module-styles')) {
  */
 export function toggleGenieAnimation(show, popup, buttonId) {
     const btn = document.getElementById(buttonId);
-    
-    // --- CÁLCULO DA ROTA (DELTA) --
-    // Precisamos saber a distância exata entre o centro da tela e o botão
-    let deltaX = 0;
-    let deltaY = 0;
+    if (!popup) return;
 
+    // Verifica se é a primeira vez (Centro) ou se já foi movido (Customizado)
+    const isCustomPosition = popup.getAttribute("data-moved") === "true";
+
+    // 1. ONDE ESTÁ O BOTÃO? (Origem)
+    let btnCenter = { x: 0, y: 0 };
     if (btn) {
         const btnRect = btn.getBoundingClientRect();
-        const screenX = window.innerWidth / 2;
-        const screenY = window.innerHeight / 2;
-        
-        // Centro do botão
-        const btnX = btnRect.left + (btnRect.width / 2);
-        const btnY = btnRect.top + (btnRect.height / 2);
-
-        deltaX = btnX - screenX;
-        deltaY = btnY - screenY;
+        btnCenter.x = btnRect.left + (btnRect.width / 2);
+        btnCenter.y = btnRect.top + (btnRect.height / 2);
     }
 
-    if (show) {
-        // --- ABRIR (Correção do Cold Start) ---
+    // 2. ONDE É O DESTINO?
+    let destX, destY;
 
-        // 1. GARANTE RENDERIZAÇÃO INICIAL (Invisível)
-        // Primeiro, garantimos que o elemento ocupa espaço no layout, mas totalmente transparente
-        popup.style.display = 'flex'; // Garante que não é 'none'
-        popup.style.opacity = '0';
-        popup.style.transition = 'none'; // Desliga animações para o teleporte
+    if (!isCustomPosition) {
+        // CASO A: Primeira vez -> Centro da Tela
+        destX = window.innerWidth / 2;
+        destY = window.innerHeight / 2;
+    } else {
+        // CASO B: Já foi movido -> Posição Atual do DOM
+        // Pegamos o boundingBox atual (mesmo oculto, ele guarda a posição top/left setada pelo drag)
+        const rect = popup.getBoundingClientRect();
         
-        // 2. TELEPORTE (Posição Inicial no Botão)
-        // Movemos ele para cima do botão instantaneamente
-        popup.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px)) scale(0.05)`;
+        // O centro do popup na posição onde ele foi deixado
+        destX = rect.left + (rect.width / 2);
+        destY = rect.top + (rect.height / 2);
+        
+        // Fallback de segurança: Se por algum motivo as coordenadas forem 0 (bug de display none)
+        // forçamos voltar ao centro para não quebrar.
+        if (destX === 0 && destY === 0) {
+            destX = window.innerWidth / 2;
+            destY = window.innerHeight / 2;
+        }
+    }
 
-        // 3. FORÇA O REFLOW (Crucial!)
-        // Isso obriga o navegador a "aceitar" a posição acima antes de continuar.
-        // Acessar offsetWidth força o navegador a calcular o layout.
-        void popup.offsetWidth; 
+    // 3. CALCULA O DELTA (Distância do voo)
+    const deltaX = btnCenter.x - destX;
+    const deltaY = btnCenter.y - destY;
 
-        // 4. A ANIMAÇÃO (Lançar)
-        // Usamos requestAnimationFrame DUPLO para garantir que o frame inicial foi pintado
+    if (show) {
+        // --- ABRIR ---
+
+        // A. RESET INSTANTÂNEO
+        popup.style.transition = 'none';
+        popup.style.opacity = '0';
+        popup.style.pointerEvents = 'auto';
+
+        // B. POSIÇÃO DE PARTIDA (NO BOTÃO)
+        if (!isCustomPosition) {
+            // Se for centralizado, precisamos manter o offset de -50%
+            popup.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px)) scale(0.05)`;
+        } else {
+            // Se for posição fixa (drag), NÃO usamos translate -50%
+            popup.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(0.05)`;
+        }
+
+        // C. REFLOW
+        void popup.offsetWidth;
+
+        // D. ANIMAÇÃO DE ENTRADA
         requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                // Agora ligamos a física
-                popup.style.transition = "opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1)";
-                popup.style.opacity = '1';
-                popup.style.pointerEvents = 'auto';
-                
-                // Destino final (Centro)
-                popup.style.transform = "translate(-50%, -50%) scale(1)";
-                
-                // Ativa estado visual do botão
-                if (btn) btn.classList.add('active');
-            });
-        });
+            popup.classList.add('open'); // Suas classes de controle
+            if (btn) btn.classList.add('active');
 
-        // Liga listeners se existirem
+            // Física Apple
+            popup.style.transition = "opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1)";
+            popup.style.opacity = '1';
+
+            // POSIÇÃO FINAL (DESTINO)
+            if (!isCustomPosition) {
+                // Volta para o centro perfeito
+                popup.style.transform = "translate(-50%, -50%) scale(1)";
+            } else {
+                // Fica onde o top/left mandam (sem offset de translate)
+                popup.style.transform = "translate(0, 0) scale(1)";
+            }
+        });
+        
+        // Listeners (Idle, etc)
         if (typeof setupIdleListener === 'function') setupIdleListener(popup, buttonId);
 
     } else {
         // --- FECHAR ---
-        
-        // 1. Configura saída
+
+        // A. CONFIGURA SAÍDA
         popup.style.transition = "opacity 0.25s ease, transform 0.3s cubic-bezier(0.5, 0, 1, 1)";
         popup.style.pointerEvents = 'none';
 
-        // 2. Anima de volta para o delta (Botão)
+        // B. ANIMAÇÃO DE SAÍDA (VOLTA PRO BOTÃO)
         requestAnimationFrame(() => {
             popup.style.opacity = '0';
-            popup.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px)) scale(0.1)`;
+            
+            if (!isCustomPosition) {
+                popup.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px)) scale(0.1)`;
+            } else {
+                popup.style.transform = `translate(${deltaX}px, ${deltaY}px) scale(0.1)`;
+            }
         });
 
-        // 3. Limpeza
-        if (btn) btn.classList.remove('active');
-        
-        // Remove listener
-        if (typeof removeIdleListener === 'function') removeIdleListener(popup);
-
-        // Aguarda animação terminar para esconder/limpar
-setTimeout(() => {
+        // C. LIMPEZA
+        setTimeout(() => {
             popup.classList.remove('open');
-            popup.classList.remove('idle');
             if (btn) btn.classList.remove('active');
             
-            // Limpa estilos de animação
+            // Limpa estilos
             popup.style.transition = '';
             popup.style.transform = ''; 
-            
-            // --- A CORREÇÃO MÁGICA ---
-            // Remove a largura inline (700px), forçando voltar ao padrão do CSS (380px/400px)
-            // Isso garante que na próxima abertura ele nasça pequeno e centralizado corretamente.
-            popup.style.width = ''; 
-            popup.style.height = ''; // Boa prática resetar altura também se houver expandir vertical
-            
+            // IMPORTANTE: Não limpamos top/left aqui, para a memória persistir
         }, 300);
+
+        if (typeof removeIdleListener === 'function') removeIdleListener(popup);
     }
 }
 
