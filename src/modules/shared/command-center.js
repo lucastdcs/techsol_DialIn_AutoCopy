@@ -179,36 +179,6 @@ export function initCommandCenter(actions) {
             }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             .cw-grip:active { cursor: grabbing; color: #fff; }
             
            @keyframes successPop {
@@ -447,12 +417,6 @@ export function initCommandCenter(actions) {
       }, 600);
     } else {
       // Clique estático (Click nos botões é tratado pelos event listeners acima)
-
-
-
-
-
-
 
       const btn = e.target.closest("button");
       if (btn) {

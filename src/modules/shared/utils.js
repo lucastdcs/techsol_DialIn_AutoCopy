@@ -246,8 +246,15 @@ export const stylePopup = {
   pointerEvents: "none",
   fontFamily: "'Google Sans', 'Roboto'",
   
-  // 2. Ajustamos a transição para ser mais permissiva com mudanças de transform
-  transition: "opacity 0.3s ease, transform 0.4s cubic-bezier(0.19, 1, 0.22, 1)",
+
+
+  // --- A MÁGICA LÍQUIDA ---
+  // duration: 0.5s (nem rápido demais, nem lento)
+  // curve: cubic-bezier(0.19, 1, 0.22, 1) -> Começa rápido e tem um "pouso" longo e suave.
+  transition: "opacity 0.4s ease, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1)",
+  
+  // Dica: Adicione isso para evitar borrões de sub-pixel durante o movimento
+  willChange: "transform, opacity",
 };
 
 export const stylePopupHeader = {
