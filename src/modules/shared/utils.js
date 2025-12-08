@@ -240,7 +240,7 @@ export const styleFloatingButton = {
 };
 
 export const stylePopup = {
-  // ... (mantenha position, top, left, width, zIndex, overflow, etc) ...
+  // ... (mantenha position, top, left, width, zIndex, etc) ...
   position: "fixed",
   top: "50%",
   left: "50%",
@@ -250,30 +250,19 @@ export const stylePopup = {
   overflow: "hidden",
   display: "flex",
   flexDirection: "column",
-
-  // --- MUDANÇA VISUAL AQUI (Descanso para os Olhos) ---
-  // Em vez de branco puro, usamos um "Cinza Google" muito suave com leve tom azulado.
-  // Isso separa o módulo do fundo branco do CRM sem ser escuro.
   backgroundColor: "rgba(248, 249, 250, 0.96)", // Cor #F8F9FA (Surface)
-  
-  // O Blur continua (Vidro Fosco)
   backdropFilter: "blur(20px) saturate(180%)",
-  
-  // Borda mais delicada para definir o limite
   borderRadius: "20px",
-  border: "1px solid rgba(255, 255, 255, 0.4)", // Borda interna de luz
-  boxShadow: 
-    "0 20px 50px -12px rgba(0,0,0,0.2), " + // Sombra profunda (Levitação)
-    "0 0 0 1px rgba(0,0,0,0.05), " +        // Borda externa sutil
-    "inset 0 1px 0 rgba(255,255,255,0.6)",  // Luz de topo (Apple feel)
-
+  boxShadow: "0 20px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)",
   opacity: "0",
   pointerEvents: "none",
   fontFamily: "'Google Sans', 'Roboto'",
   transform: "translate(-50%, -50%)", 
 
-  // Física Apple (Mantida)
+  // --- MUDANÇA AQUI: Transição Total com Física Apple ---
+  // 'all' permite que top/left/width/height animem ao expandir
   transition: "all 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.3s ease",
+  
   willChange: "transform, opacity, width, height, top, left",
 };
 
