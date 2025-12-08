@@ -205,56 +205,65 @@ export function initCaseNotesAssistant() {
 
   // Botão Expandir no Header
   const headerContainer = header.lastElementChild;
-  if (headerContainer) {
-    const expandBtn = document.createElement("div");
-    // Ícone inicial
-    expandBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>`;
-    expandBtn.classList.add("no-drag");
+    
+    if (headerContainer) {
+        const expandBtn = document.createElement("div");
+        
+        // 1. ADICIONE UMA CLASSE PARA ENCONTRARMOS DEPOIS
+        expandBtn.className = "cw-expand-btn no-drag"; 
 
-    Object.assign(expandBtn.style, {
-      fontSize: "20px",
-      color: "#9AA0A6",
-      cursor: "pointer",
-      padding: "8px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      marginRight: "4px",
-      marginLeft: "auto",
-      borderRadius: "50%",
-      transition: "background 0.2s, transform 0.3s ease", // Adicione transform aqui
-    });
+        // Ícone inicial (SVG Expandir)
+        const iconExpand = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>`;
+        const iconContract = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7"/></svg>`;
 
-    expandBtn.title = "Expandir/Contrair Janela";
-    expandBtn.onmouseover = () => (expandBtn.style.backgroundColor = "#e8eaed");
-    expandBtn.onmouseout = () =>
-      (expandBtn.style.backgroundColor = "transparent");
+        expandBtn.innerHTML = iconExpand;
 
-    let isExpanded = false;
+        Object.assign(expandBtn.style, {
+            fontSize: "20px",
+            color: "#9AA0A6",
+            cursor: "pointer",
+            padding: "8px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            marginRight: "4px",
+            marginLeft: "auto",
+            borderRadius: "50%",
+            transition: "background 0.2s, transform 0.3s ease",
+        });
 
-    expandBtn.onclick = () => {
-      isExpanded = !isExpanded;
+        expandBtn.title = "Expandir/Contrair Janela";
+        expandBtn.onmouseover = () => (expandBtn.style.backgroundColor = "#e8eaed");
+        expandBtn.onmouseout = () => (expandBtn.style.backgroundColor = "transparent");
 
-      // 1. Gira o ícone para dar feedback visual
-      expandBtn.style.transform = isExpanded
-        ? "rotate(180deg)"
-        : "rotate(0deg)";
+        let isExpanded = false;
 
-      // 2. Aplica a largura com a nova transição suave
-      popup.style.width = isExpanded ? "700px" : "380px";
+        // --- A MÁGICA: CRIAMOS UMA FUNÇÃO PÚBLICA NO ELEMENTO ---
+        expandBtn.resetState = () => {
+            isExpanded = false;
+            expandBtn.style.transform = "rotate(0deg)";
+            expandBtn.innerHTML = iconExpand;
+            // Remove largura inline para voltar ao CSS padrão (380px/400px)
+            popup.style.width = ""; 
+        };
 
-      // (Opcional) Muda o ícone dependendo do estado
-      if (isExpanded) {
-        expandBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7"/></svg>`; // Contrair
-      } else {
-        expandBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>`; // Expandir
-      }
-    };
+        expandBtn.onclick = () => {
+            isExpanded = !isExpanded;
 
-    const closeBtn = headerContainer.lastElementChild;
-    if (closeBtn) headerContainer.insertBefore(expandBtn, closeBtn);
-    else headerContainer.appendChild(expandBtn);
-  }
+            // 1. Gira
+            expandBtn.style.transform = isExpanded ? "rotate(180deg)" : "rotate(0deg)";
+
+            // 2. Aplica largura
+            popup.style.width = isExpanded ? "700px" : ""; // Vazio volta ao CSS original
+
+            // 3. Muda ícone
+            expandBtn.innerHTML = isExpanded ? iconContract : iconExpand;
+        };
+
+        const closeBtn = headerContainer.lastElementChild;
+        if (closeBtn) headerContainer.insertBefore(expandBtn, closeBtn);
+        else headerContainer.appendChild(expandBtn);
+    }
   popup.appendChild(header);
 
   const popupContent = document.createElement("div");
@@ -1301,22 +1310,20 @@ function generateOutputHtml() {
   }
 
 function toggleVisibility() {
-      visible = !visible;
+    visible = !visible;
+    
+    if (visible) {
+        // --- RESET DO EXPAND ---
+        // Procura o botão pela classe que adicionamos
+        const btnExpand = popup.querySelector('.cw-expand-btn');
+        
+        // Se o botão existe e tem a função de reset que criamos, execute-a
+        if (btnExpand && typeof btnExpand.resetState === 'function') {
+            btnExpand.resetState();
+        }
+    }
 
-      if (visible) {
-          // --- AO ABRIR: RESET DE ESTADO ---
-          // Garante que a lógica comece do zero
-          isExpanded = false;
-          
-          // Reseta o ícone do botão para "Expandir" (Setas para fora)
-          if (expandBtn) {
-              expandBtn.style.transform = "rotate(0deg)";
-              expandBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>`;
-          }
-      }
-
-      // Chama a animação
-      toggleGenieAnimation(visible, popup, 'id-do-seu-botao'); 
+    toggleGenieAnimation(visible, popup, "cw-btn-links"); // ou seu ID correto
   }
   // INICIALIZAÇÃO
   setCaseType("bau");
