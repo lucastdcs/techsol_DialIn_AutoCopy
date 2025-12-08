@@ -136,39 +136,52 @@ export function showToast(message, opts = {}) {
 }
 
 export function makeDraggable(element, handle = null) {
-  let pos1 = 0,
-    pos2 = 0,
-    pos3 = 0,
-    pos4 = 0;
+  let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
   const dragHandle = handle || element;
 
   dragHandle.style.cursor = "grab";
   dragHandle.onmousedown = dragMouseDown;
 
   function dragMouseDown(e) {
-    if (
-      ["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(e.target.tagName) ||
-      e.target.classList.contains("no-drag")
-    )
-      return;
+    // Ignora cliques em inputs ou botões
+    if (['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(e.target.tagName) || e.target.closest('.no-drag')) return;
 
     e = e || window.event;
-    // e.preventDefault(); // Removido para permitir foco
+    // e.preventDefault(); // Mantenha comentado se precisar de foco em inputs
+    
     dragHandle.style.cursor = "grabbing";
 
+    // --- A CORREÇÃO DO "PULO" (CSS FIX) ---
+    
+    // 1. Desliga a transição IMEDIATAMENTE
+    // Se não fizer isso, o navegador tenta animar a mudança de posição, causando lag visual.
+    element.style.transition = "none";
+
+    // 2. Captura a posição visual atual exata na tela
     const rect = element.getBoundingClientRect();
+
+    // 3. Reseta o Transform! (O Grande Vilão)
+    // Removemos o translate(-50%, -50%) que centralizava o elemento.
+    element.style.transform = "none";
+
+    // 4. Converte a posição visual para coordenadas absolutas fixas
+    // Como removemos o transform acima, agora top/left são literais.
     element.style.left = rect.left + "px";
     element.style.top = rect.top + "px";
-    element.style.right = "auto";
+    
+    // 5. Garante que margin/bottom/right não interfiram
+    element.style.margin = "0";
     element.style.bottom = "auto";
-    if (!element.style.width) element.style.width = rect.width + "px";
+    element.style.right = "auto";
+    
+    // --------------------------------------
 
     highestZIndex++;
     element.style.zIndex = highestZIndex;
     pos3 = e.clientX;
     pos4 = e.clientY;
 
-    element.setAttribute("data-dragging", "false");
+    element.setAttribute("data-dragging", "true");
     document.onmouseup = closeDragElement;
     document.onmousemove = elementDrag;
   }
@@ -180,18 +193,23 @@ export function makeDraggable(element, handle = null) {
     pos2 = pos4 - e.clientY;
     pos3 = e.clientX;
     pos4 = e.clientY;
-    element.setAttribute("data-dragging", "true");
-    element.style.top = element.offsetTop - pos2 + "px";
-    element.style.left = element.offsetLeft - pos1 + "px";
+    
+    // Move baseando-se no delta
+    element.style.top = (element.offsetTop - pos2) + "px";
+    element.style.left = (element.offsetLeft - pos1) + "px";
   }
 
   function closeDragElement() {
     document.onmouseup = null;
     document.onmousemove = null;
     dragHandle.style.cursor = "grab";
+    
+    // Opcional: Restaura transições suaves (apenas opacidade) após soltar
+    // NÃO restaure 'transform' aqui, senão ele pula de volta!
     setTimeout(() => {
-      element.setAttribute("data-dragging", "false");
-    }, 100);
+        element.style.transition = "opacity 0.3s ease";
+        element.setAttribute("data-dragging", "false");
+    }, 50);
   }
 }
 
