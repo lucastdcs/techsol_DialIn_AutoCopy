@@ -1046,7 +1046,7 @@ function generateOutputHtml() {
 
         // --- 2. CAPTURA DE PRINTS (Via Container do Módulo) ---
         // Busca apenas dentro do container de screenshots do Task Manager
-       const screenshotsContainer = taskManager.screenshotsElement;
+       const screenshotsContainer = stepTasks.screenshotsElement;
         
         if (screenshotsContainer) {
             // Busca inputs de nome dentro do container
