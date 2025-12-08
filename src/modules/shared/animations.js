@@ -54,23 +54,6 @@ if (!document.getElementById('cw-module-styles')) {
             
             cursor: pointer; /* Indica clicável */
         }
-
-        /* Adicione isso ao seu bloco de estilos globais */
-
-.cw-module-window.expanded {
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    max-height: 100vh !important;
-    border-radius: 0 !important;
-    
-    /* A CHAVE DO PROBLEMA: Remove o deslocamento do Genie */
-    transform: none !important; 
-    
-    /* Garante que fique por cima de tudo */
-    z-index: 2147483647 !important; 
-}
     `;
     document.head.appendChild(style);
 }
@@ -81,104 +64,64 @@ if (!document.getElementById('cw-module-styles')) {
 export function toggleGenieAnimation(show, popup, buttonId) {
     const btn = document.getElementById(buttonId);
     
-    // 1. Cálculos de Geometria (Onde estou vs Onde vou)
-    // Precisamos disso para saber a rota de voo exata
-    let deltaX = 0;
-    let deltaY = 0;
-
-    if (btn) {
-        const btnRect = btn.getBoundingClientRect();
-        const btnCenter = {
-            x: btnRect.left + (btnRect.width / 2),
-            y: btnRect.top + (btnRect.height / 2)
-        };
-        const screenCenter = {
-            x: window.innerWidth / 2,
-            y: window.innerHeight / 2
-        };
-        // A distância que o módulo precisa "viajar" do centro até o botão
-        deltaX = btnCenter.x - screenCenter.x;
-        deltaY = btnCenter.y - screenCenter.y;
+    // Adiciona classe base se faltar
+    if (!popup.classList.contains('cw-module-window')) {
+        popup.classList.add('cw-module-window');
     }
 
-    if (show) {
-        // --- ABRIR (Liquid Expansion) ---
+    // Função matemática da origem
+    const updateOrigin = () => {
+        if (!btn) return;
+        const btnRect = btn.getBoundingClientRect();
         
-        // 1. PREPARAÇÃO (Reset Instantâneo)
-        // Removemos a transição para "teletransportar" o módulo para dentro do botão
-        // sem que o usuário veja o movimento.
-        popup.style.transition = 'none';
-        popup.style.pointerEvents = 'auto';
-        popup.style.opacity = '0';
+        const startX = btnRect.left + (btnRect.width / 2);
+        const startY = btnRect.top + (btnRect.height / 2);
+        
+        const endX = popup.offsetLeft; 
+        const endY = popup.offsetTop;
+        
+        const originX = startX - endX;
+        const originY = startY - endY;
+        
+        popup.style.transformOrigin = `${originX}px ${originY}px`;
+    };
 
-        // 2. POSICIONAMENTO INICIAL (No Botão)
-        // Mantemos o translate(-50%, -50%) do CSS (que centraliza) e SOMAMOS a distância do botão
-        // Resultado: O módulo começa desenhado exatamente em cima do botão
-        popup.style.transform = `translate(calc(-50% + ${deltaX}px), calc(-50% + ${deltaY}px)) scale(0.05)`;
+    if (show) {
+        // --- ABRIR ---
+        
+        // 1. Calcula origem fresca
+        updateOrigin();
+        
+        // 2. Limpa estilos inline que possam bloquear (ex: opacity: 0 manual)
+        popup.style.opacity = ''; 
+        popup.style.pointerEvents = ''; 
+        popup.style.transform = ''; 
 
-        // 3. REFLOW (O "Pulo do Gato")
-        // Obriga o navegador a processar o frame "pequeno" AGORA. 
-        // Sem isso, ele pularia direto para o frame final.
+        // 3. Aplica Classes
+        // Força reflow
         void popup.offsetWidth;
-
-        // 4. A ANIMAÇÃO (Lançar ao Centro)
-        // Adicionamos a classe 'open' para controles lógicos, mas forçamos o estilo inline
-        // para garantir a curva física da Apple.
         popup.classList.add('open');
         popup.classList.remove('idle');
+        
         if (btn) btn.classList.add('active');
-
-        requestAnimationFrame(() => {
-            // Curva Líquida: Rápida no início, suave no final (Friction)
-            popup.style.transition = "opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1)";
-            popup.style.opacity = '1';
-            // Posição final: Centro da tela (Tamanho normal)
-            popup.style.transform = "translate(-50%, -50%) scale(1)";
-        });
-
-        // 5. Liga listeners (Mantendo sua lógica original)
-        if (typeof setupIdleListener === 'function') {
-            setupIdleListener(popup, buttonId);
-        }
+        
+        // 4. Liga o detector de Idle
+        setupIdleListener(popup, buttonId);
 
     } else {
-        // --- FECHAR (Suck Back) ---
+        // --- FECHAR ---
         
-        // 1. Configuração de Saída
-        // Curva mais agressiva para dar a sensação de sucção rápida para dentro do botão
-        popup.style.transition = "opacity 0.3s ease, transform 0.30s cubic-bezier(0.5, 0, 1, 1)";
-        popup.style.pointerEvents = 'none';
+        // 1. Recalcula origem (caso a pílula tenha movido)
+        updateOrigin();
+        
+        // 2. Limpa TUDO (Fix do botão não fechar)
+        popup.classList.remove('open');
+        popup.classList.remove('idle'); // Remove idle para não conflitar
+        
+        if (btn) btn.classList.remove('active');
 
-        // 2. A Animação
-        requestAnimationFrame(() => {
-            // A transição acontece...
-            popup.style.transition = "opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1)";
-            popup.style.opacity = '1';
-            popup.style.transform = "translate(-50%, -50%) scale(1)";
-            
-            // --- CORREÇÃO AQUI: LIMPEZA PÓS-ANIMAÇÃO ---
-            // Espera a animação acabar (500ms) e reseta a origem
-            setTimeout(() => {
-                // Devolve o ponto de pivô para o centro (para o expandir funcionar direito)
-                popup.style.transformOrigin = 'center center';
-            }, 500); 
-        });
-
-        // 3. Limpeza Final (Após a animação acabar)
-        setTimeout(() => {
-            popup.classList.remove('open');
-            popup.classList.remove('idle');
-            if (btn) btn.classList.remove('active');
-            
-            // Limpa estilos inline para não poluir
-            popup.style.transition = '';
-            popup.style.transform = ''; 
-        }, 300);
-
-        // 4. Mata listeners
-        if (typeof removeIdleListener === 'function') {
-            removeIdleListener(popup);
-        }
+        // 3. Mata o listener de idle
+        removeIdleListener(popup);
     }
 }
 

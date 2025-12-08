@@ -178,7 +178,6 @@ export function initCommandCenter(actions) {
                 opacity: 1;
             }
 
-
             .cw-grip:active { cursor: grabbing; color: #fff; }
             
            @keyframes successPop {
@@ -310,7 +309,6 @@ export function initCommandCenter(actions) {
 
     await esperar(300); // A base se estabiliza
 
-
     // ETAPA 2: Ferramentas Carregam (Cascata)
     const items = pill.querySelectorAll(".cw-btn");
     const seps = pill.querySelectorAll(".cw-sep");
@@ -417,7 +415,6 @@ export function initCommandCenter(actions) {
       }, 600);
     } else {
       // Clique estático (Click nos botões é tratado pelos event listeners acima)
-
       const btn = e.target.closest("button");
       if (btn) {
         btn.style.transform = "scale(0.9)";
