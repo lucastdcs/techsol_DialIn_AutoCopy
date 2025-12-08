@@ -255,7 +255,7 @@ expandBtn.onclick = () => {
     expandBtn.style.transform = isExpanded ? "rotate(180deg)" : "rotate(0deg)";
 
     // 2. Aplica largura
-    popup.style.width = isExpanded ? "700px" : ""; 
+    popup.style.width = isExpanded ? "700px" : "400px"; 
 
     // 3. Muda ícone
     expandBtn.innerHTML = isExpanded ? iconContract : iconExpand;
