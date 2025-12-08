@@ -201,60 +201,110 @@ export function createStepTasksComponent(onUpdateCallback) {
 
             @keyframes cwSlideDown { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-/* --- SCREENSHOTS: FINE & ELEGANT --- */
+/* --- SCREENSHOTS: FINE & ELEGANT (Step 3) --- */
             
             .cw-screens-container {
-                display: flex; flex-direction: column; gap: 12px; /* Gap menor = mais coeso */
-                padding: 4px 4px 40px 4px;
+                display: flex; flex-direction: column; gap: 12px;
+                padding: 4px 4px 40px 4px; /* Respiro para não cortar sombras */
             }
 
-            /* CARTÃO FINO */
+            /* CARTÃO (Base Física) */
             .cw-screen-card {
                 background: #FFFFFF;
-                border-radius: 12px; /* Radius menor para ser mais "técnico" */
-                /* Borda cinza muito sutil */
+                border-radius: 12px;
+                /* Borda base sutil */
                 border: 1px solid #E5E7EB; 
-                /* Faixa lateral de identidade (Cor injetada via JS) */
+                /* Faixa de identidade na esquerda (Cor injetada via JS) */
                 border-left: 4px solid var(--brand-color);
                 
-                padding: 16px 20px; /* Padding reduzido, mais compacto */
+                padding: 16px 20px;
                 position: relative;
                 transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
                 
-                /* Sombra quase invisível, só para separar do fundo */
+                /* Sombra quase invisível, apenas para separar do fundo */
                 box-shadow: 0 1px 2px rgba(0,0,0,0.02);
             }
 
-            /* Foco no Cartão (Elevação sutil) */
+            /* Interação de Foco no Cartão */
             .cw-screen-card:focus-within {
-                border-color: #E5E7EB; /* Mantém cinza, o destaque é a esquerda */
+                border-color: #E5E7EB; 
                 border-left-width: 6px; /* A faixa engorda levemente */
                 background: #FFFFFF;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.05); /* Sombra difusa Apple */
+                /* Sombra difusa estilo Apple ao focar */
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
                 transform: translateX(2px); /* Micro-movimento lateral */
             }
 
-            /* HEADER (Compacto e Alinhado) */
+            /* HEADER DO CARTÃO */
             .cw-card-header {
                 display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+                /* Sem borda inferior para visual mais limpo/moderno */
             }
             
-            /* ÍCONE (Sem fundo, apenas o logo) */
+            /* ÍCONE (Puro, sem fundo) */
             .cw-card-icon {
-                width: 24px; height: 24px; /* Pequeno e discreto */
+                width: 24px; height: 24px; flex-shrink: 0;
                 display: flex; align-items: center; justify-content: center;
-                flex-shrink: 0;
             }
-            .cw-card-icon svg { width: 100%; height: 100%; } /* Ocupa tudo */
+            .cw-card-icon svg { width: 100%; height: 100%; }
 
-            /* Título Editável (Parece texto normal) */
+            /* TÍTULO EDITÁVEL */
             .cw-card-title-input {
-                font-family: ${DS.font}; font-size: 14px; font-weight: 600; color: ${DS.textMain};
-                border: none; background: transparent; width: 100%; outline: none;
-                padding: 0; margin: 0;
+                font-family: ${DS.font}; font-size: 15px; font-weight: 600; color: ${DS.textMain};
+                border: 1px solid transparent; 
+                border-radius: 6px;
+                background: transparent; 
+                width: 100%; outline: none;
+                padding: 4px 8px; margin-left: -8px; /* Alinhamento óptico */
+                transition: all 0.2s ease;
+                cursor: text;
             }
 
-            /* INPUTS (Minimalistas) */
+            /* Hover no header revela que é editável */
+            .cw-card-header:hover .cw-card-title-input {
+                background: #F1F3F4;
+                border-color: transparent;
+            }
+            
+            /* Foco no título: Azul Google Padrão para indicar edição de texto */
+            .cw-card-title-input:focus {
+                background: #FFFFFF;
+                border-color: ${DS.brands.ads.color};
+                box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.1);
+            }
+
+            /* Dica Visual "✎ Renomear" */
+            .cw-edit-hint {
+                font-size: 12px; color: ${DS.textSub}; opacity: 0; 
+                transform: translateX(-10px); transition: all 0.2s ease;
+                pointer-events: none; white-space: nowrap;
+            }
+            .cw-card-header:hover .cw-edit-hint { opacity: 1; transform: translateX(0); }
+
+            /* INFO BANNER (Win Criteria) */
+            .cw-info-banner {
+                margin: 0 4px 16px 4px;
+                padding: 10px 14px;
+                background: #F8F9FA;
+                border: 1px dashed #DADCE0;
+                border-radius: 8px;
+                font-size: 11px; color: ${DS.textSub};
+                display: flex; align-items: center; gap: 8px;
+            }
+            .cw-info-link { color: ${DS.brands.ads.color}; text-decoration: none; font-weight: 600; }
+            .cw-info-link:hover { text-decoration: underline; }
+
+            /* FOOTER ICONS (Limpo & Original) */
+            .cw-mini-icon { 
+                width: 26px; height: 26px; border-radius: 50%; 
+                background: #FFFFFF; border: 1px solid #E0E0E0;
+                display: flex; align-items: center; justify-content: center;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+                margin-left: -8px; position: relative; z-index: 1;
+            }
+            .cw-mini-icon svg { width: 14px; height: 14px; } 
+
+            /* INPUTS (Campos de Link) */
             .cw-input-group { margin-bottom: 12px; position: relative; }
             .cw-input-group:last-child { margin-bottom: 0; }
 
@@ -265,35 +315,36 @@ export function createStepTasksComponent(onUpdateCallback) {
 
             .cw-input-field {
                 width: 100%; box-sizing: border-box;
-                padding: 10px 12px; /* Compacto */
+                padding: 10px 12px;
                 border-radius: 8px;
-                border: 1px solid #E5E7EB; /* Borda bem clara */
-                background: #F9FAFB; /* Fundo cinza gelo */
+                border: 1px solid #E5E7EB; /* Borda leve */
+                background: #F9FAFB; /* Fundo levemente cinza */
                 font-size: 13px; color: #374151;
                 transition: all 0.2s ease; outline: none;
             }
 
-            /* Foco no Input (Branco e Borda da Marca) */
+            /* Foco no Input: Usa a cor da marca */
             .cw-input-field:focus {
                 background: #FFFFFF;
-                border-color: var(--brand-color); /* Usa a cor do Ads/GA4 */
-                box-shadow: 0 0 0 2px var(--brand-bg); /* Anel suave da marca */
+                border-color: var(--brand-color); /* Dinâmico! */
+                box-shadow: 0 0 0 2px var(--brand-bg); /* Anel de foco dinâmico */
             }
             
-            /* Sucesso (Dopamina Sutil) */
+            /* Sucesso (Dopamina) */
             .cw-input-field.filled {
-                background-color: #F0FDF4; /* Verde muito claro */
+                background-color: #F0FDF4;
                 border-color: #DCFCE7;
                 color: #166534;
                 padding-right: 36px;
             }
 
-            /* Check Icon */
+            /* Check Icon Animado */
             .cw-input-check {
                 position: absolute; right: 10px; bottom: 10px; 
                 color: #16A34A; width: 16px; height: 16px;
                 opacity: 0; transform: scale(0.5); 
                 transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                pointer-events: none;
             }
             .cw-input-field.filled + .cw-input-check { opacity: 1; transform: scale(1); }
         `;
@@ -510,15 +561,23 @@ export function createStepTasksComponent(onUpdateCallback) {
             const txtDef = totalCount > 1 ? 'definidas' : 'definida';
             statusText.textContent = `${totalCount} ${txtTask} ${txtDef}`;
             
-            footerIcons.innerHTML = '';
+           footerIcons.innerHTML = '';
             iconStack.forEach(brand => {
-                const div = document.createElement('div');
-                div.className = 'cw-mini-icon';
-                div.style.backgroundColor = brand.color;
-                div.innerHTML = ICONS[brand.icon] || ICONS.default;
-                const svg = div.querySelector('svg');
-                if(svg) { svg.style.width = '12px'; svg.style.height = '12px'; }
-                footerIcons.appendChild(div);
+                const mini = document.createElement('div');
+                mini.className = 'cw-mini-icon';
+                // REMOVIDO: mini.style.backgroundColor = brand.color; (Agora é branco no CSS)
+                
+                mini.innerHTML = ICONS[brand.icon] || ICONS.default;
+                
+                // Ajuste fino do SVG dentro da bolinha
+                const svg = mini.querySelector('svg');
+                if(svg) { 
+                    svg.style.width = '14px'; 
+                    svg.style.height = '14px'; 
+                    // SVG original já tem cores, não precisa de fill
+                }
+                
+                footerIcons.appendChild(mini);
             });
         } else {
             statusBar.classList.remove('visible');
@@ -555,7 +614,7 @@ export function createStepTasksComponent(onUpdateCallback) {
     // Screenshots Logic (Adaptado)
 // --- LÓGICA DE RENDERIZAÇÃO DOS PRINTS ---
     // --- LÓGICA DE RENDERIZAÇÃO DOS PRINTS (Com Classes) ---
-   function renderScreenshots() {
+function renderScreenshots() {
         screenList.innerHTML = "";
         const keys = Object.keys(selection);
         let hasAny = false;
@@ -566,11 +625,24 @@ export function createStepTasksComponent(onUpdateCallback) {
             return;
         }
 
+        // --- NOVO: DISCLAIMER WIN CRITERIA ---
+        const disclaimer = document.createElement("div");
+        disclaimer.className = "cw-info-banner";
+        disclaimer.innerHTML = `
+            <span style="font-size:14px">ℹ️</span>
+            <span>
+                Todos os Screenshots são baseados na descrição do 
+                <a href="https://docs.google.com/spreadsheets/d/1X5yeIZZzWQRrPdSDM7oZt2Kt0ooSN4dgLN4J7gWe8O4/" target="_blank" class="cw-info-link">Win Criteria</a>.
+            </span>
+        `;
+        screenList.appendChild(disclaimer);
+        // -------------------------------------
+
         keys.forEach(key => {
             const task = selection[key].data;
             const count = selection[key].count;
-            const brand = selection[key].brand;
-            const prints = task.screenshots ? (task.screenshots[type] || []) : ['Evidência'];
+            const brand = selection[key].brand; 
+            const prints = task.screenshots ? (task.screenshots[type] || []) : ['Link da Evidência'];
 
             if (prints.length > 0) {
                 hasAny = true;
@@ -578,31 +650,42 @@ export function createStepTasksComponent(onUpdateCallback) {
                 for(let i=1; i<=count; i++) {
                     const card = document.createElement("div");
                     card.className = "cw-screen-card";
-                    
-                    // INJEÇÃO DE VARIÁVEIS DE COR
-                    // A borda esquerda e o foco do input usarão isso
                     card.style.setProperty('--brand-color', brand.color);
-                    card.style.setProperty('--brand-bg', brand.bg); // Para o anel de foco
+                    card.style.setProperty('--brand-bg', brand.bg);
+                    card.style.setProperty('--brand-shadow', brand.color + '40');
                     
                     // HEADER
                     const header = document.createElement("div");
                     header.className = "cw-card-header";
                     
-                    // Ícone (Puro, sem fundo)
                     const iconBox = document.createElement("div");
                     iconBox.className = "cw-card-icon";
                     iconBox.innerHTML = ICONS[brand.icon] || ICONS.default;
                     
+                    // Container do Input + Hint
+                    const titleWrap = document.createElement("div");
+                    titleWrap.style.cssText = "flex:1; display:flex; align-items:center; gap:8px;";
+
                     const nameInput = document.createElement("input"); 
                     nameInput.className = "cw-card-title-input";
                     nameInput.id = `name-${key}-${i}`; 
                     nameInput.value = `${task.name}${count > 1 ? ' #'+i : ''}`;
+                    // Tooltip nativo ajuda também
+                    nameInput.title = "Clique para renomear esta task";
+
+                    // Dica Visual (Lápis)
+                    const editHint = document.createElement("span");
+                    editHint.className = "cw-edit-hint";
+                    editHint.innerHTML = "✎ Renomear";
+
+                    titleWrap.appendChild(nameInput);
+                    titleWrap.appendChild(editHint);
                     
                     header.appendChild(iconBox);
-                    header.appendChild(nameInput);
+                    header.appendChild(titleWrap);
                     card.appendChild(header);
 
-                    // INPUTS
+                    // INPUTS (Mantidos iguais)
                     prints.forEach((req, idx) => {
                         const group = document.createElement("div");
                         group.className = "cw-input-group";
@@ -614,18 +697,18 @@ export function createStepTasksComponent(onUpdateCallback) {
                         const pInput = document.createElement("input");
                         pInput.className = "cw-input-field";
                         pInput.id = `screen-${key}-${i}-${idx}`; 
-                        pInput.placeholder = "Cole o link...";
+                        pInput.placeholder = "Cole o link aqui...";
                         pInput.setAttribute("autocomplete", "off");
-
-                        const check = document.createElement("div");
-                        check.className = "cw-input-check";
-                        check.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="width:100%;height:100%"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
                         // Lógica de Sucesso
                         pInput.addEventListener('input', () => {
                             if(pInput.value.trim().length > 5) pInput.classList.add('filled');
                             else pInput.classList.remove('filled');
                         });
+
+                        const check = document.createElement("div");
+                        check.className = "cw-input-check";
+                        check.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
                         group.appendChild(label);
                         group.appendChild(pInput);
