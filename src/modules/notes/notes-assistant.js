@@ -706,12 +706,8 @@ export function initCaseNotesAssistant() {
   }
 
   function updateFieldsFromScenarios() {
-    // 1. Identifica quais cenários (radios/checkboxes) estão marcados
-    // Procura no container global ou no específico se existir
-    const container =
-      typeof snippetContainer !== "undefined"
-        ? snippetContainer
-        : document.getElementById("snippet-container");
+    // 1. Identifica quais cenários estão marcados
+    const container = typeof snippetContainer !== "undefined" ? snippetContainer : document.getElementById("snippet-container");
     if (!container) return;
 
     const activeScenarioInputs = container.querySelectorAll(
@@ -727,14 +723,12 @@ export function initCaseNotesAssistant() {
       const snippets = scenarioSnippets[scenarioId];
       if (snippets) {
         for (const fieldId in snippets) {
-          // Se for linkedTask, guarda o ID da task para marcar depois
+          // AQUI: Captura a task vinculada
           if (fieldId === "linkedTask") {
             activeLinkedTasks.add(snippets.linkedTask);
           }
-          // Se for conteúdo de texto (ex: REASON_COMMENTS)
           else if (fieldId !== "type") {
-            if (!targetFieldsContent[fieldId])
-              targetFieldsContent[fieldId] = [];
+            if (!targetFieldsContent[fieldId]) targetFieldsContent[fieldId] = [];
             if (!targetFieldsContent[fieldId].includes(snippets[fieldId])) {
               targetFieldsContent[fieldId].push(snippets[fieldId]);
             }
@@ -743,12 +737,11 @@ export function initCaseNotesAssistant() {
       }
     });
 
-    // 3. Preenche os campos de texto (Textareas/Inputs)
+    // 3. Preenche os campos de texto (Mantido igual)
     const allPossibleTargetFields = new Set();
     Object.values(scenarioSnippets).forEach((snippets) => {
       Object.keys(snippets).forEach((key) => {
-        if (key !== "linkedTask" && key !== "type")
-          allPossibleTargetFields.add(key);
+        if (key !== "linkedTask" && key !== "type") allPossibleTargetFields.add(key);
       });
     });
 
@@ -762,45 +755,38 @@ export function initCaseNotesAssistant() {
           finalValue = combinedTextArray
             .map((line) => (line.startsWith("• ") ? line : "• " + line))
             .join("\n");
-          if (finalValue === "") {
-            finalValue = "• ";
-          } else if (!finalValue.endsWith("\n• ")) {
-            finalValue += "\n• ";
-          }
+          if (finalValue === "") finalValue = "• ";
+          else if (!finalValue.endsWith("\n• ")) finalValue += "\n• ";
         } else {
           finalValue = combinedTextArray.join("\n\n");
         }
 
-        // Lógica de limpeza se vazio
-        if (finalValue.trim() !== "•" && finalValue.trim() !== "")
-          field.value = finalValue;
-        else if (textareaListFields.includes(fieldId.replace("field-", "")))
-          field.value = "• ";
+        // Limpeza
+        if (finalValue.trim() !== "•" && finalValue.trim() !== "") field.value = finalValue;
+        else if (textareaListFields.includes(fieldId.replace("field-", ""))) field.value = "• ";
         else field.value = "";
 
-        if (
-          field.tagName === "TEXTAREA" &&
-          typeof enableAutoBullet === "function"
-        )
-          enableAutoBullet(field);
-      }
-    });
-
-    // 4. (CORREÇÃO) Marca as Tasks Linkadas
-    // Busca globalmente por checkboxes com a classe .task-checkbox
-    const allCheckboxes = document.querySelectorAll(".task-checkbox");
-
-    allCheckboxes.forEach((checkbox) => {
-      // Se esta task está na lista de linkadas
-      if (activeLinkedTasks.has(checkbox.value)) {
-        if (!checkbox.checked) {
-          checkbox.checked = true;
-          // Dispara o evento para que o listener (stepTasks ou populateTasks)
-          // perceba a mudança e crie os inputs de print
-          checkbox.dispatchEvent(new Event("change", { bubbles: true }));
+        if (field.tagName === "TEXTAREA" && typeof enableAutoBullet === "function") {
+            enableAutoBullet(field);
         }
       }
     });
+
+    // 4. (CORREÇÃO) Marca as Tasks no Novo Componente
+    if (activeLinkedTasks.size > 0) {
+        // Pega o que já está selecionado visualmente
+        const currentSelection = stepTasks.getCheckedElements().map(i => i.value);
+        
+        activeLinkedTasks.forEach(taskId => {
+            // Se o cenário pede a task, e ela NÃO está marcada, marca ela.
+            if (!currentSelection.includes(taskId)) {
+                stepTasks.toggleTask(taskId, true); // true = Forçar ativar
+            }
+        });
+        
+        // Opcional: Se quiser que ao DESMARCAR o cenário a task suma, precisaria de uma lógica de diff aqui.
+        // Por enquanto, o comportamento aditivo (só adiciona) é mais seguro para não apagar o que o usuário fez manual.
+    }
   }
 
   mainStatusSelect.onchange = () => {

@@ -1,76 +1,118 @@
-import { TASKS_DB } from '../notes-data.js';
+import { TASKS_DB } from "../notes-data.js";
 
 // --- 1. DESIGN SYSTEM & CONFIG ---
 const DS = {
-    bg: '#F9FAFB', // Fundo Apple Gray
-    white: '#FFFFFF',
-    border: '#E5E7EB',
-    textMain: '#111827',
-    textSub: '#6B7280',
-    blue: '#007AFF', // Apple Blue
-    blueLight: '#EBF5FF',
-    // Cores Oficiais das Ferramentas
-    brands: {
-        ads: { id: 'ads', label: 'Google Ads', color: '#1967D2', bg: '#E8F0FE', icon: 'ads' },
-        ga4: { id: 'ga4', label: 'Google Analytics 4', color: '#E37400', bg: '#FEF7E0', icon: 'ga4' },
-        gtm: { id: 'gtm', label: 'Tag Manager', color: '#00A1F1', bg: '#E2F4FD', icon: 'gtm' },
-        gmc: { id: 'gmc', label: 'Merchant Center', color: '#0F9D58', bg: '#E6F4EA', icon: 'gmc' },
-        default: { id: 'gen', label: 'Geral', color: '#5F6368', bg: '#F3F4F6', icon: 'default' }
+  bg: "#F9FAFB", // Fundo Apple Gray
+  white: "#FFFFFF",
+  border: "#E5E7EB",
+  textMain: "#111827",
+  textSub: "#6B7280",
+  blue: "#007AFF", // Apple Blue
+  blueLight: "#EBF5FF",
+  // Cores Oficiais das Ferramentas
+  brands: {
+    ads: {
+      id: "ads",
+      label: "Google Ads",
+      color: "#1967D2",
+      bg: "#E8F0FE",
+      icon: "ads",
     },
-    shadowCard: '0 1px 2px rgba(0,0,0,0.05)',
-    shadowFloat: '0 -4px 20px rgba(0,0,0,0.08)',
-    font: "'Google Sans', -apple-system, Roboto, sans-serif"
+    ga4: {
+      id: "ga4",
+      label: "Google Analytics 4",
+      color: "#E37400",
+      bg: "#FEF7E0",
+      icon: "ga4",
+    },
+    gtm: {
+      id: "gtm",
+      label: "Tag Manager",
+      color: "#00A1F1",
+      bg: "#E2F4FD",
+      icon: "gtm",
+    },
+    gmc: {
+      id: "gmc",
+      label: "Merchant Center",
+      color: "#0F9D58",
+      bg: "#E6F4EA",
+      icon: "gmc",
+    },
+    default: {
+      id: "gen",
+      label: "Geral",
+      color: "#5F6368",
+      bg: "#F3F4F6",
+      icon: "default",
+    },
+  },
+  shadowCard: "0 1px 2px rgba(0,0,0,0.05)",
+  shadowFloat: "0 -4px 20px rgba(0,0,0,0.08)",
+  font: "'Google Sans', -apple-system, Roboto, sans-serif",
 };
 
 const ICONS = {
-    // Google Ads (Triângulo Novo)
-    ads: `<svg viewBox="0 0 192 192"><path fill="#F9AB00" d="M38.85 144.47l-26.27-26.28a12.72 12.72 0 0 1 0-17.92L106 5.86a12.72 12.72 0 0 1 17.92 0l26.28 26.27a12.72 12.72 0 0 1 0 17.92l-93.43 94.42a12.73 12.73 0 0 1-17.92 0z"/><path fill="#1A73E8" d="M165.73 100.27l-26.28-26.28a12.72 12.72 0 0 0-17.92 0L28.1 167.42a12.72 12.72 0 0 0 0 17.92l26.28 26.28a12.72 12.72 0 0 0 17.92 0l93.43-93.43a12.72 12.72 0 0 0 0-17.92z"/><path fill="#34A853" d="M38.85 144.47a12.63 12.63 0 0 1 0-17.92l54.58-54.58a12.72 12.72 0 0 1 17.92 0l-54.58 54.58 37.07 37.07a12.72 12.72 0 0 1 0 17.92l-37.07-37.07z"/></svg>`,
-    
-    // GA4 (Gráfico Laranja)
-    ga4: `<svg viewBox="0 0 192 192"><path fill="#F9AB00" d="M22 138v28h28v-28H22z"/><path fill="#E37400" d="M66 84v82h28V84H66z"/><path fill="#E37400" d="M110 22v144h28V22h-28z"/></svg>`,
-    
-    // GTM (Tag Azul)
-    gtm: `<svg viewBox="0 0 192 192"><path fill="#4285F4" d="M40 32h112c4.42 0 8 3.58 8 8v112c0 4.42-3.58 8-8 8H40c-4.42 0-8-3.58-8-8V40c0-4.42 3.58-8 8-8z"/><path fill="#8AB4F8" d="M136 76h-20v-20h-40v20H56v40h20v20h40v-20h20V76z"/><circle cx="96" cy="96" r="24" fill="#1967D2"/></svg>`,
-    
-    // Merchant (Shopping Bag)
-    gmc: `<svg viewBox="0 0 192 192"><path fill="#4285F4" d="M22 66l18-36h112l18 36v100H22V66z"/><path fill="#1967D2" d="M152 30H40L22 66h148l-18-36z"/><path fill="#8AB4F8" d="M40 30h112v36H40z"/></svg>`,
-    
-    // Default
-    default: `<svg viewBox="0 0 24 24"><path fill="#5F6368" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>`
+  // Google Ads (Triângulo Novo)
+  ads: `<svg viewBox="0 0 192 192"><path fill="#F9AB00" d="M38.85 144.47l-26.27-26.28a12.72 12.72 0 0 1 0-17.92L106 5.86a12.72 12.72 0 0 1 17.92 0l26.28 26.27a12.72 12.72 0 0 1 0 17.92l-93.43 94.42a12.73 12.73 0 0 1-17.92 0z"/><path fill="#1A73E8" d="M165.73 100.27l-26.28-26.28a12.72 12.72 0 0 0-17.92 0L28.1 167.42a12.72 12.72 0 0 0 0 17.92l26.28 26.28a12.72 12.72 0 0 0 17.92 0l93.43-93.43a12.72 12.72 0 0 0 0-17.92z"/><path fill="#34A853" d="M38.85 144.47a12.63 12.63 0 0 1 0-17.92l54.58-54.58a12.72 12.72 0 0 1 17.92 0l-54.58 54.58 37.07 37.07a12.72 12.72 0 0 1 0 17.92l-37.07-37.07z"/></svg>`,
+
+  // GA4 (Gráfico Laranja)
+  ga4: `<svg viewBox="0 0 192 192"><path fill="#F9AB00" d="M22 138v28h28v-28H22z"/><path fill="#E37400" d="M66 84v82h28V84H66z"/><path fill="#E37400" d="M110 22v144h28V22h-28z"/></svg>`,
+
+  // GTM (Tag Azul)
+  gtm: `<svg viewBox="0 0 192 192"><path fill="#4285F4" d="M40 32h112c4.42 0 8 3.58 8 8v112c0 4.42-3.58 8-8 8H40c-4.42 0-8-3.58-8-8V40c0-4.42 3.58-8 8-8z"/><path fill="#8AB4F8" d="M136 76h-20v-20h-40v20H56v40h20v20h40v-20h20V76z"/><circle cx="96" cy="96" r="24" fill="#1967D2"/></svg>`,
+
+  // Merchant (Shopping Bag)
+  gmc: `<svg viewBox="0 0 192 192"><path fill="#4285F4" d="M22 66l18-36h112l18 36v100H22V66z"/><path fill="#1967D2" d="M152 30H40L22 66h148l-18-36z"/><path fill="#8AB4F8" d="M40 30h112v36H40z"/></svg>`,
+
+  // Default
+  default: `<svg viewBox="0 0 24 24"><path fill="#5F6368" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>`,
 };
 
 export function createStepTasksComponent(onUpdateCallback) {
-    const selection = {}; // { taskId: { count, data, brand } }
+  const selection = {}; // { taskId: { count, data, brand } }
 
-    // --- HEURÍSTICA DE MARCA (Auto-Categorização) ---
-    function getBrand(name) {
-        const n = name.toLowerCase();
-        if (n.includes('ads') || n.includes('conversion') || n.includes('remarketing')) return DS.brands.ads;
-        if (n.includes('ga4') || n.includes('analytics')) return DS.brands.ga4;
-        if (n.includes('gtm') || n.includes('tag manager') || n.includes('container')) return DS.brands.gtm;
-        if (n.includes('merchant') || n.includes('shopping') || n.includes('feed')) return DS.brands.gmc;
-        return DS.brands.default;
-    }
+  // --- HEURÍSTICA DE MARCA (Auto-Categorização) ---
+  function getBrand(name) {
+    const n = name.toLowerCase();
+    if (
+      n.includes("ads") ||
+      n.includes("conversion") ||
+      n.includes("remarketing")
+    )
+      return DS.brands.ads;
+    if (n.includes("ga4") || n.includes("analytics")) return DS.brands.ga4;
+    if (
+      n.includes("gtm") ||
+      n.includes("tag manager") ||
+      n.includes("container")
+    )
+      return DS.brands.gtm;
+    if (n.includes("merchant") || n.includes("shopping") || n.includes("feed"))
+      return DS.brands.gmc;
+    return DS.brands.default;
+  }
 
-    // --- ORGANIZAÇÃO DOS DADOS ---
-    // 1. Populares (Hero)
-    const heroTasks = Object.entries(TASKS_DB).filter(([_, t]) => t.popular);
-    
-    // 2. Agrupamento por Categoria (Accordion)
-    const groupedTasks = {};
-    Object.entries(TASKS_DB).forEach(([key, task]) => {
-        if (task.popular) return; // Não duplica os heróis na lista
-        const brand = getBrand(task.name);
-        if (!groupedTasks[brand.label]) groupedTasks[brand.label] = { brand, tasks: [] };
-        groupedTasks[brand.label].tasks.push({ key, ...task });
-    });
+  // --- ORGANIZAÇÃO DOS DADOS ---
+  // 1. Populares (Hero)
+  const heroTasks = Object.entries(TASKS_DB).filter(([_, t]) => t.popular);
 
-    // --- INJEÇÃO DE CSS (Zen Style + Fixes) ---
-    const styleId = 'cw-zen-tasks';
-    if (!document.getElementById(styleId)) {
-        const style = document.createElement('style');
-        style.id = styleId;
-        style.innerHTML = `
+  // 2. Agrupamento por Categoria (Accordion)
+  const groupedTasks = {};
+  Object.entries(TASKS_DB).forEach(([key, task]) => {
+    if (task.popular) return; // Não duplica os heróis na lista
+    const brand = getBrand(task.name);
+    if (!groupedTasks[brand.label])
+      groupedTasks[brand.label] = { brand, tasks: [] };
+    groupedTasks[brand.label].tasks.push({ key, ...task });
+  });
+
+  // --- INJEÇÃO DE CSS (Zen Style + Fixes) ---
+  const styleId = "cw-zen-tasks";
+  if (!document.getElementById(styleId)) {
+    const style = document.createElement("style");
+    style.id = styleId;
+    style.innerHTML = `
             .cw-zen-container {
                 display: flex; flex-direction: column; height: 100%; width: calc(100% + 32px); margin: -16px;
                 font-family: ${DS.font}; background: ${DS.bg}; position: relative; overflow: hidden;
@@ -385,23 +427,23 @@ export function createStepTasksComponent(onUpdateCallback) {
             }
             .cw-input-field.filled + .cw-input-check { opacity: 1; transform: scale(1); }
         `;
-        document.head.appendChild(style);
-    }
+    document.head.appendChild(style);
+  }
 
-// --- CRIAÇÃO DO DOM ---
-    const container = document.createElement('div');
-    container.className = 'cw-zen-container';
-    
-    // Container Invisível de Prints (Para o Step 3)
-    const screenshotsContainer = document.createElement("div");
-    Object.assign(screenshotsContainer.style, { display: "none" }); 
-    
-    const screenList = document.createElement("div");
-    screenList.className = "cw-screens-container"; // <--- ADICIONE ESTA CLASSE
-    
-    screenshotsContainer.appendChild(screenList);
+  // --- CRIAÇÃO DO DOM ---
+  const container = document.createElement("div");
+  container.className = "cw-zen-container";
 
-    container.innerHTML = `
+  // Container Invisível de Prints (Para o Step 3)
+  const screenshotsContainer = document.createElement("div");
+  Object.assign(screenshotsContainer.style, { display: "none" });
+
+  const screenList = document.createElement("div");
+  screenList.className = "cw-screens-container"; // <--- ADICIONE ESTA CLASSE
+
+  screenshotsContainer.appendChild(screenList);
+
+  container.innerHTML = `
         <div class="cw-zen-content">
             <div class="cw-hero-section">
                 <div class="cw-section-subtitle" style="font-size:11px; font-weight:700; color:#6B7280; text-transform:uppercase; letter-spacing:0.8px;">Acesso Rápido</div>
@@ -424,28 +466,28 @@ export function createStepTasksComponent(onUpdateCallback) {
         </div>
     `;
 
-    const heroGrid = container.querySelector('.cw-hero-grid');
-    const accContainer = container.querySelector('.cw-acc-container');
-    const resultsContainer = container.querySelector('.cw-results-container');
-    const searchInput = container.querySelector('.cw-search-input');
-    const statusBar = container.querySelector('.cw-status-bar');
-    const statusText = container.querySelector('.cw-status-text');
-    const footerIcons = container.querySelector('.cw-footer-icons');
+  const heroGrid = container.querySelector(".cw-hero-grid");
+  const accContainer = container.querySelector(".cw-acc-container");
+  const resultsContainer = container.querySelector(".cw-results-container");
+  const searchInput = container.querySelector(".cw-search-input");
+  const statusBar = container.querySelector(".cw-status-bar");
+  const statusText = container.querySelector(".cw-status-text");
+  const footerIcons = container.querySelector(".cw-footer-icons");
 
-    // --- RENDERIZAÇÃO ---
+  // --- RENDERIZAÇÃO ---
 
-    // 1. Heroes
-// 1. Heroes
-    heroTasks.forEach(([key, task]) => {
-        const brand = getBrand(task.name);
-        const card = document.createElement('div');
-        card.className = 'cw-hero-card';
-        card.id = `hero-${key}`;
-        
-        // Injeção da cor da marca para o CSS usar
-        card.style.setProperty('--hero-color', brand.color);
-        
-        card.innerHTML = `
+  // 1. Heroes
+  // 1. Heroes
+  heroTasks.forEach(([key, task]) => {
+    const brand = getBrand(task.name);
+    const card = document.createElement("div");
+    card.className = "cw-hero-card";
+    card.id = `hero-${key}`;
+
+    // Injeção da cor da marca para o CSS usar
+    card.style.setProperty("--hero-color", brand.color);
+
+    card.innerHTML = `
             <div class="cw-hero-main">
                 <div class="cw-hero-icon">${ICONS[brand.icon]}</div>
                 <div class="cw-hero-label">${task.name}</div>
@@ -457,32 +499,34 @@ export function createStepTasksComponent(onUpdateCallback) {
                 <div class="cw-step-btn plus">+</div>
             </div>
         `;
-        
-        // Zonas de Clique: Corpo = Toggle, Botões = Stepper
-        card.onclick = (e) => {
-            if(e.target.closest('.cw-step-btn')) return;
-            const current = selection[key] ? selection[key].count : 0;
-            updateTask(key, current > 0 ? -current : 1, task);
-        };
-        card.querySelector('.minus').onclick = () => updateTask(key, -1, task);
-        card.querySelector('.plus').onclick = () => updateTask(key, 1, task);
-        
-        // Dataset para updateUI (mantido para lógica legada se houver)
-        card.dataset.color = brand.color; 
-        
-        heroGrid.appendChild(card);
-    });
 
-    // 2. Helper para criar linhas da lista (Rica com Ícones)
-    function createListItem(key, task) {
-        const brand = getBrand(task.name);
-        const row = document.createElement('div');
-        row.className = 'cw-task-item';
-        row.dataset.id = key;
-        
-        row.innerHTML = `
+    // Zonas de Clique: Corpo = Toggle, Botões = Stepper
+    card.onclick = (e) => {
+      if (e.target.closest(".cw-step-btn")) return;
+      const current = selection[key] ? selection[key].count : 0;
+      updateTask(key, current > 0 ? -current : 1, task);
+    };
+    card.querySelector(".minus").onclick = () => updateTask(key, -1, task);
+    card.querySelector(".plus").onclick = () => updateTask(key, 1, task);
+
+    // Dataset para updateUI (mantido para lógica legada se houver)
+    card.dataset.color = brand.color;
+
+    heroGrid.appendChild(card);
+  });
+
+  // 2. Helper para criar linhas da lista (Rica com Ícones)
+  function createListItem(key, task) {
+    const brand = getBrand(task.name);
+    const row = document.createElement("div");
+    row.className = "cw-task-item";
+    row.dataset.id = key;
+
+    row.innerHTML = `
             <div class="cw-task-left">
-                <div class="cw-list-icon" style="background:${brand.bg}; color:${brand.color}">
+                <div class="cw-list-icon" style="background:${
+                  brand.bg
+                }; color:${brand.color}">
                     ${ICONS[brand.icon] || ICONS.default}
                 </div>
                 <div class="cw-task-label">${task.name}</div>
@@ -493,295 +537,329 @@ export function createStepTasksComponent(onUpdateCallback) {
                 <div class="cw-step-btn plus">+</div>
             </div>
         `;
-        
-        row.onclick = (e) => {
-            if(e.target.closest('.cw-step-btn')) return;
-            const current = selection[key] ? selection[key].count : 0;
-            updateTask(key, current > 0 ? -current : 1, task);
-        };
-        row.querySelector('.minus').onclick = () => updateTask(key, -1, task);
-        row.querySelector('.plus').onclick = () => updateTask(key, 1, task);
 
-        return row;
-    }
+    row.onclick = (e) => {
+      if (e.target.closest(".cw-step-btn")) return;
+      const current = selection[key] ? selection[key].count : 0;
+      updateTask(key, current > 0 ? -current : 1, task);
+    };
+    row.querySelector(".minus").onclick = () => updateTask(key, -1, task);
+    row.querySelector(".plus").onclick = () => updateTask(key, 1, task);
 
-    // 3. Render Accordions
-    Object.entries(groupedTasks).forEach(([catName, data]) => {
-        const group = document.createElement('div');
-        group.className = 'cw-acc-group';
-        
-        const header = document.createElement('div');
-        header.className = 'cw-acc-header';
-        header.innerHTML = `
+    return row;
+  }
+
+  // 3. Render Accordions
+  Object.entries(groupedTasks).forEach(([catName, data]) => {
+    const group = document.createElement("div");
+    group.className = "cw-acc-group";
+
+    const header = document.createElement("div");
+    header.className = "cw-acc-header";
+    header.innerHTML = `
             <div class="cw-acc-title">
                 <div class="cw-acc-dot" style="background:${data.brand.color}"></div>
                 ${catName}
             </div>
             <div class="cw-acc-icon">▼</div>
         `;
-        header.onclick = () => {
-            accContainer.querySelectorAll('.cw-acc-group.open').forEach(g => {
-                if(g !== group) g.classList.remove('open');
-            });
-            group.classList.toggle('open');
-        };
+    header.onclick = () => {
+      accContainer.querySelectorAll(".cw-acc-group.open").forEach((g) => {
+        if (g !== group) g.classList.remove("open");
+      });
+      group.classList.toggle("open");
+    };
 
-        const body = document.createElement('div');
-        body.className = 'cw-acc-body';
-        
-        data.tasks.forEach(item => {
-            const row = createListItem(item.key, item);
-            body.appendChild(row);
-        });
+    const body = document.createElement("div");
+    body.className = "cw-acc-body";
 
-        group.appendChild(header);
-        group.appendChild(body);
-        accContainer.appendChild(group);
+    data.tasks.forEach((item) => {
+      const row = createListItem(item.key, item);
+      body.appendChild(row);
     });
 
-    // --- LÓGICA DE ATUALIZAÇÃO ---
+    group.appendChild(header);
+    group.appendChild(body);
+    accContainer.appendChild(group);
+  });
 
-    function updateTask(key, delta, taskData) {
-        if (!selection[key]) selection[key] = { count: 0, data: taskData, brand: getBrand(taskData.name) };
-        selection[key].count += delta;
-        if (selection[key].count <= 0) delete selection[key];
-        
-        updateUI();
-        renderScreenshots();
-        if (onUpdateCallback) onUpdateCallback();
-    }
+  // --- LÓGICA DE ATUALIZAÇÃO ---
 
-    function updateUI() {
-        // 1. Heroes
-       heroTasks.forEach(([key]) => {
-            const card = heroGrid.querySelector(`#hero-${key}`);
-            if(!card) return;
-            const sel = selection[key];
-            
-            if (sel) {
-                card.classList.add('active');
-                // Removemos injeção de style direto, o CSS var(--hero-color) cuida disso
-                card.querySelector('.cw-step-val').textContent = sel.count;
-                // Cor do texto do count pode seguir a marca
-                card.querySelector('.cw-step-val').style.color = card.dataset.color;
-            } else {
-                card.classList.remove('active');
-            }
-        });
+  function updateTask(key, delta, taskData) {
+    if (!selection[key])
+      selection[key] = {
+        count: 0,
+        data: taskData,
+        brand: getBrand(taskData.name),
+      };
+    selection[key].count += delta;
+    if (selection[key].count <= 0) delete selection[key];
 
-        // 2. List Items
-        const allItems = container.querySelectorAll('.cw-task-item');
-        allItems.forEach(row => {
-            const key = row.dataset.id;
-            const sel = selection[key];
-            if (sel) {
-                row.classList.add('selected');
-                row.querySelector('.cw-step-val').textContent = sel.count;
-            } else {
-                row.classList.remove('selected');
-            }
-        });
+    updateUI();
+    renderScreenshots();
+    if (onUpdateCallback) onUpdateCallback();
+  }
 
-        // 3. Status Bar (Real Count + Stack)
-        const keys = Object.keys(selection);
-        let totalCount = 0;
-        const iconStack = [];
+  function updateUI() {
+    // 1. Heroes
+    heroTasks.forEach(([key]) => {
+      const card = heroGrid.querySelector(`#hero-${key}`);
+      if (!card) return;
+      const sel = selection[key];
 
-        keys.forEach(k => {
-            const item = selection[k];
-            totalCount += item.count;
-            // Adiciona ao stack N vezes
-            for(let i=0; i < item.count; i++) {
-                if(iconStack.length < 6) iconStack.push(item.brand);
-            }
-        });
-
-        if (totalCount > 0) {
-            statusBar.classList.add('visible');
-            const txtTask = totalCount > 1 ? 'Ações' : 'Ação';
-            const txtDef = totalCount > 1 ? 'definidas' : 'definida';
-            statusText.textContent = `${totalCount} ${txtTask} ${txtDef}`;
-            
-           footerIcons.innerHTML = '';
-            iconStack.forEach(brand => {
-                const mini = document.createElement('div');
-                mini.className = 'cw-mini-icon';
-                // REMOVIDO: mini.style.backgroundColor = brand.color; (Agora é branco no CSS)
-                
-                mini.innerHTML = ICONS[brand.icon] || ICONS.default;
-                
-                // Ajuste fino do SVG dentro da bolinha
-                const svg = mini.querySelector('svg');
-                if(svg) { 
-                    svg.style.width = '14px'; 
-                    svg.style.height = '14px'; 
-                    // SVG original já tem cores, não precisa de fill
-                }
-                
-                footerIcons.appendChild(mini);
-            });
-        } else {
-            statusBar.classList.remove('visible');
-        }
-    }
-
-    // Busca
-    searchInput.addEventListener('input', (e) => {
-        const term = e.target.value.toLowerCase();
-        if (term.length > 0) {
-            accContainer.style.display = 'none';
-            resultsContainer.style.display = 'block';
-            resultsContainer.innerHTML = '';
-            
-            let found = false;
-            Object.entries(TASKS_DB).forEach(([key, task]) => {
-                if (task.name.toLowerCase().includes(term)) {
-                    found = true;
-                    const item = createListItem(key, task);
-                    if(selection[key]) {
-                        item.classList.add('selected');
-                        item.querySelector('.cw-step-val').textContent = selection[key].count;
-                    }
-                    resultsContainer.appendChild(item);
-                }
-            });
-            if(!found) resultsContainer.innerHTML = '<div style="padding:20px; text-align:center; font-size:13px; color:#999">Nenhum resultado.</div>';
-        } else {
-            accContainer.style.display = 'block';
-            resultsContainer.style.display = 'none';
-        }
+      if (sel) {
+        card.classList.add("active");
+        // Removemos injeção de style direto, o CSS var(--hero-color) cuida disso
+        card.querySelector(".cw-step-val").textContent = sel.count;
+        // Cor do texto do count pode seguir a marca
+        card.querySelector(".cw-step-val").style.color = card.dataset.color;
+      } else {
+        card.classList.remove("active");
+      }
     });
 
-    // Screenshots Logic (Adaptado)
-// --- LÓGICA DE RENDERIZAÇÃO DOS PRINTS ---
-    // --- LÓGICA DE RENDERIZAÇÃO DOS PRINTS (Com Classes) ---
-function renderScreenshots() {
-        screenList.innerHTML = "";
-        const keys = Object.keys(selection);
-        let hasAny = false;
-        const type = 'implementation'; 
+    // 2. List Items
+    const allItems = container.querySelectorAll(".cw-task-item");
+    allItems.forEach((row) => {
+      const key = row.dataset.id;
+      const sel = selection[key];
+      if (sel) {
+        row.classList.add("selected");
+        row.querySelector(".cw-step-val").textContent = sel.count;
+      } else {
+        row.classList.remove("selected");
+      }
+    });
 
-        if (keys.length === 0) {
-            screenList.innerHTML = `<div class="cw-empty-state">Selecione tarefas para ver os campos.</div>`;
-            return;
+    // 3. Status Bar (Real Count + Stack)
+    const keys = Object.keys(selection);
+    let totalCount = 0;
+    const iconStack = [];
+
+    keys.forEach((k) => {
+      const item = selection[k];
+      totalCount += item.count;
+      // Adiciona ao stack N vezes
+      for (let i = 0; i < item.count; i++) {
+        if (iconStack.length < 6) iconStack.push(item.brand);
+      }
+    });
+
+    if (totalCount > 0) {
+      statusBar.classList.add("visible");
+      const txtTask = totalCount > 1 ? "Ações" : "Ação";
+      const txtDef = totalCount > 1 ? "definidas" : "definida";
+      statusText.textContent = `${totalCount} ${txtTask} ${txtDef}`;
+
+      footerIcons.innerHTML = "";
+      iconStack.forEach((brand) => {
+        const mini = document.createElement("div");
+        mini.className = "cw-mini-icon";
+        // REMOVIDO: mini.style.backgroundColor = brand.color; (Agora é branco no CSS)
+
+        mini.innerHTML = ICONS[brand.icon] || ICONS.default;
+
+        // Ajuste fino do SVG dentro da bolinha
+        const svg = mini.querySelector("svg");
+        if (svg) {
+          svg.style.width = "14px";
+          svg.style.height = "14px";
+          // SVG original já tem cores, não precisa de fill
         }
 
-        // --- NOVO: DISCLAIMER WIN CRITERIA ---
-        const disclaimer = document.createElement("div");
-        disclaimer.className = "cw-info-banner";
-        disclaimer.innerHTML = `
+        footerIcons.appendChild(mini);
+      });
+    } else {
+      statusBar.classList.remove("visible");
+    }
+  }
+
+  // Busca
+  searchInput.addEventListener("input", (e) => {
+    const term = e.target.value.toLowerCase();
+    if (term.length > 0) {
+      accContainer.style.display = "none";
+      resultsContainer.style.display = "block";
+      resultsContainer.innerHTML = "";
+
+      let found = false;
+      Object.entries(TASKS_DB).forEach(([key, task]) => {
+        if (task.name.toLowerCase().includes(term)) {
+          found = true;
+          const item = createListItem(key, task);
+          if (selection[key]) {
+            item.classList.add("selected");
+            item.querySelector(".cw-step-val").textContent =
+              selection[key].count;
+          }
+          resultsContainer.appendChild(item);
+        }
+      });
+      if (!found)
+        resultsContainer.innerHTML =
+          '<div style="padding:20px; text-align:center; font-size:13px; color:#999">Nenhum resultado.</div>';
+    } else {
+      accContainer.style.display = "block";
+      resultsContainer.style.display = "none";
+    }
+  });
+
+  // Screenshots Logic (Adaptado)
+  // --- LÓGICA DE RENDERIZAÇÃO DOS PRINTS ---
+  // --- LÓGICA DE RENDERIZAÇÃO DOS PRINTS (Com Classes) ---
+  function renderScreenshots() {
+    screenList.innerHTML = "";
+    const keys = Object.keys(selection);
+    let hasAny = false;
+    const type = "implementation";
+
+    if (keys.length === 0) {
+      screenList.innerHTML = `<div class="cw-empty-state">Selecione tarefas para ver os campos.</div>`;
+      return;
+    }
+
+    // --- NOVO: DISCLAIMER WIN CRITERIA ---
+    const disclaimer = document.createElement("div");
+    disclaimer.className = "cw-info-banner";
+    disclaimer.innerHTML = `
             <span style="font-size:14px">ℹ️</span>
             <span>
                 Todos os Screenshots são baseados na descrição do 
                 <a href="https://docs.google.com/spreadsheets/d/1X5yeIZZzWQRrPdSDM7oZt2Kt0ooSN4dgLN4J7gWe8O4/" target="_blank" class="cw-info-link">Win Criteria</a>.
             </span>
         `;
-        screenList.appendChild(disclaimer);
-        // -------------------------------------
+    screenList.appendChild(disclaimer);
+    // -------------------------------------
 
-        keys.forEach(key => {
-            const task = selection[key].data;
-            const count = selection[key].count;
-            const brand = selection[key].brand; 
-            const prints = task.screenshots ? (task.screenshots[type] || []) : ['Link da Evidência'];
+    keys.forEach((key) => {
+      const task = selection[key].data;
+      const count = selection[key].count;
+      const brand = selection[key].brand;
+      const prints = task.screenshots
+        ? task.screenshots[type] || []
+        : ["Link da Evidência"];
 
-            if (prints.length > 0) {
-                hasAny = true;
-                
-                for(let i=1; i<=count; i++) {
-                    const card = document.createElement("div");
-                    card.className = "cw-screen-card";
-                    card.style.setProperty('--brand-color', brand.color);
-                    card.style.setProperty('--brand-bg', brand.bg);
-                    card.style.setProperty('--brand-shadow', brand.color + '40');
-                    
-                    // HEADER
-                    const header = document.createElement("div");
-                    header.className = "cw-card-header";
-                    
-                    const iconBox = document.createElement("div");
-                    iconBox.className = "cw-card-icon";
-                    iconBox.innerHTML = ICONS[brand.icon] || ICONS.default;
-                    
-                    // Container do Input + Hint
-                    const titleWrap = document.createElement("div");
-                    titleWrap.style.cssText = "flex:1; display:flex; align-items:center; gap:8px;";
+      if (prints.length > 0) {
+        hasAny = true;
 
-                    const nameInput = document.createElement("input"); 
-                    nameInput.className = "cw-card-title-input";
-                    nameInput.id = `name-${key}-${i}`; 
-                    nameInput.value = `${task.name}${count > 1 ? ' #'+i : ''}`;
-                    // Tooltip nativo ajuda também
-                    nameInput.title = "Clique para renomear esta task";
+        for (let i = 1; i <= count; i++) {
+          const card = document.createElement("div");
+          card.className = "cw-screen-card";
+          card.style.setProperty("--brand-color", brand.color);
+          card.style.setProperty("--brand-bg", brand.bg);
+          card.style.setProperty("--brand-shadow", brand.color + "40");
 
-                    // Dica Visual (Lápis)
-                    const editHint = document.createElement("span");
-                    editHint.className = "cw-edit-hint";
-                    editHint.innerHTML = "✎ Renomear";
+          // HEADER
+          const header = document.createElement("div");
+          header.className = "cw-card-header";
 
-                    titleWrap.appendChild(nameInput);
-                    titleWrap.appendChild(editHint);
-                    
-                    header.appendChild(iconBox);
-                    header.appendChild(titleWrap);
-                    card.appendChild(header);
+          const iconBox = document.createElement("div");
+          iconBox.className = "cw-card-icon";
+          iconBox.innerHTML = ICONS[brand.icon] || ICONS.default;
 
-                    // INPUTS (Mantidos iguais)
-                    prints.forEach((req, idx) => {
-                        const group = document.createElement("div");
-                        group.className = "cw-input-group";
+          // Container do Input + Hint
+          const titleWrap = document.createElement("div");
+          titleWrap.style.cssText =
+            "flex:1; display:flex; align-items:center; gap:8px;";
 
-                        const label = document.createElement("label");
-                        label.className = "cw-input-label";
-                        label.textContent = req.replace(/📷|:|•/g, '').trim();
+          const nameInput = document.createElement("input");
+          nameInput.className = "cw-card-title-input";
+          nameInput.id = `name-${key}-${i}`;
+          nameInput.value = `${task.name}${count > 1 ? " #" + i : ""}`;
+          // Tooltip nativo ajuda também
+          nameInput.title = "Clique para renomear esta task";
 
-                        const pInput = document.createElement("input");
-                        pInput.className = "cw-input-field";
-                        pInput.id = `screen-${key}-${i}-${idx}`; 
-                        pInput.placeholder = "Cole o link aqui...";
-                        pInput.setAttribute("autocomplete", "off");
+          // Dica Visual (Lápis)
+          const editHint = document.createElement("span");
+          editHint.className = "cw-edit-hint";
+          editHint.innerHTML = "✎ Renomear";
 
-                        // Lógica de Sucesso
-                        pInput.addEventListener('input', () => {
-                            if(pInput.value.trim().length > 5) pInput.classList.add('filled');
-                            else pInput.classList.remove('filled');
-                        });
+          titleWrap.appendChild(nameInput);
+          titleWrap.appendChild(editHint);
 
-                        const check = document.createElement("div");
-                        check.className = "cw-input-check";
-                        check.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+          header.appendChild(iconBox);
+          header.appendChild(titleWrap);
+          card.appendChild(header);
 
-                        group.appendChild(label);
-                        group.appendChild(pInput);
-                        group.appendChild(check);
-                        card.appendChild(group);
-                    });
+          // INPUTS (Mantidos iguais)
+          prints.forEach((req, idx) => {
+            const group = document.createElement("div");
+            group.className = "cw-input-group";
 
-                    screenList.appendChild(card);
-                }
-            }
-        });
-        
-        screenshotsContainer.style.display = hasAny ? "block" : "none";
-    }
+            const label = document.createElement("label");
+            label.className = "cw-input-label";
+            label.textContent = req.replace(/📷|:|•/g, "").trim();
 
-    return {
-        selectionElement: container,
-        screenshotsElement: screenshotsContainer,
-        updateSubStatus: () => renderScreenshots(),
-        getCheckedElements: () => {
-            return Object.keys(selection).map(key => ({
-                value: key,
-                closest: () => ({ querySelector: () => ({ textContent: selection[key].count }) })
-            }));
-        },
-        reset: () => {
-            for(const k in selection) delete selection[k];
-            updateUI();
-            renderScreenshots();
-            searchInput.value = '';
-            accContainer.style.display = 'block';
-            resultsContainer.style.display = 'none';
+            const pInput = document.createElement("input");
+            pInput.className = "cw-input-field";
+            pInput.id = `screen-${key}-${i}-${idx}`;
+            pInput.placeholder = "Cole o link aqui...";
+            pInput.setAttribute("autocomplete", "off");
+
+            // Lógica de Sucesso
+            pInput.addEventListener("input", () => {
+              if (pInput.value.trim().length > 5)
+                pInput.classList.add("filled");
+              else pInput.classList.remove("filled");
+            });
+
+            const check = document.createElement("div");
+            check.className = "cw-input-check";
+            check.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+
+            group.appendChild(label);
+            group.appendChild(pInput);
+            group.appendChild(check);
+            card.appendChild(group);
+          });
+
+          screenList.appendChild(card);
         }
-    };
+      }
+    });
+
+    screenshotsContainer.style.display = hasAny ? "block" : "none";
+  }
+
+  return {
+    selectionElement: container,
+    screenshotsElement: screenshotsContainer,
+    updateSubStatus: () => renderScreenshots(),
+    getCheckedElements: () => {
+      return Object.keys(selection).map((key) => ({
+        value: key,
+        closest: () => ({
+          querySelector: () => ({ textContent: selection[key].count }),
+        }),
+      }));
+    },
+    // --- ADICIONE ISTO AQUI ---
+    toggleTask: (key, forceState = true) => {
+      // Se forceState é true, garante que esteja selecionado (pelo menos 1)
+      // Se false, garante que esteja desmarcado
+      const current = selection[key];
+      if (forceState && !current) {
+        // Adiciona (Busca dados no DB global importado no topo)
+        updateTask(key, 1, TASKS_DB[key]);
+      } else if (!forceState && current) {
+        // Remove (Zera o contador)
+        updateTask(key, -current.count, TASKS_DB[key]);
+      }
+    },
+    // ---------------------------
+    reset: () => {
+      for (const key in selection) delete selection[key];
+
+      // 2. Limpa o campo de busca visualmente
+      searchInput.value = "";
+
+      // 3. Restaura a visualização de categorias (sai do modo busca)
+      accContainer.style.display = "block";
+      resultsContainer.style.display = "none";
+
+      // 4. Chama as funções de atualização para apagar visualmente
+      updateUI(); // Desmarca cards, listas e esconde o footer
+      renderScreenshots(); // Remove os inputs de print
+    },
+  };
 }
