@@ -136,7 +136,10 @@ export function showToast(message, opts = {}) {
 }
 
 export function makeDraggable(element, handle = null) {
-  let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+  let pos1 = 0,
+    pos2 = 0,
+    pos3 = 0,
+    pos4 = 0;
   const dragHandle = handle || element;
 
   dragHandle.style.cursor = "grab";
@@ -144,50 +147,28 @@ export function makeDraggable(element, handle = null) {
 
   function dragMouseDown(e) {
     if (
-      ["INPUT", "TEXTAREA", "SELECT", "BUTTON", "I"].includes(e.target.tagName) ||
-      e.target.classList.contains("no-drag") ||
-      e.target.closest('.cw-card-title-input') // Protege inputs do header
-    ) {
+      ["INPUT", "TEXTAREA", "SELECT", "BUTTON"].includes(e.target.tagName) ||
+      e.target.classList.contains("no-drag")
+    )
       return;
-    }
 
     e = e || window.event;
-    // e.preventDefault(); // Manter comentado para permitir foco em inputs se houver
-    
+    // e.preventDefault(); // Removido para permitir foco
     dragHandle.style.cursor = "grabbing";
 
-    // --- O PULO DO GATO (FIX DO "VOO") ---
-    // 1. Removemos a transição para o arrasto ser instantâneo (sem lag)
-    element.style.transition = "none";
-
-    // 2. Pegamos a posição visual exata atual na tela
     const rect = element.getBoundingClientRect();
-
-    // 3. Importante: Resetamos o transform! 
-    // O 'translate(-50%, -50%)' é o causador do pulo. Ao removê-lo aqui,
-    // garantimos que o left/top abaixo sejam absolutos e verdadeiros.
-    element.style.transform = "none";
-
-    // 4. Fixamos a posição em pixels exatos (substituindo o 50% do CSS)
     element.style.left = rect.left + "px";
     element.style.top = rect.top + "px";
-    
-    // 5. Limpa âncoras conflitantes
     element.style.right = "auto";
     element.style.bottom = "auto";
-    element.style.margin = "0";
-    
-    // Garante largura fixa para não encolher ao sair do 'center'
     if (!element.style.width) element.style.width = rect.width + "px";
-    // --------------------------------------
 
     highestZIndex++;
     element.style.zIndex = highestZIndex;
-    
     pos3 = e.clientX;
     pos4 = e.clientY;
 
-    element.setAttribute("data-dragging", "true"); // Marca que começou
+    element.setAttribute("data-dragging", "false");
     document.onmouseup = closeDragElement;
     document.onmousemove = elementDrag;
   }
@@ -195,29 +176,22 @@ export function makeDraggable(element, handle = null) {
   function elementDrag(e) {
     e = e || window.event;
     e.preventDefault();
-    
-    // Cálculo do Delta
     pos1 = pos3 - e.clientX;
     pos2 = pos4 - e.clientY;
     pos3 = e.clientX;
     pos4 = e.clientY;
-
-    // Aplica nova posição
-    element.style.top = (element.offsetTop - pos2) + "px";
-    element.style.left = (element.offsetLeft - pos1) + "px";
+    element.setAttribute("data-dragging", "true");
+    element.style.top = element.offsetTop - pos2 + "px";
+    element.style.left = element.offsetLeft - pos1 + "px";
   }
 
   function closeDragElement() {
     document.onmouseup = null;
     document.onmousemove = null;
     dragHandle.style.cursor = "grab";
-    
-    // Restaura a transição suave (opcional, para opacidade/outros)
-    // Mas mantém transform desligado para não pular de volta
     setTimeout(() => {
-        element.style.transition = "opacity 0.3s ease"; 
-        element.setAttribute("data-dragging", "false");
-    }, 50);
+      element.setAttribute("data-dragging", "false");
+    }, 100);
   }
 }
 
