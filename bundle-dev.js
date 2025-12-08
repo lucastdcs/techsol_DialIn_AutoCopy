@@ -39,13 +39,6 @@
         }
 
         /* Utilit\xE1rios do Script Assistant (Refinados) */
-
-
-
-
-
-
-
         .csa-li { 
             margin: 6px 0 !important; 
             padding: 10px 12px; border-radius: 8px; 
@@ -53,7 +46,6 @@
             transition: all 0.2s var(--cw-ease-elastic); 
             font-size: 14px; cursor: pointer; user-select: none;
             background-color: #f8f9fa; color: var(--cw-text);
-
         }
         .csa-li:hover { 
             background-color: #e8f0fe; 
@@ -63,8 +55,6 @@
         .csa-li.csa-completed { 
             opacity: 0.6; 
             text-decoration: line-through; 
-
-
             background: transparent;
             border: 1px dashed var(--cw-border);
         }
