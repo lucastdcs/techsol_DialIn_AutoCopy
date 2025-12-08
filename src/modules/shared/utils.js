@@ -285,8 +285,7 @@ backgroundColor: "rgba(248, 249, 250, 0.96)",
   // --- MUDANÇA AQUI: Transição Total com Física Apple ---
   // 'all' permite que top/left/width/height animem ao expandir
   transition: "all 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.3s ease",
-  
-  willChange: "transform, opacity, width, height, top, left",
+
 };
 
 export const stylePopupHeader = {
