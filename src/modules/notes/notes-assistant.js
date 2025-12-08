@@ -1046,37 +1046,50 @@ function generateOutputHtml() {
 
         // --- 2. CAPTURA DE PRINTS (Via Container do Módulo) ---
         // Busca apenas dentro do container de screenshots do Task Manager
-        const screenshotsContainer = stepTasks.screenshotsElement;
+       const screenshotsContainer = taskManager.screenshotsElement;
         
         if (screenshotsContainer) {
+            // Busca inputs de nome dentro do container
             const nameInputs = Array.from(screenshotsContainer.querySelectorAll('input[id^="name-"]'));
             
-            // Filtra visíveis (embora dentro do container já devam ser os corretos)
-            const visibleNameInputs = nameInputs.filter(i => i.offsetParent !== null);
-
-            if (visibleNameInputs.length > 0) {
-                visibleNameInputs.forEach(nameInput => {
+            // Removemos o filtro de visibilidade (offsetParent) pois o container pode estar oculto
+            // no momento da geração (se o usuário estiver no passo final), mas os dados existem.
+            
+            if (nameInputs.length > 0) {
+                nameInputs.forEach(nameInput => {
                     const customName = nameInput.value;
-                    const card = nameInput.closest('div').parentNode; 
-                    const printInputs = card.querySelectorAll('input[id^="screen-"]');
                     
-                    let hasPrints = false;
-                    let itemsHtml = '';
-
-                    printInputs.forEach(printInput => {
-                        const labelEl = printInput.previousElementSibling;
-                        // Limpa ícones do label se houver
-                        const labelText = labelEl ? labelEl.textContent.replace('📷 ', '').replace(':', '') : 'Print';
-                        const val = printInput.value.trim();
-                        const displayVal = val ? ` ${val}` : '';
+                    // CORREÇÃO AQUI: 
+                    // Em vez de navegar por parentNode, buscamos o cartão ancestral pela classe.
+                    // Isso garante que acharemos o cartão independente da estrutura interna do header.
+                    const card = nameInput.closest('.cw-screen-card');
+                    
+                    if (card) {
+                        const printInputs = card.querySelectorAll('input[id^="screen-"]');
                         
-                        itemsHtml += `<li>${labelText} -${displayVal}</li>`;
-                        hasPrints = true;
-                    });
+                        let hasPrints = false;
+                        let itemsHtml = '';
 
-                    if (hasPrints) {
-                        screenshotsText += `<b>${customName}</b>`;
-                        screenshotsText += `<ul ${ulStyle}>${itemsHtml}</ul>`;
+                        printInputs.forEach(printInput => {
+                            // Encontra o label associado (irmão anterior do wrapper ou do input)
+                            // Na nova estrutura, o label está dentro de .cw-input-group, antes do wrapper
+                            const group = printInput.closest('.cw-input-group');
+                            const labelEl = group ? group.querySelector('.cw-input-label') : null;
+                            
+                            const labelText = labelEl ? labelEl.textContent : 'Evidência';
+                            const val = printInput.value.trim();
+                            const displayVal = val ? ` ${val}` : '';
+                            
+                            // Adiciona linha mesmo se vazio (para template) ou só se tiver valor?
+                            // Geralmente mantemos para mostrar o checklist.
+                            itemsHtml += `<li>${labelText} -${displayVal}</li>`;
+                            hasPrints = true;
+                        });
+
+                        if (hasPrints) {
+                            screenshotsText += `<b>${customName}</b>`;
+                            screenshotsText += `<ul ${ulStyle}>${itemsHtml}</ul>`;
+                        }
                     }
                 });
             }
