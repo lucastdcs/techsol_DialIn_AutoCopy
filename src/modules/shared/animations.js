@@ -140,14 +140,21 @@ export function toggleGenieAnimation(show, popup, buttonId) {
         if (typeof removeIdleListener === 'function') removeIdleListener(popup);
 
         // Aguarda animação terminar para esconder/limpar
-        setTimeout(() => {
-            // Só esconde display none se necessário pela sua lógica de app, 
-            // mas manter opacity 0 é geralmente suficiente e mais performático.
-            // popup.style.display = 'none'; 
+setTimeout(() => {
+            popup.classList.remove('open');
+            popup.classList.remove('idle');
+            if (btn) btn.classList.remove('active');
             
-            // Limpa estilos inline para não atrapalhar o Drag & Drop depois
+            // Limpa estilos de animação
             popup.style.transition = '';
             popup.style.transform = ''; 
+            
+            // --- A CORREÇÃO MÁGICA ---
+            // Remove a largura inline (700px), forçando voltar ao padrão do CSS (380px/400px)
+            // Isso garante que na próxima abertura ele nasça pequeno e centralizado corretamente.
+            popup.style.width = ''; 
+            popup.style.height = ''; // Boa prática resetar altura também se houver expandir vertical
+            
         }, 300);
     }
 }
