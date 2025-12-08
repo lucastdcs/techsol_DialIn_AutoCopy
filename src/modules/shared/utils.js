@@ -62,13 +62,6 @@ export function initGlobalStylesAndFont() {
         }
 
         /* Utilitários do Script Assistant (Refinados) */
-
-
-
-
-
-
-
         .csa-li { 
             margin: 6px 0 !important; 
             padding: 10px 12px; border-radius: 8px; 
@@ -76,7 +69,6 @@ export function initGlobalStylesAndFont() {
             transition: all 0.2s var(--cw-ease-elastic); 
             font-size: 14px; cursor: pointer; user-select: none;
             background-color: #f8f9fa; color: var(--cw-text);
-
         }
         .csa-li:hover { 
             background-color: #e8f0fe; 
@@ -86,8 +78,6 @@ export function initGlobalStylesAndFont() {
         .csa-li.csa-completed { 
             opacity: 0.6; 
             text-decoration: line-through; 
-
-
             background: transparent;
             border: 1px dashed var(--cw-border);
         }
@@ -98,7 +88,6 @@ export function initGlobalStylesAndFont() {
 export function showToast(message, opts = {}) {
   const toast = document.createElement("div");
   // Determina cor baseada no tipo (sucesso vs erro)
-
   const bg = opts.error 
     ? "rgba(217, 48, 37, 0.95)" // Vermelho Google com transparência
     : "rgba(32, 33, 36, 0.90)"; // Cinza escuro Google com transparência
@@ -118,7 +107,6 @@ export function showToast(message, opts = {}) {
     fontSize: "14px",
     fontWeight: "500",
     zIndex: "2147483647",
-
     opacity: "0",
     transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)", // Efeito "Spring" (Mola)
     pointerEvents: "none" // Não bloqueia cliques embaixo
@@ -237,7 +225,7 @@ export const stylePopup = {
   transform: "translate(-50%, -50%) scale(0.95)", 
   width: "400px",
   maxHeight: "85vh",
-  
+
   zIndex: "99999",
   overflow: "hidden",
   display: "flex",
@@ -248,18 +236,16 @@ export const stylePopup = {
   backdropFilter: "blur(20px) saturate(180%)", // O segredo do visual Apple
   borderRadius: "20px", // Cantos mais arredondados
   boxShadow: "0 20px 40px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05)", // Borda sutil + Sombra profunda
-  
+
   opacity: "0",
   pointerEvents: "none", // Controlado pelo JS de animação
   fontFamily: "'Google Sans', sans-serif",
-
   transition: "opacity 0.3s ease, transform 0.3s cubic-bezier(0.19, 1, 0.22, 1)",
 };
 
 export const stylePopupHeader = {
   display: "flex",
   alignItems: "center", // Centralizado verticalmente
-
   justifyContent: "space-between",
   padding: "16px 20px",
   background: "transparent", // Deixa o vidro do pai aparecer
@@ -267,24 +253,14 @@ export const stylePopupHeader = {
   cursor: "grab",
   userSelect: "none",
   flexShrink: "0",
-
 };
 
 export const stylePopupTitle = {
   fontSize: "16px", // Um pouco menor, mais elegante
   fontWeight: "600",
   color: "#202124",
-
   letterSpacing: "-0.01em",
 };
-
-
-
-
-
-
-
-
 
 export const stylePopupCloseBtn = {
   fontSize: "24px",
@@ -298,20 +274,8 @@ export const stylePopupCloseBtn = {
   borderRadius: "50%",
   background: "rgba(0,0,0,0.05)", // Fundo sutil
   transition: "all 0.2s ease",
-
-
-
   border: "none",
 };
-
-
-
-
-
-
-
-
-
 
 export const styleSelect = {
   width: "100%",
@@ -338,7 +302,6 @@ export const styleButtonBase = {
   padding: "12px 20px",
   background: "#1a73e8",
   color: "#fff",
-
   border: "none",
   borderRadius: "100px", // Botão Pílula (Tendência Google/Apple atual)
   fontSize: "14px",
@@ -351,14 +314,13 @@ export const styleButtonBase = {
   transition: "transform 0.1s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s ease, background 0.2s",
   // IMPORTANTE: Adicionar no JS: element.onmousedown = () => el.style.transform = 'scale(0.96)'
 };
-export const styleLabel = {
-  display: "block",
-  fontSize: "13px",
-  fontWeight: "600",
-  color: COLORS.text,
-  marginBottom: "8px",
-  marginTop: "16px",
-};
+
+
+
+
+
+
+
 
 export const styleCredit = {
   fontSize: "10px",
@@ -368,7 +330,6 @@ export const styleCredit = {
   borderTop: "1px solid #eee",
   marginTop: "16px",
 };
-
 export const styleExpandButton = {
   fontSize: "18px",
   color: "#5f6368",
@@ -379,7 +340,6 @@ export const styleExpandButton = {
   lineHeight: "1",
   zIndex: "10",
 };
-
 export const typeBtnStyle = {
   padding: "6px 12px",
   cursor: "pointer",
@@ -390,9 +350,7 @@ export const typeBtnStyle = {
   transition: "all 0.2s ease",
   width: "100%",
   textAlign: "center",
-
 };
-
 export const styleIconBtn = {
   width: "32px",
   height: "32px",
@@ -406,7 +364,6 @@ export const styleIconBtn = {
   transition: "background-color 0.2s ease",
   marginLeft: "4px",
 };
-
 export const styleHelpOverlay = {
   position: "absolute",
   top: "0",
