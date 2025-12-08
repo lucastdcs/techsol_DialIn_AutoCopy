@@ -315,7 +315,14 @@ export const styleButtonBase = {
   // IMPORTANTE: Adicionar no JS: element.onmousedown = () => el.style.transform = 'scale(0.96)'
 };
 
-
+export const styleLabel = {
+  display: "block",
+  fontSize: "13px",
+  fontWeight: "600",
+  color: COLORS.text,
+  marginBottom: "8px",
+  marginTop: "16px",
+};
 
 
 
