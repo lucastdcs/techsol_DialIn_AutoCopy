@@ -336,7 +336,7 @@ export function initCaseNotesAssistant() {
   const mainStatusSelect = document.createElement("select");
   mainStatusSelect.id = "main-status";
   Object.assign(mainStatusSelect.style, styleSelect);
-  mainStatusSelect.innerHTML = `<option value="">-- Selecione --</option><option value="NI">NI - Need Info</option><option value="SO">SO - Solution Offered</option><option value="IN">IN - Inactive</option><option value="AS">AS - Assigned</option>`;
+  mainStatusSelect.innerHTML = `<option value="">Selecione</option><option value="NI">NI - Need Info</option><option value="SO">SO - Solution Offered</option><option value="IN">IN - Inactive</option><option value="AS">AS - Assigned</option>`;
 
   const subStatusHeader = document.createElement("div");
   Object.assign(subStatusHeader.style, {

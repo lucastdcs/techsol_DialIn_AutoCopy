@@ -239,10 +239,15 @@ export const stylePopup = {
   boxShadow: "0 20px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)",
 
   opacity: "0",
-  transform: "translate(-50%, -50%) scale(0.95)", // Estado inicial para animação
+
+
+  transform: "translate(-50%, -50%)", 
+  
   pointerEvents: "none",
   fontFamily: "'Google Sans', 'Roboto'",
-  transition: "opacity 0.3s ease, transform 0.3s cubic-bezier(0.19, 1, 0.22, 1)",
+  
+  // 2. Ajustamos a transição para ser mais permissiva com mudanças de transform
+  transition: "opacity 0.3s ease, transform 0.4s cubic-bezier(0.19, 1, 0.22, 1)",
 };
 
 export const stylePopupHeader = {
