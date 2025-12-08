@@ -233,7 +233,7 @@ const CATEGORY_ICONS = {
   // 2. TOOLBAR (Busca + Abas)
   const toolbar = document.createElement("div");
   Object.assign(toolbar.style, {
-    padding: "0 16px 16px 16px",
+    padding: "16px",
     display: "flex",
     flexDirection: "column",
     gap: "12px",
