@@ -408,38 +408,46 @@ export function initCaseNotesAssistant() {
   stepConsentDiv.appendChild(consentRadioGroup);
   popupContent.appendChild(stepConsentDiv);
 
-// --- STEP 1.5: Cenários Comuns ---
+
+  // 1. CRIAÇÃO: Usamos o nome 'snippetContainer' para manter compatibilidade
+// --- STEP 1.5: Cenários Comuns (ATUALIZADO) ---
   const stepSnippetsDiv = document.createElement("div");
   stepSnippetsDiv.id = "step-1-5-snippets";
+  // Mantemos display: none pois a lógica de mostrar/esconder (baseada no Status SO) ainda vai controlar isso
   Object.assign(stepSnippetsDiv.style, styles.stepBlock, { display: "none" });
 
   const stepSnippetsTitle = document.createElement("h3");
   Object.assign(stepSnippetsTitle.style, styles.h3);
   stepSnippetsTitle.textContent = "Cenários Comuns";
 
-  // 1. CRIAÇÃO: Usamos o nome 'snippetContainer' para manter compatibilidade
+  // --- AQUI A MÁGICA ACONTECE ---
+  // Chamamos o componente visual (Chips + Preview)
   const snippetContainer = createScenariosComponent((selectedText) => {
-      // Lógica ao selecionar um chip
-      // Tenta achar o campo "Action Taken" ou qualquer textarea disponível
-      const target = document.getElementById("field-action-taken") || document.querySelector('textarea');
+      // Callback: O que fazer quando o usuário clica num chip?
+      
+      // Tenta achar o textarea principal (ajuste o seletor conforme sua necessidade)
+      // Se seu textarea tiver um ID específico, use-o aqui.
+      const target = document.querySelector('textarea'); 
       
       if (target) {
+          // Injeta o texto
           target.value = selectedText;
-          target.dispatchEvent(new Event('input')); // Salva estado
           
-          // Feedback Visual no campo
+          // Dispara evento para o React/DOM saber que mudou
+          target.dispatchEvent(new Event('input'));
+          
+          // Feedback Visual no campo (Piscar azul)
           target.style.transition = "background-color 0.2s";
           target.style.backgroundColor = "#e8f0fe";
           setTimeout(() => target.style.backgroundColor = "#fff", 300);
       }
   });
-  
-  // Opcional: Garante que ele tenha o ID antigo se o CSS depender disso
+
+  // Mantemos o ID antigo no container wrapper caso alguma lógica externa precise
   snippetContainer.id = "snippet-container";
 
-  // 2. ANEXAR: Usamos a mesma variável 'snippetContainer'
   stepSnippetsDiv.appendChild(stepSnippetsTitle);
-  stepSnippetsDiv.appendChild(snippetContainer); // <--- AQUI ESTAVA O ERRO (scenariosComponent)
+  stepSnippetsDiv.appendChild(snippetContainer);
   
   popupContent.appendChild(stepSnippetsDiv);
 
