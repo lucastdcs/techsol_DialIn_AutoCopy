@@ -1,304 +1,383 @@
 // src/modules/call-script/call-script-assistant.js
 
 import {
-    stylePopup,
-    styleResizeHandle,
-    makeResizable,
-    makeDraggable
+  styleSelect,
+  stylePopup,
+  styleCredit,
+  typeBtnStyle,
+  getRandomGoogleStyle,
+  styleResizeHandle, // <--- Novo
+  makeResizable      // <--- Novo
 } from "../shared/utils.js";
+
 import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from "../shared/animations.js";
 
-// --- DADOS DO SCRIPT (Poderia vir de um JSON externo) ---
-const SCRIPT_DATA = [
-    {
-        title: "👋 Abertura & Conexão",
-        steps: [
-            "Olá, bom dia/boa tarde! Gostaria de falar com <b>{CLIENT_NAME}</b>?",
-            "Aqui é o <b>{AGENT_NAME}</b>, sou especialista de implementação do Google.",
-            "O motivo do meu contato é para apoiar na implementação das tags no site <b>{URL}</b>.",
-            "Você teria 10-15 minutos para realizarmos esse procedimento agora?"
-        ]
-    },
-    {
-        title: "🔍 Investigação (Sondagem)",
-        steps: [
-            "Para começarmos, você tem acesso administrativo ao <b>Google Ads</b>?",
-            "E ao painel do site (WordPress/Shopify/Wix)?",
-            "Atualmente, qual é a maior dificuldade que está encontrando na instalação?",
-            "Podemos compartilhar a tela para eu te guiar melhor?"
-        ]
-    },
-    {
-        title: "🛠️ Ação Técnica",
-        steps: [
-            "Vou te enviar um convite de acesso para o Google Tag Manager.",
-            "Poderia aceitar o convite no seu e-mail, por favor?",
-            "Agora, vamos instalar o código base no <head> do site.",
-            "Ótimo! Agora vamos criar a Tag de Conversão e o Vinculador."
-        ]
-    },
-    {
-        title: "✅ Validação & Fechamento",
-        steps: [
-            "Vamos usar o Tag Assistant para validar o disparo.",
-            "Tudo funcionando! Você tem mais alguma dúvida técnica?",
-            "Vou te enviar um e-mail com o resumo do que fizemos hoje.",
-            "Obrigado pelo seu tempo e tenha um excelente dia!"
-        ]
-    }
-];
+// Importa os textos originais
+import { csaChecklistData } from "./call-script-data.js";
 
 export function initCallScriptAssistant() {
-    const CURRENT_VERSION = "v2.0";
-    let visible = false;
+  const CURRENT_VERSION = "v2.0 (Teleprompter)";
 
-    // --- ESTILOS LOCAIS (Teleprompter UI) ---
-    const styles = {
-        progressBarContainer: {
-            height: "4px",
-            background: "#f1f3f4",
-            width: "100%",
-            position: "relative",
-            overflow: "hidden"
-        },
-        progressBarFill: {
-            height: "100%",
-            background: "linear-gradient(90deg, #4285F4, #34A853)",
-            width: "0%",
-            transition: "width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)",
-            borderRadius: "0 2px 2px 0"
-        },
-        card: {
-            background: "#ffffff",
-            border: "1px solid #e0e0e0",
-            borderRadius: "12px",
-            padding: "16px",
-            marginBottom: "12px",
-            transition: "all 0.3s ease",
-            cursor: "pointer",
-            position: "relative",
-            opacity: "0.7", // Estado inativo
-            transform: "scale(0.98)"
-        },
-        cardActive: {
-            borderColor: "#1a73e8",
-            boxShadow: "0 4px 12px rgba(26, 115, 232, 0.15)",
-            opacity: "1",
-            transform: "scale(1)",
-            backgroundColor: "#fff"
-        },
-        cardTitle: {
-            fontSize: "14px",
-            fontWeight: "600",
-            color: "#202124",
-            marginBottom: "12px",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px"
-        },
-        stepRow: {
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "10px",
-            marginBottom: "8px",
-            fontSize: "14px",
-            lineHeight: "1.5",
-            color: "#3c4043"
-        },
-        checkbox: {
-            marginTop: "3px",
-            cursor: "pointer",
-            accentColor: "#1a73e8",
-            width: "16px",
-            height: "16px"
-        }
-    };
+  // --- ESTILOS LOCAIS (UI Otimizada) ---
+  const styles = {
+    progressBarContainer: {
+        height: "4px",
+        background: "#f1f3f4",
+        width: "100%",
+        position: "relative",
+        overflow: "hidden"
+    },
+    progressBarFill: {
+        height: "100%",
+        background: "linear-gradient(90deg, #4285F4, #34A853)",
+        width: "0%",
+        transition: "width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)",
+        borderRadius: "0 2px 2px 0"
+    },
+    card: {
+        background: "#ffffff",
+        border: "1px solid #dadce0",
+        borderRadius: "12px", // Google Material 3
+        padding: "16px",
+        marginBottom: "16px",
+        transition: "all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.05)"
+    },
+    cardTitle: {
+        fontSize: "13px",
+        fontWeight: "700",
+        color: "#5f6368",
+        textTransform: "uppercase",
+        letterSpacing: "0.5px",
+        marginBottom: "12px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between"
+    },
+    itemRow: {
+        display: "flex",
+        alignItems: "flex-start",
+        padding: "8px 0",
+        cursor: "pointer",
+        transition: "opacity 0.2s",
+        color: "#202124",
+        fontSize: "14px",
+        lineHeight: "1.5"
+    },
+    itemCompleted: {
+        opacity: "0.5",
+        textDecoration: "line-through",
+        color: "#5f6368"
+    },
+    checkbox: {
+        minWidth: "18px",
+        height: "18px",
+        borderRadius: "4px",
+        border: "2px solid #5f6368",
+        marginRight: "12px",
+        marginTop: "2px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transition: "all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)"
+    }
+  };
 
-    // --- CONSTRUÇÃO DO DOM ---
-    const popup = document.createElement("div");
-    popup.id = "call-script-popup";
-    // Usa estilos globais + ajustes de posição
-    Object.assign(popup.style, stylePopup, {
+  // --- Estado ---
+  const csaCompletedTasks = {};
+  let csaCurrentLang = "PT";
+  let csaCurrentType = "BAU";
+  let csaVisible = false;
+
+  // --- POPUP ---
+  const csaPopup = document.createElement("div");
+  csaPopup.id = "call-script-popup";
+
+  Object.assign(csaPopup.style, stylePopup, { 
         right: "auto", 
-        left: "50%",
-        width: "420px",
-        height: "600px", // Altura inicial boa para leitura
+        left: "50%", // Centralizado para o Genie funcionar
+        width: "400px",
+        height: "600px",
+        display: "flex", 
+        flexDirection: "column",
+        boxShadow: "none",
         opacity: "0",
         pointerEvents: "none"
-    });
+  });
 
-    const animRefs = { popup, googleLine: null };
+  const animRefs = { popup: csaPopup, googleLine: null };
 
-    // 1. HEADER
-    const header = createStandardHeader(
-        popup,
-        "Call Script",
-        CURRENT_VERSION,
-        "Guia interativo para condução de chamadas.",
-        animRefs,
-        () => toggleVisibility()
-    );
-    popup.appendChild(header);
+  function toggleVisibility() {
+    csaVisible = !csaVisible;
+    toggleGenieAnimation(csaVisible, csaPopup, 'cw-btn-script');
+  }
 
-    // 2. PROGRESS BAR (Gamification)
-    const progressContainer = document.createElement("div");
-    Object.assign(progressContainer.style, styles.progressBarContainer);
-    const progressFill = document.createElement("div");
-    Object.assign(progressFill.style, styles.progressBarFill);
-    progressContainer.appendChild(progressFill);
-    popup.appendChild(progressContainer);
+  // 1. HEADER
+  const csaHeader = createStandardHeader(
+    csaPopup,
+    "Call Script",
+    CURRENT_VERSION,
+    "Guia interativo para condução de chamadas.", 
+    animRefs,
+    () => { toggleVisibility(); }
+  );
+  csaPopup.appendChild(csaHeader);
 
-    // 3. CONTEÚDO (Scrollable)
-    const contentArea = document.createElement("div");
-    Object.assign(contentArea.style, {
-        padding: "16px",
-        overflowY: "auto",
-        flexGrow: "1",
-        scrollBehavior: "smooth"
-    });
-    popup.appendChild(contentArea);
+  // 2. PROGRESS BAR (NOVO)
+  const progressContainer = document.createElement("div");
+  Object.assign(progressContainer.style, styles.progressBarContainer);
+  const progressFill = document.createElement("div");
+  Object.assign(progressFill.style, styles.progressBarFill);
+  progressContainer.appendChild(progressFill);
+  csaPopup.appendChild(progressContainer);
 
-    // 4. FOOTER (Opcional - Reset)
-    const footer = document.createElement("div");
-    Object.assign(footer.style, {
-        padding: "10px 16px",
-        borderTop: "1px solid #eee",
-        display: "flex",
-        justifyContent: "flex-end",
-        background: "#f8f9fa"
-    });
-    const resetBtn = document.createElement("button");
-    resetBtn.textContent = "Resetar Script";
-    resetBtn.style.cssText = "background:none; border:none; color:#5f6368; font-size:12px; cursor:pointer; font-weight:500;";
-    resetBtn.onclick = resetAll;
-    footer.appendChild(resetBtn);
-    popup.appendChild(footer);
+  // 3. CONTEÚDO
+  const csaContent = document.createElement("div");
+  csaContent.id = "csa-content";
+  Object.assign(csaContent.style, {
+    padding: "16px",
+    overflowY: "auto",
+    flexGrow: "1",
+    background: "#f8f9fa" // Fundo leve para destacar os cards brancos
+  });
+  csaPopup.appendChild(csaContent);
 
-    // --- RESIZE HANDLE (Padrão Novo) ---
-    const resizeHandle = document.createElement('div');
-    Object.assign(resizeHandle.style, styleResizeHandle);
-    resizeHandle.className = "no-drag";
-    resizeHandle.title = "Redimensionar";
-    popup.appendChild(resizeHandle);
-    makeResizable(popup, resizeHandle);
+  // Footer (Créditos)
+  const credit = document.createElement("div");
+  credit.textContent = "created by lucaste@";
+  Object.assign(credit.style, styleCredit);
+  csaPopup.appendChild(credit);
 
-    document.body.appendChild(popup);
+  // --- CONTROLES DE CONFIGURAÇÃO ---
+  const csaControlsDiv = document.createElement("div");
+  Object.assign(csaControlsDiv.style, {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "16px",
+    gap: "8px",
+  });
 
-    // --- LÓGICA DE RENDERIZAÇÃO ---
-    let totalSteps = 0;
-    let completedSteps = 0;
+  const csaTypeContainer = document.createElement("div");
+  Object.assign(csaTypeContainer.style, {
+    display: "flex",
+    borderRadius: "8px",
+    border: "1px solid #dadce0",
+    overflow: "hidden",
+    background: "#fff"
+  });
 
-    function renderScript() {
-        contentArea.innerHTML = "";
-        totalSteps = 0;
-        completedSteps = 0;
+  const csaTypeBAU = document.createElement("div");
+  csaTypeBAU.textContent = "BAU";
+  const csaTypeLT = document.createElement("div");
+  csaTypeLT.textContent = "LT";
 
-        SCRIPT_DATA.forEach((section, sIndex) => {
-            const card = document.createElement("div");
-            Object.assign(card.style, styles.card);
-            
-            // Título da Seção
-            const title = document.createElement("div");
-            Object.assign(title.style, styles.cardTitle);
-            title.textContent = section.title;
-            card.appendChild(title);
+  Object.assign(csaTypeBAU.style, typeBtnStyle);
+  Object.assign(csaTypeLT.style, typeBtnStyle);
 
-            // Container dos Passos
-            const stepsContainer = document.createElement("div");
-            
-            section.steps.forEach((stepText, stepIndex) => {
-                totalSteps++;
-                const row = document.createElement("div");
-                Object.assign(row.style, styles.stepRow);
+  csaTypeContainer.appendChild(csaTypeBAU);
+  csaTypeContainer.appendChild(csaTypeLT);
 
-                const chk = document.createElement("input");
-                chk.type = "checkbox";
-                chk.id = `step-${sIndex}-${stepIndex}`;
-                Object.assign(chk.style, styles.checkbox);
+  const csaLangSelect = document.createElement("select");
+  Object.assign(csaLangSelect.style, styleSelect, {
+    marginBottom: "0",
+    width: "auto",
+    minWidth: "90px",
+    paddingTop: "6px",
+    paddingBottom: "6px",
+    paddingRight: "30px", // Espaço para seta
+    height: "32px",
+    backgroundPosition: "right 8px center"
+  });
+  csaLangSelect.innerHTML = `<option value="PT">PT</option><option value="ES">ES</option><option value="EN">EN</option>`;
+  csaLangSelect.value = csaCurrentLang;
 
-                const label = document.createElement("label");
-                label.htmlFor = `step-${sIndex}-${stepIndex}`;
-                label.innerHTML = stepText; // Permite <b>
-                label.style.cursor = "pointer";
+  csaControlsDiv.appendChild(csaTypeContainer);
+  csaControlsDiv.appendChild(csaLangSelect);
+  csaContent.appendChild(csaControlsDiv);
 
-                // Evento de Check
-                chk.onchange = (e) => {
-                    if (e.target.checked) {
-                        completedSteps++;
-                        row.style.opacity = "0.5"; // Diminui opacidade do que já foi
-                        row.style.textDecoration = "line-through";
-                    } else {
-                        completedSteps--;
-                        row.style.opacity = "1";
-                        row.style.textDecoration = "none";
-                    }
-                    updateProgress();
-                    focusCard(card); // Garante foco ao interagir
-                };
+  const csaChecklistArea = document.createElement("div");
+  csaChecklistArea.id = "csa-checklist-area";
+  csaContent.appendChild(csaChecklistArea);
 
-                row.appendChild(chk);
-                row.appendChild(label);
-                stepsContainer.appendChild(row);
-            });
+  // --- RESIZE HANDLE (NOVO) ---
+  const resizeHandle = document.createElement('div');
+  Object.assign(resizeHandle.style, styleResizeHandle);
+  resizeHandle.className = "no-drag";
+  resizeHandle.title = "Redimensionar";
+  csaPopup.appendChild(resizeHandle);
+  makeResizable(csaPopup, resizeHandle);
 
-            card.appendChild(stepsContainer);
+  document.body.appendChild(csaPopup);
 
-            // Evento de Foco no Card (Clique em qualquer lugar)
-            card.onclick = (e) => {
-                if(e.target.type !== 'checkbox') focusCard(card);
-            };
+  // --- LÓGICA DO SCRIPT ---
 
-            contentArea.appendChild(card);
-        });
-        
-        // Foca no primeiro card inicialmente
-        if(contentArea.firstChild) focusCard(contentArea.firstChild);
+  // Simula "Smart Variables" (Futuro: IA vai preencher isso)
+  function formatScriptText(text) {
+      // Exemplo: Substituir placeholders se existissem
+      // return text.replace('{CLIENTE}', 'João'); 
+      return text;
+  }
+
+  function csaBuildChecklist() {
+    csaChecklistArea.innerHTML = "";
+    const combinedKey = `${csaCurrentLang} ${csaCurrentType}`;
+    const data = csaChecklistData[combinedKey];
+
+    if (!data) {
+      csaChecklistArea.innerHTML = `<div style="padding: 20px; text-align: center; color: #5f6368;">Script não disponível.</div>`;
+      progressFill.style.width = "0%";
+      return;
     }
 
-    function focusCard(activeCard) {
-        // Remove foco de todos
-        Array.from(contentArea.children).forEach(c => {
-            Object.assign(c.style, styles.card); // Volta ao estilo base (opacidade 0.7)
-        });
-        // Adiciona foco no atual
-        Object.assign(activeCard.style, styles.cardActive);
-        
-        // Scroll suave para garantir visibilidade
-        // activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    // Cores do tema (Google)
+    const activeColor = data.color || "#1a73e8";
 
-    function updateProgress() {
-        const pct = totalSteps === 0 ? 0 : (completedSteps / totalSteps) * 100;
-        progressFill.style.width = `${pct}%`;
-        
-        // Mudança de cor dinâmica (Azul -> Verde)
-        if (pct === 100) {
-            progressFill.style.background = "#34A853"; // Verde Sucesso
-        } else {
-            progressFill.style.background = "linear-gradient(90deg, #4285F4, #34A853)";
+    // 1. Calcula Progresso Total
+    let totalItems = 0;
+    let completedItems = 0;
+    
+    // Varre para contar
+    ["inicio", "fim"].forEach(groupKey => {
+        if(data[groupKey]) totalItems += data[groupKey].length;
+    });
+
+    // 2. Renderiza Grupos (Cards)
+    ["inicio", "fim"].forEach((groupKey) => {
+      const items = data[groupKey];
+      if (!items || items.length === 0) return;
+
+      // Card Container
+      const card = document.createElement("div");
+      Object.assign(card.style, styles.card);
+      
+      // Título do Card
+      const cardTitle = document.createElement("div");
+      Object.assign(cardTitle.style, styles.cardTitle);
+      
+      let titleText = groupKey === "inicio" ? "Abertura" : "Fechamento";
+      // Traduções simples para título do card
+      if (csaCurrentLang.includes("ES")) titleText = groupKey === "inicio" ? "Apertura" : "Cierre";
+      if (csaCurrentLang.includes("EN")) titleText = groupKey === "inicio" ? "Opening" : "Closing";
+      
+      cardTitle.textContent = titleText;
+      
+      // Indicador de progresso do card (ex: 2/5)
+      const counter = document.createElement("span");
+      counter.style.fontSize = "11px";
+      counter.style.opacity = "0.7";
+      counter.id = `counter-${groupKey}`;
+      cardTitle.appendChild(counter);
+
+      card.appendChild(cardTitle);
+
+      let groupDoneCount = 0;
+
+      // Lista de Itens
+      items.forEach((itemText, index) => {
+        const key = `${combinedKey}-${groupKey}-${index}`;
+        const isDone = !!csaCompletedTasks[key];
+        if(isDone) {
+            completedItems++;
+            groupDoneCount++;
         }
+
+        const row = document.createElement("div");
+        Object.assign(row.style, styles.itemRow);
+        
+        // Custom Checkbox (Visual)
+        const chk = document.createElement("div");
+        Object.assign(chk.style, styles.checkbox);
+        
+        // Texto
+        const textSpan = document.createElement("span");
+        textSpan.innerHTML = formatScriptText(itemText); // Aplica variáveis se houver
+        textSpan.style.flex = "1";
+
+        // Estado Inicial
+        if (isDone) {
+            Object.assign(row.style, styles.itemCompleted);
+            chk.style.background = activeColor;
+            chk.style.borderColor = activeColor;
+            // Ícone Check SVG
+            chk.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        } else {
+            row.style.textDecoration = "none";
+            row.style.opacity = "1";
+            chk.style.background = "transparent";
+            chk.style.borderColor = "#5f6368";
+            chk.innerHTML = "";
+        }
+
+        // Interação
+        row.onclick = () => {
+            // Toggle estado
+            csaCompletedTasks[key] = !csaCompletedTasks[key];
+            
+            // Re-renderiza tudo para atualizar progresso e visuais
+            // (Poderia ser otimizado, mas para listas pequenas é instantâneo e seguro)
+            csaBuildChecklist();
+            
+            // Feedback Sonoro (Espaço reservado para o Sound UX)
+            // playSound(csaCompletedTasks[key] ? 'check' : 'uncheck');
+        };
+
+        // Hover Effect
+        row.onmouseenter = () => { if(!csaCompletedTasks[key]) row.style.background = "#f1f3f4"; };
+        row.onmouseleave = () => { row.style.background = "transparent"; };
+
+        row.appendChild(chk);
+        row.appendChild(textSpan);
+        card.appendChild(row);
+      });
+
+      // Atualiza contador do card
+      counter.textContent = `${groupDoneCount}/${items.length}`;
+      if (groupDoneCount === items.length) {
+          counter.style.color = "#1e8e3e"; // Verde completo
+          card.style.borderLeft = "4px solid #1e8e3e"; // Indicador visual lateral
+      }
+
+      csaChecklistArea.appendChild(card);
+    });
+
+    // Atualiza Barra de Progresso Global
+    const progressPct = totalItems === 0 ? 0 : (completedItems / totalItems) * 100;
+    progressFill.style.width = `${progressPct}%`;
+    
+    if (progressPct === 100) {
+        progressFill.style.background = "#34A853"; // Verde Sucesso
+    } else {
+        progressFill.style.background = "linear-gradient(90deg, #4285F4, #34A853)";
     }
+  }
 
-    function resetAll() {
-        const checks = contentArea.querySelectorAll('input[type="checkbox"]');
-        checks.forEach(c => {
-            c.checked = false;
-            c.dispatchEvent(new Event('change')); // Dispara lógica visual
-        });
-        // Foca no primeiro de novo
-        if(contentArea.firstChild) focusCard(contentArea.firstChild);
-        showToast("Script reiniciado");
+  function setActiveType(type) {
+    csaCurrentType = type;
+    const newActiveStyle = getRandomGoogleStyle();
+
+    Object.assign(csaTypeBAU.style, typeBtnStyle);
+    Object.assign(csaTypeLT.style, typeBtnStyle);
+
+    if (type === "BAU") {
+      Object.assign(csaTypeBAU.style, newActiveStyle);
+    } else {
+      Object.assign(csaTypeLT.style, newActiveStyle);
     }
+    csaBuildChecklist();
+  }
 
-    // Toggle
-    function toggleVisibility() {
-        visible = !visible;
-        toggleGenieAnimation(visible, popup, 'cw-btn-script');
-    }
+  csaTypeBAU.onclick = () => setActiveType("BAU");
+  csaTypeLT.onclick = () => setActiveType("LT");
 
-    // Inicialização
-    renderScript();
+  csaLangSelect.addEventListener("change", (e) => {
+    csaCurrentLang = e.target.value;
+    csaBuildChecklist();
+  });
 
-    return toggleVisibility;
+  // Carregamento inicial
+  setActiveType(csaCurrentType);
+
+  return toggleVisibility;
 }
