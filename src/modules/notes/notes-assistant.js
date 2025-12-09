@@ -416,32 +416,30 @@ export function initCaseNotesAssistant() {
   const stepSnippetsTitle = document.createElement("h3");
   Object.assign(stepSnippetsTitle.style, styles.h3);
   stepSnippetsTitle.textContent = "Cenários Comuns";
-  
-  // --- MUDANÇA AQUI ---
-  // Em vez de 'const scenariosComponent', usamos o nome antigo 'snippetContainer'
+
+  // 1. CRIAÇÃO: Usamos o nome 'snippetContainer' para manter compatibilidade
   const snippetContainer = createScenariosComponent((selectedText) => {
-      // Lógica de injeção no textarea (Action Taken ou Comments)
+      // Lógica ao selecionar um chip
+      // Tenta achar o campo "Action Taken" ou qualquer textarea disponível
       const target = document.getElementById("field-action-taken") || document.querySelector('textarea');
+      
       if (target) {
           target.value = selectedText;
-          target.dispatchEvent(new Event('input'));
-          // Efeito visual
+          target.dispatchEvent(new Event('input')); // Salva estado
+          
+          // Feedback Visual no campo
           target.style.transition = "background-color 0.2s";
           target.style.backgroundColor = "#e8f0fe";
           setTimeout(() => target.style.backgroundColor = "#fff", 300);
       }
   });
-
-  // Opcional: Adicionar o ID antigo caso seu CSS ou JS busque por ID
+  
+  // Opcional: Garante que ele tenha o ID antigo se o CSS depender disso
   snippetContainer.id = "snippet-container";
 
+  // 2. ANEXAR: Usamos a mesma variável 'snippetContainer'
   stepSnippetsDiv.appendChild(stepSnippetsTitle);
-  stepSnippetsDiv.appendChild(snippetContainer);
-  
-  popupContent.appendChild(stepSnippetsDiv);
-
-  stepSnippetsDiv.appendChild(stepSnippetsTitle);
-  stepSnippetsDiv.appendChild(scenariosComponent);
+  stepSnippetsDiv.appendChild(snippetContainer); // <--- AQUI ESTAVA O ERRO (scenariosComponent)
   
   popupContent.appendChild(stepSnippetsDiv);
 
