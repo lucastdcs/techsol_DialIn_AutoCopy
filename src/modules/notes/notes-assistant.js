@@ -15,6 +15,8 @@ import {
   styleExpandButton,
   typeBtnStyle,
   getRandomGoogleStyle,
+  styleResizeHandle, // <--- Novo
+  makeResizable      // <--- Novo
 } from "../shared/utils.js";
 
 import {
@@ -204,76 +206,6 @@ export function initCaseNotesAssistant() {
     () => toggleVisibility()
   );
 
-  // Botão Expandir no Header
-const headerActionContainer = header.querySelector('.cw-header-actions') || header.lastElementChild;
-
-if (headerActionContainer) {
-    const expandBtn = document.createElement("div");
-    expandBtn.className = "cw-expand-btn no-drag";
-    
-    // Ícones
-    const iconExpand = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>`;
-    const iconContract = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14h6v6M20 10h-6V4M14 10l7-7M10 14l-7 7"/></svg>`;
-
-    expandBtn.innerHTML = iconExpand;
-
-    Object.assign(expandBtn.style, {
-        fontSize: "20px", color: "#bdc1c6", cursor: "pointer",
-        padding: "8px", display: "flex", alignItems: "center", justifyContent: "center",
-        borderRadius: "50%", transition: "all 0.2s ease",
-        marginLeft: "auto", marginRight: "4px", width: "32px", height: "32px"
-    });
-
-    // Hover state
-    expandBtn.onmouseenter = () => { expandBtn.style.background = "rgba(255,255,255,0.1)"; expandBtn.style.color = "#fff"; };
-    expandBtn.onmouseleave = () => { expandBtn.style.background = "transparent"; expandBtn.style.color = "#bdc1c6"; };
-
-    // --- CORREÇÃO 1: ESTADO INICIAL FORÇADO ---
-    let isExpanded = false;
-    // Garante que começa pequeno, removendo qualquer largura inline residual
-    popup.style.width = ""; 
-
-    // Função de Reset Pública (para o toggleVisibility usar)
-    expandBtn.resetState = () => {
-        isExpanded = false;
-        expandBtn.style.transform = "rotate(0deg)";
-        expandBtn.innerHTML = iconExpand;
-        popup.style.width = ""; // Volta ao CSS padrão
-    };
-
-    expandBtn.onclick = (e) => {
-        e.stopPropagation();
-        isExpanded = !isExpanded;
-
-        // 1. Feedback Visual no Botão
-        expandBtn.style.transform = isExpanded ? "rotate(180deg)" : "rotate(0deg)";
-        expandBtn.innerHTML = isExpanded ? iconContract : iconExpand;
-
-        // --- CORREÇÃO 2: GARANTIR A FÍSICA APPLE ---
-        // Antes de mudar a largura, REAPLICAMOS a transição elástica.
-        // Isso garante que, mesmo que o drag tenha removido a transição, ela volta agora.
-        // (Essa string deve ser a mesma definida no stylePopup do utils.js)
-        popup.style.transition = "all 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.3s ease";
-
-        // 2. Aplica a Largura (Dispara a animação)
-        // Se true, 700px. Se false, string vazia "" (volta ao padrão do CSS, ex: 400px)
-        popup.style.width = isExpanded ? "700px" : "";
-
-        // 3. Trava de Segurança (Opcional, mas recomendado)
-        // Importe constrainToViewport do utils.js se quiser usar.
-        // Usamos requestAnimationFrame para não interromper a transição que acabamos de iniciar.
-        /* requestAnimationFrame(() => {
-            if (typeof constrainToViewport === 'function') {
-                constrainToViewport(popup);
-            }
-        }); 
-        */
-    };
-
-    // Insere antes do botão fechar
-    const closeBtn = headerActionContainer.querySelector('.cw-close-btn') || headerActionContainer.lastElementChild;
-    headerActionContainer.insertBefore(expandBtn, closeBtn);
-}
 
   popup.appendChild(header);
 
@@ -572,6 +504,18 @@ if (headerActionContainer) {
   generateButton.textContent = "Preencher";
   buttonContainer.appendChild(copyButton);
   buttonContainer.appendChild(generateButton);
+
+  // --- RESIZE HANDLE (A Nova Alça) ---
+  const resizeHandle = document.createElement('div');
+  Object.assign(resizeHandle.style, styleResizeHandle); // Importado do utils
+  resizeHandle.className = "no-drag"; // Garante que o draggable ignore
+  resizeHandle.title = "Redimensionar";
+  
+  popup.appendChild(resizeHandle);
+
+  // Ativa a lógica
+  // Importe makeResizable do utils.js no topo do arquivo!
+  makeResizable(popup, resizeHandle);
 
   document.body.appendChild(popup);
 

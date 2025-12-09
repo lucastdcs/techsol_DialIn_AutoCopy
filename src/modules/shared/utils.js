@@ -273,7 +273,7 @@ export const stylePopup = {
   overflow: "hidden",
   display: "flex",
   flexDirection: "column",
-backgroundColor: "rgba(248, 249, 250, 0.96)",
+  backgroundColor: "rgba(248, 249, 250, 0.96)",
   backdropFilter: "blur(20px) saturate(180%)",
   borderRadius: "20px",
   boxShadow: "0 20px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)",
@@ -281,9 +281,6 @@ backgroundColor: "rgba(248, 249, 250, 0.96)",
   pointerEvents: "none",
   fontFamily: "'Google Sans', 'Roboto'",
   transform: "translate(-50%, -50%)", 
-
-  // --- MUDANÇA AQUI: Transição Total com Física Apple ---
-  // 'all' permite que top/left/width/height animem ao expandir
   transition: "all 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.3s ease",
 
 };
@@ -714,4 +711,76 @@ export function constrainToViewport(element) {
             element.style.transition = originalTransition;
         }, 300);
     }
+}
+
+export const styleResizeHandle = {
+  position: "absolute",
+  bottom: "0",
+  right: "0",
+  width: "24px",
+  height: "24px",
+  cursor: "nwse-resize", // Cursor diagonal padrão do SO
+  zIndex: "10",
+  display: "flex",
+  alignItems: "end",
+  justifyContent: "end",
+  padding: "4px",
+  opacity: "0.5",
+  transition: "opacity 0.2s",
+  // Ícone de "risquinhos" em SVG via Data URI (Cinza Google)
+  backgroundImage: `url('data:image/svg+xml;utf8,<svg viewBox="0 0 24 24" fill="none" stroke="%239aa0a6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="15" x2="15" y2="21"></line><line x1="21" y1="9" x2="9" y2="21"></line></svg>')`,
+  backgroundRepeat: "no-repeat",
+  backgroundPosition: "bottom right",
+  borderBottomRightRadius: "20px" // Acompanha a borda da janela
+};
+
+export function makeResizable(element, handle) {
+  handle.onmousedown = initResize;
+
+  function initResize(e) {
+    // 1. Impede que o clique propague para o Drag (não queremos arrastar, queremos redimensionar)
+    e.stopPropagation(); 
+    e.preventDefault();
+
+    const startX = e.clientX;
+    const startY = e.clientY;
+    
+    // Captura dimensões atuais (Computadas, para precisão)
+    const startWidth = parseInt(document.defaultView.getComputedStyle(element).width, 10);
+    const startHeight = parseInt(document.defaultView.getComputedStyle(element).height, 10);
+
+    // Função de movimento
+    function doResize(e) {
+      // Calcula quanto o mouse andou
+      const newWidth = startWidth + (e.clientX - startX);
+      const newHeight = startHeight + (e.clientY - startY);
+
+      // Aplica com limites (Mínimo de 350px para não quebrar layout)
+      if (newWidth > 350) {
+          element.style.width = newWidth + 'px';
+      }
+      
+      // Opcional: Se quiser controlar altura também. 
+      // Se preferir altura automática pelo conteúdo, remova esse bloco IF.
+      // Geralmente notes é bom ter resize vertical também.
+      if (newHeight > 200) {
+          element.style.height = newHeight + 'px';
+      }
+    }
+
+    // Função de parada
+    function stopResize() {
+      document.removeEventListener('mousemove', doResize);
+      document.removeEventListener('mouseup', stopResize);
+      
+      // Opcional: Salvar preferência de tamanho no localStorage aqui
+    }
+
+    document.addEventListener('mousemove', doResize);
+    document.addEventListener('mouseup', stopResize);
+  }
+  
+  // Efeito visual no hover
+  handle.onmouseenter = () => handle.style.opacity = "1";
+  handle.onmouseleave = () => handle.style.opacity = "0.5";
 }
