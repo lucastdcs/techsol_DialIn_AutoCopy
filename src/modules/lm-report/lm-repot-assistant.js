@@ -13,6 +13,7 @@ import {
 
 import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from '../shared/animations.js';
+import { SoundManager } from "../../shared/sound-manager.js";
 
 // --- BANCO DE DADOS DE LINKS ---
 const LINKS_DB = {
@@ -413,6 +414,7 @@ function renderTabs() {
       
       // Lógica de Copiar com Feedback Tátil
       copyBtn.onclick = (e) => {
+        SoundManager.playClick();
           e.stopPropagation();
           navigator.clipboard.writeText(link.url);
           

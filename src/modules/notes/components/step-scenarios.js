@@ -1,6 +1,7 @@
 // src/modules/notes/components/step-scenarios.js
 
 import { scenarioSnippets } from "../notes-data.js";
+import { SoundManager } from "../../shared/sound-manager.js";
 
 export function createScenariosComponent(onSelectCallback) {
   // Container Principal
@@ -91,6 +92,7 @@ export function createScenariosComponent(onSelectCallback) {
 
     // 2. Clique (Seleção)
     chip.onclick = () => {
+      SoundManager.playClick();
       // Toggle (Se clicar no mesmo, desmarca)
       if (activeValue === textValue) {
         activeValue = null;

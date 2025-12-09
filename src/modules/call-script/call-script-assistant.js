@@ -9,6 +9,7 @@ import {
   styleResizeHandle,
   makeResizable
 } from "../shared/utils.js";
+import { SoundManager } from "../shared/sound-manager.js";
 
 import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from "../shared/animations.js";
@@ -382,6 +383,7 @@ export function initCallScriptAssistant() {
         row.onclick = () => {
             const newState = !csaCompletedTasks[key];
             csaCompletedTasks[key] = newState;
+            SoundManager.playClick();
 
             // Feedback Tátil Imediato (Sem re-render total para manter a física)
             if (newState) {

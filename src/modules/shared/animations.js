@@ -1,5 +1,6 @@
 // src/modules/shared/animations.js
 
+import { SoundManager } from "./sound-manager.js";
 // 1. INJEÇÃO DE ESTILOS (CSS do Módulo + Animações)
 if (!document.getElementById('cw-module-styles')) {
     const style = document.createElement('style');
@@ -106,7 +107,7 @@ export function toggleGenieAnimation(show, popup, buttonId) {
 
     if (show) {
         // --- ABRIR ---
-
+SoundManager.playSwoosh();
         // A. RESET INSTANTÂNEO
         popup.style.transition = 'none';
         popup.style.opacity = '0';
