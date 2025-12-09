@@ -316,14 +316,6 @@ export function initCallScriptAssistant() {
       const card = document.createElement("div");
       Object.assign(card.style, styles.card);
       
-      // Animação de Entrada (Cascata dos Cards)
-      card.style.opacity = "0";
-      card.style.transform = "translateY(10px)";
-      setTimeout(() => {
-          card.style.opacity = "1";
-          card.style.transform = "translateY(0)";
-      }, groupIndex * 100);
-
       // Título
       const cardTitle = document.createElement("div");
       Object.assign(cardTitle.style, styles.cardTitle);
