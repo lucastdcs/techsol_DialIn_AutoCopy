@@ -13,7 +13,7 @@ import {
 
 import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from '../shared/animations.js';
-import { SoundManager } from "../../shared/sound-manager.js";
+import { SoundManager } from "../shared/sound-manager.js";
 
 // --- BANCO DE DADOS DE LINKS ---
 const LINKS_DB = {
