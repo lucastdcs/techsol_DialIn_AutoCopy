@@ -1,259 +1,304 @@
-import {
-  styleSelect,
-  styleLabel,
-  stylePopup,
-  styleCredit,
-  typeBtnStyle,
-  getRandomGoogleStyle,
-} from "../shared/utils.js"; // Removi imports não usados para limpar
+// src/modules/call-script/call-script-assistant.js
 
+import {
+    stylePopup,
+    styleResizeHandle,
+    makeResizable,
+    makeDraggable
+} from "../shared/utils.js";
 import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from "../shared/animations.js";
 
-import { csaChecklistData } from "./call-script-data.js";
+// --- DADOS DO SCRIPT (Poderia vir de um JSON externo) ---
+const SCRIPT_DATA = [
+    {
+        title: "👋 Abertura & Conexão",
+        steps: [
+            "Olá, bom dia/boa tarde! Gostaria de falar com <b>{CLIENT_NAME}</b>?",
+            "Aqui é o <b>{AGENT_NAME}</b>, sou especialista de implementação do Google.",
+            "O motivo do meu contato é para apoiar na implementação das tags no site <b>{URL}</b>.",
+            "Você teria 10-15 minutos para realizarmos esse procedimento agora?"
+        ]
+    },
+    {
+        title: "🔍 Investigação (Sondagem)",
+        steps: [
+            "Para começarmos, você tem acesso administrativo ao <b>Google Ads</b>?",
+            "E ao painel do site (WordPress/Shopify/Wix)?",
+            "Atualmente, qual é a maior dificuldade que está encontrando na instalação?",
+            "Podemos compartilhar a tela para eu te guiar melhor?"
+        ]
+    },
+    {
+        title: "🛠️ Ação Técnica",
+        steps: [
+            "Vou te enviar um convite de acesso para o Google Tag Manager.",
+            "Poderia aceitar o convite no seu e-mail, por favor?",
+            "Agora, vamos instalar o código base no <head> do site.",
+            "Ótimo! Agora vamos criar a Tag de Conversão e o Vinculador."
+        ]
+    },
+    {
+        title: "✅ Validação & Fechamento",
+        steps: [
+            "Vamos usar o Tag Assistant para validar o disparo.",
+            "Tudo funcionando! Você tem mais alguma dúvida técnica?",
+            "Vou te enviar um e-mail com o resumo do que fizemos hoje.",
+            "Obrigado pelo seu tempo e tenha um excelente dia!"
+        ]
+    }
+];
 
 export function initCallScriptAssistant() {
-  const CURRENT_VERSION = "v1.2.7";
+    const CURRENT_VERSION = "v2.0";
+    let visible = false;
 
-  // --- Dados e Estado ---
-  const csaCompletedTasks = {};
-  let csaCurrentLang = "PT";
-  let csaCurrentType = "BAU";
-  let csaVisible = false; // Variável de estado
+    // --- ESTILOS LOCAIS (Teleprompter UI) ---
+    const styles = {
+        progressBarContainer: {
+            height: "4px",
+            background: "#f1f3f4",
+            width: "100%",
+            position: "relative",
+            overflow: "hidden"
+        },
+        progressBarFill: {
+            height: "100%",
+            background: "linear-gradient(90deg, #4285F4, #34A853)",
+            width: "0%",
+            transition: "width 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)",
+            borderRadius: "0 2px 2px 0"
+        },
+        card: {
+            background: "#ffffff",
+            border: "1px solid #e0e0e0",
+            borderRadius: "12px",
+            padding: "16px",
+            marginBottom: "12px",
+            transition: "all 0.3s ease",
+            cursor: "pointer",
+            position: "relative",
+            opacity: "0.7", // Estado inativo
+            transform: "scale(0.98)"
+        },
+        cardActive: {
+            borderColor: "#1a73e8",
+            boxShadow: "0 4px 12px rgba(26, 115, 232, 0.15)",
+            opacity: "1",
+            transform: "scale(1)",
+            backgroundColor: "#fff"
+        },
+        cardTitle: {
+            fontSize: "14px",
+            fontWeight: "600",
+            color: "#202124",
+            marginBottom: "12px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+        },
+        stepRow: {
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "10px",
+            marginBottom: "8px",
+            fontSize: "14px",
+            lineHeight: "1.5",
+            color: "#3c4043"
+        },
+        checkbox: {
+            marginTop: "3px",
+            cursor: "pointer",
+            accentColor: "#1a73e8",
+            width: "16px",
+            height: "16px"
+        }
+    };
 
-  // --- POPUP (Com Animação) ---
-  const csaPopup = document.createElement("div");
-  csaPopup.id = "call-script-popup";
-
-  // Estilos base + Preparação para Genie (Invisível)
-  Object.assign(csaPopup.style, stylePopup, { 
-        right: "100px",
-        width: "340px",
-        display: "flex", 
-        flexDirection: "column",
-        boxShadow: "none", // A classe .open adiciona a sombra depois
-        opacity: "0",      // Começa invisível
+    // --- CONSTRUÇÃO DO DOM ---
+    const popup = document.createElement("div");
+    popup.id = "call-script-popup";
+    // Usa estilos globais + ajustes de posição
+    Object.assign(popup.style, stylePopup, {
+        right: "auto", 
+        left: "50%",
+        width: "420px",
+        height: "600px", // Altura inicial boa para leitura
+        opacity: "0",
         pointerEvents: "none"
-  });
-
-  // Refs para animação (se precisar de linha colorida)
-  const animRefs = { popup: csaPopup, googleLine: null };
-
-  // --- FUNÇÃO DE TOGGLE (CORRIGIDA) ---
-  function toggleVisibility() {
-    csaVisible = !csaVisible;
-    
-    // CORREÇÃO 1: Usar 'csaPopup', não 'popup'
-    // CORREÇÃO 2: Usar ID 'cw-btn-script' para sair do botão certo
-    toggleGenieAnimation(csaVisible, csaPopup, 'cw-btn-script');
-  }
-
-  // 1. HEADER (Factory)
-  const csaHeader = createStandardHeader(
-    csaPopup,
-    "Call Script Assistant",
-    CURRENT_VERSION,
-    "Checklists guiados para início e fim de chamada.", 
-    animRefs,
-    () => { toggleVisibility(); } // Callback do fechar
-  );
-  csaPopup.appendChild(csaHeader);
-
-  // 2. CONTEÚDO
-  const csaContent = document.createElement("div");
-  csaContent.id = "csa-content";
-  Object.assign(csaContent.style, {
-    padding: "16px",
-    overflowY: "auto",
-    flexGrow: "1",
-  });
-  csaPopup.appendChild(csaContent);
-
-  const credit = document.createElement("div");
-  credit.textContent = "created by lucaste@";
-  Object.assign(credit.style, styleCredit);
-  csaPopup.appendChild(credit);
-
-  // --- CONTROLES (BAU/LT + IDIOMA) ---
-  const csaControlsDiv = document.createElement("div");
-  Object.assign(csaControlsDiv.style, {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "12px",
-    gap: "8px",
-  });
-
-  const csaTypeContainer = document.createElement("div");
-  Object.assign(csaTypeContainer.style, {
-    display: "flex",
-    borderRadius: "8px",
-    border: "1px solid #dadce0",
-    overflow: "hidden",
-  });
-
-  const csaTypeBAU = document.createElement("div");
-  csaTypeBAU.textContent = "BAU";
-  const csaTypeLT = document.createElement("div");
-  csaTypeLT.textContent = "LT";
-
-  Object.assign(csaTypeBAU.style, typeBtnStyle);
-  Object.assign(csaTypeLT.style, typeBtnStyle);
-
-  csaTypeContainer.appendChild(csaTypeBAU);
-  csaTypeContainer.appendChild(csaTypeLT);
-
-  const csaLangSelect = document.createElement("select");
-  Object.assign(csaLangSelect.style, styleSelect, {
-    marginBottom: "0",
-    width: "auto",
-    minWidth: "85px",
-    paddingTop: "6px",
-    paddingBottom: "6px",
-  });
-  csaLangSelect.innerHTML = `<option value="PT">PT</option><option value="ES">ES</option><option value="EN">EN</option>`;
-  csaLangSelect.value = csaCurrentLang;
-
-  csaControlsDiv.appendChild(csaTypeContainer);
-  csaControlsDiv.appendChild(csaLangSelect);
-  csaContent.appendChild(csaControlsDiv);
-
-  const csaChecklistArea = document.createElement("div");
-  csaChecklistArea.id = "csa-checklist-area";
-  Object.assign(csaChecklistArea.style, {
-    maxHeight: "60vh",
-    overflowY: "auto",
-    paddingRight: "5px",
-  });
-  csaContent.appendChild(csaChecklistArea);
-  document.body.appendChild(csaPopup);
-
-  // --- FUNÇÕES AUXILIARES ---
-
-  function hexToRgba(hex, alpha) {
-    const clean = hex.replace("#", "");
-    const r = parseInt(clean.substring(0, 2), 16);
-    const g = parseInt(clean.substring(2, 4), 16);
-    const b = parseInt(clean.substring(4, 6), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-  }
-
-  function csaSetLiStyle(li, isCompleted, color) {
-    li.classList.toggle("csa-completed", isCompleted);
-
-    if (isCompleted) {
-      li.style.borderColor = color;
-      li.style.backgroundColor = hexToRgba(color, 0.15); // Mais suave
-      li.style.textDecorationLine = "line-through";
-    } else {
-      li.style.borderColor = "transparent";
-      li.style.backgroundColor = "#f8f9fa";
-      li.style.textDecorationLine = "none";
-    }
-  }
-
-  function checkGroupCompletion(combinedKey, groupKey, groupDiv) {
-    const data = csaChecklistData[combinedKey];
-    if (!data) return;
-    const items = data[groupKey];
-    if (!items || items.length === 0) return;
-    let allDone = true;
-    for (let i = 0; i < items.length; i++) {
-      const key = `${combinedKey}-${groupKey}-${i}`;
-      if (!csaCompletedTasks[key]) {
-        allDone = false;
-        break;
-      }
-    }
-    groupDiv.classList.toggle("csa-group-completed", allDone);
-  }
-
-  function csaBuildChecklist() {
-    csaChecklistArea.innerHTML = "";
-    const combinedKey = `${csaCurrentLang} ${csaCurrentType}`;
-    const data = csaChecklistData[combinedKey];
-
-    if (!data) {
-      csaChecklistArea.innerHTML = `<div style="padding: 10px; color: #5f6368;">Script não disponível.</div>`;
-      return;
-    }
-
-    const color = data.color;
-
-    ["inicio", "fim"].forEach((groupKey) => {
-      const items = data[groupKey];
-      if (!items || items.length === 0) return;
-
-      const groupDiv = document.createElement("div");
-      groupDiv.className = "csa-group-container";
-      Object.assign(groupDiv.style, { marginBottom: "16px" });
-
-      const groupTitle = document.createElement("div");
-      groupTitle.className = "csa-group-title";
-      let titleText = groupKey === "inicio" ? "Início" : "Fim";
-      if (csaCurrentLang.includes("ES")) titleText = groupKey === "inicio" ? "Inicio" : "Fin";
-      if (csaCurrentLang.includes("EN")) titleText = groupKey === "inicio" ? "Start" : "End";
-
-      groupTitle.textContent = titleText;
-      Object.assign(groupTitle.style, styleLabel, {
-        fontWeight: "600", fontSize: "14px", textDecoration: "underline", marginBottom: "8px",
-      });
-      groupDiv.appendChild(groupTitle);
-
-      const list = document.createElement("ul");
-      Object.assign(list.style, { listStyle: "none", paddingLeft: "0", margin: "0" });
-
-      items.forEach((item, index) => {
-        const li = document.createElement("li");
-        li.className = "csa-li";
-        li.textContent = item;
-
-        const key = `${combinedKey}-${groupKey}-${index}`;
-        const done = !!csaCompletedTasks[key];
-
-        csaSetLiStyle(li, done, color);
-
-        li.addEventListener("click", () => {
-          const newDone = !csaCompletedTasks[key];
-          csaCompletedTasks[key] = newDone;
-          csaSetLiStyle(li, newDone, color);
-          checkGroupCompletion(combinedKey, groupKey, groupDiv);
-        });
-        list.appendChild(li);
-      });
-      groupDiv.appendChild(list);
-      csaChecklistArea.appendChild(groupDiv);
-
-      checkGroupCompletion(combinedKey, groupKey, groupDiv);
     });
-  }
 
-  function setActiveType(type) {
-    csaCurrentType = type;
-    const newActiveStyle = getRandomGoogleStyle();
+    const animRefs = { popup, googleLine: null };
 
-    Object.assign(csaTypeBAU.style, typeBtnStyle);
-    Object.assign(csaTypeLT.style, typeBtnStyle);
+    // 1. HEADER
+    const header = createStandardHeader(
+        popup,
+        "Call Script",
+        CURRENT_VERSION,
+        "Guia interativo para condução de chamadas.",
+        animRefs,
+        () => toggleVisibility()
+    );
+    popup.appendChild(header);
 
-    if (type === "BAU") {
-      Object.assign(csaTypeBAU.style, newActiveStyle);
-    } else {
-      Object.assign(csaTypeLT.style, newActiveStyle);
+    // 2. PROGRESS BAR (Gamification)
+    const progressContainer = document.createElement("div");
+    Object.assign(progressContainer.style, styles.progressBarContainer);
+    const progressFill = document.createElement("div");
+    Object.assign(progressFill.style, styles.progressBarFill);
+    progressContainer.appendChild(progressFill);
+    popup.appendChild(progressContainer);
+
+    // 3. CONTEÚDO (Scrollable)
+    const contentArea = document.createElement("div");
+    Object.assign(contentArea.style, {
+        padding: "16px",
+        overflowY: "auto",
+        flexGrow: "1",
+        scrollBehavior: "smooth"
+    });
+    popup.appendChild(contentArea);
+
+    // 4. FOOTER (Opcional - Reset)
+    const footer = document.createElement("div");
+    Object.assign(footer.style, {
+        padding: "10px 16px",
+        borderTop: "1px solid #eee",
+        display: "flex",
+        justifyContent: "flex-end",
+        background: "#f8f9fa"
+    });
+    const resetBtn = document.createElement("button");
+    resetBtn.textContent = "Resetar Script";
+    resetBtn.style.cssText = "background:none; border:none; color:#5f6368; font-size:12px; cursor:pointer; font-weight:500;";
+    resetBtn.onclick = resetAll;
+    footer.appendChild(resetBtn);
+    popup.appendChild(footer);
+
+    // --- RESIZE HANDLE (Padrão Novo) ---
+    const resizeHandle = document.createElement('div');
+    Object.assign(resizeHandle.style, styleResizeHandle);
+    resizeHandle.className = "no-drag";
+    resizeHandle.title = "Redimensionar";
+    popup.appendChild(resizeHandle);
+    makeResizable(popup, resizeHandle);
+
+    document.body.appendChild(popup);
+
+    // --- LÓGICA DE RENDERIZAÇÃO ---
+    let totalSteps = 0;
+    let completedSteps = 0;
+
+    function renderScript() {
+        contentArea.innerHTML = "";
+        totalSteps = 0;
+        completedSteps = 0;
+
+        SCRIPT_DATA.forEach((section, sIndex) => {
+            const card = document.createElement("div");
+            Object.assign(card.style, styles.card);
+            
+            // Título da Seção
+            const title = document.createElement("div");
+            Object.assign(title.style, styles.cardTitle);
+            title.textContent = section.title;
+            card.appendChild(title);
+
+            // Container dos Passos
+            const stepsContainer = document.createElement("div");
+            
+            section.steps.forEach((stepText, stepIndex) => {
+                totalSteps++;
+                const row = document.createElement("div");
+                Object.assign(row.style, styles.stepRow);
+
+                const chk = document.createElement("input");
+                chk.type = "checkbox";
+                chk.id = `step-${sIndex}-${stepIndex}`;
+                Object.assign(chk.style, styles.checkbox);
+
+                const label = document.createElement("label");
+                label.htmlFor = `step-${sIndex}-${stepIndex}`;
+                label.innerHTML = stepText; // Permite <b>
+                label.style.cursor = "pointer";
+
+                // Evento de Check
+                chk.onchange = (e) => {
+                    if (e.target.checked) {
+                        completedSteps++;
+                        row.style.opacity = "0.5"; // Diminui opacidade do que já foi
+                        row.style.textDecoration = "line-through";
+                    } else {
+                        completedSteps--;
+                        row.style.opacity = "1";
+                        row.style.textDecoration = "none";
+                    }
+                    updateProgress();
+                    focusCard(card); // Garante foco ao interagir
+                };
+
+                row.appendChild(chk);
+                row.appendChild(label);
+                stepsContainer.appendChild(row);
+            });
+
+            card.appendChild(stepsContainer);
+
+            // Evento de Foco no Card (Clique em qualquer lugar)
+            card.onclick = (e) => {
+                if(e.target.type !== 'checkbox') focusCard(card);
+            };
+
+            contentArea.appendChild(card);
+        });
+        
+        // Foca no primeiro card inicialmente
+        if(contentArea.firstChild) focusCard(contentArea.firstChild);
     }
-    csaBuildChecklist();
-  }
 
-  csaTypeBAU.onclick = () => setActiveType("BAU");
-  csaTypeLT.onclick = () => setActiveType("LT");
+    function focusCard(activeCard) {
+        // Remove foco de todos
+        Array.from(contentArea.children).forEach(c => {
+            Object.assign(c.style, styles.card); // Volta ao estilo base (opacidade 0.7)
+        });
+        // Adiciona foco no atual
+        Object.assign(activeCard.style, styles.cardActive);
+        
+        // Scroll suave para garantir visibilidade
+        // activeCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
 
-  csaLangSelect.addEventListener("change", (e) => {
-    csaCurrentLang = e.target.value;
-    csaBuildChecklist();
-  });
+    function updateProgress() {
+        const pct = totalSteps === 0 ? 0 : (completedSteps / totalSteps) * 100;
+        progressFill.style.width = `${pct}%`;
+        
+        // Mudança de cor dinâmica (Azul -> Verde)
+        if (pct === 100) {
+            progressFill.style.background = "#34A853"; // Verde Sucesso
+        } else {
+            progressFill.style.background = "linear-gradient(90deg, #4285F4, #34A853)";
+        }
+    }
 
-  // Carregamento inicial
-  setActiveType(csaCurrentType);
+    function resetAll() {
+        const checks = contentArea.querySelectorAll('input[type="checkbox"]');
+        checks.forEach(c => {
+            c.checked = false;
+            c.dispatchEvent(new Event('change')); // Dispara lógica visual
+        });
+        // Foca no primeiro de novo
+        if(contentArea.firstChild) focusCard(contentArea.firstChild);
+        showToast("Script reiniciado");
+    }
 
-  // Retorna o toggle para o App.js usar no Command Center
-  return toggleVisibility;
+    // Toggle
+    function toggleVisibility() {
+        visible = !visible;
+        toggleGenieAnimation(visible, popup, 'cw-btn-script');
+    }
+
+    // Inicialização
+    renderScript();
+
+    return toggleVisibility;
 }
