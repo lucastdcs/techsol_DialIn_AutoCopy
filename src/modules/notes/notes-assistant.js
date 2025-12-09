@@ -408,32 +408,37 @@ export function initCaseNotesAssistant() {
   stepConsentDiv.appendChild(consentRadioGroup);
   popupContent.appendChild(stepConsentDiv);
 
-// --- STEP 1.5: Cenários Comuns (Refatorado) ---
+// --- STEP 1.5: Cenários Comuns ---
   const stepSnippetsDiv = document.createElement("div");
   stepSnippetsDiv.id = "step-1-5-snippets";
-  // Mantemos display none inicial, a lógica de mostrar (quando status não é SO) continua a mesma
-  Object.assign(stepSnippetsDiv.style, styles.stepBlock, { display: "none" }); 
+  Object.assign(stepSnippetsDiv.style, styles.stepBlock, { display: "none" });
 
   const stepSnippetsTitle = document.createElement("h3");
   Object.assign(stepSnippetsTitle.style, styles.h3);
-  stepSnippetsTitle.textContent = "Cenários Comuns"; // Título explícito
+  stepSnippetsTitle.textContent = "Cenários Comuns";
   
-  // --- AQUI ENTRA O NOVO COMPONENTE ---
-  const scenariosComponent = createScenariosComponent((selectedText) => {
-
-      const targetField = document.getElementById("field-action-taken") || document.getElementById("field-comments"); 
-      
-      if (targetField) {
-
-          targetField.value = selectedText;
-          
-          targetField.dispatchEvent(new Event('input'));
-          
-          targetField.style.transition = "background-color 0.2s";
-          targetField.style.backgroundColor = "#e8f0fe";
-          setTimeout(() => targetField.style.backgroundColor = "#fff", 300);
+  // --- MUDANÇA AQUI ---
+  // Em vez de 'const scenariosComponent', usamos o nome antigo 'snippetContainer'
+  const snippetContainer = createScenariosComponent((selectedText) => {
+      // Lógica de injeção no textarea (Action Taken ou Comments)
+      const target = document.getElementById("field-action-taken") || document.querySelector('textarea');
+      if (target) {
+          target.value = selectedText;
+          target.dispatchEvent(new Event('input'));
+          // Efeito visual
+          target.style.transition = "background-color 0.2s";
+          target.style.backgroundColor = "#e8f0fe";
+          setTimeout(() => target.style.backgroundColor = "#fff", 300);
       }
   });
+
+  // Opcional: Adicionar o ID antigo caso seu CSS ou JS busque por ID
+  snippetContainer.id = "snippet-container";
+
+  stepSnippetsDiv.appendChild(stepSnippetsTitle);
+  stepSnippetsDiv.appendChild(snippetContainer);
+  
+  popupContent.appendChild(stepSnippetsDiv);
 
   stepSnippetsDiv.appendChild(stepSnippetsTitle);
   stepSnippetsDiv.appendChild(scenariosComponent);
