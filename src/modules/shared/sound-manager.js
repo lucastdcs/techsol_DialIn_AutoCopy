@@ -200,13 +200,34 @@ export const SoundManager = {
         noise.start(t);
     },
 
+    // 8. GENIE OPEN (Dinâmico / Variação Tonal)
     playGenieOpen: () => {
         const ctx = getContext();
         if (!ctx) return;
         const t = ctx.currentTime;
-        const duration = 0.35;
+        const duration = 0.4; // Um pouquinho mais longo para apreciar a nota
 
-        // 1. O AR (Noise Filtered)
+        // --- A LÓGICA DE VARIAÇÃO ---
+        // Multiplicadores baseados em intervalos harmônicos (Escala Pentatônica)
+        // 1.0 = Base (200Hz)
+        // 1.125 = Tom acima
+        // 1.25 = Terça Maior
+        // 1.5 = Quinta Justa (A nota "triunfante")
+        const variations = [1.0, 1.125, 1.25, 1.5];
+        
+        // Escolhe um aleatoriamente
+        const pitchMod = variations[Math.floor(Math.random() * variations.length)];
+
+        // Frequências Base calculadas com a variação
+        const sineStart = 200 * pitchMod;
+        const sineEnd = 400 * pitchMod;
+        
+        // O filtro do ar também acompanha o tom para ficar coeso
+        const filterStart = 100 * pitchMod;
+        const filterEnd = 1200 * pitchMod;
+
+
+        // 1. O AR (Noise Filtered - Acompanha o Pitch)
         const bufferSize = ctx.sampleRate * duration;
         const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const data = buffer.getChannelData(0);
@@ -217,12 +238,12 @@ export const SoundManager = {
 
         const noiseFilter = ctx.createBiquadFilter();
         noiseFilter.type = 'lowpass';
-        // O filtro abre rapidamente: de fechado (100Hz) para aberto (1200Hz)
-        noiseFilter.frequency.setValueAtTime(100, t);
-        noiseFilter.frequency.exponentialRampToValueAtTime(1200, t + duration);
+        
+        noiseFilter.frequency.setValueAtTime(filterStart, t);
+        noiseFilter.frequency.exponentialRampToValueAtTime(filterEnd, t + duration);
 
         const noiseGain = ctx.createGain();
-        noiseGain.gain.setValueAtTime(0.04, t); // Volume baixo
+        noiseGain.gain.setValueAtTime(0.04, t);
         noiseGain.gain.linearRampToValueAtTime(0, t + duration);
 
         noise.connect(noiseFilter);
@@ -230,8 +251,8 @@ export const SoundManager = {
         noiseGain.connect(ctx.destination);
         noise.start(t);
 
-        // 2. A MÁGICA (Sine Wave Rising)
-        // Dá a sensação de "subida" ou "surgimento"
+
+        // 2. A MÁGICA (Sine Wave Rising - Com Pitch Variável)
         const osc = ctx.createOscillator();
         const oscGain = ctx.createGain();
         
@@ -239,13 +260,14 @@ export const SoundManager = {
         oscGain.connect(ctx.destination);
         
         osc.type = 'sine';
-        // Sobe de 200Hz para 400Hz (Ascendente)
-        osc.frequency.setValueAtTime(200, t); 
-        osc.frequency.exponentialRampToValueAtTime(400, t + duration);
         
-        // Envelope de volume muito suave
+        // Aplica as frequências variáveis que calculamos
+        osc.frequency.setValueAtTime(sineStart, t); 
+        osc.frequency.exponentialRampToValueAtTime(sineEnd, t + duration);
+        
+        // Envelope de volume (Suave)
         oscGain.gain.setValueAtTime(0, t);
-        oscGain.gain.linearRampToValueAtTime(0.03, t + 0.1); // Ataque
+        oscGain.gain.linearRampToValueAtTime(0.04, t + 0.1); // Ataque
         oscGain.gain.linearRampToValueAtTime(0, t + duration); // Decay
 
         osc.start(t);
@@ -256,44 +278,49 @@ export const SoundManager = {
         if (!ctx) return;
         const t = ctx.currentTime;
 
-        // Notas do acorde: C4, E4, G4, B4 (Dó Maior com 7ª)
-        // Frequências: 261.63, 329.63, 392.00, 493.88
-        const notes = [261.63, 329.63, 392.00, 493.88];
+        // 1. O SUB-GRAVE (Peso Físico)
+        const subOsc = ctx.createOscillator();
+        const subGain = ctx.createGain();
+        subOsc.connect(subGain);
+        subGain.connect(ctx.destination);
+        subOsc.type = 'sine';
+        subOsc.frequency.value = 65.41; // C2 (Grave profundo)
+        
+        // Envelope Sub
+        subGain.gain.setValueAtTime(0, t);
+        subGain.gain.linearRampToValueAtTime(0.4, t + 1.0); // Demora 1s para encher
+        subGain.gain.exponentialRampToValueAtTime(0.001, t + 4.0); // Longo decay
+        subOsc.start(t);
+        subOsc.stop(t + 4.0);
 
-        notes.forEach((freq, i) => {
+        // 2. A TEXTURA (Drone Cinematográfico)
+        // Criamos 2 osciladores levemente desafinados para dar efeito "Stereo/Largo"
+        const freqs = [130.81, 131.5]; // C3 e C3 levemente desafinado
+        
+        // Filtro Lowpass (O segredo do som "abafado" que abre)
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(100, t); // Começa fechado (abafado)
+        filter.frequency.exponentialRampToValueAtTime(2000, t + 2.5); // Abre devagar
+
+        freqs.forEach(f => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
+            
+            osc.type = 'sawtooth'; // Onda com "rasgo"
+            osc.frequency.value = f;
 
-            osc.connect(gain);
+            osc.connect(filter); // Passa pelo filtro primeiro
+            filter.connect(gain);
             gain.connect(ctx.destination);
 
-            // Mistura ondas para um som mais "sintetizador" e menos "laboratório"
-            osc.type = i % 2 === 0 ? 'sine' : 'triangle'; 
-            osc.frequency.value = freq;
-
-            // Envelope de "Pad" (Ataque lento, decay longo)
+            // Envelope
             gain.gain.setValueAtTime(0, t);
-            // Cada nota entra um pouquinho depois da outra (Arpejo ultra-rápido imperceptível)
-            gain.gain.linearRampToValueAtTime(0.05, t + 0.3 + (i * 0.05)); 
-            gain.gain.exponentialRampToValueAtTime(0.001, t + 3.0); // Fica soando por 3 segundos
+            gain.gain.linearRampToValueAtTime(0.08, t + 0.5); // Volume baixo pois sawtooth é forte
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 3.5);
 
             osc.start(t);
-            osc.stop(t + 3.5);
+            osc.stop(t + 4.0);
         });
-
-        // Adiciona um "Brilho" agudo (Sparkle)
-        const sparkle = ctx.createOscillator();
-        const sparkleGain = ctx.createGain();
-        sparkle.connect(sparkleGain);
-        sparkleGain.connect(ctx.destination);
-        sparkle.type = 'sine';
-        sparkle.frequency.setValueAtTime(1500, t); // Nota alta
-        
-        sparkleGain.gain.setValueAtTime(0, t);
-        sparkleGain.gain.linearRampToValueAtTime(0.02, t + 0.1); // Entra rápido
-        sparkleGain.gain.exponentialRampToValueAtTime(0.001, t + 1.5); // Sai rápido
-
-        sparkle.start(t);
-        sparkle.stop(t + 1.5);
     }
 };
