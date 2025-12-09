@@ -5,15 +5,14 @@ import { initCaseNotesAssistant } from './modules/notes/notes-assistant.js';
 import { initQuickEmailAssistant } from './modules/quick-email/quick-email-assistant.js';
 import { initCallScriptAssistant } from './modules/call-script/call-script-assistant.js';
 import { initFeedbackAssistant } from './modules/lm-report/lm-repot-assistant.js'; 
+import { initBroadcastAssistant } from './modules/broadcast/broadcast-assistant.js'; // <--- NOVO
 
 // 2. Importação do Núcleo Compartilhado
 import { initCommandCenter } from './modules/shared/command-center.js';
 import { initGlobalStylesAndFont, playStartupAnimation, showToast } from './modules/shared/utils.js';
 
 function initApp() {
-    // Evita múltiplas inicializações
     if (window.techSolInitialized) {
-        // Se clicar de novo, apenas roda a animação "bonitinha" novamente
         playStartupAnimation();
         return;
     }
@@ -22,27 +21,28 @@ function initApp() {
     console.log('🚀 TechSol Suite Initializing...');
 
     try {
-        // A. Injeta estilos globais (Fontes, Scrollbar)
+        // A. Injeta estilos globais
         initGlobalStylesAndFont();
 
-        // B. Roda a Animação de Entrada (Splash Screen)
+        // B. Animação de Entrada
         playStartupAnimation();
 
-        // C. Inicializa os Módulos e Captura os Toggles
-        // IMPORTANTE: Agora esses módulos retornam uma função para abrir/fechar
-        // e NÃO criam mais seus próprios botões flutuantes.
+        // C. Inicializa os Módulos
         const toggleNotes = initCaseNotesAssistant();
         const toggleEmail = initQuickEmailAssistant();
         const toggleScript = initCallScriptAssistant();
         const toggleLinks = initFeedbackAssistant();
+        
+        // Broadcast retorna um objeto: { toggle: fn, hasUnread: bool }
+        const broadcastControl = initBroadcastAssistant(); // <--- NOVO
 
-        // D. Inicializa a Barra de Comando (Command Center)
-        // Passamos as funções de controle para os botões da barra
+        // D. Inicializa a Barra de Comando
         initCommandCenter({
             toggleNotes,
             toggleEmail,
             toggleScript,
-            toggleLinks
+            toggleLinks,
+            broadcastControl // <--- Passamos o objeto inteiro para lá
         });
 
     } catch (error) {
@@ -51,5 +51,4 @@ function initApp() {
     }
 }
 
-// Ponto de entrada
 initApp();
