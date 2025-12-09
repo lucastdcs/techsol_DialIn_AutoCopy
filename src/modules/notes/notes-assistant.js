@@ -34,6 +34,7 @@ import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from "../shared/animations.js";
 import { triggerProcessingAnimation } from "../shared/command-center.js";
 import { constrainToViewport } from '../shared/utils.js';
+import { createScenariosComponent } from "./components/step-scenarios.js"; // <--- NOVO
 import {
   copyHtmlToClipboard,
   ensureNoteCardIsOpen,
@@ -407,15 +408,36 @@ export function initCaseNotesAssistant() {
   stepConsentDiv.appendChild(consentRadioGroup);
   popupContent.appendChild(stepConsentDiv);
 
+// --- STEP 1.5: Cenários Comuns (Refatorado) ---
   const stepSnippetsDiv = document.createElement("div");
   stepSnippetsDiv.id = "step-1-5-snippets";
-  Object.assign(stepSnippetsDiv.style, styles.stepBlock, { display: "none" });
+  // Mantemos display none inicial, a lógica de mostrar (quando status não é SO) continua a mesma
+  Object.assign(stepSnippetsDiv.style, styles.stepBlock, { display: "none" }); 
+
   const stepSnippetsTitle = document.createElement("h3");
   Object.assign(stepSnippetsTitle.style, styles.h3);
-  const snippetContainer = document.createElement("div");
-  snippetContainer.id = "snippet-container";
+  stepSnippetsTitle.textContent = "Cenários Comuns"; // Título explícito
+  
+  // --- AQUI ENTRA O NOVO COMPONENTE ---
+  const scenariosComponent = createScenariosComponent((selectedText) => {
+
+      const targetField = document.getElementById("field-action-taken") || document.getElementById("field-comments"); 
+      
+      if (targetField) {
+
+          targetField.value = selectedText;
+          
+          targetField.dispatchEvent(new Event('input'));
+          
+          targetField.style.transition = "background-color 0.2s";
+          targetField.style.backgroundColor = "#e8f0fe";
+          setTimeout(() => targetField.style.backgroundColor = "#fff", 300);
+      }
+  });
+
   stepSnippetsDiv.appendChild(stepSnippetsTitle);
-  stepSnippetsDiv.appendChild(snippetContainer);
+  stepSnippetsDiv.appendChild(scenariosComponent);
+  
   popupContent.appendChild(stepSnippetsDiv);
 
   // --- STEP 2: TASKS (Integrado com Componente) ---
