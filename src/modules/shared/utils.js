@@ -1,6 +1,7 @@
 // src/modules/shared/utils.js
 
 import { captureNameWithMagic, getSmartGreeting } from "./page-data.js";
+import { SoundManager } from "./sound-manager.js";
 
 // Variável global para controlar a pilha de janelas
 let highestZIndex = 10000;
@@ -122,6 +123,12 @@ export function showToast(message, opts = {}) {
   
   toast.textContent = message;
   document.body.appendChild(toast);
+  if (options.error) {
+        SoundManager.playError(); // Som grave
+        // Opcional: Vibrar se for mobile navigator.vibrate(200);
+    } else {
+        SoundManager.playSuccess(); // Som brilhante
+    }
   
   requestAnimationFrame(() => {
     toast.style.opacity = "1";
@@ -638,7 +645,7 @@ export async function playStartupAnimation() {
 
     await esperar(400);
     if (el1) el1.style.opacity = "1"; // Bom dia
-
+SoundManager.playStartup();
     // Digitação
     if (el2) await humanTypeWriter(el2, data.name);
 

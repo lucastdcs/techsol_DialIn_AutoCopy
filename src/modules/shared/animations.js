@@ -107,7 +107,8 @@ export function toggleGenieAnimation(show, popup, buttonId) {
 
     if (show) {
         // --- ABRIR ---
-SoundManager.playSwoosh();
+        SoundManager.playGenieOpen();
+
         // A. RESET INSTANTÂNEO
         popup.style.transition = 'none';
         popup.style.opacity = '0';
@@ -149,7 +150,7 @@ SoundManager.playSwoosh();
 
     } else {
         // --- FECHAR ---
-
+SoundManager.playSwoosh();
         // A. CONFIGURA SAÍDA
         popup.style.transition = "opacity 0.25s ease, transform 0.3s cubic-bezier(0.5, 0, 1, 1)";
         popup.style.pointerEvents = 'none';
