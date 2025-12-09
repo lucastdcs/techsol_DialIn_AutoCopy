@@ -201,77 +201,78 @@ export const SoundManager = {
     },
 
     // 8. GENIE OPEN (Dinâmico / Variação Tonal)
-    playGenieOpen: () => {
+playGenieOpen: () => {
         const ctx = getContext();
         if (!ctx) return;
         const t = ctx.currentTime;
-        const duration = 0.4; // Um pouquinho mais longo para apreciar a nota
+        const duration = 0.3; // Curto e rápido
 
-        // --- A LÓGICA DE VARIAÇÃO ---
-        // Multiplicadores baseados em intervalos harmônicos (Escala Pentatônica)
-        // 1.0 = Base (200Hz)
-        // 1.125 = Tom acima
-        // 1.25 = Terça Maior
-        // 1.5 = Quinta Justa (A nota "triunfante")
-        const variations = [1.0, 1.125, 1.25, 1.5];
-        
-        // Escolhe um aleatoriamente
-        const pitchMod = variations[Math.floor(Math.random() * variations.length)];
+        // --- VARIAÇÃO SUTIL DE TEXTURA (Não musical) ---
+        // Em vez de mudar a nota (Dó, Ré, Mi), mudamos o "Brilho" do filtro.
+        // Isso faz o som parecer ligeiramente diferente a cada clique, 
+        // mas sem parecer que está tocando uma música.
+        const brightness = 800 + (Math.random() * 400); // Entre 800Hz e 1200Hz
 
-        // Frequências Base calculadas com a variação
-        const sineStart = 200 * pitchMod;
-        const sineEnd = 400 * pitchMod;
-        
-        // O filtro do ar também acompanha o tom para ficar coeso
-        const filterStart = 100 * pitchMod;
-        const filterEnd = 1200 * pitchMod;
-
-
-        // 1. O AR (Noise Filtered - Acompanha o Pitch)
+        // 1. O DESLOCAMENTO DE AR (Swoosh de Alta Qualidade)
         const bufferSize = ctx.sampleRate * duration;
         const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
         const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
+        
+        // Pink Noise (Mais suave e agradável que o White Noise)
+        let b0, b1, b2, b3, b4, b5, b6;
+        b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0;
+        for (let i = 0; i < bufferSize; i++) {
+            const white = Math.random() * 2 - 1;
+            b0 = 0.99886 * b0 + white * 0.0555179;
+            b1 = 0.99332 * b1 + white * 0.0750759;
+            b2 = 0.96900 * b2 + white * 0.1538520;
+            b3 = 0.86650 * b3 + white * 0.3104856;
+            b4 = 0.55000 * b4 + white * 0.5329522;
+            b5 = -0.7616 * b5 - white * 0.0168980;
+            data[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+            data[i] *= 0.11; // Compensa o ganho do Pink Noise
+            b6 = white * 0.115926;
+        }
 
         const noise = ctx.createBufferSource();
         noise.buffer = buffer;
 
+        // Filtro Bandpass: Cria a sensação de "movimento" sem nota musical
         const noiseFilter = ctx.createBiquadFilter();
-        noiseFilter.type = 'lowpass';
+        noiseFilter.type = 'bandpass';
+        noiseFilter.Q.value = 1.0; // Largura de banda suave
         
-        noiseFilter.frequency.setValueAtTime(filterStart, t);
-        noiseFilter.frequency.exponentialRampToValueAtTime(filterEnd, t + duration);
+        // O filtro se move, simulando a abertura rápida
+        noiseFilter.frequency.setValueAtTime(200, t);
+        noiseFilter.frequency.exponentialRampToValueAtTime(brightness, t + 0.15);
 
         const noiseGain = ctx.createGain();
-        noiseGain.gain.setValueAtTime(0.04, t);
-        noiseGain.gain.linearRampToValueAtTime(0, t + duration);
+        noiseGain.gain.setValueAtTime(0.08, t); // Volume discreto
+        noiseGain.gain.exponentialRampToValueAtTime(0.001, t + duration);
 
         noise.connect(noiseFilter);
         noiseFilter.connect(noiseGain);
         noiseGain.connect(ctx.destination);
         noise.start(t);
 
+        // 2. O "SNAP" MECÂNICO (Substitui o som de "fiuuu")
+        // Um clique ultra-curto grave para dar "peso" ao início da animação
+        const clickOsc = ctx.createOscillator();
+        const clickGain = ctx.createGain();
+        
+        clickOsc.connect(clickGain);
+        clickGain.connect(ctx.destination);
+        
+        // Onda triangular filtrada soa como madeira ou plástico batendo
+        clickOsc.type = 'triangle'; 
+        clickOsc.frequency.setValueAtTime(150, t); // Grave e seco
+        
+        // Envelope ultra-rápido (apenas um estalo)
+        clickGain.gain.setValueAtTime(0.05, t);
+        clickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
 
-        // 2. A MÁGICA (Sine Wave Rising - Com Pitch Variável)
-        const osc = ctx.createOscillator();
-        const oscGain = ctx.createGain();
-        
-        osc.connect(oscGain);
-        oscGain.connect(ctx.destination);
-        
-        osc.type = 'sine';
-        
-        // Aplica as frequências variáveis que calculamos
-        osc.frequency.setValueAtTime(sineStart, t); 
-        osc.frequency.exponentialRampToValueAtTime(sineEnd, t + duration);
-        
-        // Envelope de volume (Suave)
-        oscGain.gain.setValueAtTime(0, t);
-        oscGain.gain.linearRampToValueAtTime(0.04, t + 0.1); // Ataque
-        oscGain.gain.linearRampToValueAtTime(0, t + duration); // Decay
-
-        osc.start(t);
-        osc.stop(t + duration);
+        clickOsc.start(t);
+        clickOsc.stop(t + 0.05);
     },
     playStartup: () => {
         const ctx = getContext();
