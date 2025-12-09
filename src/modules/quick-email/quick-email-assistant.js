@@ -225,30 +225,37 @@ export function initQuickEmailAssistant() {
       const insertBtn = detailContent.querySelector('#csa-insert-btn');
       insertBtn.onmouseover = () => insertBtn.style.backgroundColor = "#174ea6";
       insertBtn.onmouseout = () => insertBtn.style.backgroundColor = "#1a73e8";
-     insertBtn.onclick = async () => {
-          // 1. Feedback visual no botão (clique)
+insertBtn.onclick = async () => {
+          // 1. Feedback tátil no botão
           insertBtn.style.transform = "scale(0.96)";
           
-          // 2. Fecha a janela (Efeito Gênio) imediatamente
+          // 2. Fecha a janela do módulo
           toggleVisibility();
           
-          // 3. Inicia a Animação na Pílula (Feedback de "Trabalhando...")
+          // 3. INICIA A ANIMAÇÃO (Desfoque + Loader)
           const finishLoading = triggerProcessingAnimation();
 
           try {
-              // 4. Executa a automação (Await garante que só avança quando acabar)
-              // (Lembre-se que já colocamos as travas de tempo dentro do runQuickEmail)
+              // --- A CORREÇÃO MÁGICA ---
+              // Forçamos o código a esperar 1000ms (1 segundo) COM a tela desfocada.
+              // Isso garante que o usuário veja a pílula "pensando" antes de ser jogado para o Gmail.
+              await new Promise(resolve => setTimeout(resolve, 1000));
+
+              // 4. Executa a automação
+              // (Se runQuickEmail não for async, tire o await, mas o delay acima já resolve o visual)
               await runQuickEmail(email);
               
-              // 5. Finaliza com Check Verde
+              // 5. Finaliza (Check Verde)
+              // Nota: Como o usuário provavelmente já mudou de aba, 
+              // ele verá o check verde quando voltar para esta aba depois.
               finishLoading();
 
           } catch (error) {
               console.error(error);
-              finishLoading(); // Destrava mesmo com erro
+              finishLoading(); 
           }
           
-          // 6. Reseta o estado interno do módulo para a próxima vez
+          // 6. Reseta botão e view
           setTimeout(() => {
               insertBtn.style.transform = "scale(1)";
               showListView();
