@@ -123,7 +123,7 @@ export function showToast(message, opts = {}) {
   
   toast.textContent = message;
   document.body.appendChild(toast);
-  if (options.error) {
+  if (opts.error) {
         SoundManager.playError(); // Som grave
         // Opcional: Vibrar se for mobile navigator.vibrate(200);
     } else {
