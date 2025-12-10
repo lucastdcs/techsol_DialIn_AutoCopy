@@ -330,7 +330,40 @@ export function initQuickEmailAssistant() {
             btnView.onmouseleave = () => { btnView.style.background = "#f1f3f4"; btnView.style.color = "#5f6368"; };
 
             const btnSend = row.querySelector('.send');
-            btnSend.onclick = (e) => { e.stopPropagation(); btnSend.style.transform = "scale(0.9)"; setTimeout(() => btnSend.style.transform = "scale(1)", 150); runQuickEmail(email); toggleVisibility(); };
+            // ... (criação do botão acima) ...
+
+            btnSend.onclick = async (e) => { 
+                e.stopPropagation(); 
+                
+                // 1. Feedback Tátil
+                btnSend.style.transform = "scale(0.9)"; 
+                setTimeout(() => btnSend.style.transform = "scale(1)", 150); 
+                
+                // 2. Fecha a Janela IMEDIATAMENTE
+                toggleVisibility(); 
+
+                // 3. LIGA A ANIMAÇÃO (O passo que faltava)
+                // Certifique-se que triggerProcessingAnimation está importado no topo deste arquivo!
+                const finishLoading = triggerProcessingAnimation();
+
+                try {
+                    // 4. PAUSA DRAMÁTICA (800ms)
+                    // Essencial para o usuário ver o loader antes do Gmail abrir
+                    await new Promise(resolve => setTimeout(resolve, 800));
+
+                    // 5. Executa o Email
+                    await runQuickEmail(email);
+                    
+                    // 6. Finaliza (Check Verde)
+                    finishLoading();
+
+                } catch (err) {
+                    console.error("Erro no envio rápido:", err);
+                    finishLoading(); // Destrava em caso de erro
+                }
+            };
+            
+            // ... (os onmouseenter/leave continuam iguais) ...
             btnSend.onmouseenter = () => { btnSend.style.background = "#1a73e8"; btnSend.style.color = "#fff"; btnSend.style.boxShadow = "0 2px 6px rgba(26,115,232,0.3)"; };
             btnSend.onmouseleave = () => { btnSend.style.background = "#e8f0fe"; btnSend.style.color = "#1a73e8"; btnSend.style.boxShadow = "none"; };
 
