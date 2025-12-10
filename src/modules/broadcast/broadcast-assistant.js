@@ -12,137 +12,109 @@ import { toggleGenieAnimation } from "../shared/animations.js";
 import { BROADCAST_MESSAGES, EMOJI_MAP } from "./broadcast-data.js";
 
 export function initBroadcastAssistant() {
-  const CURRENT_VERSION = "v2.0 (System Feed)";
+  const CURRENT_VERSION = "v2.2 (History)";
   let visible = false;
 
-  // --- CONFIGURAÇÃO VISUAL POR TIPO ---
-  // Define cores e ícones para cada nível de alerta
   const TYPE_THEMES = {
       critical: {
-          bg: "#FEF2F2", // Vermelho muito pálido
-          border: "#FECACA",
-          text: "#991B1B",
+          bg: "#FEF2F2", border: "#FECACA", text: "#991B1B",
           icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`
       },
       info: {
-          bg: "#EFF6FF", // Azul muito pálido
-          border: "#BFDBFE",
-          text: "#1E40AF",
+          bg: "#EFF6FF", border: "#BFDBFE", text: "#1E40AF",
           icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`
       },
       success: {
-          bg: "#F0FDF4", // Verde muito pálido
-          border: "#BBF7D0",
-          text: "#166534",
+          bg: "#F0FDF4", border: "#BBF7D0", text: "#166534",
           icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`
       }
   };
 
-  // --- ESTILOS VISUAIS (Refinados) ---
   const styles = {
     feedContainer: {
       padding: "24px",
       overflowY: "auto",
       flexGrow: "1",
-      background: "#FAFAFA", // Fundo mais limpo
-      display: "flex",
-      flexDirection: "column",
-      gap: "20px",
+      background: "#FAFAFA",
+      display: "flex", flexDirection: "column", gap: "20px",
     },
-    // Card Base
+    // CARD ATIVO (Novo) - Flutuante e Brilhante
     card: {
       background: "#FFFFFF",
       borderRadius: "16px",
       border: "1px solid rgba(0,0,0,0.06)", 
-      boxShadow: "0 2px 8px rgba(0,0,0,0.04)", 
+      boxShadow: "0 4px 12px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02)", 
       overflow: "hidden",
       transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
-      position: "relative",
-      width: "100%",
-      boxSizing: "border-box",
+      position: "relative", width: "100%", boxSizing: "border-box",
     },
-    // Estado Lido (Diminui contraste)
-    cardRead: {
-        opacity: "0.6",
-        filter: "grayscale(100%)",
-        boxShadow: "none",
-        border: "1px solid rgba(0,0,0,0.04)",
-        background: "#F9FAFB"
+    // CARD ARQUIVADO (Histórico) - Plano e Discreto
+    cardHistory: {
+      background: "#FFFFFF",
+      borderRadius: "16px",
+      border: "1px solid rgba(0,0,0,0.04)", 
+      boxShadow: "none", // Sem sombra (plano)
+      opacity: "0.8",    // Levemente transparente
+      filter: "grayscale(0.3)", // Levemente desaturado
+      marginBottom: "16px"
     },
-
-    // Header do Card (Onde fica o Tipo, Data e Botão de Ação)
+    
     cardHeader: {
       padding: "12px 20px",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
+      display: "flex", justifyContent: "space-between", alignItems: "center",
       borderBottom: "1px solid rgba(0,0,0,0.04)",
-      fontSize: "12px",
-      fontWeight: "600",
-      letterSpacing: "0.5px",
-      textTransform: "uppercase"
+      fontSize: "12px", fontWeight: "600", letterSpacing: "0.5px", textTransform: "uppercase"
     },
-    
-    // Título da Mensagem
     msgTitle: {
       padding: "20px 20px 8px 20px",
-      fontSize: "16px",
-      fontWeight: "700",
-      color: "#202124",
-      letterSpacing: "-0.01em",
-      lineHeight: "1.4"
+      fontSize: "16px", fontWeight: "700", color: "#202124", letterSpacing: "-0.01em", lineHeight: "1.4"
     },
-
-    // Autor e Data (Metadados)
     metaContainer: {
         padding: "0 20px 12px 20px",
-        display: "flex",
-        alignItems: "center",
-        gap: "8px",
-        fontSize: "12px",
-        color: "#5f6368"
+        display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "#5f6368"
     },
-
     cardBody: {
       padding: "0 20px 24px 20px", 
-      fontSize: "14px", 
-      color: "#3c4043", // Cinza Google texto
-      lineHeight: "1.6", 
-      whiteSpace: "pre-wrap",
-      fontFamily: "'Google Sans', Roboto, sans-serif",
-      wordBreak: "break-word", 
+      fontSize: "14px", color: "#3c4043", lineHeight: "1.6", 
+      whiteSpace: "pre-wrap", fontFamily: "'Google Sans', Roboto, sans-serif", wordBreak: "break-word", 
     },
-
     emojiImg: "height: 20px; vertical-align: text-bottom; margin: 0 2px;",
 
-    // Botão de "Check" (Dispensar)
+    // Botões e Ações
     dismissBtn: {
-        width: "28px", height: "28px",
-        borderRadius: "50%",
-        border: "1px solid rgba(0,0,0,0.1)",
-        background: "#fff",
-        color: "#5f6368",
-        cursor: "pointer",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        transition: "all 0.2s ease",
-        marginLeft: "12px"
+        width: "28px", height: "28px", borderRadius: "50%",
+        border: "1px solid rgba(0,0,0,0.1)", background: "#fff", color: "#5f6368",
+        cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+        transition: "all 0.2s ease", marginLeft: "12px"
     },
-    
     markAllBtn: {
         fontSize: "12px", color: "#1a73e8", cursor: "pointer", fontWeight: "600",
-        background: "transparent", border: "none", padding: "8px",
-        transition: "opacity 0.2s"
+        background: "transparent", border: "none", padding: "8px", transition: "opacity 0.2s"
     },
 
-    // Empty State
+    // Empty State (Inbox Zero)
     emptyState: {
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        height: "100%", color: "#bdc1c6", gap: "16px", marginTop: "60px",
-        textAlign: "center"
+        padding: "40px 0", color: "#bdc1c6", gap: "16px", textAlign: "center"
+    },
+    
+    // ÁREA DE HISTÓRICO
+    historyDivider: {
+        display: "flex", alignItems: "center", justifyContent: "center",
+        margin: "10px 0 20px 0", cursor: "pointer", color: "#1a73e8",
+        fontSize: "13px", fontWeight: "500", gap: "8px",
+        padding: "10px", borderRadius: "8px", transition: "background 0.2s"
+    },
+    historyContainer: {
+        display: "none", // Começa fechado
+        flexDirection: "column",
+        gap: "16px",
+        paddingTop: "10px",
+        borderTop: "1px dashed rgba(0,0,0,0.1)"
     }
   };
 
-  // --- HELPER: Scrollbar ---
+  // --- Scrollbar ---
   const styleScrollId = "cw-scrollbar-style";
   if (!document.getElementById(styleScrollId)) {
       const s = document.createElement("style");
@@ -155,7 +127,6 @@ export function initBroadcastAssistant() {
       document.head.appendChild(s);
   }
 
-  // --- PARSER ---
   function parseMessageText(rawText) {
     let html = rawText;
     Object.keys(EMOJI_MAP).forEach((shortcode) => {
@@ -171,16 +142,12 @@ export function initBroadcastAssistant() {
     return html;
   }
 
-  // --- UI ---
+  // --- UI SETUP ---
   const popup = document.createElement("div");
   popup.id = "broadcast-popup";
   Object.assign(popup.style, stylePopup, {
-    right: "auto",
-    left: "50%", 
-    width: "450px", 
-    height: "650px", 
-    display: "flex", flexDirection: "column",
-    opacity: "0", pointerEvents: "none",
+    right: "auto", left: "50%", width: "450px", height: "650px", 
+    display: "flex", flexDirection: "column", opacity: "0", pointerEvents: "none",
   });
   const animRefs = { popup, googleLine: null };
 
@@ -193,24 +160,17 @@ export function initBroadcastAssistant() {
     }
   }
 
-  // Header
   const header = createStandardHeader(
-    popup,
-    "Operations Feed", // Nome mais técnico
-    CURRENT_VERSION,
-    "Atualizações oficiais da operação.",
-    animRefs,
-    () => toggleVisibility()
+    popup, "Operations Feed", CURRENT_VERSION, "Atualizações oficiais da operação.",
+    animRefs, () => toggleVisibility()
   );
   
-  // Ação "Mark All" no Header
+  // Limpar Tudo
   const actionContainer = header.querySelector('.cw-header-actions') || header.lastElementChild;
   if(actionContainer) {
       const markAll = document.createElement("button");
       markAll.textContent = "Limpar tudo";
       Object.assign(markAll.style, styles.markAllBtn);
-      markAll.onmouseenter = () => markAll.style.opacity = "0.7";
-      markAll.onmouseleave = () => markAll.style.opacity = "1";
       markAll.onclick = (e) => {
           e.stopPropagation();
           SoundManager.playSuccess();
@@ -223,118 +183,172 @@ export function initBroadcastAssistant() {
 
   popup.appendChild(header);
 
-  // Feed
   const feed = document.createElement("div");
   feed.className = "cw-nice-scroll";
   Object.assign(feed.style, styles.feedContainer);
   popup.appendChild(feed);
 
+  // --- RENDERIZAÇÃO INTELIGENTE (Split Unread/Read) ---
   function renderFeed() {
       feed.innerHTML = "";
-      const readMessages = JSON.parse(localStorage.getItem("cw_read_broadcasts") || "[]");
+      const readIds = JSON.parse(localStorage.getItem("cw_read_broadcasts") || "[]");
       
-      const sortedMessages = [...BROADCAST_MESSAGES].sort((a, b) => {
-          const aRead = readMessages.includes(a.id);
-          const bRead = readMessages.includes(b.id);
-          return aRead === bRead ? 0 : aRead ? 1 : -1;
-      });
+      // Separa os Arrays
+      const unreadMsgs = BROADCAST_MESSAGES.filter(m => !readIds.includes(m.id));
+      const readMsgs = BROADCAST_MESSAGES.filter(m => readIds.includes(m.id));
 
-      // Se todas lidas, mostra empty state
-      if (sortedMessages.every(m => readMessages.includes(m.id))) {
-           const empty = document.createElement("div");
-           Object.assign(empty.style, styles.emptyState);
-           // Ícone SVG de "Tudo Limpo" (Check Shield)
-           empty.innerHTML = `
+      // 1. Renderiza NÃO LIDOS (Destaque)
+      if (unreadMsgs.length > 0) {
+          unreadMsgs.forEach(msg => {
+              feed.appendChild(createCard(msg, false));
+          });
+      } else {
+          // Estado Inbox Zero
+          const empty = document.createElement("div");
+          Object.assign(empty.style, styles.emptyState);
+          empty.innerHTML = `
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#dadce0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>
             <div style="font-weight:500;">Você está em dia!</div>
             <div style="font-size:12px;">Nenhum aviso pendente.</div>
            `;
            feed.appendChild(empty);
-           return;
       }
-      
-      sortedMessages.forEach((msg) => {
-        const isRead = readMessages.includes(msg.id);
-        
-        // Se já leu, não mostra no feed principal (ou mostra no final, aqui optamos por esconder para limpar a visão)
-        if (isRead) return; 
 
-        const card = document.createElement("div");
-        Object.assign(card.style, styles.card);
-        
-        // Tema (Cores e Ícone)
-        const theme = TYPE_THEMES[msg.type] || TYPE_THEMES.info;
+      // 2. Renderiza HISTÓRICO (Se houver)
+      if (readMsgs.length > 0) {
+          // Divisor / Botão
+          const divider = document.createElement("div");
+          Object.assign(divider.style, styles.historyDivider);
+          divider.innerHTML = `
+            <span>Visualizar ${readMsgs.length} avisos anteriores</span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.3s"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          `;
+          
+          const historyContainer = document.createElement("div");
+          Object.assign(historyContainer.style, styles.historyContainer);
 
-        // --- 1. HEADER DO CARD (TINTED) ---
-        const cardHead = document.createElement("div");
-        Object.assign(cardHead.style, styles.cardHeader, {
-            background: theme.bg,
-            color: theme.text,
-            borderBottom: `1px solid ${theme.border}`
-        });
+          // Popula o container oculto
+          readMsgs.forEach(msg => {
+              historyContainer.appendChild(createCard(msg, true));
+          });
 
-        const typeLabel = document.createElement("div");
-        Object.assign(typeLabel.style, { display: "flex", alignItems: "center", gap: "6px" });
-        typeLabel.innerHTML = `${theme.icon} <span>${msg.type.toUpperCase()}</span>`;
-        
-        // Botão Check (Dismiss)
+          // Lógica de Toggle
+          let isHistoryOpen = false;
+          divider.onclick = () => {
+              SoundManager.playClick();
+              isHistoryOpen = !isHistoryOpen;
+              
+              if (isHistoryOpen) {
+                  historyContainer.style.display = "flex";
+                  // Animação simples de entrada
+                  historyContainer.style.opacity = "0";
+                  historyContainer.style.transform = "translateY(-10px)";
+                  requestAnimationFrame(() => {
+                      historyContainer.style.transition = "all 0.3s ease";
+                      historyContainer.style.opacity = "1";
+                      historyContainer.style.transform = "translateY(0)";
+                  });
+                  // Gira a seta
+                  divider.querySelector('svg').style.transform = "rotate(180deg)";
+                  divider.querySelector('span').textContent = "Ocultar histórico";
+              } else {
+                  historyContainer.style.display = "none";
+                  divider.querySelector('svg').style.transform = "rotate(0deg)";
+                  divider.querySelector('span').textContent = `Visualizar ${readMsgs.length} avisos anteriores`;
+              }
+          };
+
+          // Hover effect no divider
+          divider.onmouseenter = () => divider.style.background = "rgba(0,0,0,0.03)";
+          divider.onmouseleave = () => divider.style.background = "transparent";
+
+          feed.appendChild(divider);
+          feed.appendChild(historyContainer);
+      }
+  }
+
+  // --- FACTORY DE CARD ---
+  function createCard(msg, isHistory) {
+    const card = document.createElement("div");
+    // Escolhe o estilo base (Ativo vs Histórico)
+    Object.assign(card.style, isHistory ? styles.cardHistory : styles.card);
+    
+    // Tema
+    const theme = TYPE_THEMES[msg.type] || TYPE_THEMES.info;
+
+    // Header Colorido
+    const cardHead = document.createElement("div");
+    Object.assign(cardHead.style, styles.cardHeader, {
+        background: theme.bg, color: theme.text,
+        borderBottom: `1px solid ${theme.border}`
+    });
+
+    const typeLabel = document.createElement("div");
+    Object.assign(typeLabel.style, { display: "flex", alignItems: "center", gap: "6px" });
+    typeLabel.innerHTML = `${theme.icon} <span>${msg.type.toUpperCase()}</span>`;
+    
+    cardHead.appendChild(typeLabel);
+
+    // Botão de Dispensar (Só aparece se NÃO for histórico)
+    if (!isHistory) {
         const dismissBtn = document.createElement("button");
         dismissBtn.title = "Marcar como lido";
         Object.assign(dismissBtn.style, styles.dismissBtn);
         dismissBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
         
-        // Hover do Check
         dismissBtn.onmouseenter = () => { dismissBtn.style.color = "#1e8e3e"; dismissBtn.style.background = "#e6f4ea"; dismissBtn.style.borderColor = "#1e8e3e"; };
         dismissBtn.onmouseleave = () => { dismissBtn.style.color = "#5f6368"; dismissBtn.style.background = "#fff"; dismissBtn.style.borderColor = "rgba(0,0,0,0.1)"; };
         
-        // Ação de Dispensar
         dismissBtn.onclick = (e) => {
-            e.stopPropagation(); // Evita cliques indesejados
+            e.stopPropagation();
             SoundManager.playClick();
-            
-            // Animação de Saída (Slide Out Right)
+            // Animação de Saída
             card.style.transform = "translateX(20px)";
             card.style.opacity = "0";
-            
             setTimeout(() => {
-                readMessages.push(msg.id);
-                localStorage.setItem("cw_read_broadcasts", JSON.stringify(readMessages));
-                renderFeed(); // Re-renderiza para atualizar a lista
+                const currentRead = JSON.parse(localStorage.getItem("cw_read_broadcasts") || "[]");
+                currentRead.push(msg.id);
+                localStorage.setItem("cw_read_broadcasts", JSON.stringify(currentRead));
+                renderFeed(); 
             }, 250);
         };
-
-        cardHead.appendChild(typeLabel);
         cardHead.appendChild(dismissBtn);
-        card.appendChild(cardHead);
+    } else {
+        // No histórico, talvez mostrar a data de forma mais discreta no header
+        const dateHist = document.createElement("span");
+        dateHist.textContent = msg.date;
+        dateHist.style.opacity = "0.7";
+        cardHead.appendChild(dateHist);
+    }
 
-        // --- 2. CONTEÚDO ---
-        // Título
-        if (msg.title) {
-          const titleDiv = document.createElement("div");
-          Object.assign(titleDiv.style, styles.msgTitle);
-          titleDiv.textContent = msg.title;
-          card.appendChild(titleDiv);
-        }
-        
-        // Metadados (Autor e Data)
+    card.appendChild(cardHead);
+
+    // Conteúdo
+    if (msg.title) {
+      const titleDiv = document.createElement("div");
+      Object.assign(titleDiv.style, styles.msgTitle);
+      titleDiv.textContent = msg.title;
+      card.appendChild(titleDiv);
+    }
+    
+    // Meta (Só mostra autor e data se for novo, no histórico simplificamos para reduzir ruído)
+    if (!isHistory) {
         const metaDiv = document.createElement("div");
         Object.assign(metaDiv.style, styles.metaContainer);
         metaDiv.innerHTML = `<span style="font-weight:600">${msg.author}</span> • <span>${msg.date}</span>`;
         card.appendChild(metaDiv);
+    }
 
-        // Corpo
-        const body = document.createElement("div");
-        Object.assign(body.style, styles.cardBody);
-        body.innerHTML = parseMessageText(msg.text);
-        card.appendChild(body);
+    const body = document.createElement("div");
+    Object.assign(body.style, styles.cardBody);
+    body.innerHTML = parseMessageText(msg.text);
+    card.appendChild(body);
 
-        feed.appendChild(card);
-      });
+    return card;
   }
 
   renderFeed();
 
-  // Resize Handle
   const resizeHandle = document.createElement("div");
   Object.assign(resizeHandle.style, styleResizeHandle);
   resizeHandle.className = "no-drag";
