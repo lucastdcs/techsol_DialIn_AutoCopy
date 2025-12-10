@@ -13,28 +13,33 @@ import { BROADCAST_MESSAGES, EMOJI_MAP, setBroadcastMessages } from "./broadcast
 import { DataService } from "../shared/data-service.js"; // <--- NOVO
 
 export function initBroadcastAssistant() {
- const CURRENT_VERSION = "v2.2 (Cloud)";
+ const CURRENT_VERSION = "v2.3 (Live)";
   let visible = false;
+  let pollInterval = null;
 
-  // 1. CARREGA DADOS (Lógica Híbrida)
-  // A. Pega do cache primeiro (instantâneo)
-  let cachedData = DataService.getCachedBroadcasts();
-  if (cachedData.length > 0) {
-      setBroadcastMessages(cachedData);
-  }
+  // --- 1. CONFIGURAÇÕES ---
+const POLL_TIME_MS = 60 * 1000;
 
-  // B. Atualiza da Nuvem (em segundo plano)
-  DataService.fetchData().then(data => {
-      if (data && data.broadcast) {
-          setBroadcastMessages(data.broadcast);
-          // Se o popup estiver aberto, re-renderiza para mostrar novidades ao vivo
-          if (document.getElementById('broadcast-popup')) {
-              renderFeed(); 
-          }
-          // Atualiza o badge no Command Center se houver novos
-          // (Isso exigiria um evento customizado, mas por enquanto basta atualizar o feed)
+  // --- 2. FORMATADOR DE DATA (A Correção Visual) ---
+  function formatFriendlyDate(isoString) {
+      if (!isoString) return "";
+      try {
+          const date = new Date(isoString);
+          // Verifica se a data é válida
+          if (isNaN(date.getTime())) return isoString; 
+
+          // Formata para o padrão brasileiro: DD/MM/AAAA às HH:MM
+          return new Intl.DateTimeFormat('pt-BR', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+          }).format(date).replace(',', ' às');
+      } catch (e) {
+          return isoString; // Fallback se der erro
       }
-  });
+  }
 
   const TYPE_THEMES = {
       critical: {
@@ -172,12 +177,15 @@ export function initBroadcastAssistant() {
   });
   const animRefs = { popup, googleLine: null };
 
-  function toggleVisibility() {
+ function toggleVisibility() {
     visible = !visible;
     toggleGenieAnimation(visible, popup, "cw-btn-broadcast");
+    
     if (visible) {
       const btn = document.getElementById("cw-btn-broadcast");
       if (btn) btn.classList.remove("has-new");
+      
+      checkForUpdates(); 
     }
   }
 
@@ -209,6 +217,65 @@ export function initBroadcastAssistant() {
   Object.assign(feed.style, styles.feedContainer);
   popup.appendChild(feed);
 
+  // --- 3. LÓGICA DE DADOS E POLLING (O Cérebro) ---
+  
+  // Função para buscar novidades silenciosamente
+  async function checkForUpdates() {
+      // console.log("📡 Buscando novos avisos...");
+      const data = await DataService.fetchData();
+      if (data && data.broadcast) {
+          setBroadcastMessages(data.broadcast);
+          updateBadge(); // Atualiza a bolinha vermelha
+          if (visible) renderFeed(); // Se a janela estiver aberta, atualiza a lista na cara do usuário
+      }
+  }
+
+  // Atualiza o Badge no Command Center
+  function updateBadge() {
+      const btn = document.getElementById("cw-btn-broadcast");
+      if (!btn) return;
+
+      const readMessages = JSON.parse(localStorage.getItem("cw_read_broadcasts") || "[]");
+      const hasUnread = BROADCAST_MESSAGES.some(m => !readMessages.includes(m.id));
+
+      if (hasUnread) {
+          btn.classList.add("has-new");
+          if (!btn.querySelector('.cw-badge')) {
+              // Cria badge se não existir (Replicando estilo do command-center)
+              const badge = document.createElement('div');
+              badge.className = 'cw-badge'; // Classe CSS já definida globalmente
+              // Se não tiver classe global, injete o estilo inline aqui
+              Object.assign(badge.style, {
+                  position: "absolute", top: "8px", right: "8px",
+                  width: "8px", height: "8px", backgroundColor: "#d93025",
+                  borderRadius: "50%", border: "1px solid #fff", zIndex: "10"
+              });
+              btn.appendChild(badge);
+              // Opcional: Tocar som suave de notificação se quiser
+              // SoundManager.playNotification();
+          }
+      } else {
+          btn.classList.remove("has-new");
+          const badge = btn.querySelector('.cw-badge');
+          if (badge) badge.remove();
+      }
+  }
+
+  // --- INICIALIZAÇÃO HÍBRIDA ---
+  // 1. Mostra Cache Imediato
+  const cachedData = DataService.getCachedBroadcasts();
+  if (cachedData.length > 0) {
+      setBroadcastMessages(cachedData);
+      renderFeed();
+  }
+
+  // 2. Busca Nuvem Imediato
+  checkForUpdates();
+
+  // 3. Inicia o Loop Infinito (Polling)
+  if (!pollInterval) {
+      pollInterval = setInterval(checkForUpdates, POLL_TIME_MS);
+  }
   // --- RENDERIZAÇÃO INTELIGENTE (Split Unread/Read) ---
   function renderFeed() {
       feed.innerHTML = "";
@@ -331,13 +398,14 @@ export function initBroadcastAssistant() {
                 currentRead.push(msg.id);
                 localStorage.setItem("cw_read_broadcasts", JSON.stringify(currentRead));
                 renderFeed(); 
+                updateBadge(); // Atualiza o sino
             }, 250);
         };
         cardHead.appendChild(dismissBtn);
     } else {
-        // No histórico, talvez mostrar a data de forma mais discreta no header
+
         const dateHist = document.createElement("span");
-        dateHist.textContent = msg.date;
+        dateHist.textContent = formatFriendlyDate(msg.date);
         dateHist.style.opacity = "0.7";
         cardHead.appendChild(dateHist);
     }
@@ -377,8 +445,7 @@ export function initBroadcastAssistant() {
   makeResizable(popup, resizeHandle);
 
   document.body.appendChild(popup);
-
-  const readMessages = JSON.parse(localStorage.getItem("cw_read_broadcasts") || "[]");
+const readMessages = JSON.parse(localStorage.getItem("cw_read_broadcasts") || "[]");
   const hasUnread = BROADCAST_MESSAGES.some((m) => !readMessages.includes(m.id));
 
   return { toggle: toggleVisibility, hasUnread };
