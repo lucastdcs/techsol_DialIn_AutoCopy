@@ -186,8 +186,7 @@ export function initCaseNotesAssistant() {
   popup.id = "autofill-popup";
   Object.assign(popup.style, stylePopup, {
     right: "100px", // Afastado da pílula
-    width: "400px",
-    boxShadow: "none", // A classe .open põe a sombra
+    width: "400px", // A classe .open põe a sombra
     opacity: "0",
     pointerEvents: "none",
     transition:

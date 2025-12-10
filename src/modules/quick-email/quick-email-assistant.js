@@ -77,7 +77,7 @@ export function initQuickEmailAssistant() {
 
     Object.assign(popup.style, stylePopup, {
         right: "100px", width: "480px", height: "600px",
-        boxShadow: "none", opacity: "0", pointerEvents: "none"
+ opacity: "0", pointerEvents: "none"
     });
 
     const animRefs = { popup, googleLine: null, focusElement: null };

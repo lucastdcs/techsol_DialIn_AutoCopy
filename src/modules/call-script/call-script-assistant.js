@@ -142,7 +142,6 @@ export function initCallScriptAssistant() {
         height: "650px", // Um pouco mais alto para caber o footer
         display: "flex", 
         flexDirection: "column",
-        boxShadow: "none",
         opacity: "0",
         pointerEvents: "none"
   });
