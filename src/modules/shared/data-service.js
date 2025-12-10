@@ -1,6 +1,6 @@
 // src/modules/shared/data-service.js
 
-// SUA URL DO GOOGLE APPS SCRIPT (Verifique se é a implantação 'exec', não 'dev')
+// SUA URL (Mantida)
 const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbyWu0rzLNjeJL64FtuFsfMOoNP-kL-r4pLjacQrqtkT_POEgpxRymhmoqKU8_SwmQ7b/exec";
 
 const CACHE_KEY_BROADCAST = "cw_data_broadcast";
@@ -18,30 +18,41 @@ const FALLBACK_TIPS = [
 
 export const DataService = {
     
-    // 1. BUSCAR TODAS AS DICAS (Tips)
-    // Usamos fetch normal pois seu Apps Script retorna JSON
+    // 1. BUSCAR DICAS
     fetchTips: async () => {
         try {
-            // Chama a operação 'tips' no script
-            const response = await fetch(`${API_URL}?op=tips`);
-            const data = await response.json();
+            // 'credentials: include' é vital para scripts corporativos (/a/google.com)
+            const response = await fetch(`${API_URL}?op=tips`, { credentials: 'include' });
+            
+            // Verifica se deu erro de rede ou Auth (Google retornando página de login)
+            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+            
+            // Segurança: Lê texto primeiro para garantir que é JSON
+            const text = await response.text();
+            if (text.trim().startsWith("<")) throw new Error("Auth Error: Recebido HTML em vez de JSON");
+
+            const data = JSON.parse(text);
 
             if (data && data.tips && Array.isArray(data.tips)) {
                 localStorage.setItem(CACHE_KEY_TIPS, JSON.stringify(data.tips));
-                console.log("✅ Dicas atualizadas da nuvem.");
+                console.log("✅ Dicas atualizadas.");
             }
         } catch (err) {
-            console.warn("TechSol: Falha ao baixar dicas (usando offline).", err);
-            // Não faz nada, deixa o sistema usar o cache antigo ou o fallback
+            console.warn("TechSol: Falha ao baixar dicas (Offline/Auth).", err);
         }
     },
 
     // 2. BUSCAR BROADCASTS
     fetchData: async () => {
         try {
-            // Chama a operação padrão (broadcast)
-            const response = await fetch(`${API_URL}?op=broadcast`);
-            const data = await response.json();
+            const response = await fetch(`${API_URL}?op=broadcast`, { credentials: 'include' });
+            
+            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+            const text = await response.text();
+            if (text.trim().startsWith("<")) throw new Error("Auth Error: Recebido HTML em vez de JSON");
+
+            const data = JSON.parse(text);
 
             if (data && data.broadcast) {
                 localStorage.setItem(CACHE_KEY_BROADCAST, JSON.stringify(data.broadcast));
@@ -49,48 +60,44 @@ export const DataService = {
             return data;
         } catch (err) {
             console.warn("TechSol: Erro ao buscar Broadcasts.", err);
-            // Retorna o que tem no cache para não deixar a tela em branco
+            // Retorna cache como fallback
             return {
                 broadcast: JSON.parse(localStorage.getItem(CACHE_KEY_BROADCAST) || "[]")
             };
         }
     },
 
-    // 3. RECUPERAR DO CACHE (Leitura rápida)
+    // 3. CACHE GETTERS
     getCachedBroadcasts: () => JSON.parse(localStorage.getItem(CACHE_KEY_BROADCAST) || "[]"),
     
-    // 4. OBTER DICA ALEATÓRIA (Inteligente: Cache > Fallback)
+    // 4. GET RANDOM TIP
     getRandomTip: () => {
         let tips = FALLBACK_TIPS;
-        
         const cached = localStorage.getItem(CACHE_KEY_TIPS);
+        
         if (cached) {
             try {
                 const parsed = JSON.parse(cached);
                 if (parsed.length > 0) tips = parsed;
             } catch (e) {
-                console.error("Cache de dicas corrompido, resetando.");
                 localStorage.removeItem(CACHE_KEY_TIPS);
             }
         }
-        
         return tips[Math.floor(Math.random() * tips.length)];
     },
 
-    // 5. ENVIAR LOGS (Analytics)
-    // Usa no-cors para enviar dados sem esperar resposta (Fire & Forget)
+    // 5. LOG USAGE (Fire & Forget)
     logUsage: (actionType, details = "") => {
         const user = window._USER_ID || "agente_anonimo"; 
         
-        // Payload simples em JSON para o doPost
         const payload = { 
-            op: "log", // Importante avisar que é log
+            op: "log", 
             user: user, 
             action: actionType, 
             meta: details 
         };
 
-        // O 'no-cors' com text/plain é a forma mais robusta de passar por CSP corporativo
+        // Usa text/plain para evitar Preflight (OPTIONS) que o Apps Script não suporta
         fetch(API_URL, {
             method: "POST",
             mode: "no-cors", 
