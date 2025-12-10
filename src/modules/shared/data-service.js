@@ -1,7 +1,7 @@
 // src/modules/shared/data-service.js
 
 // SUA URL DO GOOGLE APPS SCRIPT
-const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbzSfyxdEFcJHdowXW2dvcCXotleWRexp_2dcXn3MiQubRtUA5k01N1q0c-xF8k9T2djYg/exec";
+const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbyMRSU73aP76rZCw-dVLjFh7LLskfwPOiQLM1mzrbNuMX0mhsdSzd75_sbJSWfocGF95A/exec";
 
 // Cache Keys (Para salvar no navegador)
 const CACHE_KEY_BROADCAST = "cw_data_broadcast";
