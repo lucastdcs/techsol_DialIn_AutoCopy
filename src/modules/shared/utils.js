@@ -273,9 +273,12 @@ export const styleFloatingButton = {
 
 export const stylePopup = {
   position: "fixed",
-  top: "80px", // Posição inicial padrão
-  right: "80px",
-  width: "350px",
+ top: "50%",
+  left: "50%",
+  width: "400px",
+   maxHeight: "85vh",
+  zIndex: "99999",
+  overflow: "hidden",
   
   // O SEGREDO APPLE (Glassmorphism + Sombra em Camadas)
   backgroundColor: "rgba(255, 255, 255, 0.98)", // Quase sólido, mas permite luz passar (se tiver backdrop-filter)
