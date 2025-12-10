@@ -82,7 +82,7 @@ export function initQuickEmailAssistant() {
 
   const animRefs = { popup, googleLine: null, focusElement: null };
 
-  function toggleVisibility() {
+ function toggleVisibility() {
       visible = !visible;
       toggleGenieAnimation(visible, popup, 'cw-btn-email'); 
       if(!visible) setTimeout(() => showListView(), 300);
@@ -226,46 +226,35 @@ export function initQuickEmailAssistant() {
       insertBtn.onmouseover = () => insertBtn.style.backgroundColor = "#174ea6";
       insertBtn.onmouseout = () => insertBtn.style.backgroundColor = "#1a73e8";
 insertBtn.onclick = async () => {
-          // 1. Feedback tátil no botão
+          // 1. Feedback visual no botão (clique)
           insertBtn.style.transform = "scale(0.96)";
           
-          // 2. Fecha a janela do módulo
+          // 2. Fecha a janela (Efeito Gênio) imediatamente
           toggleVisibility();
           
-          // 3. INICIA A ANIMAÇÃO (A pílula começa a pensar)
-          // Isso ativa o overlay escuro e o loader colorido
+          // 3. Inicia a Animação na Pílula (Feedback de "Trabalhando...")
           const finishLoading = triggerProcessingAnimation();
 
           try {
-              // --- O TRUQUE DE UX ---
-              // Criamos duas promessas:
-              // A. A execução do email (que é rápida)
-              // B. Um timer mínimo de 800ms (para o usuário ver a animação)
+              // 4. Executa a automação (Await garante que só avança quando acabar)
+              // (Lembre-se que já colocamos as travas de tempo dentro do runQuickEmail)
+              await runQuickEmail(email);
               
-              const automationTask = runQuickEmail(email); // Sua função que funciona
-              const minAnimationTime = new Promise(resolve => setTimeout(resolve, 1000));
-
-              // O 'Promise.all' espera AS DUAS terminarem. 
-              // Se o email levar 10ms, ele espera os 990ms restantes do timer.
-              // Se o email levar 2s, ele espera os 2s.
-              await Promise.all([automationTask, minAnimationTime]);
-              
-              // 4. Finaliza com Check Verde
+              // 5. Finaliza com Check Verde
               finishLoading();
 
           } catch (error) {
               console.error(error);
-              finishLoading(); // Destrava a tela mesmo com erro
+              finishLoading(); // Destrava mesmo com erro
           }
           
-          // 5. Reseta o botão para o tamanho original
+          // 6. Reseta o estado interno do módulo para a próxima vez
           setTimeout(() => {
               insertBtn.style.transform = "scale(1)";
-              // Opcional: Se quiser resetar a visualização interna do módulo
-              if (typeof showListView === 'function') showListView();
+              showListView();
           }, 300);
       };
-    }
+  }
   function showListView() {
       currentView = 'list';
       slider.style.transform = "translateX(0)"; 
