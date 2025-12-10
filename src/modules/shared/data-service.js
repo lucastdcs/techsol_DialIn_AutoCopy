@@ -43,28 +43,32 @@ export const DataService = {
     },
 
     // 2. BUSCAR BROADCASTS
-    fetchData: async () => {
+   fetchData: async () => {
         try {
-            const response = await fetch(`${API_URL}?op=broadcast`, { credentials: 'include' });
+            // ADICIONEI: '&t=' + Date.now() para evitar cache de navegador
+            const cacheBuster = `&t=${Date.now()}`;
+            const response = await fetch(`${API_URL}?op=broadcast${cacheBuster}`, { credentials: 'include' });
             
             if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
 
             const text = await response.text();
-            if (text.trim().startsWith("<")) throw new Error("Auth Error: Recebido HTML em vez de JSON");
+            if (text.trim().startsWith("<")) throw new Error("Auth Error: Recebido HTML");
 
             const data = JSON.parse(text);
 
             if (data && data.broadcast) {
+                // Salva a versão nova
                 localStorage.setItem(CACHE_KEY_BROADCAST, JSON.stringify(data.broadcast));
+                return data; // Retorna dados FRESCOS
             }
-            return data;
         } catch (err) {
-            console.warn("TechSol: Erro ao buscar Broadcasts.", err);
-            // Retorna cache como fallback
-            return {
-                broadcast: JSON.parse(localStorage.getItem(CACHE_KEY_BROADCAST) || "[]")
-            };
+            console.warn("TechSol: Erro ao buscar Broadcasts. Usando Cache.", err);
         }
+        
+        // Se falhou tudo, aí sim usa o cache
+        return {
+            broadcast: JSON.parse(localStorage.getItem(CACHE_KEY_BROADCAST) || "[]")
+        };
     },
 
     // 3. CACHE GETTERS
