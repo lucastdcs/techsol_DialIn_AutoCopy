@@ -12,142 +12,152 @@ import { toggleGenieAnimation } from "../shared/animations.js";
 import { BROADCAST_MESSAGES, EMOJI_MAP } from "./broadcast-data.js";
 
 export function initBroadcastAssistant() {
-  const CURRENT_VERSION = "v1.1 (Feed)";
+  const CURRENT_VERSION = "v2.0 (System Feed)";
   let visible = false;
+
+  // --- CONFIGURAÇÃO VISUAL POR TIPO ---
+  // Define cores e ícones para cada nível de alerta
+  const TYPE_THEMES = {
+      critical: {
+          bg: "#FEF2F2", // Vermelho muito pálido
+          border: "#FECACA",
+          text: "#991B1B",
+          icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>`
+      },
+      info: {
+          bg: "#EFF6FF", // Azul muito pálido
+          border: "#BFDBFE",
+          text: "#1E40AF",
+          icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>`
+      },
+      success: {
+          bg: "#F0FDF4", // Verde muito pálido
+          border: "#BBF7D0",
+          text: "#166534",
+          icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`
+      }
+  };
 
   // --- ESTILOS VISUAIS (Refinados) ---
   const styles = {
     feedContainer: {
-      padding: "20px",
+      padding: "24px",
       overflowY: "auto",
       flexGrow: "1",
-      background: "#F2F2F7", // Cinza Apple System (Dark Mode friendly base)
+      background: "#FAFAFA", // Fundo mais limpo
       display: "flex",
       flexDirection: "column",
-      gap: "16px",
-      // Scrollbar Customizada será injetada via CSS class
+      gap: "20px",
     },
-    // Estado Vazio (Zero Inbox)
-    emptyState: {
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        height: "100%", color: "#86868b", gap: "12px", marginTop: "40px"
-    },
+    // Card Base
     card: {
       background: "#FFFFFF",
-      borderRadius: "20px", // Mais arredondado (iOS 16 style)
-      border: "1px solid rgba(0,0,0,0.02)", // Micro borda para definição
-      boxShadow: "0 4px 12px rgba(0,0,0,0.03), 0 1px 2px rgba(0,0,0,0.02)", 
+      borderRadius: "16px",
+      border: "1px solid rgba(0,0,0,0.06)", 
+      boxShadow: "0 2px 8px rgba(0,0,0,0.04)", 
       overflow: "hidden",
-      transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s ease, opacity 0.3s ease",
+      transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)",
       position: "relative",
       width: "100%",
       boxSizing: "border-box",
     },
-    
-    // Faixas laterais (Indicadores de tipo)
-    cardCritical: { borderLeft: "5px solid #FF3B30" }, 
-    cardInfo: { borderLeft: "5px solid #007AFF" }, 
-    cardSuccess: { borderLeft: "5px solid #34C759" }, 
+    // Estado Lido (Diminui contraste)
+    cardRead: {
+        opacity: "0.6",
+        filter: "grayscale(100%)",
+        boxShadow: "none",
+        border: "1px solid rgba(0,0,0,0.04)",
+        background: "#F9FAFB"
+    },
 
+    // Header do Card (Onde fica o Tipo, Data e Botão de Ação)
     cardHeader: {
-      padding: "18px 20px 8px 20px",
+      padding: "12px 20px",
       display: "flex",
       justifyContent: "space-between",
       alignItems: "center",
+      borderBottom: "1px solid rgba(0,0,0,0.04)",
+      fontSize: "12px",
+      fontWeight: "600",
+      letterSpacing: "0.5px",
+      textTransform: "uppercase"
     },
-    authorName: {
-      fontSize: "13px",
+    
+    // Título da Mensagem
+    msgTitle: {
+      padding: "20px 20px 8px 20px",
+      fontSize: "16px",
       fontWeight: "700",
-      color: "#1D1D1F",
+      color: "#202124",
       letterSpacing: "-0.01em",
+      lineHeight: "1.4"
     },
-    date: {
-      fontSize: "11px",
-      color: "#86868b",
-      fontWeight: "500",
-      background: "#f5f5f7",
-      padding: "2px 8px",
-      borderRadius: "10px"
+
+    // Autor e Data (Metadados)
+    metaContainer: {
+        padding: "0 20px 12px 20px",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        fontSize: "12px",
+        color: "#5f6368"
     },
 
     cardBody: {
-      padding: "8px 20px 24px 20px", 
-      fontSize: "15px", 
-      color: "#1D1D1F",
+      padding: "0 20px 24px 20px", 
+      fontSize: "14px", 
+      color: "#3c4043", // Cinza Google texto
       lineHeight: "1.6", 
       whiteSpace: "pre-wrap",
-      fontFamily: "-apple-system, BlinkMacSystemFont, 'Google Sans', Roboto, Helvetica, Arial, sans-serif",
+      fontFamily: "'Google Sans', Roboto, sans-serif",
       wordBreak: "break-word", 
     },
 
-    emojiImg: "height: 24px; vertical-align: bottom; margin: 0 1px;",
+    emojiImg: "height: 20px; vertical-align: text-bottom; margin: 0 2px;",
 
-    // Botão de Ação Integrado
-    readButton: {
-      width: "100%",
-      padding: "14px",
-      background: "#FAFAFA", 
-      border: "none",
-      borderTop: "1px solid #F0F0F0",
-      color: "#007AFF", 
-      fontSize: "13px",
-      fontWeight: "600",
-      cursor: "pointer",
-      transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)", // Transição suave
-      outline: "none",
-      // Propriedades para animação de colapso
-      maxHeight: "50px", 
-      opacity: "1",
-      overflow: "hidden"
-    },
-
-    newBadge: {
-      background: "#007AFF", 
-      color: "#fff",
-      fontSize: "10px",
-      padding: "3px 8px",
-      borderRadius: "12px",
-      fontWeight: "700",
-      marginLeft: "8px",
-      boxShadow: "0 2px 4px rgba(0,122,255,0.2)",
-      display: "inline-block",
-      verticalAlign: "middle"
-    },
-
-    msgTitle: {
-      padding: "0 20px",
-      marginTop: "4px",
-      fontSize: "17px", // Título maior
-      fontWeight: "700",
-      color: "#1D1D1F",
-      letterSpacing: "-0.02em",
+    // Botão de "Check" (Dispensar)
+    dismissBtn: {
+        width: "28px", height: "28px",
+        borderRadius: "50%",
+        border: "1px solid rgba(0,0,0,0.1)",
+        background: "#fff",
+        color: "#5f6368",
+        cursor: "pointer",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        transition: "all 0.2s ease",
+        marginLeft: "12px"
     },
     
     markAllBtn: {
-        fontSize: "12px", color: "#007AFF", cursor: "pointer", fontWeight: "600",
-        background: "transparent", border: "none", padding: "8px"
+        fontSize: "12px", color: "#1a73e8", cursor: "pointer", fontWeight: "600",
+        background: "transparent", border: "none", padding: "8px",
+        transition: "opacity 0.2s"
+    },
+
+    // Empty State
+    emptyState: {
+        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+        height: "100%", color: "#bdc1c6", gap: "16px", marginTop: "60px",
+        textAlign: "center"
     }
   };
 
-  // --- HELPER: Scrollbar CSS ---
-  // Injetamos um estilo específico para a scrollbar ficar bonita
+  // --- HELPER: Scrollbar ---
   const styleScrollId = "cw-scrollbar-style";
   if (!document.getElementById(styleScrollId)) {
       const s = document.createElement("style");
       s.id = styleScrollId;
       s.innerHTML = `
-        .cw-nice-scroll::-webkit-scrollbar { width: 6px; }
+        .cw-nice-scroll::-webkit-scrollbar { width: 5px; }
         .cw-nice-scroll::-webkit-scrollbar-track { background: transparent; }
         .cw-nice-scroll::-webkit-scrollbar-thumb { background-color: rgba(0,0,0,0.1); border-radius: 10px; }
-        .cw-nice-scroll::-webkit-scrollbar-thumb:hover { background-color: rgba(0,0,0,0.2); }
       `;
       document.head.appendChild(s);
   }
 
-  // --- PARSER DE TEXTO ---
+  // --- PARSER ---
   function parseMessageText(rawText) {
     let html = rawText;
-    // Emojis
     Object.keys(EMOJI_MAP).forEach((shortcode) => {
       const url = EMOJI_MAP[shortcode];
       if (url.startsWith("http")) {
@@ -157,8 +167,7 @@ export function initBroadcastAssistant() {
         html = html.split(shortcode).join(url);
       }
     });
-    // Mentions
-    html = html.replace(/@todos|@all/gi, '<span style="background:#e8f0fe; color:#1967d2; padding:2px 6px; border-radius:6px; font-weight:600; font-size:13px;">@todos</span>');
+    html = html.replace(/@todos|@all/gi, '<span style="background:#e8f0fe; color:#1967d2; padding:1px 5px; border-radius:4px; font-weight:600; font-size:12px;">@todos</span>');
     return html;
   }
 
@@ -168,12 +177,10 @@ export function initBroadcastAssistant() {
   Object.assign(popup.style, stylePopup, {
     right: "auto",
     left: "50%", 
-    width: "480px", // Largura generosa
-    height: "700px", 
-    display: "flex",
-    flexDirection: "column",
-    opacity: "0",
-    pointerEvents: "none",
+    width: "450px", 
+    height: "650px", 
+    display: "flex", flexDirection: "column",
+    opacity: "0", pointerEvents: "none",
   });
   const animRefs = { popup, googleLine: null };
 
@@ -189,97 +196,118 @@ export function initBroadcastAssistant() {
   // Header
   const header = createStandardHeader(
     popup,
-    "Avisos",
+    "Operations Feed", // Nome mais técnico
     CURRENT_VERSION,
-    "Central de Notificações.",
+    "Atualizações oficiais da operação.",
     animRefs,
     () => toggleVisibility()
   );
   
-  // Botão "Marcar todos como lido" no header (Action Container)
+  // Ação "Mark All" no Header
   const actionContainer = header.querySelector('.cw-header-actions') || header.lastElementChild;
   if(actionContainer) {
       const markAll = document.createElement("button");
       markAll.textContent = "Limpar tudo";
       Object.assign(markAll.style, styles.markAllBtn);
+      markAll.onmouseenter = () => markAll.style.opacity = "0.7";
+      markAll.onmouseleave = () => markAll.style.opacity = "1";
       markAll.onclick = (e) => {
           e.stopPropagation();
           SoundManager.playSuccess();
-          // Marca tudo
           const allIds = BROADCAST_MESSAGES.map(m => m.id);
           localStorage.setItem("cw_read_broadcasts", JSON.stringify(allIds));
-          renderFeed(); // Re-renderiza
+          renderFeed(); 
       };
-      // Insere antes do fechar
       actionContainer.insertBefore(markAll, actionContainer.firstChild);
   }
 
   popup.appendChild(header);
 
-  // Feed Container
+  // Feed
   const feed = document.createElement("div");
-  feed.className = "cw-nice-scroll"; // Usa nossa classe de scrollbar
+  feed.className = "cw-nice-scroll";
   Object.assign(feed.style, styles.feedContainer);
   popup.appendChild(feed);
 
-  // Função de Renderização (Para permitir refresh)
   function renderFeed() {
       feed.innerHTML = "";
       const readMessages = JSON.parse(localStorage.getItem("cw_read_broadcasts") || "[]");
       
-      // Ordenação: Não lidos primeiro
       const sortedMessages = [...BROADCAST_MESSAGES].sort((a, b) => {
           const aRead = readMessages.includes(a.id);
           const bRead = readMessages.includes(b.id);
           return aRead === bRead ? 0 : aRead ? 1 : -1;
       });
 
-      // Contador de visíveis (para Empty State)
-      // Se quiser esconder os lidos totalmente, filtre aqui. 
-      // Por enquanto mostraremos lidos com opacidade baixa.
+      // Se todas lidas, mostra empty state
+      if (sortedMessages.every(m => readMessages.includes(m.id))) {
+           const empty = document.createElement("div");
+           Object.assign(empty.style, styles.emptyState);
+           // Ícone SVG de "Tudo Limpo" (Check Shield)
+           empty.innerHTML = `
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#dadce0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>
+            <div style="font-weight:500;">Você está em dia!</div>
+            <div style="font-size:12px;">Nenhum aviso pendente.</div>
+           `;
+           feed.appendChild(empty);
+           return;
+      }
       
       sortedMessages.forEach((msg) => {
         const isRead = readMessages.includes(msg.id);
+        
+        // Se já leu, não mostra no feed principal (ou mostra no final, aqui optamos por esconder para limpar a visão)
+        if (isRead) return; 
 
         const card = document.createElement("div");
         Object.assign(card.style, styles.card);
         
-        // Efeito Hover (Levitação Apple)
-        card.onmouseenter = () => { if(!isRead) card.style.transform = "translateY(-2px)"; };
-        card.onmouseleave = () => { card.style.transform = "translateY(0)"; };
+        // Tema (Cores e Ícone)
+        const theme = TYPE_THEMES[msg.type] || TYPE_THEMES.info;
 
-        if (msg.type === "critical") Object.assign(card.style, styles.cardCritical);
-        if (msg.type === "info") Object.assign(card.style, styles.cardInfo);
-        if (msg.type === "success") Object.assign(card.style, styles.cardSuccess);
-
-        // Header
+        // --- 1. HEADER DO CARD (TINTED) ---
         const cardHead = document.createElement("div");
-        Object.assign(cardHead.style, styles.cardHeader);
+        Object.assign(cardHead.style, styles.cardHeader, {
+            background: theme.bg,
+            color: theme.text,
+            borderBottom: `1px solid ${theme.border}`
+        });
 
-        const leftSide = document.createElement("div");
+        const typeLabel = document.createElement("div");
+        Object.assign(typeLabel.style, { display: "flex", alignItems: "center", gap: "6px" });
+        typeLabel.innerHTML = `${theme.icon} <span>${msg.type.toUpperCase()}</span>`;
         
-        // Autor
-        const authorSpan = document.createElement("span");
-        Object.assign(authorSpan.style, styles.authorName);
-        authorSpan.textContent = msg.author;
-        leftSide.appendChild(authorSpan);
+        // Botão Check (Dismiss)
+        const dismissBtn = document.createElement("button");
+        dismissBtn.title = "Marcar como lido";
+        Object.assign(dismissBtn.style, styles.dismissBtn);
+        dismissBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        
+        // Hover do Check
+        dismissBtn.onmouseenter = () => { dismissBtn.style.color = "#1e8e3e"; dismissBtn.style.background = "#e6f4ea"; dismissBtn.style.borderColor = "#1e8e3e"; };
+        dismissBtn.onmouseleave = () => { dismissBtn.style.color = "#5f6368"; dismissBtn.style.background = "#fff"; dismissBtn.style.borderColor = "rgba(0,0,0,0.1)"; };
+        
+        // Ação de Dispensar
+        dismissBtn.onclick = (e) => {
+            e.stopPropagation(); // Evita cliques indesejados
+            SoundManager.playClick();
+            
+            // Animação de Saída (Slide Out Right)
+            card.style.transform = "translateX(20px)";
+            card.style.opacity = "0";
+            
+            setTimeout(() => {
+                readMessages.push(msg.id);
+                localStorage.setItem("cw_read_broadcasts", JSON.stringify(readMessages));
+                renderFeed(); // Re-renderiza para atualizar a lista
+            }, 250);
+        };
 
-        // Badge NOVO
-        if (!isRead) {
-            const badge = document.createElement("span");
-            Object.assign(badge.style, styles.newBadge);
-            badge.textContent = "NOVO";
-            leftSide.appendChild(badge);
-        }
-
-        const rightSide = document.createElement("div");
-        Object.assign(rightSide.style, styles.date);
-        rightSide.textContent = msg.date;
-
-        cardHead.appendChild(leftSide);
-        cardHead.appendChild(rightSide);
+        cardHead.appendChild(typeLabel);
+        cardHead.appendChild(dismissBtn);
         card.appendChild(cardHead);
 
+        // --- 2. CONTEÚDO ---
         // Título
         if (msg.title) {
           const titleDiv = document.createElement("div");
@@ -287,6 +315,12 @@ export function initBroadcastAssistant() {
           titleDiv.textContent = msg.title;
           card.appendChild(titleDiv);
         }
+        
+        // Metadados (Autor e Data)
+        const metaDiv = document.createElement("div");
+        Object.assign(metaDiv.style, styles.metaContainer);
+        metaDiv.innerHTML = `<span style="font-weight:600">${msg.author}</span> • <span>${msg.date}</span>`;
+        card.appendChild(metaDiv);
 
         // Corpo
         const body = document.createElement("div");
@@ -294,56 +328,10 @@ export function initBroadcastAssistant() {
         body.innerHTML = parseMessageText(msg.text);
         card.appendChild(body);
 
-        // Botão de Ação
-        if (!isRead) {
-          const btn = document.createElement("button");
-          btn.textContent = "Marcar como lido";
-          Object.assign(btn.style, styles.readButton);
-
-          btn.onmouseenter = () => (btn.style.background = "#F5F5F7");
-          btn.onmouseleave = () => (btn.style.background = "#FAFAFA");
-
-          btn.onclick = () => {
-            SoundManager.playClick();
-            
-            // Lógica de dados
-            readMessages.push(msg.id);
-            localStorage.setItem("cw_read_broadcasts", JSON.stringify(readMessages));
-
-            // ANIMAÇÃO DE COLAPSO SUAVE
-            btn.style.maxHeight = "0px";
-            btn.style.padding = "0px";
-            btn.style.opacity = "0";
-            
-            // Remove badge visualmente
-            const badge = leftSide.querySelector("span:last-child");
-            if(badge && badge.textContent === "NOVO") badge.style.display = "none";
-
-            // Diminui destaque do card
-            card.style.opacity = "0.6";
-            card.style.transform = "translateY(0)"; // Remove hover effect
-            card.onmouseenter = null; // Remove listener
-          };
-          card.appendChild(btn);
-        } else {
-          card.style.opacity = "0.6"; 
-          card.style.filter = "grayscale(0.8)"; // Lidos ficam preto e branco
-        }
-
         feed.appendChild(card);
       });
-
-      // Empty State (Se não houver mensagens ou todas lidas e quiser esconder)
-      // Aqui vamos mostrar um "Tudo limpo" se não houver NENHUMA mensagem no array
-      if (BROADCAST_MESSAGES.length === 0) {
-          const empty = document.createElement("div");
-          Object.assign(empty.style, styles.emptyState);
-          empty.innerHTML = `<div style="font-size:40px;">🎉</div><div>Nada por aqui!</div>`;
-          feed.appendChild(empty);
-      }
   }
 
-  // Inicializa
   renderFeed();
 
   // Resize Handle
@@ -355,7 +343,6 @@ export function initBroadcastAssistant() {
 
   document.body.appendChild(popup);
 
-  // Status para o Command Center
   const readMessages = JSON.parse(localStorage.getItem("cw_read_broadcasts") || "[]");
   const hasUnread = BROADCAST_MESSAGES.some((m) => !readMessages.includes(m.id));
 
