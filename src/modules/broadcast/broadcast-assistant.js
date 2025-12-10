@@ -88,29 +88,52 @@ export function initBroadcastAssistant() {
       document.head.appendChild(s);
   }
 
- function parseMessageText(rawText) {
-    // --- PROTEÇÃO NOVA ---
-    // Se rawText não existir ou não for uma string, retorna vazio para não quebrar
+function parseMessageText(rawText) {
+    // 1. Proteção contra Crash (que fizemos antes)
     if (!rawText || typeof rawText !== 'string') {
         return ""; 
     }
-    // ---------------------
 
     let html = rawText;
+
+    // 2. Sanitização Básica (Opcional, mas recomendada se o input for de usuário)
+    // Se você confia na fonte, pode pular. Se for chat aberto, previne injeção de script.
+    // html = html.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    // 3. Auto-Link (Detecta http/https e www)
+    // Regex simples para capturar URLs e transformar em <a href>
+    const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/g;
+    html = html.replace(urlRegex, (url) => {
+        let href = url;
+        if (!href.startsWith('http')) href = 'http://' + href;
+        return `<a href="${href}" target="_blank" style="color:#1967d2; text-decoration:underline;">${url}</a>`;
+    });
+
+    // 4. Markdown Básico
+    // Negrito: **texto** -> <b>texto</b>
+    html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+    // Itálico: _texto_ -> <i>texto</i>
+    html = html.replace(/_(.*?)_/g, '<i>$1</i>');
+    
+    // 5. Quebra de Linha (\n -> <br>)
+    html = html.replace(/\n/g, '<br>');
+
+    // 6. Seus Emojis (Mantido igual)
     Object.keys(EMOJI_MAP).forEach((shortcode) => {
       const url = EMOJI_MAP[shortcode];
+      // Nota: Como o Auto-link roda antes, ele não vai quebrar essa tag <img>
+      // pois neste ponto o shortcode ainda é texto puro (ex: :smile:)
       if (url.startsWith("http")) {
-        // Dica: use replaceAll se puder, ou o split/join está ok também
         const imgTag = `<img src="${url}" style="${styles.emojiImg}" alt="${shortcode}">`;
         html = html.split(shortcode).join(imgTag);
       } else {
         html = html.split(shortcode).join(url);
       }
     });
-    
-    // O replace já é seguro em strings, mas o split/join acima era o ponto crítico
+
+    // 7. Menção @todos (Mantido igual)
     html = html.replace(/@todos|@all/gi, '<span style="background:#e8f0fe; color:#1967d2; padding:1px 5px; border-radius:4px; font-weight:600; font-size:12px;">@todos</span>');
-    
+
     return html;
 }
 
@@ -162,30 +185,72 @@ export function initBroadcastAssistant() {
 
   // --- 3. LÓGICA DE DADOS, POLLING E SOM ---
   
+// --- 3. LÓGICA DE DADOS, POLLING E SOM ---
+  
   async function checkForUpdates() {
-      // 1. Guarda o estado atual antes de buscar
+      // 1. UI de Loading (Barra de status visual)
+      let statusEl = document.getElementById('cw-update-status');
+      
+      // Só cria/mostra feedback visual se o popup estiver ABERTO
+      if (visible) {
+          if (!statusEl) {
+              statusEl = document.createElement('div');
+              statusEl.id = 'cw-update-status';
+              // Estilo: barra sutil no topo da lista
+              statusEl.style.cssText = "padding: 6px; text-align: center; font-size: 11px; color: #5f6368; background: #f8f9fa; border-bottom: 1px solid #e0e0e0;";
+              // Insere logo antes da div do feed (feedContainer)
+              feed.parentNode.insertBefore(statusEl, feed); 
+          }
+          statusEl.innerHTML = '⏳ Verificando atualizações...';
+          statusEl.style.display = 'block';
+      }
+
       const currentIds = BROADCAST_MESSAGES.map(m => m.id);
       const readIds = JSON.parse(localStorage.getItem("cw_read_broadcasts") || "[]");
 
-      // 2. Busca na Nuvem
-      const data = await DataService.fetchData();
-      
-      if (data && data.broadcast) {
-          // Detecta se chegou algo NOVO que não estava na lista anterior E não foi lido
-          // (Isso evita tocar som ao abrir a ferramenta pela primeira vez no dia)
-          if (currentIds.length > 0) { // Só toca se já tinha carregado antes (evita som no boot)
-              const newMessages = data.broadcast.filter(m => !currentIds.includes(m.id));
-              const unreadNew = newMessages.filter(m => !readIds.includes(m.id));
-              
-              if (unreadNew.length > 0) {
-                  console.log("🔔 Novo aviso detectado! Tocando som.");
-                  SoundManager.playNotification(); // <--- O POP!
+      try {
+          // 2. Busca na Nuvem
+          const data = await DataService.fetchData();
+          
+          if (data && data.broadcast) {
+              // Feedback Visual de Sucesso
+              if (visible && statusEl) {
+                  // Se chegou mensagem nova que não tinha antes
+                  const temNovidade = data.broadcast.some(m => !currentIds.includes(m.id));
+                  
+                  if (temNovidade) {
+                      statusEl.innerHTML = '✅ Novos avisos sincronizados!';
+                      statusEl.style.backgroundColor = '#e6f4ea'; // Verde claro
+                      statusEl.style.color = '#137333';
+                  } else {
+                      statusEl.innerHTML = '🔹 Tudo atualizado.';
+                  }
+                  // Some após 1.5 segundos
+                  setTimeout(() => { if(statusEl) statusEl.style.display = 'none'; }, 1500);
               }
-          }
 
-          setBroadcastMessages(data.broadcast);
-          updateBadge();
-          if (visible) renderFeed(); 
+              // Lógica de Som (Mantida)
+              if (currentIds.length > 0) { 
+                  const newMessages = data.broadcast.filter(m => !currentIds.includes(m.id));
+                  const unreadNew = newMessages.filter(m => !readIds.includes(m.id));
+                  
+                  if (unreadNew.length > 0) {
+                      console.log("🔔 Novo aviso detectado! Tocando som.");
+                      SoundManager.playNotification(); 
+                  }
+              }
+
+              setBroadcastMessages(data.broadcast);
+              updateBadge();
+              if (visible) renderFeed(); 
+          }
+      } catch (error) {
+          console.error("Erro no update:", error);
+          // Feedback Visual de Erro
+          if (visible && statusEl) {
+              statusEl.innerHTML = '⚠️ Falha na conexão.';
+              statusEl.style.backgroundColor = '#fce8e6'; // Vermelho claro
+          }
       }
   }
 
