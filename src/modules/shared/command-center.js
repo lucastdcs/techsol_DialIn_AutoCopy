@@ -154,6 +154,24 @@ export function initCommandCenter(actions) {
             @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
             .cw-check svg { width: 28px; height: 28px; stroke-dasharray: 50; stroke-dashoffset: 50; transition: stroke-dashoffset 0.5s ease 0.2s; }
             .cw-pill.success .cw-check svg { stroke-dashoffset: 0; }
+
+            .cw-status-text {
+              font-size: 12px; 
+              color: #5f6368; 
+              margin-left: 12px; 
+              font-weight: 500;
+              white-space: nowrap; 
+              overflow: hidden; 
+              text-overflow: ellipsis; 
+              max-width: 160px;
+              opacity: 0; 
+              animation: fadeInText 0.4s forwards 0.2s;
+          }
+
+          @keyframes fadeInText { 
+              from { opacity: 0; transform: translateX(-5px); } 
+              to { opacity: 1; transform: translateX(0); } 
+          }
         `;
     document.head.appendChild(style);
   }
@@ -310,15 +328,35 @@ export function initCommandCenter(actions) {
   }
 }
 
+// Adicione o import no topo do arquivo se não houver
+import { DataService } from './data-service.js';
+
 export function triggerProcessingAnimation() {
     const pill = document.querySelector('.cw-pill');
     const overlay = document.querySelector('.cw-focus-backdrop');
     const loader = document.getElementById('cw-loader');
     const success = document.getElementById('cw-success');
     
+    // 1. Tenta encontrar ou criar o elemento de texto da Dica
+    let textEl = document.getElementById('cw-status-text');
+    
     if (!pill || !loader || !success) return () => {}; 
 
+    // Criação dinâmica do elemento de texto (se for a primeira vez)
+    if (!textEl) {
+        textEl = document.createElement('span');
+        textEl.id = 'cw-status-text';
+        textEl.className = 'cw-status-text';
+        // Insere dentro do container de status, logo após o loader
+        loader.parentNode.appendChild(textEl);
+    }
+
     const startTime = Date.now();
+    
+    // 2. Busca uma frase nova e exibe
+    textEl.textContent = DataService.getRandomTip();
+    textEl.style.display = 'block';
+
     pill.classList.add('processing');
     if (overlay) overlay.classList.add('active');
     
@@ -327,13 +365,18 @@ export function triggerProcessingAnimation() {
 
     return function finish() {
         const elapsed = Date.now() - startTime;
+        // Garante leitura mínima de 1.5s
         const remainingTime = Math.max(0, 1500 - elapsed);
 
         setTimeout(() => {
             loader.style.display = 'none';
+            textEl.style.display = 'none'; // 3. Esconde o texto ao finalizar
+            
             success.style.display = 'block';
-            void success.offsetWidth; 
+            void success.offsetWidth; // Força reinício da animação CSS
+            
             pill.classList.add('success');
+            
             setTimeout(() => {
                 pill.classList.remove('processing', 'success');
                 if (overlay) overlay.classList.remove('active');

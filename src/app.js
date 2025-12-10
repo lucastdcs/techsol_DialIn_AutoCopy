@@ -7,7 +7,7 @@ import { initCallScriptAssistant } from './modules/call-script/call-script-assis
 import { initFeedbackAssistant } from './modules/lm-report/lm-repot-assistant.js'; 
 import { initBroadcastAssistant } from './modules/broadcast/broadcast-assistant.js'; // <--- NOVO
 import { initMagicWand } from "./modules/ai/magic-wand.js";
-
+import { DataService } from './modules/shared/data-service.js';
 // 2. Importação do Núcleo Compartilhado
 import { initCommandCenter } from './modules/shared/command-center.js';
 import { initGlobalStylesAndFont, playStartupAnimation, showToast } from './modules/shared/utils.js';
@@ -24,7 +24,7 @@ function initApp() {
     try {
         // A. Injeta estilos globais
         initGlobalStylesAndFont();
-
+DataService.fetchTips();
         // B. Animação de Entrada
         playStartupAnimation();
 
@@ -37,7 +37,7 @@ function initApp() {
         // Broadcast retorna um objeto: { toggle: fn, hasUnread: bool }
         const broadcastControl = initBroadcastAssistant(); // <--- NOVO
 
-        initMagicWand(); // <--- Faltava essa linha no seu código!
+       
 
         // D. Inicializa a Barra de Comando
         initCommandCenter({
