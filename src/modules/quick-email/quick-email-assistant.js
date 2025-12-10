@@ -226,39 +226,47 @@ export function initQuickEmailAssistant() {
         insertBtn.onmouseover = () => insertBtn.style.backgroundColor = "#174ea6";
         insertBtn.onmouseout = () => insertBtn.style.backgroundColor = "#1a73e8";
         insertBtn.onclick = async () => {
-            // 1. Feedback tátil
+            console.log("🔍 DEBUG: Clique detectado");
+
+            // Teste do Import
+            console.log("🔍 DEBUG: triggerProcessingAnimation é:", typeof triggerProcessingAnimation);
+
             insertBtn.style.transform = "scale(0.96)";
-
-            // 2. Fecha a janela do módulo
             toggleVisibility();
-
-            // 3. INICIA A ANIMAÇÃO (Liga o Overlay e o Loader)
-            const finishLoading = triggerProcessingAnimation();
+            console.log("🔍 DEBUG: Janela fechada");
 
             try {
-                // --- A PAUSA ESTRATÉGICA ---
-                // Aqui nós dizemos: "Navegador, pare por 600ms e DESENHE a animação na tela".
-                // Só depois de ter certeza que o usuário viu o loader, avançamos.
-                await new Promise(resolve => setTimeout(resolve, 600));
+                console.log("🔍 DEBUG: Chamando animação...");
+                const finishLoading = triggerProcessingAnimation();
 
-                // 4. AGORA roda a lógica do email
-                // (Como já passou 600ms, a animação já está rodando lisa na tela)
+                // Verifica se a função retornou algo (se retornou, é porque achou os elementos)
+                console.log("🔍 DEBUG: finishLoading é:", typeof finishLoading);
+
+                console.log("🔍 DEBUG: Iniciando espera de 1s...");
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                console.log("🔍 DEBUG: Rodando lógica do email...");
                 await runQuickEmail(email);
 
-                // 5. Finaliza (Check Verde)
-                finishLoading();
+                console.log("🔍 DEBUG: Finalizando animação...");
+                if (typeof finishLoading === 'function') {
+                    finishLoading();
+                } else {
+                    console.error("❌ ERRO: finishLoading não é uma função! A animação falhou ao iniciar.");
+                }
 
             } catch (error) {
-                console.error(error);
-                finishLoading();
+                console.error("❌ ERRO NO PROCESSO:", error);
+                // Tenta limpar mesmo assim
+                const elOverlay = document.querySelector('.cw-focus-backdrop');
+                if (elOverlay) elOverlay.classList.remove('active');
             }
 
-            // 6. Reseta botão
             setTimeout(() => {
                 insertBtn.style.transform = "scale(1)";
                 if (typeof showListView === 'function') showListView();
             }, 300);
-        };
+        }
     }
     function showListView() {
         currentView = 'list';
