@@ -88,20 +88,31 @@ export function initBroadcastAssistant() {
       document.head.appendChild(s);
   }
 
-  function parseMessageText(rawText) {
+ function parseMessageText(rawText) {
+    // --- PROTEÇÃO NOVA ---
+    // Se rawText não existir ou não for uma string, retorna vazio para não quebrar
+    if (!rawText || typeof rawText !== 'string') {
+        return ""; 
+    }
+    // ---------------------
+
     let html = rawText;
     Object.keys(EMOJI_MAP).forEach((shortcode) => {
       const url = EMOJI_MAP[shortcode];
       if (url.startsWith("http")) {
+        // Dica: use replaceAll se puder, ou o split/join está ok também
         const imgTag = `<img src="${url}" style="${styles.emojiImg}" alt="${shortcode}">`;
         html = html.split(shortcode).join(imgTag);
       } else {
         html = html.split(shortcode).join(url);
       }
     });
+    
+    // O replace já é seguro em strings, mas o split/join acima era o ponto crítico
     html = html.replace(/@todos|@all/gi, '<span style="background:#e8f0fe; color:#1967d2; padding:1px 5px; border-radius:4px; font-weight:600; font-size:12px;">@todos</span>');
+    
     return html;
-  }
+}
 
   // --- UI SETUP ---
   const popup = document.createElement("div");
