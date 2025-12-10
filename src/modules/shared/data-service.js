@@ -1,7 +1,7 @@
 // src/modules/shared/data-service.js
 
 // SUA URL DO GOOGLE APPS SCRIPT (Verifique se é a implantação 'exec', não 'dev')
-const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbwojbYGOUlE6g2HEMLAtF6U7caJX355Y3dzJaKqD3UOpztRjH0LmBldXa1lb0gNRbGT8w/exec";
+const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbyWu0rzLNjeJL64FtuFsfMOoNP-kL-r4pLjacQrqtkT_POEgpxRymhmoqKU8_SwmQ7b/exec";
 
 const CACHE_KEY_BROADCAST = "cw_data_broadcast";
 const CACHE_KEY_TIPS = "cw_data_tips";
