@@ -14,6 +14,7 @@ const COLORS = {
   purple: "#C58AF9", // Script
   green: "#81C995",  // Links
   orange: "#F9AB00", // Broadcast (NOVO)
+  
 };
 
 // Helper interno de tempo
