@@ -9,11 +9,32 @@ import {
 import { SoundManager } from "../shared/sound-manager.js";
 import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from "../shared/animations.js";
-import { BROADCAST_MESSAGES, EMOJI_MAP } from "./broadcast-data.js";
+import { BROADCAST_MESSAGES, EMOJI_MAP, setBroadcastMessages } from "./broadcast-data.js"; // Adicione setBroadcastMessages
+import { DataService } from "../shared/data-service.js"; // <--- NOVO
 
 export function initBroadcastAssistant() {
-  const CURRENT_VERSION = "v2.2 (History)";
+ const CURRENT_VERSION = "v2.2 (Cloud)";
   let visible = false;
+
+  // 1. CARREGA DADOS (Lógica Híbrida)
+  // A. Pega do cache primeiro (instantâneo)
+  let cachedData = DataService.getCachedBroadcasts();
+  if (cachedData.length > 0) {
+      setBroadcastMessages(cachedData);
+  }
+
+  // B. Atualiza da Nuvem (em segundo plano)
+  DataService.fetchData().then(data => {
+      if (data && data.broadcast) {
+          setBroadcastMessages(data.broadcast);
+          // Se o popup estiver aberto, re-renderiza para mostrar novidades ao vivo
+          if (document.getElementById('broadcast-popup')) {
+              renderFeed(); 
+          }
+          // Atualiza o badge no Command Center se houver novos
+          // (Isso exigiria um evento customizado, mas por enquanto basta atualizar o feed)
+      }
+  });
 
   const TYPE_THEMES = {
       critical: {
