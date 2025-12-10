@@ -1,253 +1,187 @@
-// src/modules/shared/command-center.js
-
 import { DataService } from './data-service.js';
 
 const COLORS = {
-  glassBg: "rgba(61, 61, 61, 0.77)",
-  glassBorder: "rgba(255, 255, 255, 0.15)",
-  glassActive: "rgba(79, 79, 79, 0.89)",
-  glassHighlight: "rgba(255, 255, 255, 0.08)",
-  iconIdle: "#c2c5c8ff",
+  glassBg: "rgba(32, 33, 36, 0.95)", // Fundo mais sólido e premium
+  glassBorder: "rgba(255, 255, 255, 0.1)",
+  iconIdle: "#9aa0a6",
   iconActive: "#FFFFFF",
   
-  // Cores de Marca
-  blue: "#8AB4F8",   // Notes
-  red: "#F28B82",    // Email
-  purple: "#C58AF9", // Script
-  green: "#81C995",  // Links
-  orange: "#F9AB00", // Broadcast (NOVO)
-  
+  // Cores Oficiais Google (Do seu código original)
+  blue: "#8AB4F8",
+  red: "#F28B82", 
+  green: "#81C995",
+  yellow: "#FDD663",
+  orange: "#F9AB00"
 };
 
-// Helper interno de tempo
+// Helper de tempo
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export function initCommandCenter(actions) {
-  // actions agora contém: { toggleNotes, toggleEmail, toggleScript, toggleLinks, broadcastControl }
 
-  // 1. ESTILOS
+  // 1. ESTILOS (CSS)
   const styleId = "cw-command-center-style";
   if (!document.getElementById(styleId)) {
     const style = document.createElement("style");
     style.id = styleId;
+    // CSS OTIMIZADO
     style.innerHTML = `
-            @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@500&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500&display=swap');
 
-            .cw-focus-backdrop {
-                position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-                background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px);
-                z-index: 2147483646; opacity: 0; pointer-events: none;
-                transition: opacity 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
-            }
-            .cw-focus-backdrop.active { opacity: 1; pointer-events: auto; }
-
+            /* --- BASE DA PÍLULA (A Física Apple) --- */
             .cw-pill {
                 position: fixed; top: 30%; right: 24px;
                 display: flex; flex-direction: column; align-items: center; gap: 12px;
-                padding: 16px 8px;
-                background: ${COLORS.glassBg};
-                backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-                border: 1px solid ${COLORS.glassBorder}; border-radius: 50px;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 2147483647;
-                opacity: 0; transform: translateX(40px) scale(0.95);
-                transition: opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+                padding: 14px 8px;
+                background: rgba(45, 45, 45, 0.9);
+                backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+                border: 1px solid ${COLORS.glassBorder}; 
+                border-radius: 50px;
+                box-shadow: 0 12px 40px rgba(0,0,0,0.3); 
+                z-index: 2147483647;
+                
+                /* A Mágica da Fluidez: Transição unificada para tudo */
+                transition: 
+                    top 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    left 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    width 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    height 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    border-radius 0.6s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    background-color 0.4s ease;
             }
-            .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
+            /* --- ESTADO 1: FLUTUANDO NA LATERAL (Padrão) --- */
+            .cw-pill.docked { opacity: 1; transform: translateX(0); }
+            
+            /* --- ESTADO 2: DYNAMIC ISLAND (No Centro) --- */
+            .cw-pill.processing-center {
+                /* Geometria */
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                width: 320px !important;
+                height: 110px !important;
+                border-radius: 28px !important;
+                
+                /* Visual */
+                background: #202124 !important; /* Material Dark */
+                box-shadow: 0 40px 80px rgba(0,0,0,0.6) !important;
+                padding: 0 !important;
+                
+                /* Layout */
+                justify-content: center;
+                align-items: center;
+                flex-direction: column;
+            }
+
+            /* Esconde os botões laterais durante a animação */
+            .cw-pill.processing-center > .cw-btn,
+            .cw-pill.processing-center > .cw-sep,
+            .cw-pill.processing-center > .cw-grip {
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.2s ease; /* Some rápido */
+            }
+
+            /* --- BOTÕES E ÍCONES --- */
             .cw-btn {
-                width: 40px; height: 40px; 
+                width: 42px; height: 42px; 
                 border-radius: 50%; border: none; background: transparent;
                 display: flex; align-items: center; justify-content: center; 
                 cursor: pointer; position: relative; color: ${COLORS.iconIdle};
-                opacity: 0; transform: scale(0.5);
-                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+                transition: all 0.2s ease;
             }
-            .cw-btn.popped { opacity: 1; transform: scale(1); }
-
-            .cw-btn:hover { background: ${COLORS.glassHighlight}; color: ${COLORS.iconActive}; transform: scale(1.1); }
-
-            /* Estados Ativos e Cores */
-            .cw-btn.notes.active { color: ${COLORS.blue} !important; background: rgba(138, 180, 248, 0.15); }
-            .cw-btn.email.active { color: ${COLORS.red} !important; background: rgba(242, 139, 130, 0.15); }
-            .cw-btn.script.active { color: ${COLORS.purple} !important; background: rgba(197, 138, 249, 0.15); }
-            .cw-btn.links.active { color: ${COLORS.green} !important; background: rgba(129, 201, 149, 0.15); }
-            .cw-btn.broadcast.active { color: ${COLORS.orange} !important; background: rgba(249, 171, 0, 0.15); } /* NOVO */
-
-            .cw-btn.notes:hover { color: ${COLORS.blue}; filter: drop-shadow(0 0 5px rgba(138, 180, 248, 0.5)); }
-            .cw-btn.email:hover { color: ${COLORS.red}; filter: drop-shadow(0 0 5px rgba(242, 139, 130, 0.5)); }
-            .cw-btn.script:hover { color: ${COLORS.purple}; filter: drop-shadow(0 0 5px rgba(197, 138, 249, 0.5)); }
-            .cw-btn.links:hover { color: ${COLORS.green}; filter: drop-shadow(0 0 5px rgba(129, 201, 149, 0.5)); }
-            .cw-btn.broadcast:hover { color: ${COLORS.orange}; filter: drop-shadow(0 0 5px rgba(249, 171, 0, 0.5)); } /* NOVO */
-
-            /* Indicador LED */
-            .cw-btn::before {
-                content: ''; position: absolute; bottom: 2px; left: 50%; 
-                width: 4px; height: 4px; border-radius: 50%;
-                background-color: currentColor; box-shadow: 0 0 6px currentColor;
-                transform: translateX(-50%) scale(0);
-                transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none;
-            }
-            .cw-btn.active::before { transform: translateX(-50%) scale(1); }
+            .cw-btn:hover { background: rgba(255,255,255,0.1); color: #fff; transform: scale(1.1); }
+            .cw-btn svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+            .cw-sep { width: 24px; height: 1px; background: rgba(255,255,255,0.1); margin: 4px 0; }
             
-            .cw-btn svg { width: 22px; height: 22px; fill: currentColor; pointer-events: none; }
+            /* Badges e Grip */
+            .cw-grip { width: 100%; height: 20px; display: flex; justify-content: center; cursor: grab; opacity: 0.5; }
+            .cw-grip:hover { opacity: 1; }
+            .cw-grip-bar { width: 20px; height: 4px; background: #fff; border-radius: 2px; }
+            .cw-badge { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background: #d93025; border-radius: 50%; border: 1px solid #202124; }
 
-            /* BADGE DE NOTIFICAÇÃO (Bolinha Vermelha) */
-            .cw-badge {
-                position: absolute; top: 8px; right: 8px;
-                width: 8px; height: 8px;
-                background-color: #d93025; border-radius: 50%;
-                border: 1px solid #fff; pointer-events: none;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-                z-index: 10;
-                animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            /* --- ELEMENTOS DO CENTRO (Injectados) --- */
+            .cw-center-stage {
+                position: absolute; width: 100%; height: 100%;
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                gap: 16px;
+                opacity: 0; animation: fadeInStage 0.6s ease forwards 0.2s;
             }
-            @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
 
-            .cw-sep {
-                width: 20px; height: 1px; background: rgba(255,255,255,0.2);
-                opacity: 0; transition: opacity 0.5s ease;
+            /* AS BOLINHAS (Código Original Recuperado) */
+            .cw-google-dots { display: flex; gap: 8px; }
+            .cw-google-dots span {
+                width: 10px; height: 10px; border-radius: 50%;
+                /* Importante: animation-fill-mode both para manter estado */
+                animation: bounce 1.4s infinite ease-in-out both; 
             }
-            .cw-sep.visible { opacity: 1; }
+            .cw-google-dots span:nth-child(1) { background-color: ${COLORS.blue}; animation-delay: -0.32s; }
+            .cw-google-dots span:nth-child(2) { background-color: ${COLORS.red}; animation-delay: -0.16s; }
+            .cw-google-dots span:nth-child(3) { background-color: ${COLORS.green}; }
 
-            .cw-grip {
-                width: 100%; height: 24px; display: flex; align-items: center; justify-content: center; 
-                cursor: grab; margin-bottom: 2px; 
+            @keyframes bounce { 
+                0%, 80%, 100% { transform: scale(0); } 
+                40% { transform: scale(1); } 
             }
-            .cw-grip-bar { 
-                width: 24px; height: 4px; background-color: ${COLORS.iconIdle}; border-radius: 4px; 
-                opacity: 0.4; transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); 
+
+            /* O Texto da Dica */
+            .cw-center-text {
+                font-family: 'Google Sans', sans-serif;
+                font-size: 14px; color: #E8EAED; text-align: center;
+                max-width: 90%; line-height: 1.5; font-weight: 400;
+                opacity: 0; transform: translateY(10px);
+                animation: slideUpText 0.5s ease forwards 0.3s;
             }
-            .cw-grip:hover .cw-grip-bar { opacity: 1; background-color: #FFFFFF; transform: scaleY(1.2); }
-            .cw-grip:active { cursor: grabbing; }
-            .cw-pill.dragging .cw-grip-bar { background-color: ${COLORS.blue}; width: 16px; opacity: 1; }
 
-            @keyframes successPop {
-                0% { box-shadow: 0 0 0 transparent; transform: scale(1); }
-                50% { box-shadow: 0 0 15px #81C995; transform: scale(1.05); border-color: #81C995; }
-                100% { box-shadow: 0 0 0 transparent; transform: scale(1); }
+            /* Ícone de Sucesso */
+            .cw-center-success { display: none; color: ${COLORS.green}; }
+            .cw-center-success svg { width: 48px; height: 48px; }
+            .cw-center-success.show { display: block; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+            /* Animações de Entrada/Saída */
+            @keyframes fadeInStage { to { opacity: 1; } }
+            @keyframes slideUpText { to { opacity: 1; transform: translateY(0); } }
+            @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+            .cw-focus-backdrop {
+                position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(2px);
+                opacity: 0; pointer-events: none; transition: opacity 0.5s; z-index: 2147483646;
             }
-            .cw-pill.system-check { animation: successPop 0.6s ease-out; }
-            
-            /* Tooltips */
-            .cw-btn::after { 
-                content: attr(data-label); position: absolute; top: 50%; transform: translateY(-50%) scale(0.9); 
-                padding: 6px 12px; border-radius: 6px; background: #202124; color: #fff; 
-                font-family: 'Google Sans', sans-serif; font-size: 12px; font-weight: 500; 
-                opacity: 0; pointer-events: none; transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1); 
-                box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: nowrap; border: 1px solid rgba(255,255,255,0.15);
-            }
-            .cw-pill.side-right .cw-btn::after { right: 60px; transform-origin: right center; }
-            .cw-pill.side-right .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
-            .cw-pill.side-left .cw-btn::after { left: 60px; transform-origin: left center; }
-            .cw-pill.side-left .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
-
-/* --- CSS DINÂMICO CENTRAL (Abordagem "Fresh DOM") --- */
-
-/* 1. Base da Pílula (Transição suave para a volta) */
-.cw-pill {
-    transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-/* 2. O Estado Centralizado (O Container) */
-.cw-pill.processing-center {
-    top: 50% !important; left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    width: 320px !important; height: 120px !important;
-    border-radius: 24px !important;
-    background: rgba(32, 33, 36, 0.98) !important;
-    padding: 0 !important;
-    box-shadow: 0 30px 60px rgba(0,0,0,0.6) !important;
-    
-    /* Centraliza o conteúdo novo */
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-}
-
-/* 3. O TRUQUE: Esconde TUDO que era original da pílula */
-.cw-pill.processing-center > *:not(.cw-temp-center-content) {
-    display: none !important;
-}
-
-/* 4. Estilo do NOVO conteúdo temporário */
-.cw-temp-center-content {
-    display: flex; flex-direction: column; align-items: center; gap: 16px;
-    opacity: 0; animation: fadeIn 0.3s ease forwards 0.2s; color: #fff;
-    width: 100%;
-}
-
-/* 5. Bolinhas NOVAS (Garante que apareçam) */
-.cw-temp-dots { display: flex; gap: 10px; }
-.cw-temp-dots span {
-    width: 12px; height: 12px; border-radius: 50%; background: #fff;
-    animation: bounce 1.4s infinite ease-in-out both;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
-/* Reutiliza os delays de animação existentes */
-.cw-temp-dots span:nth-child(1) { animation-delay: -0.32s; }
-.cw-temp-dots span:nth-child(2) { animation-delay: -0.16s; }
-
-/* 6. Texto NOVO */
-.cw-temp-text {
-    font-size: 15px; font-weight: 400; text-align: center; max-width: 90%; line-height: 1.4;
-}
-
-/* 7. Ícone de Sucesso NOVO */
-.cw-temp-success { display: none; color: #81C995; }
-.cw-temp-success svg { width: 42px; height: 42px; }
-.cw-temp-success.active { 
-    display: block; 
-    animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); 
-}
-
-@keyframes fadeIn { to { opacity: 1; } }
-@keyframes popIn { from { transform: scale(0.5); opacity:0; } to { transform: scale(1); opacity:1;} }
+            .cw-focus-backdrop.active { opacity: 1; }
         `;
     document.head.appendChild(style);
   }
 
-  // 2. CONSTRUÇÃO DO DOM
+  // 2. CONSTRUÇÃO DO DOM (Pílula Lateral)
   const ICONS = {
-    check: `<svg viewBox="0 0 24 24" fill="none" stroke="#81C995" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
-    notes: `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`,
-    email: `<svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>`,
-    script: `<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`,
-    links: `<svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>`,
+    notes: `<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`,
+    email: `<svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>`,
+    script: `<svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`,
+    links: `<svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`,
     broadcast: `<svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`
   };
 
   const pill = document.createElement("div");
   pill.className = "cw-pill side-right";
   
-  // ESTRUTURA ATUALIZADA (Links Subiu, Broadcast Entrou)
+  // HTML Limpo
   pill.innerHTML = `
-        <div class="cw-grip" title="Arrastar">
-            <div class="cw-grip-bar"></div>
-        </div>
-        
-        <button class="cw-btn notes" id="cw-btn-notes" data-label="Case Notes">${ICONS.notes}</button>
-        
-        <button class="cw-btn email" id="cw-btn-email" data-label="Quick Email">${ICONS.email}</button>
-        
-        <button class="cw-btn script" id="cw-btn-script" data-label="Call Script">${ICONS.script}</button>
-
-        <button class="cw-btn links" id="cw-btn-links" data-label="Links">${ICONS.links}</button>
-        
+        <div class="cw-grip"><div class="cw-grip-bar"></div></div>
+        <button class="cw-btn notes" title="Notas">${ICONS.notes}</button>
+        <button class="cw-btn email" title="Email">${ICONS.email}</button>
+        <button class="cw-btn script" title="Script">${ICONS.script}</button>
         <div class="cw-sep"></div>
-        
-        <button class="cw-btn broadcast" id="cw-btn-broadcast" data-label="Avisos">${ICONS.broadcast}</button>
+        <button class="cw-btn links" title="Links">${ICONS.links}</button>
+        <button class="cw-btn broadcast" title="Avisos">${ICONS.broadcast}</button>
+  `;
 
-        <div class="cw-status-container">
-            <div class="cw-dots" id="cw-loader"><span></span><span></span><span></span></div>
-            <div class="cw-check" id="cw-success" style="display:none;">${ICONS.check}</div>
-        </div>
-    `;
-
-    // INSERE OVERLAY E PILL
-    const overlay = document.createElement('div');
-    overlay.className = 'cw-focus-backdrop';
-    document.body.appendChild(overlay);
-    document.body.appendChild(pill);
+  // Overlay para foco
+  const overlay = document.createElement('div');
+  overlay.className = 'cw-focus-backdrop';
+  document.body.appendChild(overlay);
+  document.body.appendChild(pill);
 
   // 3. LISTENERS
   pill.querySelector(".notes").onclick = (e) => { e.stopPropagation(); actions.toggleNotes(); };
@@ -255,173 +189,108 @@ export function initCommandCenter(actions) {
   pill.querySelector(".script").onclick = (e) => { e.stopPropagation(); actions.toggleScript(); };
   pill.querySelector(".links").onclick = (e) => { e.stopPropagation(); actions.toggleLinks(); };
   
-  // Listener do Broadcast (Com Badge Logic)
   pill.querySelector(".broadcast").onclick = (e) => { 
       e.stopPropagation(); 
-      
-      // Remove a bolinha vermelha visualmente se existir
       const badge = e.currentTarget.querySelector('.cw-badge');
-      if(badge) {
-          badge.style.transform = "scale(0)";
-          setTimeout(() => badge.remove(), 200);
-      }
-      
+      if(badge) badge.remove();
       if(actions.broadcastControl) actions.broadcastControl.toggle(); 
   };
 
-  // INJETA O BADGE (Se houver não lidos)
+  // Badge Inicial
   if (actions.broadcastControl && actions.broadcastControl.hasUnread) {
       const badge = document.createElement('div');
       badge.className = 'cw-badge';
       pill.querySelector('.broadcast').appendChild(badge);
   }
 
-  // 4. SEQUÊNCIA DE ANIMAÇÃO
-  (async function startAnimation() {
-    await esperar(2800);
-    pill.classList.add("docked");
-    await esperar(300);
-    
-    const items = pill.querySelectorAll(".cw-btn");
-    const seps = pill.querySelectorAll(".cw-sep");
-    seps.forEach((s) => s.classList.add("visible"));
-
-    for (let i = 0; i < items.length; i++) {
-      items[i].classList.add("popped");
-      await esperar(90);
-    }
-    await esperar(200);
-    pill.classList.add("system-check");
-  })();
-
-  // 5. FÍSICA DE ARRASTO
-  let isDragging = false;
-  let startX, startY, initialLeft, initialTop;
-  const DRAG_THRESHOLD = 3;
-
-  pill.onmousedown = (e) => {
-    if (e.target.closest("button")) return;
-    e.preventDefault();
-    startX = e.clientX; startY = e.clientY;
-    const rect = pill.getBoundingClientRect();
-    initialLeft = rect.left; initialTop = rect.top;
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", onMouseUp);
+  // 4. ARRASTAR (Draggable)
+  let isDragging = false, startX, startY, initialLeft, initialTop;
+  pill.querySelector('.cw-grip').onmousedown = (e) => {
+      e.preventDefault();
+      isDragging = true;
+      startX = e.clientX; startY = e.clientY;
+      const rect = pill.getBoundingClientRect();
+      initialLeft = rect.left; initialTop = rect.top;
+      pill.style.transition = 'none'; // Remove transição para arrastar rápido
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
   };
 
-  function onMouseMove(e) {
-    const dx = e.clientX - startX;
-    const dy = e.clientY - startY;
-    if (!isDragging && Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD) {
-      isDragging = true;
-      pill.style.transition = "none";
-    }
-    if (isDragging) {
-      pill.style.left = `${initialLeft + dx}px`;
-      pill.style.top = `${initialTop + dy}px`;
-      pill.style.right = "auto"; pill.style.bottom = "auto"; pill.style.transform = "none";
-    }
+  function onMove(e) {
+      if(!isDragging) return;
+      pill.style.left = `${initialLeft + (e.clientX - startX)}px`;
+      pill.style.top = `${initialTop + (e.clientY - startY)}px`;
+      pill.style.right = 'auto'; // Reseta right
   }
 
-  function onMouseUp(e) {
-    document.removeEventListener("mousemove", onMouseMove);
-    document.removeEventListener("mouseup", onMouseUp);
-    if (isDragging) {
+  function onUp() {
       isDragging = false;
-      pill.style.transition = "left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease";
-      const screenW = window.innerWidth;
-      const screenH = window.innerHeight;
-      const rect = pill.getBoundingClientRect();
-      const centerX = rect.left + rect.width / 2;
-      
-      let targetLeft;
-      if (centerX < screenW / 2) {
-        targetLeft = 24;
-        pill.classList.remove("side-right"); pill.classList.add("side-left");
-      } else {
-        targetLeft = screenW - rect.width - 24;
-        pill.classList.remove("side-left"); pill.classList.add("side-right");
-      }
-      let targetTop = rect.top;
-      if (targetTop < 24) targetTop = 24;
-      if (targetTop > screenH - rect.height - 24) targetTop = screenH - rect.height - 24;
-
-      pill.style.left = `${targetLeft}px`;
-      pill.style.top = `${targetTop}px`;
-    } else {
-      const btn = e.target.closest("button");
-      if (btn) {
-        btn.style.transform = "scale(0.9)";
-        setTimeout(() => (btn.style.transform = ""), 150);
-      }
-    }
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      // Restaura a "Física Apple" ao soltar
+      pill.style.transition = 'top 0.6s cubic-bezier(0.2,0.8,0.2,1), left 0.6s cubic-bezier(0.2,0.8,0.2,1), width 0.6s cubic-bezier(0.2,0.8,0.2,1), height 0.6s cubic-bezier(0.2,0.8,0.2,1)';
   }
 }
 
-
-
+// --- FUNÇÃO DE ANIMAÇÃO DO CENTRO (AQUI ESTÁ A MÁGICA) ---
 export function triggerProcessingAnimation() {
     const pill = document.querySelector('.cw-pill');
     const overlay = document.querySelector('.cw-focus-backdrop');
     if (!pill) return () => {}; 
 
-    // 1. CRIAR O CONTEÚDO TEMPORÁRIO DO ZERO (A solução do problema)
-    const tempContainer = document.createElement('div');
-    tempContainer.className = 'cw-temp-center-content';
-
+    // 1. Criar o Palco Central (DOM Fresco e Limpo)
+    const stage = document.createElement('div');
+    stage.className = 'cw-center-stage';
+    
+    // Texto da Dica
     const tipText = DataService.getRandomTip();
 
-    // Injeta HTML "fresco" das bolinhas e do texto
-    tempContainer.innerHTML = `
-        <div class="cw-temp-dots"><span></span><span></span><span></span></div>
-        <div class="cw-temp-text">${tipText}</div>
-        <div class="cw-temp-success">
+    // HTML INJETADO (Bolinhas Coloridas + Texto)
+    stage.innerHTML = `
+        <div class="cw-google-dots">
+            <span></span><span></span><span></span>
+        </div>
+        <div class="cw-center-text">${tipText}</div>
+        <div class="cw-center-success">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
         </div>
     `;
 
-    // Adiciona na pílula
-    pill.appendChild(tempContainer);
+    pill.appendChild(stage);
+
+    // 2. Mover para o Centro (Ativa classe CSS)
+    pill.classList.add('processing-center');
+    if(overlay) overlay.classList.add('active');
 
     const startTime = Date.now();
 
-    // 2. VAI PRO CENTRO (O CSS esconde os botões velhos e mostra o novo container)
-    pill.classList.add('processing-center');
-    if (overlay) overlay.classList.add('active');
-
-    // Função de Finalização
+    // RETORNA FUNÇÃO DE FINALIZAR
     return function finish() {
         const elapsed = Date.now() - startTime;
-        const remainingTime = Math.max(0, 2000 - elapsed);
+        const remaining = Math.max(0, 2000 - elapsed); // Mínimo 2s
 
         setTimeout(() => {
-            // 3. MOSTRA SUCESSO NO CENTRO
-            const dots = tempContainer.querySelector('.cw-temp-dots');
-            const text = tempContainer.querySelector('.cw-temp-text');
-            const success = tempContainer.querySelector('.cw-temp-success');
+            // 3. Trocar Bolinhas por Sucesso
+            const dots = stage.querySelector('.cw-google-dots');
+            const text = stage.querySelector('.cw-center-text');
+            const success = stage.querySelector('.cw-center-success');
 
             if(dots) dots.style.display = 'none';
             if(text) text.style.display = 'none';
-            if(success) success.classList.add('active'); // Ativa animação de pop-in
-            
-            pill.classList.add('success'); // Borda verde
+            if(success) success.classList.add('show'); // Pop!
 
-            // Espera vendo o sucesso...
+            // 4. Voltar para a Lateral (Após ver o sucesso)
             setTimeout(() => {
-                // 4. VOLTA PRA LATERAL (A transição suave do CSS assume)
-                pill.classList.remove('processing-center');
-
-                // Espera a viagem de volta terminar para limpar a bagunça
+                pill.classList.remove('processing-center'); // CSS Cuida da transição fluida
+                
+                // Limpar DOM após a viagem de volta (0.6s é o tempo da transição CSS)
                 setTimeout(() => {
-                    // Remove o container temporário do DOM
-                    if(tempContainer.parentNode) tempContainer.parentNode.removeChild(tempContainer);
-                    
-                    pill.classList.remove('success');
-                    if (overlay) overlay.classList.remove('active');
-                }, 800); // Sincronizado com os 0.8s do CSS base
+                    stage.remove(); // Tchau palco
+                    if(overlay) overlay.classList.remove('active');
+                }, 600);
 
-            }, 1200); // Tempo mostrando o check verde
+            }, 1000); // Tempo vendo o check verde
 
-        }, remainingTime);
+        }, remaining);
     };
 }
