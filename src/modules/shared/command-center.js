@@ -141,74 +141,103 @@ export function initCommandCenter(actions) {
             .cw-pill.side-left .cw-btn::after { left: 60px; transform-origin: left center; }
             .cw-pill.side-left .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
 
-            /* --- BLOCO NOVO: DYNAMIC CENTER LOADING --- */
+          /* --- CSS DINÂMICO CENTRAL (Versão Fluida) --- */
 
-/* 1. O Estado Centralizado (A Mágica) */
+/* 1. Base da Pílula (Ajuste para garantir a volta suave) */
+.cw-pill {
+    /* Adicione 'all' na transição base para animar top/left/width/height na volta */
+    transition: all 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+}
+
+/* 2. O Estado Centralizado (Ida) */
 .cw-pill.processing-center {
-    /* Centraliza na tela */
+    /* Centraliza */
     top: 50% !important;
     left: 50% !important;
     transform: translate(-50%, -50%) !important;
     
-    /* Morpha para Horizontal */
-    width: 320px !important;    /* Mais largo para caber texto */
-    height: 100px !important;   /* Altura fixa */
-    border-radius: 24px !important;
+    /* Forma */
+    width: 300px !important;
+    height: 90px !important;
+    border-radius: 20px !important;
     
-    /* Layout Interno */
-    flex-direction: column;
-    justify-content: center;
+    /* Estilo */
+    background: rgba(32, 33, 36, 0.98) !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+    
+    /* Layout */
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
     padding: 0 !important;
-    background: rgba(32, 33, 36, 0.95) !important; /* Fundo mais sólido no centro */
-    box-shadow: 0 20px 50px rgba(0,0,0,0.5) !important;
 }
 
-/* 2. Esconde os botões e o grip durante a viagem */
+/* 3. Esconde itens antigos suavemente */
 .cw-pill.processing-center > .cw-btn,
 .cw-pill.processing-center > .cw-sep,
 .cw-pill.processing-center > .cw-grip {
     opacity: 0;
     pointer-events: none;
-    position: absolute; /* Tira do fluxo para não atrapalhar o layout */
-    transform: scale(0.5);
+    position: absolute;
+    transform: scale(0.8);
+    transition: opacity 0.2s ease; /* Some rápido */
 }
 
-/* 3. Ajusta o Container de Status (Loading + Texto) */
+/* 4. Container de Status (Garante que apareça) */
 .cw-pill.processing-center .cw-status-container {
-    position: relative !important; /* Reseta posicionamento absoluto */
+    position: relative !important;
     top: auto !important; left: auto !important;
     transform: none !important;
-    display: flex;
-    flex-direction: column; /* Pontos em cima, Texto embaixo */
-    align-items: center;
-    gap: 16px;
-    opacity: 1;
+    opacity: 1 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    gap: 12px; /* Espaço entre bolinhas e texto */
 }
 
-/* 4. Texto da Dica Centralizado */
+/* 5. CORREÇÃO DAS BOLINHAS (O Quadrado Branco sumirá) */
+.cw-pill.processing-center .cw-dots {
+    display: flex !important;
+    gap: 6px !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.cw-pill.processing-center .cw-dots span {
+    display: block !important; /* Garante que não colapse */
+    width: 10px !important;    /* Tamanho fixo */
+    height: 10px !important;
+    border-radius: 50% !important; /* FORÇA SER REDONDO */
+    background-color: #fff !important; /* Cor Branca */
+    /* Mantém a animação original de bounce */
+    animation: bounce 1.4s infinite ease-in-out both; 
+}
+
+/* 6. Texto da Dica */
 .cw-status-text {
-    font-size: 14px !important; /* Um pouco maior */
-    color: #E8EAED !important;  /* Texto claro */
+    font-size: 13px !important;
+    color: #e8eaed !important;
     text-align: center;
-    white-space: normal !important; /* Permite quebrar linha se for longo */
-    max-width: 90%;
-    margin-left: 0 !important;
+    max-width: 85%;
+    line-height: 1.4;
     font-weight: 400;
-    letter-spacing: 0.5px;
-    animation: fadeInUp 0.5s ease 0.2s forwards;
     opacity: 0;
     transform: translateY(10px);
+    animation: fadeInUp 0.5s ease 0.3s forwards;
 }
 
-@keyframes fadeInUp {
-    to { opacity: 1; transform: translateY(0); }
+/* 7. Sucesso (Check Verde no Centro) */
+.cw-pill.processing-center .cw-check svg {
+    width: 32px !important;
+    height: 32px !important;
+    stroke: #81C995 !important;
 }
 
-/* 5. Ajuste nos Pontinhos (Dots) */
-.cw-pill.processing-center .cw-dots span {
-    width: 10px; height: 10px; /* Pontos maiores */
-    background: #fff; /* Pontos brancos */
-}
+@keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
         `;
     document.head.appendChild(style);
   }
@@ -365,65 +394,66 @@ export function initCommandCenter(actions) {
   }
 }
 
+import { DataService } from './data-service.js';
+
 export function triggerProcessingAnimation() {
     const pill = document.querySelector('.cw-pill');
     const overlay = document.querySelector('.cw-focus-backdrop');
     const loader = document.getElementById('cw-loader');
     const success = document.getElementById('cw-success');
     
-    // Tenta encontrar ou criar o elemento de texto
+    // Cria/Busca elemento de texto
     let textEl = document.getElementById('cw-status-text');
     
     if (!pill || !loader || !success) return () => {}; 
 
     if (!textEl) {
-        textEl = document.createElement('div'); // Mudei para DIV para aceitar quebra de linha
+        textEl = document.createElement('div');
         textEl.id = 'cw-status-text';
         textEl.className = 'cw-status-text';
-        // Insere DEPOIS do loader
         loader.parentNode.appendChild(textEl);
     }
 
     const startTime = Date.now();
     
-    // Configura texto
+    // Configura
     textEl.textContent = DataService.getRandomTip();
-    textEl.style.display = 'block';
+    textEl.style.display = 'block'; // Garante display block para centralizar
 
-    // --- ATIVA O MODO CENTRALIZADO ---
-    pill.classList.add('processing-center'); // A classe mágica do CSS acima
+    // 1. VAI PRO CENTRO
+    pill.classList.add('processing-center'); 
     if (overlay) overlay.classList.add('active');
     
-    loader.style.display = 'flex';
+    loader.style.display = 'flex'; // Garante flex para as bolinhas
     success.style.display = 'none';
 
     return function finish() {
         const elapsed = Date.now() - startTime;
-        // Aumentei um pouco o tempo mínimo para dar gosto de ver a animação (2.0s)
         const remainingTime = Math.max(0, 2000 - elapsed);
 
         setTimeout(() => {
-            // Sucesso!
+            // 2. MOSTRA SUCESSO NO CENTRO
             loader.style.display = 'none';
             textEl.style.display = 'none'; 
             
             success.style.display = 'block';
             void success.offsetWidth; 
             
-            // Adiciona classe de sucesso (Borda verde)
             pill.classList.add('success');
             
-            // Remove o modo centralizado (A pílula volta voando para o canto)
-            // Fazemos isso com um pequeno delay para mostrar o "Check" verde no centro ainda
+            // Espera um pouco mostrando o Check verde...
             setTimeout(() => {
-                pill.classList.remove('processing-center'); // VOLTA PRO CANTO
+                // 3. VOLTA PARA A LATERAL (A Mágica Fluida)
+                // Ao remover a classe, o CSS 'transition: all 0.7s...' assume o controle
+                pill.classList.remove('processing-center'); 
                 
+                // Espera a viagem de volta terminar para limpar o resto
                 setTimeout(() => {
                     pill.classList.remove('success');
                     if (overlay) overlay.classList.remove('active');
-                }, 500); // Tempo da viagem de volta
+                }, 700); // Sincronizado com a transição do CSS (0.7s)
                 
-            }, 800); // Tempo mostrando o Check verde no centro
+            }, 1000); // Tempo vendo o sucesso
             
         }, remainingTime);
     };
