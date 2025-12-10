@@ -232,37 +232,40 @@ insertBtn.onclick = async () => {
           // 2. Fecha a janela do módulo
           toggleVisibility();
           
-          // 3. INICIA A ANIMAÇÃO (Desfoque + Loader)
+          // 3. INICIA A ANIMAÇÃO (A pílula começa a pensar)
+          // Isso ativa o overlay escuro e o loader colorido
           const finishLoading = triggerProcessingAnimation();
 
           try {
-              // --- A CORREÇÃO MÁGICA ---
-              // Forçamos o código a esperar 1000ms (1 segundo) COM a tela desfocada.
-              // Isso garante que o usuário veja a pílula "pensando" antes de ser jogado para o Gmail.
-              await new Promise(resolve => setTimeout(resolve, 1000));
-
-              // 4. Executa a automação
-              // (Se runQuickEmail não for async, tire o await, mas o delay acima já resolve o visual)
-              await runQuickEmail(email);
+              // --- O TRUQUE DE UX ---
+              // Criamos duas promessas:
+              // A. A execução do email (que é rápida)
+              // B. Um timer mínimo de 800ms (para o usuário ver a animação)
               
-              // 5. Finaliza (Check Verde)
-              // Nota: Como o usuário provavelmente já mudou de aba, 
-              // ele verá o check verde quando voltar para esta aba depois.
+              const automationTask = runQuickEmail(email); // Sua função que funciona
+              const minAnimationTime = new Promise(resolve => setTimeout(resolve, 1000));
+
+              // O 'Promise.all' espera AS DUAS terminarem. 
+              // Se o email levar 10ms, ele espera os 990ms restantes do timer.
+              // Se o email levar 2s, ele espera os 2s.
+              await Promise.all([automationTask, minAnimationTime]);
+              
+              // 4. Finaliza com Check Verde
               finishLoading();
 
           } catch (error) {
               console.error(error);
-              finishLoading(); 
+              finishLoading(); // Destrava a tela mesmo com erro
           }
           
-          // 6. Reseta botão e view
+          // 5. Reseta o botão para o tamanho original
           setTimeout(() => {
               insertBtn.style.transform = "scale(1)";
-              showListView();
+              // Opcional: Se quiser resetar a visualização interna do módulo
+              if (typeof showListView === 'function') showListView();
           }, 300);
       };
-  }
-
+    }
   function showListView() {
       currentView = 'list';
       slider.style.transform = "translateX(0)"; 
