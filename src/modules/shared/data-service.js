@@ -1,7 +1,9 @@
 // src/modules/shared/data-service.js
 
 // SUA URL (Mantida)
-const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbyWu0rzLNjeJL64FtuFsfMOoNP-kL-r4pLjacQrqtkT_POEgpxRymhmoqKU8_SwmQ7b/exec";
+const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbyTd5XYrIz4Y92H5Ay4XeL2wwhuR_N3zXSjW3LIqZDEL7VTmvFkspbGoQ8UTCvZR4zTRA/exec";
+// src/modules/shared/data-service.js
+
 
 const CACHE_KEY_BROADCAST = "cw_data_broadcast";
 const CACHE_KEY_TIPS = "cw_data_tips";
@@ -9,104 +11,97 @@ const CACHE_KEY_TIPS = "cw_data_tips";
 const FALLBACK_TIPS = [
     "Processando sua solicitação...",
     "Dica: Mantenha suas notas organizadas.",
-    "Sincronizando com a base de dados...",
     "Aguarde um momento...",
-    "Dica: Use os Templates de Email para ganhar tempo.",
-    "Quase lá...",
-    "Dica: Respire fundo e beba água."
+    "Quase lá..."
 ];
+
+// Função Helper Interna para JSONP
+function jsonpFetch(operation) {
+    return new Promise((resolve, reject) => {
+        // 1. Cria nome único para a função
+        const callbackName = 'cw_cb_' + Math.round(10000 * Math.random());
+        const script = document.createElement('script');
+        
+        // 2. Define o que acontece quando o Google responder
+        window[callbackName] = (data) => {
+            document.body.removeChild(script);
+            delete window[callbackName];
+            resolve(data);
+        };
+
+        // 3. Monta a URL com callback e timestamp (anti-cache)
+        script.src = `${API_URL}?op=${operation}&callback=${callbackName}&t=${Date.now()}`;
+        
+        // 4. Tratamento de erro
+        script.onerror = () => {
+            document.body.removeChild(script);
+            delete window[callbackName];
+            reject(new Error("JSONP Load Error"));
+        };
+
+        // 5. Dispara
+        document.body.appendChild(script);
+    });
+}
 
 export const DataService = {
     
-    // 1. BUSCAR DICAS
+    // 1. BUSCAR DICAS (Via JSONP)
     fetchTips: async () => {
         try {
-            // 'credentials: include' é vital para scripts corporativos (/a/google.com)
-            const response = await fetch(`${API_URL}?op=tips`, { credentials: 'include' });
+            console.log("📥 Baixando dicas via JSONP...");
+            const data = await jsonpFetch('tips');
             
-            // Verifica se deu erro de rede ou Auth (Google retornando página de login)
-            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-            
-            // Segurança: Lê texto primeiro para garantir que é JSON
-            const text = await response.text();
-            if (text.trim().startsWith("<")) throw new Error("Auth Error: Recebido HTML em vez de JSON");
-
-            const data = JSON.parse(text);
-
             if (data && data.tips && Array.isArray(data.tips)) {
                 localStorage.setItem(CACHE_KEY_TIPS, JSON.stringify(data.tips));
-                console.log("✅ Dicas atualizadas.");
+                console.log("✅ Dicas atualizadas:", data.tips.length);
             }
         } catch (err) {
-            console.warn("TechSol: Falha ao baixar dicas (Offline/Auth).", err);
+            console.warn("TechSol: Erro ao baixar dicas (Offline).", err);
         }
     },
 
-    // 2. BUSCAR BROADCASTS
-   fetchData: async () => {
+    // 2. BUSCAR BROADCASTS (Via JSONP)
+    fetchData: async () => {
         try {
-            // ADICIONEI: '&t=' + Date.now() para evitar cache de navegador
-            const cacheBuster = `&t=${Date.now()}`;
-            const response = await fetch(`${API_URL}?op=broadcast${cacheBuster}`, { credentials: 'include' });
+            console.log("📥 Baixando Broadcasts via JSONP...");
+            const data = await jsonpFetch('broadcast');
             
-            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-
-            const text = await response.text();
-            if (text.trim().startsWith("<")) throw new Error("Auth Error: Recebido HTML");
-
-            const data = JSON.parse(text);
-
             if (data && data.broadcast) {
-                // Salva a versão nova
                 localStorage.setItem(CACHE_KEY_BROADCAST, JSON.stringify(data.broadcast));
-                return data; // Retorna dados FRESCOS
+                console.log("✅ Broadcasts atualizados:", data.broadcast.length);
+                return data;
             }
         } catch (err) {
-            console.warn("TechSol: Erro ao buscar Broadcasts. Usando Cache.", err);
+            console.warn("TechSol: Erro ao buscar Broadcasts.", err);
         }
-        
-        // Se falhou tudo, aí sim usa o cache
+        // Fallback Cache
         return {
             broadcast: JSON.parse(localStorage.getItem(CACHE_KEY_BROADCAST) || "[]")
         };
     },
 
-    // 3. CACHE GETTERS
     getCachedBroadcasts: () => JSON.parse(localStorage.getItem(CACHE_KEY_BROADCAST) || "[]"),
     
-    // 4. GET RANDOM TIP
     getRandomTip: () => {
         let tips = FALLBACK_TIPS;
         const cached = localStorage.getItem(CACHE_KEY_TIPS);
-        
         if (cached) {
-            try {
-                const parsed = JSON.parse(cached);
-                if (parsed.length > 0) tips = parsed;
-            } catch (e) {
-                localStorage.removeItem(CACHE_KEY_TIPS);
-            }
+            try { tips = JSON.parse(cached); } catch(e){}
         }
         return tips[Math.floor(Math.random() * tips.length)];
     },
 
-    // 5. LOG USAGE (Fire & Forget)
     logUsage: (actionType, details = "") => {
+        // Logs continuam via fetch no-cors (POST é mais chato com JSONP)
         const user = window._USER_ID || "agente_anonimo"; 
+        const payload = { op: "log", user, action: actionType, meta: details };
         
-        const payload = { 
-            op: "log", 
-            user: user, 
-            action: actionType, 
-            meta: details 
-        };
-
-        // Usa text/plain para evitar Preflight (OPTIONS) que o Apps Script não suporta
         fetch(API_URL, {
             method: "POST",
             mode: "no-cors", 
             headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify(payload)
-        }).catch(e => console.log("Log error (ignorable)", e));
+        }).catch(e => console.log("Log fail", e));
     }
 };
