@@ -269,29 +269,43 @@ export const styleFloatingButton = {
   fontFamily: "'Google Sans', 'Roboto'",
 };
 
+// src/modules/shared/utils.js
+
 export const stylePopup = {
-  // ... (mantenha position, top, left, width, zIndex, etc) ...
   position: "fixed",
-  top: "50%",
-  left: "50%",
-  width: "400px",
-  maxHeight: "85vh",
-  zIndex: "99999",
-  overflow: "hidden",
+  top: "80px", // Posição inicial padrão
+  right: "80px",
+  width: "350px",
+  
+  // O SEGREDO APPLE (Glassmorphism + Sombra em Camadas)
+  backgroundColor: "rgba(255, 255, 255, 0.98)", // Quase sólido, mas permite luz passar (se tiver backdrop-filter)
+  backdropFilter: "blur(20px)", // O efeito "vidro jateado" do macOS
+  webkitBackdropFilter: "blur(20px)", 
+  
+  borderRadius: "16px", // Curva suave (Squircle)
+  
+  // A SOMBRA (Depth Stack)
+  // 1. 0 0 1px: Uma linha de contorno quase invisível para definição
+  // 2. 0 8px 24px: A sombra de elevação principal (suave)
+  // 3. 0 20px 60px: A sombra de ambiente (muito difusa, dá a sensação de flutuar alto)
+  boxShadow: `
+    0 0 1px rgba(0,0,0,0.08), 
+    0 8px 24px rgba(0,0,0,0.12),
+    0 20px 60px rgba(0,0,0,0.08)
+  `,
+  
+  border: "1px solid rgba(255, 255, 255, 0.6)", // Borda interna de luz
+  zIndex: "9999",
   display: "flex",
   flexDirection: "column",
-  backgroundColor: "rgba(248, 249, 250, 0.96)",
-  backdropFilter: "blur(20px) saturate(180%)",
-  borderRadius: "20px",
-  boxShadow: "0 20px 50px -12px rgba(0,0,0,0.25), 0 0 0 1px rgba(0,0,0,0.05)",
-  opacity: "0",
-  pointerEvents: "none",
-  fontFamily: "'Google Sans', 'Roboto'",
-  transform: "translate(-50%, -50%)", 
-  transition: "all 0.5s cubic-bezier(0.19, 1, 0.22, 1), opacity 0.3s ease",
-
+  fontFamily: "'Google Sans', Roboto, sans-serif",
+  fontSize: "14px",
+  color: "#3c4043",
+  
+  // Garante animações de gpu aceleradas
+  willChange: "transform, opacity, width, height",
+  transformOrigin: "top right" // Para o efeito Genie sair do lugar certo
 };
-
 export const stylePopupHeader = {
   display: "flex",
   flexDirection: "row",
