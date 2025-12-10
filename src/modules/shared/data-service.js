@@ -1,69 +1,70 @@
 // src/modules/shared/data-service.js
 
 // SUA URL DO GOOGLE APPS SCRIPT
-const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbyMRSU73aP76rZCw-dVLjFh7LLskfwPOiQLM1mzrbNuMX0mhsdSzd75_sbJSWfocGF95A/exec";
+const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbwojbYGOUlE6g2HEMLAtF6U7caJX355Y3dzJaKqD3UOpztRjH0LmBldXa1lb0gNRbGT8w/exec";
+// src/modules/shared/data-service.js
 
 const CACHE_KEY_BROADCAST = "cw_data_broadcast";
 const CACHE_KEY_TIPS = "cw_data_tips";
 
 export const DataService = {
     
-    // 1. BUSCAR DADOS
-    fetchData: async () => {
-        try {
-            // Adicionamos um timestamp para evitar cache do navegador na requisição
-            const bustCache = "?t=" + new Date().getTime();
+    // 1. BUSCAR DADOS (Via JSONP - O "Cavalo de Troia")
+    fetchData: () => {
+        return new Promise((resolve, reject) => {
+            // Cria um nome de função único temporário
+            const callbackName = "cw_callback_" + Math.round(100000 * Math.random());
             
-            const response = await fetch(API_URL + bustCache, { 
-                method: "GET",
-                // IMPORTANTE:
-                // 1. 'follow': Segue o redirecionamento do Google
-                // 2. SEM headers customizados para evitar preflight OPTIONS que falha no Google
-                redirect: "follow" 
-            });
-            
-            if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
-
-            const data = await response.json();
-
-            // Validação simples para garantir que veio o que esperamos
-            if (data && (data.broadcast || data.tips)) {
+            // Cria a função global que o Google vai chamar
+            window[callbackName] = (data) => {
+                // 1. Salva no Cache
                 if (data.broadcast) localStorage.setItem(CACHE_KEY_BROADCAST, JSON.stringify(data.broadcast));
                 if (data.tips) localStorage.setItem(CACHE_KEY_TIPS, JSON.stringify(data.tips));
-                return data;
-            } else {
-                throw new Error("JSON inválido recebido");
-            }
+                
+                // 2. Limpa a sujeira (remove o script e a função global)
+                document.body.removeChild(script);
+                delete window[callbackName];
+                
+                resolve(data);
+            };
 
-        } catch (error) {
-            console.warn("TechSol: Falha na nuvem, usando cache.", error);
-            // Retorna cache silenciosamente
+            // Cria a tag <script> invisível
+            const script = document.createElement('script');
+            script.src = `${API_URL}?callback=${callbackName}`;
+            script.onerror = (err) => {
+                reject(err);
+                document.body.removeChild(script);
+                delete window[callbackName];
+            };
+            
+            document.body.appendChild(script);
+        }).catch(err => {
+            console.warn("TechSol: Erro na nuvem (JSONP), usando cache.", err);
             return {
                 broadcast: JSON.parse(localStorage.getItem(CACHE_KEY_BROADCAST) || "[]"),
                 tips: JSON.parse(localStorage.getItem(CACHE_KEY_TIPS) || "[]")
             };
-        }
+        });
     },
 
-    // ... (Mantenha o resto: getCachedBroadcasts, logUsage, etc iguais) ...
-    getCachedBroadcasts: () => {
-        return JSON.parse(localStorage.getItem(CACHE_KEY_BROADCAST) || "[]");
-    },
-    
-    getCachedTips: () => {
-        return JSON.parse(localStorage.getItem(CACHE_KEY_TIPS) || "[]");
-    },
+    getCachedBroadcasts: () => JSON.parse(localStorage.getItem(CACHE_KEY_BROADCAST) || "[]"),
+    getCachedTips: () => JSON.parse(localStorage.getItem(CACHE_KEY_TIPS) || "[]"),
 
+    // 2. LOG USAGE (Via no-cors)
+    // Para escrever (POST), usamos fetch com mode: 'no-cors'.
+    // Isso manda o dado, mas não espera resposta (não gera erro de CORS).
     logUsage: (actionType, details = "") => {
         const user = window._USER_ID || document.querySelector('meta[name="user-login"]')?.content || "unknown_agent";
         const payload = { user, action: actionType, details };
 
-        // Log usa POST com no-cors (Fire and Forget)
+        // Transformamos em form-data para garantir que passe pelos firewalls chatos
+        const formData = new FormData();
+        formData.append('data', JSON.stringify(payload));
+
         fetch(API_URL, {
             method: "POST",
-            mode: "no-cors", 
-            headers: { "Content-Type": "text/plain" }, // Text/plain evita preflight
-            body: JSON.stringify(payload)
-        }).catch(err => console.error("Log failed", err));
+            mode: "no-cors", // <--- O Segredo para não dar erro no POST
+            body: formData
+        }).catch(e => console.log("Log error (ignorable)", e));
     }
 };
