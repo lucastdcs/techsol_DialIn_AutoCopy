@@ -1,5 +1,7 @@
 // src/modules/shared/command-center.js
 
+import { DataService } from './data-service.js';
+
 const COLORS = {
   glassBg: "rgba(61, 61, 61, 0.77)",
   glassBorder: "rgba(255, 255, 255, 0.15)",
@@ -139,39 +141,74 @@ export function initCommandCenter(actions) {
             .cw-pill.side-left .cw-btn::after { left: 60px; transform-origin: left center; }
             .cw-pill.side-left .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
 
-            .cw-pill.processing > :not(.cw-status-container) { opacity: 0; pointer-events: none; transform: scale(0.8); }
-            .cw-status-container {
-                position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                display: flex; align-items: center; justify-content: center;
-                opacity: 0; pointer-events: none; transition: opacity 0.3s ease; width: 100%; height: 100%;
-            }
-            .cw-pill.processing .cw-status-container { opacity: 1; }
-            .cw-dots { display: flex; gap: 4px; }
-            .cw-dots span { width: 6px; height: 6px; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out both; }
-            .cw-dots span:nth-child(1) { background: ${COLORS.blue}; animation-delay: -0.32s; }
-            .cw-dots span:nth-child(2) { background: ${COLORS.red}; animation-delay: -0.16s; }
-            .cw-dots span:nth-child(3) { background: ${COLORS.green}; }
-            @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
-            .cw-check svg { width: 28px; height: 28px; stroke-dasharray: 50; stroke-dashoffset: 50; transition: stroke-dashoffset 0.5s ease 0.2s; }
-            .cw-pill.success .cw-check svg { stroke-dashoffset: 0; }
+            /* --- BLOCO NOVO: DYNAMIC CENTER LOADING --- */
 
-            .cw-status-text {
-              font-size: 12px; 
-              color: #5f6368; 
-              margin-left: 12px; 
-              font-weight: 500;
-              white-space: nowrap; 
-              overflow: hidden; 
-              text-overflow: ellipsis; 
-              max-width: 160px;
-              opacity: 0; 
-              animation: fadeInText 0.4s forwards 0.2s;
-          }
+/* 1. O Estado Centralizado (A Mágica) */
+.cw-pill.processing-center {
+    /* Centraliza na tela */
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    
+    /* Morpha para Horizontal */
+    width: 320px !important;    /* Mais largo para caber texto */
+    height: 100px !important;   /* Altura fixa */
+    border-radius: 24px !important;
+    
+    /* Layout Interno */
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 !important;
+    background: rgba(32, 33, 36, 0.95) !important; /* Fundo mais sólido no centro */
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5) !important;
+}
 
-          @keyframes fadeInText { 
-              from { opacity: 0; transform: translateX(-5px); } 
-              to { opacity: 1; transform: translateX(0); } 
-          }
+/* 2. Esconde os botões e o grip durante a viagem */
+.cw-pill.processing-center > .cw-btn,
+.cw-pill.processing-center > .cw-sep,
+.cw-pill.processing-center > .cw-grip {
+    opacity: 0;
+    pointer-events: none;
+    position: absolute; /* Tira do fluxo para não atrapalhar o layout */
+    transform: scale(0.5);
+}
+
+/* 3. Ajusta o Container de Status (Loading + Texto) */
+.cw-pill.processing-center .cw-status-container {
+    position: relative !important; /* Reseta posicionamento absoluto */
+    top: auto !important; left: auto !important;
+    transform: none !important;
+    display: flex;
+    flex-direction: column; /* Pontos em cima, Texto embaixo */
+    align-items: center;
+    gap: 16px;
+    opacity: 1;
+}
+
+/* 4. Texto da Dica Centralizado */
+.cw-status-text {
+    font-size: 14px !important; /* Um pouco maior */
+    color: #E8EAED !important;  /* Texto claro */
+    text-align: center;
+    white-space: normal !important; /* Permite quebrar linha se for longo */
+    max-width: 90%;
+    margin-left: 0 !important;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    animation: fadeInUp 0.5s ease 0.2s forwards;
+    opacity: 0;
+    transform: translateY(10px);
+}
+
+@keyframes fadeInUp {
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 5. Ajuste nos Pontinhos (Dots) */
+.cw-pill.processing-center .cw-dots span {
+    width: 10px; height: 10px; /* Pontos maiores */
+    background: #fff; /* Pontos brancos */
+}
         `;
     document.head.appendChild(style);
   }
@@ -328,36 +365,33 @@ export function initCommandCenter(actions) {
   }
 }
 
-// Adicione o import no topo do arquivo se não houver
-import { DataService } from './data-service.js';
-
 export function triggerProcessingAnimation() {
     const pill = document.querySelector('.cw-pill');
     const overlay = document.querySelector('.cw-focus-backdrop');
     const loader = document.getElementById('cw-loader');
     const success = document.getElementById('cw-success');
     
-    // 1. Tenta encontrar ou criar o elemento de texto da Dica
+    // Tenta encontrar ou criar o elemento de texto
     let textEl = document.getElementById('cw-status-text');
     
     if (!pill || !loader || !success) return () => {}; 
 
-    // Criação dinâmica do elemento de texto (se for a primeira vez)
     if (!textEl) {
-        textEl = document.createElement('span');
+        textEl = document.createElement('div'); // Mudei para DIV para aceitar quebra de linha
         textEl.id = 'cw-status-text';
         textEl.className = 'cw-status-text';
-        // Insere dentro do container de status, logo após o loader
+        // Insere DEPOIS do loader
         loader.parentNode.appendChild(textEl);
     }
 
     const startTime = Date.now();
     
-    // 2. Busca uma frase nova e exibe
+    // Configura texto
     textEl.textContent = DataService.getRandomTip();
     textEl.style.display = 'block';
 
-    pill.classList.add('processing');
+    // --- ATIVA O MODO CENTRALIZADO ---
+    pill.classList.add('processing-center'); // A classe mágica do CSS acima
     if (overlay) overlay.classList.add('active');
     
     loader.style.display = 'flex';
@@ -365,22 +399,32 @@ export function triggerProcessingAnimation() {
 
     return function finish() {
         const elapsed = Date.now() - startTime;
-        // Garante leitura mínima de 1.5s
-        const remainingTime = Math.max(0, 1500 - elapsed);
+        // Aumentei um pouco o tempo mínimo para dar gosto de ver a animação (2.0s)
+        const remainingTime = Math.max(0, 2000 - elapsed);
 
         setTimeout(() => {
+            // Sucesso!
             loader.style.display = 'none';
-            textEl.style.display = 'none'; // 3. Esconde o texto ao finalizar
+            textEl.style.display = 'none'; 
             
             success.style.display = 'block';
-            void success.offsetWidth; // Força reinício da animação CSS
+            void success.offsetWidth; 
             
+            // Adiciona classe de sucesso (Borda verde)
             pill.classList.add('success');
             
+            // Remove o modo centralizado (A pílula volta voando para o canto)
+            // Fazemos isso com um pequeno delay para mostrar o "Check" verde no centro ainda
             setTimeout(() => {
-                pill.classList.remove('processing', 'success');
-                if (overlay) overlay.classList.remove('active');
-            }, 2000);
+                pill.classList.remove('processing-center'); // VOLTA PRO CANTO
+                
+                setTimeout(() => {
+                    pill.classList.remove('success');
+                    if (overlay) overlay.classList.remove('active');
+                }, 500); // Tempo da viagem de volta
+                
+            }, 800); // Tempo mostrando o Check verde no centro
+            
         }, remainingTime);
     };
 }
