@@ -141,103 +141,67 @@ export function initCommandCenter(actions) {
             .cw-pill.side-left .cw-btn::after { left: 60px; transform-origin: left center; }
             .cw-pill.side-left .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
 
-          /* --- CSS DINÂMICO CENTRAL (Versão Fluida) --- */
+/* --- CSS DINÂMICO CENTRAL (Abordagem "Fresh DOM") --- */
 
-/* 1. Base da Pílula (Ajuste para garantir a volta suave) */
+/* 1. Base da Pílula (Transição suave para a volta) */
 .cw-pill {
-    /* Adicione 'all' na transição base para animar top/left/width/height na volta */
-    transition: all 0.7s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease;
+    transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* 2. O Estado Centralizado (Ida) */
+/* 2. O Estado Centralizado (O Container) */
 .cw-pill.processing-center {
-    /* Centraliza */
-    top: 50% !important;
-    left: 50% !important;
+    top: 50% !important; left: 50% !important;
     transform: translate(-50%, -50%) !important;
-    
-    /* Forma */
-    width: 300px !important;
-    height: 90px !important;
-    border-radius: 20px !important;
-    
-    /* Estilo */
+    width: 320px !important; height: 120px !important;
+    border-radius: 24px !important;
     background: rgba(32, 33, 36, 0.98) !important;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
-    
-    /* Layout */
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    align-items: center !important;
     padding: 0 !important;
-}
-
-/* 3. Esconde itens antigos suavemente */
-.cw-pill.processing-center > .cw-btn,
-.cw-pill.processing-center > .cw-sep,
-.cw-pill.processing-center > .cw-grip {
-    opacity: 0;
-    pointer-events: none;
-    position: absolute;
-    transform: scale(0.8);
-    transition: opacity 0.2s ease; /* Some rápido */
-}
-
-/* 4. Container de Status (Garante que apareça) */
-.cw-pill.processing-center .cw-status-container {
-    position: relative !important;
-    top: auto !important; left: auto !important;
-    transform: none !important;
-    opacity: 1 !important;
-    width: 100% !important;
-    height: 100% !important;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.6) !important;
+    
+    /* Centraliza o conteúdo novo */
     display: flex !important;
-    flex-direction: column !important;
-    justify-content: center !important;
-    align-items: center !important;
-    gap: 12px; /* Espaço entre bolinhas e texto */
-}
-
-/* 5. CORREÇÃO DAS BOLINHAS (O Quadrado Branco sumirá) */
-.cw-pill.processing-center .cw-dots {
-    display: flex !important;
-    gap: 6px !important;
     align-items: center !important;
     justify-content: center !important;
 }
 
-.cw-pill.processing-center .cw-dots span {
-    display: block !important; /* Garante que não colapse */
-    width: 10px !important;    /* Tamanho fixo */
-    height: 10px !important;
-    border-radius: 50% !important; /* FORÇA SER REDONDO */
-    background-color: #fff !important; /* Cor Branca */
-    /* Mantém a animação original de bounce */
-    animation: bounce 1.4s infinite ease-in-out both; 
+/* 3. O TRUQUE: Esconde TUDO que era original da pílula */
+.cw-pill.processing-center > *:not(.cw-temp-center-content) {
+    display: none !important;
 }
 
-/* 6. Texto da Dica */
-.cw-status-text {
-    font-size: 13px !important;
-    color: #e8eaed !important;
-    text-align: center;
-    max-width: 85%;
-    line-height: 1.4;
-    font-weight: 400;
-    opacity: 0;
-    transform: translateY(10px);
-    animation: fadeInUp 0.5s ease 0.3s forwards;
+/* 4. Estilo do NOVO conteúdo temporário */
+.cw-temp-center-content {
+    display: flex; flex-direction: column; align-items: center; gap: 16px;
+    opacity: 0; animation: fadeIn 0.3s ease forwards 0.2s; color: #fff;
+    width: 100%;
 }
 
-/* 7. Sucesso (Check Verde no Centro) */
-.cw-pill.processing-center .cw-check svg {
-    width: 32px !important;
-    height: 32px !important;
-    stroke: #81C995 !important;
+/* 5. Bolinhas NOVAS (Garante que apareçam) */
+.cw-temp-dots { display: flex; gap: 10px; }
+.cw-temp-dots span {
+    width: 12px; height: 12px; border-radius: 50%; background: #fff;
+    animation: bounce 1.4s infinite ease-in-out both;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+/* Reutiliza os delays de animação existentes */
+.cw-temp-dots span:nth-child(1) { animation-delay: -0.32s; }
+.cw-temp-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+/* 6. Texto NOVO */
+.cw-temp-text {
+    font-size: 15px; font-weight: 400; text-align: center; max-width: 90%; line-height: 1.4;
 }
 
-@keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+/* 7. Ícone de Sucesso NOVO */
+.cw-temp-success { display: none; color: #81C995; }
+.cw-temp-success svg { width: 42px; height: 42px; }
+.cw-temp-success.active { 
+    display: block; 
+    animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); 
+}
+
+@keyframes fadeIn { to { opacity: 1; } }
+@keyframes popIn { from { transform: scale(0.5); opacity:0; } to { transform: scale(1); opacity:1;} }
         `;
     document.head.appendChild(style);
   }
@@ -399,62 +363,65 @@ import { DataService } from './data-service.js';
 export function triggerProcessingAnimation() {
     const pill = document.querySelector('.cw-pill');
     const overlay = document.querySelector('.cw-focus-backdrop');
-    const loader = document.getElementById('cw-loader');
-    const success = document.getElementById('cw-success');
-    
-    // Cria/Busca elemento de texto
-    let textEl = document.getElementById('cw-status-text');
-    
-    if (!pill || !loader || !success) return () => {}; 
+    if (!pill) return () => {}; 
 
-    if (!textEl) {
-        textEl = document.createElement('div');
-        textEl.id = 'cw-status-text';
-        textEl.className = 'cw-status-text';
-        loader.parentNode.appendChild(textEl);
-    }
+    // 1. CRIAR O CONTEÚDO TEMPORÁRIO DO ZERO (A solução do problema)
+    const tempContainer = document.createElement('div');
+    tempContainer.className = 'cw-temp-center-content';
+
+    const tipText = DataService.getRandomTip();
+
+    // Injeta HTML "fresco" das bolinhas e do texto
+    tempContainer.innerHTML = `
+        <div class="cw-temp-dots"><span></span><span></span><span></span></div>
+        <div class="cw-temp-text">${tipText}</div>
+        <div class="cw-temp-success">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        </div>
+    `;
+
+    // Adiciona na pílula
+    pill.appendChild(tempContainer);
 
     const startTime = Date.now();
-    
-    // Configura
-    textEl.textContent = DataService.getRandomTip();
-    textEl.style.display = 'block'; // Garante display block para centralizar
 
-    // 1. VAI PRO CENTRO
-    pill.classList.add('processing-center'); 
+    // 2. VAI PRO CENTRO (O CSS esconde os botões velhos e mostra o novo container)
+    pill.classList.add('processing-center');
     if (overlay) overlay.classList.add('active');
-    
-    loader.style.display = 'flex'; // Garante flex para as bolinhas
-    success.style.display = 'none';
 
+    // Função de Finalização
     return function finish() {
         const elapsed = Date.now() - startTime;
         const remainingTime = Math.max(0, 2000 - elapsed);
 
         setTimeout(() => {
-            // 2. MOSTRA SUCESSO NO CENTRO
-            loader.style.display = 'none';
-            textEl.style.display = 'none'; 
+            // 3. MOSTRA SUCESSO NO CENTRO
+            const dots = tempContainer.querySelector('.cw-temp-dots');
+            const text = tempContainer.querySelector('.cw-temp-text');
+            const success = tempContainer.querySelector('.cw-temp-success');
+
+            if(dots) dots.style.display = 'none';
+            if(text) text.style.display = 'none';
+            if(success) success.classList.add('active'); // Ativa animação de pop-in
             
-            success.style.display = 'block';
-            void success.offsetWidth; 
-            
-            pill.classList.add('success');
-            
-            // Espera um pouco mostrando o Check verde...
+            pill.classList.add('success'); // Borda verde
+
+            // Espera vendo o sucesso...
             setTimeout(() => {
-                // 3. VOLTA PARA A LATERAL (A Mágica Fluida)
-                // Ao remover a classe, o CSS 'transition: all 0.7s...' assume o controle
-                pill.classList.remove('processing-center'); 
-                
-                // Espera a viagem de volta terminar para limpar o resto
+                // 4. VOLTA PRA LATERAL (A transição suave do CSS assume)
+                pill.classList.remove('processing-center');
+
+                // Espera a viagem de volta terminar para limpar a bagunça
                 setTimeout(() => {
+                    // Remove o container temporário do DOM
+                    if(tempContainer.parentNode) tempContainer.parentNode.removeChild(tempContainer);
+                    
                     pill.classList.remove('success');
                     if (overlay) overlay.classList.remove('active');
-                }, 700); // Sincronizado com a transição do CSS (0.7s)
-                
-            }, 1000); // Tempo vendo o sucesso
-            
+                }, 800); // Sincronizado com os 0.8s do CSS base
+
+            }, 1200); // Tempo mostrando o check verde
+
         }, remainingTime);
     };
 }
