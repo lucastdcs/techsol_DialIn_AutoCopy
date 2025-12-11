@@ -179,8 +179,8 @@ export function initCommandCenter(actions) {
 /* 5. AS BOLINHAS DO GOOGLE (Réplica exata da sua original) */
 .cw-center-dots { display: flex; gap: 8px; }
 .cw-center-dots span {
-    width: 10px; height: 10px; border-radius: 50%;
-    animation: bounce 1.4s infinite ease-in-out both;
+    width: 8px; height: 8px; border-radius: 50%;
+    animation: googleBounce 1.4s infinite ease-in-out both;
 }
 /* Usa as variáveis COLORS que já existem no seu arquivo */
 .cw-center-dots span:nth-child(1) { background-color: ${COLORS.blue}; animation-delay: -0.32s; }
@@ -189,8 +189,18 @@ export function initCommandCenter(actions) {
 
 /* 6. Texto da Dica */
 .cw-center-text {
-    font-size: 13px; color: #E8EAED; text-align: center; max-width: 90%;
-    font-weight: 400; line-height: 1.4;
+    font-size: 13px; 
+    color: #E8EAED; 
+    text-align: center; 
+    max-width: 90%;
+    font-weight: 500; /* Aumentei um pouco o peso */
+    line-height: 1.4;
+    
+    /* A MÁGICA: */
+    opacity: 0;
+    transform: translateY(10px); /* Começa um pouco para baixo */
+    animation: textSlideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation-delay: 0.2s; /* Espera as bolinhas começarem */
 }
 
 /* 7. Sucesso */
@@ -200,6 +210,13 @@ export function initCommandCenter(actions) {
 
 @keyframes fadeIn { to { opacity: 1; } }
 @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes googleBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+    @keyframes textSlideUp {
+    to { opacity: 1; transform: translateY(0); }
+}
         `;
     document.head.appendChild(style);
   }
