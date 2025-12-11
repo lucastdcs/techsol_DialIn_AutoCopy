@@ -909,6 +909,24 @@
                     <br>
                     <p><strong>[Seu Nome]</strong><br>Time de Solu\xE7\xF5es T\xE9cnicas Cognizant, em nome do Google</p>
                 `}]}};function no(){let e="v4.0.0",t=Object.keys(Pe)[0],n="",o="list",l={display:"flex",flexDirection:"column",height:"100%",position:"relative",overflow:"hidden",background:"#FAFAFA"},s={display:"flex",width:"200%",height:"100%",transition:"transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)",transform:"translateX(0)"},a={width:"50%",height:"100%",display:"flex",flexDirection:"column",overflow:"hidden",position:"relative"},i={width:"100%",padding:"10px 12px 10px 36px",borderRadius:"8px",border:"none",background:"#F0F2F5",fontSize:"14px",color:"#202124",boxSizing:"border-box",outline:"none",transition:"all 0.2s ease",backgroundImage:`url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="%235f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>')`,backgroundRepeat:"no-repeat",backgroundPosition:"10px center"},c={display:"flex",gap:"6px",padding:"4px 4px 8px 4px",overflowX:"auto",scrollbarWidth:"none"},m={padding:"6px 12px",borderRadius:"16px",border:"1px solid transparent",background:"transparent",color:"#5f6368",fontSize:"12px",fontWeight:"500",cursor:"pointer",transition:"all 0.2s ease",flexShrink:"0"},y={background:"#E8F0FE",color:"#1967D2",fontWeight:"600"},u={display:"flex",alignItems:"center",justifyContent:"space-between",padding:"12px 16px",marginBottom:"6px",borderRadius:"8px",background:"#fff",border:"1px solid #dadce0",cursor:"pointer",transition:"all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)",position:"relative",overflow:"hidden"},T=!1,h=document.createElement("div");h.id="quick-email-popup",Object.assign(h.style,Se,{right:"100px",width:"480px",height:"600px",opacity:"0",pointerEvents:"none"});let g={popup:h,googleLine:null,focusElement:null};function x(){T=!T,Ae(T,h,"cw-btn-email"),T||setTimeout(()=>O(),300)}let A=we(h,"Emails R\xE1pidos",e,"Selecione, visualize e insira com um clique.",g,()=>x()),I=document.createElement("div");Object.assign(I.style,l);let N=document.createElement("div");Object.assign(N.style,s);let G=document.createElement("div");Object.assign(G.style,a);let L=document.createElement("div");Object.assign(L.style,{padding:"16px 16px 4px 16px",flexShrink:"0",background:"#fff",zIndex:"10",display:"flex",flexDirection:"column",gap:"8px",borderBottom:"1px solid #f1f3f4"});let b=document.createElement("input");b.placeholder="Buscar template...",Object.assign(b.style,i),b.onfocus=()=>{b.style.background="#fff",b.style.boxShadow="0 2px 8px rgba(0,0,0,0.05)"},b.onblur=()=>{b.style.background="#F0F2F5",b.style.boxShadow="none"},g.focusElement=b;let f=document.createElement("div");Object.assign(f.style,c);let r=document.createElement("div");Object.assign(r.style,{padding:"12px 16px",overflowY:"auto",flexGrow:"1"}),L.appendChild(b),L.appendChild(f),G.appendChild(L),G.appendChild(r);let p=document.createElement("div");Object.assign(p.style,a);let C=document.createElement("div");Object.assign(C.style,{padding:"0",overflowY:"auto",flexGrow:"1",background:"#fff"}),p.appendChild(C),N.appendChild(G),N.appendChild(p),I.appendChild(N),h.appendChild(A),h.appendChild(I);let d=document.createElement("div");Object.assign(d.style,{padding:"8px 16px",borderTop:"1px solid #eee",textAlign:"center",fontSize:"10px",color:"#9aa0a6",background:"#fff",flexShrink:"0"}),d.textContent="created by lucaste@",h.appendChild(d),document.body.appendChild(h);function v(B){o="detail",N.style.transform="translateX(-50%)";let D='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',_='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>';C.innerHTML=`
+        <style>
+            /* CSS Local para limpar a formata\xE7\xE3o nativa e deixar elegante */
+            .cw-email-body-content p {
+                margin: 0 0 10px 0 !important; /* Apenas uma margem suave abaixo */
+                line-height: 1.5 !important;
+            }
+            /* Se houver <br> entre <p>, isso evita buracos duplos */
+            .cw-email-body-content br {
+                display: block;
+                content: "";
+                margin-top: 0;
+            }
+            /* Remove margem do \xFAltimo p para n\xE3o sobrar espa\xE7o no fim */
+            .cw-email-body-content p:last-child {
+                margin-bottom: 0 !important;
+            }
+        </style>
+
         <div style="
             position: sticky; top: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
             border-bottom: 1px solid #f1f3f4; padding: 12px 20px; z-index: 10;
@@ -935,21 +953,23 @@
             
             <div>
                 <div style="font-size:11px; font-weight:700; color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Mensagem</div>
-                <div style="
+                
+                <div class="cw-email-body-content" style="
                     font-size:13px; 
-                    line-height:1.35; /* <--- AJUSTE DE ESPA\xC7AMENTO (Mais compacto) */
                     color:#3c4043; 
-                    white-space: pre-wrap; 
+                    white-space: normal; /* Mudado de pre-wrap para normal */
                     padding: 0 4px;
-                ">${B.body}</div>
+                ">
+                    ${B.body}
+                </div>
             </div>
         </div>
 
         <div style="
             position: sticky; bottom: 0; left: 0; width: 100%; 
             padding: 20px; box-sizing: border-box;
-            background: linear-gradient(to top, #ffffff 80%, rgba(255,255,255,0)); /* Fade out no topo */
-            margin-top: auto; /* Empurra para o fim se sobrar espa\xE7o */
+            background: linear-gradient(to top, #ffffff 80%, rgba(255,255,255,0)); 
+            margin-top: auto; 
         ">
             <button id="csa-insert-btn" style="
                 width: 100%; padding: 12px; 
