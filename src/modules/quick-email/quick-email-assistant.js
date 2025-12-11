@@ -164,6 +164,24 @@ export function initQuickEmailAssistant() {
         const iconSendWhite = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
 
         detailContent.innerHTML = `
+        <style>
+            /* CSS Local para limpar a formatação nativa e deixar elegante */
+            .cw-email-body-content p {
+                margin: 0 0 10px 0 !important; /* Apenas uma margem suave abaixo */
+                line-height: 1.5 !important;
+            }
+            /* Se houver <br> entre <p>, isso evita buracos duplos */
+            .cw-email-body-content br {
+                display: block;
+                content: "";
+                margin-top: 0;
+            }
+            /* Remove margem do último p para não sobrar espaço no fim */
+            .cw-email-body-content p:last-child {
+                margin-bottom: 0 !important;
+            }
+        </style>
+
         <div style="
             position: sticky; top: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
             border-bottom: 1px solid #f1f3f4; padding: 12px 20px; z-index: 10;
@@ -190,21 +208,23 @@ export function initQuickEmailAssistant() {
             
             <div>
                 <div style="font-size:11px; font-weight:700; color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Mensagem</div>
-                <div style="
+                
+                <div class="cw-email-body-content" style="
                     font-size:13px; 
-                    line-height:1.35; /* <--- AJUSTE DE ESPAÇAMENTO (Mais compacto) */
                     color:#3c4043; 
-                    white-space: pre-wrap; 
+                    white-space: normal; /* Mudado de pre-wrap para normal */
                     padding: 0 4px;
-                ">${email.body}</div>
+                ">
+                    ${email.body}
+                </div>
             </div>
         </div>
 
         <div style="
             position: sticky; bottom: 0; left: 0; width: 100%; 
             padding: 20px; box-sizing: border-box;
-            background: linear-gradient(to top, #ffffff 80%, rgba(255,255,255,0)); /* Fade out no topo */
-            margin-top: auto; /* Empurra para o fim se sobrar espaço */
+            background: linear-gradient(to top, #ffffff 80%, rgba(255,255,255,0)); 
+            margin-top: auto; 
         ">
             <button id="csa-insert-btn" style="
                 width: 100%; padding: 12px; 
