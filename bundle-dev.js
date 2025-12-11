@@ -350,8 +350,8 @@
 /* 5. AS BOLINHAS DO GOOGLE (R\xE9plica exata da sua original) */
 .cw-center-dots { display: flex; gap: 8px; }
 .cw-center-dots span {
-    width: 10px; height: 10px; border-radius: 50%;
-    animation: bounce 1.4s infinite ease-in-out both;
+    width: 8px; height: 8px; border-radius: 50%;
+    animation: googleBounce 1.4s infinite ease-in-out both;
 }
 /* Usa as vari\xE1veis COLORS que j\xE1 existem no seu arquivo */
 .cw-center-dots span:nth-child(1) { background-color: ${ne.blue}; animation-delay: -0.32s; }
@@ -360,8 +360,18 @@
 
 /* 6. Texto da Dica */
 .cw-center-text {
-    font-size: 13px; color: #E8EAED; text-align: center; max-width: 90%;
-    font-weight: 400; line-height: 1.4;
+    font-size: 13px; 
+    color: #E8EAED; 
+    text-align: center; 
+    max-width: 90%;
+    font-weight: 500; /* Aumentei um pouco o peso */
+    line-height: 1.4;
+    
+    /* A M\xC1GICA: */
+    opacity: 0;
+    transform: translateY(10px); /* Come\xE7a um pouco para baixo */
+    animation: textSlideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    animation-delay: 0.2s; /* Espera as bolinhas come\xE7arem */
 }
 
 /* 7. Sucesso */
@@ -371,6 +381,13 @@
 
 @keyframes fadeIn { to { opacity: 1; } }
 @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes googleBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+}
+    @keyframes textSlideUp {
+    to { opacity: 1; transform: translateY(0); }
+}
         `,document.head.appendChild(f)}let n={check:'<svg viewBox="0 0 24 24" fill="none" stroke="#81C995" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',notes:'<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>',email:'<svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>',script:'<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>',links:'<svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>',broadcast:'<svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>'},o=document.createElement("div");o.className="cw-pill side-right",o.innerHTML=`
         <div class="cw-grip" title="Arrastar">
             <div class="cw-grip-bar"></div>
