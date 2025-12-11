@@ -429,7 +429,7 @@ export function triggerProcessingAnimation() {
                     stage.remove(); // Remove o palco temporário
                     pill.classList.remove('success');
                     if(overlay) overlay.classList.remove('active');
-                }, 600);
+                }, 400);
 
             }, 1000); // Tempo exibindo o check verde
 
