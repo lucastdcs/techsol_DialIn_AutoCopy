@@ -71,6 +71,7 @@ const ICONS = {
 
 export function createStepTasksComponent(onUpdateCallback) {
   const selection = {}; // { taskId: { count, data, brand } }
+  let currentMode = "implementation";
 
   // --- HEURÍSTICA DE MARCA (Auto-Categorização) ---
   function getBrand(name) {
@@ -708,11 +709,28 @@ export function createStepTasksComponent(onUpdateCallback) {
   // --- LÓGICA DE RENDERIZAÇÃO DOS PRINTS ---
   // --- LÓGICA DE RENDERIZAÇÃO DOS PRINTS (Com Classes) ---
   function renderScreenshots() {
-    screenList.innerHTML = "";
+
+screenList.innerHTML = "";
     const keys = Object.keys(selection);
     let hasAny = false;
-    const type = "implementation";
 
+    // --- MUDANÇA AQUI: DETECÇÃO AUTOMÁTICA ---
+    // 1. Tenta achar o input de substatus pelo ID (AJUSTE O ID SE NECESSÁRIO)
+    const subStatusEl = document.getElementById("sub-status"); 
+    
+    // 2. Define o padrão
+    let type = "implementation";
+
+    // 3. Se o elemento existir e o valor contiver "Education", muda o tipo
+    if (subStatusEl && subStatusEl.value.toLowerCase().includes("education")) {
+        type = "education";
+    }
+    // -----------------------------------------
+
+    if (keys.length === 0) {
+      screenList.innerHTML = `<div class="cw-empty-state">Selecione tarefas para ver os campos.</div>`;
+      return;
+    }
     if (keys.length === 0) {
       screenList.innerHTML = `<div class="cw-empty-state">Selecione tarefas para ver os campos.</div>`;
       return;
@@ -845,6 +863,11 @@ export function createStepTasksComponent(onUpdateCallback) {
         // Remove (Zera o contador)
         updateTask(key, -current.count, TASKS_DB[key]);
       }
+    },
+    setMode: (mode) => {
+        // mode deve ser 'implementation' ou 'education'
+        currentMode = mode;
+        renderScreenshots(); // Atualiza a lista visualmente na hora
     },
     // ---------------------------
     reset: () => {
