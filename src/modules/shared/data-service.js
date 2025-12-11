@@ -1,7 +1,7 @@
 // src/modules/shared/data-service.js
 
 // SUA URL (Mantida)
-const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbyTd5XYrIz4Y92H5Ay4XeL2wwhuR_N3zXSjW3LIqZDEL7VTmvFkspbGoQ8UTCvZR4zTRA/exec";
+const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbzC8qLjT9Ytpyjl_bes3gg5eO_aizPRSdWuExy6Ayc-ooWR2WJXfdeclLS_g6x0uJua/exec";
 // src/modules/shared/data-service.js
 
 
