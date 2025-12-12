@@ -182,38 +182,48 @@ playStartup: () => {
         if (!ctx) return;
         const t = ctx.currentTime;
 
-        // CAMADA 1: O SUB-BASS SLIDE (A marca registrada da JBL)
-        const bass = ctx.createOscillator();
-        const bassGain = ctx.createGain();
-        bass.connect(bassGain);
-        bassGain.connect(ctx.destination);
+        // CAMADA 1: O "KICK" (A batida na mesa)
+        // Um som curto e seco para marcar o início
+        const kick = ctx.createOscillator();
+        const kickGain = ctx.createGain();
+        kick.connect(kickGain);
+        kickGain.connect(ctx.destination);
 
-        bass.type = 'sine'; // Senoidal pura para tremer a caixa de som
-        bass.frequency.setValueAtTime(30, t); // Começa super grave
-        bass.frequency.linearRampToValueAtTime(60, t + 0.4); // Sobe (Slide Up)
+        kick.frequency.setValueAtTime(150, t);
+        kick.frequency.exponentialRampToValueAtTime(40, t + 0.1); // Cai rápido
+        
+        kickGain.gain.setValueAtTime(MASTER_GAIN * 2.0, t);
+        kickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+        
+        kick.start(t); kick.stop(t + 0.2);
 
-        bassGain.gain.setValueAtTime(0, t);
-        bassGain.gain.linearRampToValueAtTime(MASTER_GAIN * 2.5, t + 0.1);
-        bassGain.gain.exponentialRampToValueAtTime(0.001, t + 1.5);
+        // CAMADA 2: O "BLOOM" (A textura que abre)
+        // Usamos ondas Sawtooth (serrilhadas) para ter aquela textura de sintetizador analógico
+        const freqs = [55, 55.5, 110]; // Lá Grave desafinado (efeito Chorus)
 
-        bass.start(t); bass.stop(t + 1.5);
-
-        // CAMADA 2: O CHORD LATERAL (O brilho estéreo)
-        const chord = [146.83, 185.00]; // Ré e Fá# (D Major)
-        chord.forEach(f => {
+        freqs.forEach((f, i) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
-            
-            osc.type = 'triangle'; // Triângulo tem um som mais "hollow" e limpo
-            osc.frequency.value = f;
-            
-            gain.gain.setValueAtTime(0, t);
-            gain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.3, t + 0.3); // Entra atrasado
-            gain.gain.exponentialRampToValueAtTime(0.001, t + 1.5);
+            const filter = ctx.createBiquadFilter();
 
-            osc.connect(gain);
+            osc.type = 'sawtooth';
+            osc.frequency.value = f;
+
+            // O Filtro é o segredo da Netflix: Ele começa fechado (abafado) e abre
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(50, t); 
+            filter.frequency.linearRampToValueAtTime(800, t + 0.3); // Abre (Wahhh)
+            filter.frequency.exponentialRampToValueAtTime(50, t + 2.0); // Fecha
+
+            gain.gain.setValueAtTime(0, t);
+            gain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.5, t + 0.1); // Entra suave depois do Kick
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 3.0); // Longo sustain
+
+            osc.connect(filter);
+            filter.connect(gain);
             gain.connect(ctx.destination);
-            osc.start(t); osc.stop(t + 1.5);
+            
+            osc.start(t); osc.stop(t + 3.1);
         });
     },
     playNotification: () => {
