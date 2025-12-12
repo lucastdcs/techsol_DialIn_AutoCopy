@@ -971,19 +971,23 @@ export function makeResizable(element, handle) {
  * @param {string} text - O texto cru com códigos
  * @returns {string} - Texto formatado com emojis
  */
+// src/modules/shared/utils.js
+
 export function parseEmojiCodes(text) {
     if (!text) return "";
 
-    // MAPA DE TRADUÇÃO (Adicione aqui os códigos que sua empresa usa)
     const emojiMap = {
-        // --- Customizados da sua Empresa (Vistos nos logs) ---
-        ":frog-eat:": "🐸",           // Ou "🐸☕" se for o meme
+        // --- CUSTOMIZADOS DA EMPRESA (Novos Adicionados) ---
+        ":bufo-alarma:": "🐸🚨",       // Sapo + Sirene
+        ":frog-hype-1:": "🐸🥳",       // Sapo + Festa
+        ":coffee-intensifies:": "☕⚡", // Café + Raio (Energia)
+        ":frog-eat:": "🐸☕",          // Sapo bebendo
+
+        // --- Padrões Universais ---
         ":alert-01:": "⚠️",
         ":alert-circle-i-notice:": "ℹ️",
         ":wind-face-animated:": "🌬️",
         ":smile:": "🙂",
-        
-        // --- Padrões Comuns ---
         ":warning:": "⚠️",
         ":check:": "✅",
         ":white_check_mark:": "✅",
@@ -997,23 +1001,21 @@ export function parseEmojiCodes(text) {
         ":heart:": "❤️",
         ":fire:": "🔥",
         ":sunny:": "🌞",
-        ":star:": "⭐"
+        ":star:": "⭐",
+        ":coffee:": "☕"
     };
 
-    // REGEX: Procura por padrões :palavra-com-hifen:
+    // REGEX: Procura por padrões :qualquer-coisa:
     return text.replace(/:([a-zA-Z0-9-_+]+):/g, (match) => {
-        // 1. Tenta achar no mapa exato
+        // 1. Se achou no mapa, retorna o Emoji bonito
         if (emojiMap[match]) {
             return emojiMap[match];
         }
         
-        // 2. Fallback Inteligente (Opcional)
-        // Se não achar o emoji, o que fazer?
-        
-        // Opção A: Retornar vazio (apaga o código feio) -> Fica mais limpo
-        // return ""; 
-        
-        // Opção B: Retornar o código original (para você ver e adicionar no mapa depois) -> Mais seguro
-        return match; 
+        // 2. A MELHORIA DE SEGURANÇA:
+        // Se não achou (ex: :emoji-novo-que-criaram-ontem:),
+        // retorna uma string vazia "".
+        // Isso "apaga" o código feio da tela, deixando a frase legível.
+        return ""; 
     });
 }

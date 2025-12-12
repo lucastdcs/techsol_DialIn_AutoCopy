@@ -205,6 +205,96 @@ export const SoundManager = {
         osc.start(t);
         osc.stop(t + 2.0);
     },
+    playStartup: () => {
+        const ctx = getContext();
+        if (!ctx) return;
+        const t = ctx.currentTime;
+
+        // PARTE 1: O "TA" (O Impacto Percussivo / Batida na Madeira)
+        const kickOsc = ctx.createOscillator();
+        const kickGain = ctx.createGain();
+        
+        kickOsc.connect(kickGain);
+        kickGain.connect(ctx.destination);
+
+        kickOsc.type = 'sine';
+        kickOsc.frequency.setValueAtTime(120, t); // Começa "alto"
+        kickOsc.frequency.exponentialRampToValueAtTime(40, t + 0.15); // Cai brusco (Bumbo)
+
+        kickGain.gain.setValueAtTime(MASTER_GAIN * 1.5, t); // Ataque forte
+        kickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.3); // Some rápido
+
+        kickOsc.start(t);
+        kickOsc.stop(t + 0.3);
+
+
+        // PARTE 2: O "DUM" (O Acorde Sombrio/Cinemático)
+        // Usamos 3 osciladores desafinados para criar o efeito "Wide" (Estéreo)
+        const freqs = [55, 55.4, 110]; // Lá Grave (A1) + Oitava
+
+        freqs.forEach((f, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+
+            // Sawtooth dá a textura "rasgada" e rica
+            osc.type = 'sawtooth';
+            osc.frequency.value = f;
+
+            // Filtro Lowpass: Corta o chiado agudo, deixa só o "peso" do grave
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(100, t); 
+            filter.frequency.linearRampToValueAtTime(600, t + 0.3); // O filtro abre um pouco (Bloom)
+            filter.frequency.exponentialRampToValueAtTime(100, t + 2.5); // Fecha no final
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+
+            // Envelope do "Dum"
+            gain.gain.setValueAtTime(0, t);
+            // Pequeno atraso (0.05s) para separar do "Ta"
+            gain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.4, t + 0.1); 
+            // Sustain longo e dramático
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 3.5);
+
+            osc.start(t);
+            osc.stop(t + 3.6);
+        });
+    },
+    playNotification: () => {
+        const ctx = getContext();
+        if (!ctx) return;
+        const t = ctx.currentTime;
+
+        // Usamos duas ondas senoidais (Sine) para criar um acorde harmônico simples (Oitava)
+        // Isso dá a sensação de "brilho" do vidro.
+        const tones = [
+            { freq: 880,  dur: 1.2, vol: 0.6 }, // A5 (Corpo do som)
+            { freq: 1760, dur: 0.6, vol: 0.3 }  // A6 (Brilho/Harmônico)
+        ];
+
+        tones.forEach(tone => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(tone.freq, t);
+
+            // Envelope "Sino": Ataque instantâneo e cauda longa
+            gain.gain.setValueAtTime(0, t);
+            // Ataque muito rápido (4ms) para simular o impacto físico
+            gain.gain.linearRampToValueAtTime(MASTER_GAIN * tone.vol, t + 0.004); 
+            // Decaimento exponencial longo (o som "ressoa")
+            gain.gain.exponentialRampToValueAtTime(0.001, t + tone.dur);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.start(t);
+            osc.stop(t + tone.dur + 0.1);
+        });
+    },
 
     // Manter compatibilidade com chamadas antigas
     playSwoosh: () => { /* Alias para Genie */ SoundManager.playGenieOpen(); },
