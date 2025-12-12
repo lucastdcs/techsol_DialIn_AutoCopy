@@ -177,46 +177,54 @@ export const SoundManager = {
     },
     
 
-   playStartup: async () => {
+_playStartupSynth: () => {
         const ctx = getContext();
         if (!ctx) return;
+        const t = ctx.currentTime;
+
+        // CAMADA 1: O "KICK" (A batida na mesa)
+        // Um som curto e seco para marcar o início
+        const kick = ctx.createOscillator();
+        const kickGain = ctx.createGain();
+        kick.connect(kickGain);
+        kickGain.connect(ctx.destination);
+
+        kick.frequency.setValueAtTime(150, t);
+        kick.frequency.exponentialRampToValueAtTime(40, t + 0.1); // Cai rápido
         
-        // Se já decodificamos antes, usa o cache (Performance instantânea)
-        if (SoundManager._startupBuffer) {
-            const source = ctx.createBufferSource();
-            source.buffer = SoundManager._startupBuffer;
-            
+        kickGain.gain.setValueAtTime(MASTER_GAIN * 2.0, t);
+        kickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+        
+        kick.start(t); kick.stop(t + 0.2);
+
+        // CAMADA 2: O "BLOOM" (A textura que abre)
+        // Usamos ondas Sawtooth (serrilhadas) para ter aquela textura de sintetizador analógico
+        const freqs = [55, 55.5, 110]; // Lá Grave desafinado (efeito Chorus)
+
+        freqs.forEach((f, i) => {
+            const osc = ctx.createOscillator();
             const gain = ctx.createGain();
-            gain.gain.value = MASTER_GAIN * 2.0; // Um pouco mais alto que os cliques
-            
-            source.connect(gain);
+            const filter = ctx.createBiquadFilter();
+
+            osc.type = 'sawtooth';
+            osc.frequency.value = f;
+
+            // O Filtro é o segredo da Netflix: Ele começa fechado (abafado) e abre
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(50, t); 
+            filter.frequency.linearRampToValueAtTime(800, t + 0.3); // Abre (Wahhh)
+            filter.frequency.exponentialRampToValueAtTime(50, t + 2.0); // Fecha
+
+            gain.gain.setValueAtTime(0, t);
+            gain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.5, t + 0.1); // Entra suave depois do Kick
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 3.0); // Longo sustain
+
+            osc.connect(filter);
+            filter.connect(gain);
             gain.connect(ctx.destination);
-            source.start(0);
-            return;
-        }
-
-        // Se é a primeira vez, decodifica a string Base64
-        try {
-            const response = await fetch(STARTUP_SOUND);
-            const arrayBuffer = await response.arrayBuffer();
-            const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
             
-            // Salva no cache para a próxima vez ser imediata
-            SoundManager._startupBuffer = audioBuffer;
-
-            // Toca
-            const source = ctx.createBufferSource();
-            source.buffer = audioBuffer;
-            
-            const gain = ctx.createGain();
-            gain.gain.value = MASTER_GAIN * 2.0;
-
-            source.connect(gain);
-            gain.connect(ctx.destination);
-            source.start(0);
-        } catch (e) {
-            console.error("Erro ao tocar som de startup:", e);
-        }
+            osc.start(t); osc.stop(t + 3.1);
+        });
     },
     playNotification: () => {
         const ctx = getContext();
