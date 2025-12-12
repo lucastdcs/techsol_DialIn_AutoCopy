@@ -1,334 +1,517 @@
 // src/modules/call-script/call-script-assistant.js
 
-import { 
-    makeDraggable,
-    styleSelect,
-    styleLabel,
-    stylePopup,
-    stylePopupHeader,
-    stylePopupTitle,
-    stylePopupCloseBtn,
-    stylePopupVersion,
-    styleCredit,
-    typeBtnStyle,          
-    getRandomGoogleStyle    
-} from '../shared/utils.js';
+import {
+  styleSelect,
+  stylePopup,
+  styleCredit,
+  typeBtnStyle,
+  getRandomGoogleStyle,
+  styleResizeHandle,
+  makeResizable
+} from "../shared/utils.js";
+import { SoundManager } from "../shared/sound-manager.js";
 
-import { csaChecklistData } from './call-script-data.js';
+import { createStandardHeader } from "../shared/header-factory.js";
+import { toggleGenieAnimation } from "../shared/animations.js";
+
+// Importa os textos
+import { csaChecklistData } from "./call-script-data.js";
 
 export function initCallScriptAssistant() {
-    const CURRENT_VERSION = "v1.2.7"; 
+  const CURRENT_VERSION = "v2.1 (Apple Motion)";
 
-    // --- Dados e Estado ---
-    const csaCompletedTasks = {};
-    let csaCurrentLang = "PT";
-    let csaCurrentType = "BAU";
-
-    // --- UI: Botão Flutuante (Material Design Pro) ---
-    const btnContainer = document.createElement("div");
-    Object.assign(btnContainer.style, {
-        position: "fixed", bottom: "30%", right: "24px", zIndex: "9999",
-        display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px"
-    });
-
-    const btn = document.createElement("button");
-    btn.id = "script-floating-btn";
-    btn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M21,12.22C21,6.73,16.74,2.2,11.5,2.2C6.4,2.2,2.3,6.49,2.3,11.77C2.3,13.82,2.95,15.73,4.06,17.3L3,21L7.08,19.5C8.45,20.02,9.95,20.32,11.5,20.32C16.74,20.32,21,15.81,21,12.22M15,12H16.5C16.5,13.38,15.38,14.5,14,14.5V16H18V12H15V12M9,12H10V16H9V12M13,12V16H11V12H13M13,9.5C13,8.67,12.33,8,11.5,8C10.67,8,10,8.67,10,9.5H8.5C8.5,7.84,9.84,6.5,11.5,6.5C13.16,6.5,14.5,7.84,14.5,9.5H13Z"/></svg>`;
-
-    Object.assign(btn.style, {
-        width: "48px", height: "48px", borderRadius: "50%",
-        background: "#9c27b0", color: "white", border: "none", cursor: "pointer",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        boxShadow: "0 4px 12px rgba(156, 39, 176, 0.4)", // Roxo
-        transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s"
-    });
-
-    const tooltip = document.createElement("span");
-    tooltip.textContent = "Call Scripts";
-    Object.assign(tooltip.style, {
-        background: "rgba(0,0,0,0.7)", color: "white", padding: "4px 8px",
-        borderRadius: "4px", fontSize: "12px", opacity: "0", pointerEvents: "none",
-        transition: "opacity 0.2s", whiteSpace: "nowrap", fontWeight: "500"
-    });
-
-    btn.onmouseenter = () => {
-        btn.style.transform = "scale(1.1)";
-        btn.style.boxShadow = "0 6px 16px rgba(156, 39, 176, 0.5)";
-        tooltip.style.opacity = "1";
-    };
-    btn.onmouseleave = () => {
-        btn.style.transform = "scale(1)";
-        btn.style.boxShadow = "0 4px 12px rgba(156, 39, 176, 0.4)";
-        tooltip.style.opacity = "0";
-    };
-
-    btnContainer.appendChild(btn);
-    btnContainer.appendChild(tooltip);
-    document.body.appendChild(btnContainer);
-    
-    // CORREÇÃO: Arrastar o container inteiro
-    makeDraggable(btnContainer);
-
-    // --- Popup ---
-    const csaPopup = document.createElement("div");
-    csaPopup.id = "call-script-popup";
-    Object.assign(csaPopup.style, stylePopup, { right: "80px" });
-
-    const csaHeader = document.createElement("div");
-    Object.assign(csaHeader.style, stylePopupHeader);
-    makeDraggable(csaPopup, csaHeader);
-
-    const csaHeaderLeft = document.createElement("div");
-    Object.assign(csaHeaderLeft.style, { display: 'flex', alignItems: 'center', gap: '10px' });
-    
-    const csaLogo = document.createElement("div");
-    csaLogo.textContent = "📋";
-    Object.assign(csaLogo.style, { fontSize: "20px" });
-    
-    const titleContainer = document.createElement("div");
-    Object.assign(titleContainer.style, { display: 'flex', flexDirection: 'column' });
-    const csaTitle = document.createElement("div");
-    csaTitle.textContent = "Call Script Assistant";
-    Object.assign(csaTitle.style, stylePopupTitle);
-    titleContainer.appendChild(csaTitle);
-
-    const versionDisplay = document.createElement("div");
-    versionDisplay.textContent = CURRENT_VERSION;
-    Object.assign(versionDisplay.style, stylePopupVersion);
-    titleContainer.appendChild(versionDisplay);
-    
-    csaHeaderLeft.appendChild(csaLogo);
-    csaHeaderLeft.appendChild(titleContainer);
-    
-    const csaHeaderRight = document.createElement("div");
-    Object.assign(csaHeaderRight.style, { display: 'flex', alignItems: 'center' });
-
-    const csaCloseBtn = document.createElement("div");
-    csaCloseBtn.textContent = "✕";
-    csaCloseBtn.classList.add('no-drag');
-    Object.assign(csaCloseBtn.style, stylePopupCloseBtn);
-    csaCloseBtn.onclick = () => csaTogglePopup(false);
-    csaCloseBtn.onmouseover = () => csaCloseBtn.style.backgroundColor = '#e8eaed';
-    csaCloseBtn.onmouseout = () => csaCloseBtn.style.backgroundColor = 'transparent';
-    csaHeaderRight.appendChild(csaCloseBtn);
-    
-    csaPopup.appendChild(csaHeader);
-    csaHeader.appendChild(csaHeaderLeft);
-    csaHeader.appendChild(csaHeaderRight);
-
-    const csaContent = document.createElement("div");
-    csaContent.id = "csa-content";
-    Object.assign(csaContent.style, {
-        padding: "16px", 
+  // --- ESTILOS LOCAIS (Refinados para Feedback Tátil) ---
+  const styles = {
+    // Barra de Progresso "Líquida"
+    progressBarContainer: {
+        height: "4px",
+        background: "#f1f3f4",
+        width: "100%",
+        position: "relative",
+        overflow: "hidden"
+    },
+    progressBarFill: {
+        height: "100%",
+        background: "linear-gradient(90deg, #4285F4, #34A853)",
+        width: "0%",
+        transition: "width 0.5s cubic-bezier(0.25, 0.8, 0.25, 1)", // Física suave
+        borderRadius: "0 2px 2px 0"
+    },
+    // Container de Conteúdo
+    contentArea: {
+        padding: "16px",
         overflowY: "auto",
-        flexGrow: "1"
+        flexGrow: "1",
+        background: "#f8f9fa", // Contraste com os cards brancos
+        scrollBehavior: "smooth"
+    },
+    // Cards (Ilhas de Informação)
+    card: {
+        background: "#ffffff",
+        border: "1px solid #dadce0",
+        borderRadius: "12px",
+        padding: "16px",
+        marginBottom: "16px",
+        transition: "transform 0.2s ease, box-shadow 0.2s ease",
+        boxShadow: "0 1px 2px rgba(0,0,0,0.02)"
+    },
+    cardTitle: {
+        fontSize: "13px",
+        fontWeight: "700",
+        color: "#5f6368",
+        textTransform: "uppercase",
+        letterSpacing: "0.6px",
+        marginBottom: "12px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        userSelect: "none"
+    },
+    // Linha do Item
+    itemRow: {
+        display: "flex",
+        alignItems: "flex-start",
+        padding: "10px 8px", // Área de clique maior
+        cursor: "pointer",
+        borderRadius: "8px",
+        transition: "background-color 0.15s ease, opacity 0.3s ease",
+        color: "#202124",
+        fontSize: "14px",
+        lineHeight: "1.5",
+        marginBottom: "2px"
+    },
+    // Estado Completado
+    itemCompleted: {
+        opacity: "0.5",
+        textDecoration: "line-through",
+        color: "#5f6368"
+    },
+    // Checkbox Customizado (Quadrado Arredondado)
+    checkbox: {
+        minWidth: "20px",
+        height: "20px",
+        borderRadius: "6px", // Squircle Apple
+        border: "2px solid #dadce0",
+        marginRight: "14px",
+        marginTop: "1px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        transition: "all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)", // Efeito "Pop" Elástico
+        background: "#fff"
+    },
+    // Footer do Reset
+    footer: {
+        padding: "12px 16px",
+        borderTop: "1px solid #eee",
+        background: "#fff",
+        display: "flex",
+        justifyContent: "space-between", // Créditos na esq, Reset na dir
+        alignItems: "center"
+    },
+    resetBtn: {
+        background: "transparent",
+        border: "none",
+        color: "#d93025", // Vermelho Google (Atenção suave)
+        fontSize: "12px",
+        fontWeight: "600",
+        cursor: "pointer",
+        padding: "6px 12px",
+        borderRadius: "20px",
+        transition: "background 0.2s ease",
+        display: "flex",
+        alignItems: "center",
+        gap: "4px"
+    }
+  };
+
+  // --- Estado ---
+  const csaCompletedTasks = {};
+  let csaCurrentLang = "PT";
+  let csaCurrentType = "BAU";
+  let csaVisible = false;
+
+  // --- POPUP ---
+  const csaPopup = document.createElement("div");
+  csaPopup.id = "call-script-popup";
+
+  Object.assign(csaPopup.style, stylePopup, { 
+        right: "auto", 
+        left: "50%", 
+        width: "400px",
+        height: "650px", // Um pouco mais alto para caber o footer
+        display: "flex", 
+        flexDirection: "column",
+        opacity: "0",
+        pointerEvents: "none"
+  });
+
+  const animRefs = { popup: csaPopup, googleLine: null };
+
+  function toggleVisibility() {
+    csaVisible = !csaVisible;
+    toggleGenieAnimation(csaVisible, csaPopup, 'cw-btn-script');
+  }
+
+  // 1. HEADER
+  const csaHeader = createStandardHeader(
+    csaPopup,
+    "Call Script",
+    CURRENT_VERSION,
+    "Guia interativo para condução de chamadas.", 
+    animRefs,
+    () => { toggleVisibility(); }
+  );
+  csaPopup.appendChild(csaHeader);
+
+  // 2. PROGRESS BAR
+  const progressContainer = document.createElement("div");
+  Object.assign(progressContainer.style, styles.progressBarContainer);
+  const progressFill = document.createElement("div");
+  Object.assign(progressFill.style, styles.progressBarFill);
+  progressContainer.appendChild(progressFill);
+  csaPopup.appendChild(progressContainer);
+
+  // 3. CONTEÚDO (Scrollable)
+  const csaContent = document.createElement("div");
+  csaContent.id = "csa-content";
+  Object.assign(csaContent.style, styles.contentArea);
+  csaPopup.appendChild(csaContent);
+
+  // 4. FOOTER (Reset + Créditos)
+  const footer = document.createElement("div");
+  Object.assign(footer.style, styles.footer);
+  
+  // Créditos
+  const credit = document.createElement("span");
+  credit.textContent = "by lucaste@";
+  Object.assign(credit.style, { fontSize: "10px", color: "#bdc1c6" });
+  
+  // Botão Reset (Novo)
+  const resetBtn = document.createElement("button");
+  resetBtn.innerHTML = `
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+    Resetar Script
+  `;
+  Object.assign(resetBtn.style, styles.resetBtn);
+  
+  // Hover do Reset
+  resetBtn.onmouseenter = () => resetBtn.style.background = "#fce8e6"; // Fundo vermelho claro
+  resetBtn.onmouseleave = () => resetBtn.style.background = "transparent";
+  
+  // Ação de Reset
+  resetBtn.onclick = () => {
+      // Feedback Visual no botão
+      resetBtn.style.transform = "scale(0.9)";
+      setTimeout(() => resetBtn.style.transform = "scale(1)", 150);
+      
+      // Limpa dados
+      for (let key in csaCompletedTasks) delete csaCompletedTasks[key];
+      
+      // Re-renderiza com animação
+      csaBuildChecklist();
+  };
+
+  footer.appendChild(credit);
+  footer.appendChild(resetBtn);
+  csaPopup.appendChild(footer);
+
+  // --- CONTROLES (Dentro do Content) ---
+  const csaControlsDiv = document.createElement("div");
+  Object.assign(csaControlsDiv.style, {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: "16px",
+    gap: "8px",
+  });
+
+  // Toggle BAU/LT
+  const csaTypeContainer = document.createElement("div");
+  Object.assign(csaTypeContainer.style, {
+    display: "flex",
+    borderRadius: "8px",
+    border: "1px solid #dadce0",
+    overflow: "hidden",
+    background: "#fff"
+  });
+
+  const csaTypeBAU = document.createElement("div");
+  csaTypeBAU.textContent = "BAU";
+  const csaTypeLT = document.createElement("div");
+  csaTypeLT.textContent = "LT";
+
+  Object.assign(csaTypeBAU.style, typeBtnStyle);
+  Object.assign(csaTypeLT.style, typeBtnStyle);
+
+  csaTypeContainer.appendChild(csaTypeBAU);
+  csaTypeContainer.appendChild(csaTypeLT);
+
+  // Select Idioma
+  const csaLangSelect = document.createElement("select");
+  Object.assign(csaLangSelect.style, styleSelect, {
+    marginBottom: "0",
+    width: "auto",
+    minWidth: "90px",
+    paddingTop: "6px",
+    paddingBottom: "6px",
+    paddingRight: "30px",
+    height: "32px",
+    backgroundPosition: "right 8px center"
+  });
+  csaLangSelect.innerHTML = `<option value="PT">PT</option><option value="ES">ES</option><option value="EN">EN</option>`;
+  csaLangSelect.value = csaCurrentLang;
+
+  csaControlsDiv.appendChild(csaTypeContainer);
+  csaControlsDiv.appendChild(csaLangSelect);
+  csaContent.appendChild(csaControlsDiv);
+
+  const csaChecklistArea = document.createElement("div");
+  csaChecklistArea.id = "csa-checklist-area";
+  csaContent.appendChild(csaChecklistArea);
+
+  // --- RESIZE HANDLE ---
+  const resizeHandle = document.createElement('div');
+  Object.assign(resizeHandle.style, styleResizeHandle);
+  resizeHandle.className = "no-drag";
+  resizeHandle.title = "Redimensionar";
+  csaPopup.appendChild(resizeHandle);
+  makeResizable(csaPopup, resizeHandle);
+
+  document.body.appendChild(csaPopup);
+
+  // --- LÓGICA & RENDERIZAÇÃO ---
+
+  // Simula "Smart Variables"
+  function formatScriptText(text) {
+      return text;
+  }
+
+  function csaBuildChecklist() {
+    csaChecklistArea.innerHTML = "";
+    const combinedKey = `${csaCurrentLang} ${csaCurrentType}`;
+    const data = csaChecklistData[combinedKey];
+
+    if (!data) {
+      csaChecklistArea.innerHTML = `<div style="padding: 30px; text-align: center; color: #bdc1c6; display: flex; flex-direction: column; align-items: center; gap: 10px;">
+        <div style="font-size: 24px;">☕</div>
+        <div>Script não configurado.</div>
+      </div>`;
+      progressFill.style.width = "0%";
+      return;
+    }
+
+    const activeColor = data.color || "#1a73e8";
+
+    // 1. Calcula Progresso
+    let totalItems = 0;
+    let completedItems = 0;
+    ["inicio", "fim"].forEach(k => { if(data[k]) totalItems += data[k].length; });
+
+    // 2. Renderiza Cards
+    ["inicio", "fim"].forEach((groupKey, groupIndex) => {
+      const items = data[groupKey];
+      if (!items || items.length === 0) return;
+
+      const card = document.createElement("div");
+      Object.assign(card.style, styles.card);
+      
+      // Título
+      const cardTitle = document.createElement("div");
+      Object.assign(cardTitle.style, styles.cardTitle);
+      
+      let titleText = groupKey === "inicio" ? "Abertura" : "Fechamento";
+      if (csaCurrentLang.includes("ES")) titleText = groupKey === "inicio" ? "Apertura" : "Cierre";
+      if (csaCurrentLang.includes("EN")) titleText = groupKey === "inicio" ? "Opening" : "Closing";
+      
+      cardTitle.textContent = titleText;
+      
+      // Contador (ex: 2/5)
+      const counter = document.createElement("span");
+      counter.style.fontSize = "11px";
+      counter.style.opacity = "0.7";
+      counter.style.fontWeight = "500";
+      counter.style.background = "#f1f3f4";
+      counter.style.padding = "2px 8px";
+      counter.style.borderRadius = "10px";
+      cardTitle.appendChild(counter);
+
+      card.appendChild(cardTitle);
+
+      let groupDoneCount = 0;
+
+      // Lista de Itens
+      items.forEach((itemText, index) => {
+        const key = `${combinedKey}-${groupKey}-${index}`;
+        const isDone = !!csaCompletedTasks[key];
+        if(isDone) {
+            completedItems++;
+            groupDoneCount++;
+        }
+
+        const row = document.createElement("div");
+        Object.assign(row.style, styles.itemRow);
+        
+        // Checkbox
+        const chk = document.createElement("div");
+        Object.assign(chk.style, styles.checkbox);
+        
+        // Texto
+        const textSpan = document.createElement("span");
+        textSpan.innerHTML = formatScriptText(itemText);
+        textSpan.style.flex = "1";
+
+        // Aplica Estilos baseados no Estado
+        if (isDone) {
+            Object.assign(row.style, styles.itemCompleted);
+            chk.style.background = activeColor;
+            chk.style.borderColor = activeColor;
+            chk.style.transform = "scale(1)"; // Estado normal após animação
+            // Ícone Check SVG
+            chk.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        } else {
+            row.style.textDecoration = "none";
+            row.style.opacity = "1";
+            chk.style.background = "transparent";
+            chk.style.borderColor = "#dadce0";
+            chk.style.transform = "scale(1)";
+            chk.innerHTML = "";
+        }
+
+        // Interação (Clique na Linha)
+        row.onclick = () => {
+            const newState = !csaCompletedTasks[key];
+            csaCompletedTasks[key] = newState;
+            SoundManager.playClick();
+
+            // Feedback Tátil Imediato (Sem re-render total para manter a física)
+            if (newState) {
+                // Animação de Check "Pop"
+                chk.style.transform = "scale(1.2)";
+                setTimeout(() => chk.style.transform = "scale(1)", 150);
+                
+                // Atualiza visual da linha
+                Object.assign(row.style, styles.itemCompleted);
+                chk.style.background = activeColor;
+                chk.style.borderColor = activeColor;
+                chk.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            } else {
+                // Uncheck
+                row.style.textDecoration = "none";
+                row.style.opacity = "1";
+                chk.style.background = "transparent";
+                chk.style.borderColor = "#dadce0";
+                chk.innerHTML = "";
+            }
+
+            // Atualiza Lógica Global (Progresso e Contadores)
+            // Fazemos um 'mini-update' em vez de re-renderizar tudo para não perder o foco
+            updateProgressAndCounters(combinedKey, data);
+        };
+
+        // Hover
+        row.onmouseenter = () => { 
+            if(!csaCompletedTasks[key]) {
+                row.style.background = "#f1f3f4"; 
+                chk.style.borderColor = activeColor; // Cor ao passar o mouse
+            }
+        };
+        row.onmouseleave = () => { 
+            if(!csaCompletedTasks[key]) {
+                row.style.background = "transparent"; 
+                chk.style.borderColor = "#dadce0";
+            }
+        };
+
+        row.appendChild(chk);
+        row.appendChild(textSpan);
+        card.appendChild(row);
+      });
+
+      // Status Visual do Card (Borda Lateral)
+      if (groupDoneCount === items.length && items.length > 0) {
+          counter.style.color = "#1e8e3e";
+          counter.style.background = "#e6f4ea";
+          card.style.boxShadow = "inset 4px 0 0 #1e8e3e, 0 1px 3px rgba(0,0,0,0.05)";
+      }
+
+      counter.textContent = `${groupDoneCount}/${items.length}`;
+      csaChecklistArea.appendChild(card);
     });
-    csaPopup.appendChild(csaContent);
 
-    const credit = document.createElement("div");
-    credit.textContent = "created by lucaste@";
-    Object.assign(credit.style, styleCredit);
-    csaPopup.appendChild(credit);
+    // Atualiza Barra (Inicial)
+    updateProgressUI(totalItems, completedItems);
+  }
 
-    const csaControlsDiv = document.createElement("div");
-    Object.assign(csaControlsDiv.style, { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', gap: '8px' });
+  // Função Auxiliar para atualizar UI sem destruir DOM
+  function updateProgressAndCounters(combinedKey, data) {
+      let total = 0;
+      let completed = 0;
+      
+      ["inicio", "fim"].forEach(groupKey => {
+          const items = data[groupKey] || [];
+          total += items.length;
+          
+          let groupDone = 0;
+          items.forEach((_, idx) => {
+              if (csaCompletedTasks[`${combinedKey}-${groupKey}-${idx}`]) {
+                  completed++;
+                  groupDone++;
+              }
+          });
 
-    const csaTypeContainer = document.createElement("div");
-    Object.assign(csaTypeContainer.style, { display: 'flex', borderRadius: '8px', border: '1px solid #dadce0', overflow: 'hidden' });
+          // Atualiza contador do card específico via DOM ID
+          // (Nota: Isso exige que a gente tenha referências, mas o re-render 
+          // é rápido o suficiente se a lista for pequena. Para "Apple Feel",
+          // vamos apenas atualizar a barra de progresso aqui).
+      });
 
-    const csaTypeBAU = document.createElement("div");
-    csaTypeBAU.textContent = "BAU";
-    const csaTypeLT = document.createElement("div");
-    csaTypeLT.textContent = "LT";
+      updateProgressUI(total, completed);
+      
+      // Nota: Para os contadores de card (2/5) atualizarem, 
+      // precisaríamos selecioná-los. Se preferir 100% de precisão visual,
+      // chame csaBuildChecklist() no onclick, mas perde a animação do scale(1.2).
+      // SOLUÇÃO HÍBRIDA: A animação visual já aconteceu no onclick. 
+      // Agora chamamos o rebuild depois de um delay imperceptível.
+      setTimeout(() => csaBuildChecklist(), 200);
+  }
+
+  function updateProgressUI(total, completed) {
+    const pct = total === 0 ? 0 : (completed / total) * 100;
+    progressFill.style.width = `${pct}%`;
+    
+    if (pct === 100) {
+        progressFill.style.background = "#34A853";
+    } else {
+        progressFill.style.background = "linear-gradient(90deg, #4285F4, #34A853)";
+    }
+  }
+
+  function setActiveType(type) {
+    csaCurrentType = type;
+    const newActiveStyle = getRandomGoogleStyle();
 
     Object.assign(csaTypeBAU.style, typeBtnStyle);
     Object.assign(csaTypeLT.style, typeBtnStyle);
 
-    csaTypeContainer.appendChild(csaTypeBAU);
-    csaTypeContainer.appendChild(csaTypeLT);
-    
-    csaTypeBAU.onmouseover = () => { if (csaCurrentType !== 'BAU') csaTypeBAU.style.backgroundColor = '#f1f3f4'; };
-    csaTypeBAU.onmouseout = () => { if (csaCurrentType !== 'BAU') csaTypeBAU.style.backgroundColor = '#f8f9fa'; };
-    csaTypeLT.onmouseover = () => { if (csaCurrentType !== 'LT') csaTypeLT.style.backgroundColor = '#f1f3f4'; };
-    csaTypeLT.onmouseout = () => { if (csaCurrentType !== 'LT') csaTypeLT.style.backgroundColor = '#f8f9fa'; };
-
-    const csaLangSelect = document.createElement("select");
-    Object.assign(csaLangSelect.style, styleSelect, { 
-        marginBottom: '0', 
-        width: 'auto', 
-        minWidth:'85px',
-        paddingTop: '6px',
-        paddingBottom: '6px'
-    });
-    csaLangSelect.innerHTML = `<option value="PT">PT</option><option value="ES">ES</option><option value="EN">EN</option>`;
-    csaLangSelect.value = csaCurrentLang;
-
-    csaControlsDiv.appendChild(csaTypeContainer);
-    csaControlsDiv.appendChild(csaLangSelect);
-    csaContent.appendChild(csaControlsDiv);
-
-    const csaChecklistArea = document.createElement("div");
-    csaChecklistArea.id = "csa-checklist-area";
-    Object.assign(csaChecklistArea.style, {
-        maxHeight: "60vh",
-        overflowY: "auto",
-        paddingRight: "5px"
-    });
-    csaContent.appendChild(csaChecklistArea);
-    document.body.appendChild(csaPopup);
-
-    // --- Lógica Auxiliar ---
-    function hexToRgba(hex, alpha) {
-        const clean = hex.replace("#","");
-        const r = parseInt(clean.substring(0,2),16);
-        const g = parseInt(clean.substring(2,4),16);
-        const b = parseInt(clean.substring(4,6),16);
-        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    if (type === "BAU") {
+      Object.assign(csaTypeBAU.style, newActiveStyle);
+    } else {
+      Object.assign(csaTypeLT.style, newActiveStyle);
     }
+    csaBuildChecklist();
+  }
 
-    function csaTogglePopup(show) {
-        if (show) {
-            csaPopup.style.opacity = "1";
-            csaPopup.style.pointerEvents = "auto";
-            csaPopup.style.transform = "scale(1)";
-        } else {
-            csaPopup.style.opacity = "0";
-            csaPopup.style.pointerEvents = "none";
-            csaPopup.style.transform = "scale(0.95)";
-        }
-    }
+  csaTypeBAU.onclick = () => setActiveType("BAU");
+  csaTypeLT.onclick = () => setActiveType("LT");
 
-    function csaSetLiStyle(li, isCompleted, color) {
-        li.classList.toggle('csa-completed', isCompleted);
+  csaLangSelect.addEventListener("change", (e) => {
+    csaCurrentLang = e.target.value;
+    csaBuildChecklist();
+  });
 
-        if (isCompleted) {
-            li.style.borderColor = color;
-            li.style.backgroundColor = hexToRgba(color, 0.4);
-            li.style.textDecorationLine = 'line-through';
-        } else {
-            li.style.borderColor = 'transparent';
-            li.style.backgroundColor = '#f8f9fa';
-            li.style.textDecorationLine = 'none';
-        }
-    }
+  // Carregamento inicial
+  setActiveType(csaCurrentType);
 
-    function checkGroupCompletion(combinedKey, groupKey, groupDiv) {
-        const data = csaChecklistData[combinedKey];
-        if (!data) return;
-        const items = data[groupKey];
-        if (!items || items.length === 0) return;
-        let allDone = true;
-        for (let i = 0; i < items.length; i++) {
-            const key = `${combinedKey}-${groupKey}-${i}`;
-            if (!csaCompletedTasks[key]) {
-                allDone = false;
-                break;
-            }
-        }
-        groupDiv.classList.toggle('csa-group-completed', allDone);
-    }
-
-    function csaBuildChecklist() {
-        csaChecklistArea.innerHTML = "";
-        const combinedKey = `${csaCurrentLang} ${csaCurrentType}`;
-        const data = csaChecklistData[combinedKey];
-
-        if (!data) {
-            csaChecklistArea.innerHTML = `<div style="padding: 10px; color: #5f6368; font-family: 'Poppins', sans-serif;">Script não disponível para esta combinação.</div>`;
-            return;
-        }
-
-        const color = data.color;
-
-        ['inicio', 'fim'].forEach(groupKey => {
-            const items = data[groupKey];
-            if (!items || items.length === 0) return;
-
-            const groupDiv = document.createElement('div');
-            groupDiv.className = 'csa-group-container';
-            Object.assign(groupDiv.style, { marginBottom: '16px' });
-
-            const groupTitle = document.createElement('div');
-            groupTitle.className = 'csa-group-title';
-            let titleText = groupKey === 'inicio' ? 'Início' : 'Fim';
-            if (csaCurrentLang.includes("ES")) titleText = groupKey === 'inicio' ? 'Inicio' : 'Fin';
-            if (csaCurrentLang.includes("EN")) titleText = groupKey === 'inicio' ? 'Start' : 'End';
-
-            groupTitle.textContent = titleText;
-            Object.assign(groupTitle.style, styleLabel, {
-                fontWeight: "600",
-                fontSize: "14px",
-                textDecoration: "underline",
-                marginBottom: "8px"
-            });
-            groupDiv.appendChild(groupTitle);
-
-            const list = document.createElement("ul");
-            Object.assign(list.style, { listStyle: 'none', paddingLeft: '0', margin: '0' });
-
-            items.forEach((item, index) => {
-                const li = document.createElement("li");
-                li.className = 'csa-li';
-                li.textContent = item;
-
-                const key = `${combinedKey}-${groupKey}-${index}`;
-                const done = !!csaCompletedTasks[key];
-
-                csaSetLiStyle(li, done, color);
-
-                li.addEventListener("click", () => {
-                    const newDone = !csaCompletedTasks[key];
-                    csaCompletedTasks[key] = newDone;
-                    csaSetLiStyle(li, newDone, color);
-                    checkGroupCompletion(combinedKey, groupKey, groupDiv);
-                });
-                list.appendChild(li);
-            });
-            groupDiv.appendChild(list);
-            csaChecklistArea.appendChild(groupDiv);
-
-            checkGroupCompletion(combinedKey, groupKey, groupDiv);
-        });
-    }
-
-    // --- Event Handlers (CORREÇÃO DE NOME DE VARIÁVEL) ---
-   let csaVisible = false;
-    btn.onclick = () => {
-        // --- PROTEÇÃO CONTRA ARRASTO ---
-        if (btnContainer.getAttribute('data-dragging') === 'true') {
-            return; 
-        }
-        // -------------------------------
-
-        csaVisible = !csaVisible;
-        csaTogglePopup(csaVisible);
-    };
-
-    function setActiveType(type) {
-         csaCurrentType = type;
-         
-         const newActiveStyle = getRandomGoogleStyle();
-         
-         Object.assign(csaTypeBAU.style, typeBtnStyle);
-         Object.assign(csaTypeLT.style, typeBtnStyle);
-
-         if (type === 'BAU') {
-             Object.assign(csaTypeBAU.style, newActiveStyle);
-         } else {
-             Object.assign(csaTypeLT.style, newActiveStyle);
-         }
-         csaBuildChecklist();
-    }
-
-    csaTypeBAU.onclick = () => setActiveType('BAU');
-    csaTypeLT.onclick = () => setActiveType('LT');
-
-    csaLangSelect.addEventListener("change", (e) => {
-        csaCurrentLang = e.target.value;
-        csaBuildChecklist();
-    });
-
-    // Carregamento inicial
-    setActiveType(csaCurrentType);
-
+  return toggleVisibility;
 }

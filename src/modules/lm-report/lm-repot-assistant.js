@@ -1,382 +1,502 @@
-// src/modules/feedback/feedback-assistant.js
+// src/modules/lm-report/lm-repot.js
 
-import { 
-    makeDraggable,
-    stylePopup,
-    stylePopupHeader,
-    stylePopupTitle,
-    stylePopupCloseBtn,
-    stylePopupVersion,
-    styleCredit,
-    styleFloatingButton
-} from '../shared/utils.js';
+import {
+  makeDraggable,
+  stylePopup,
+  stylePopupHeader,
+  stylePopupTitle,
+  stylePopupCloseBtn,
+  stylePopupVersion,
+  styleCredit,
+  styleFloatingButton,
+} from "../shared/utils.js";
 
-// ... (código do LINKS_DB mantido igual) ...
-// (Mantenha o seu LINKS_DB aqui)
+import { createStandardHeader } from "../shared/header-factory.js";
+import { toggleGenieAnimation } from '../shared/animations.js';
+import { SoundManager } from "../shared/sound-manager.js";
 
 // --- BANCO DE DADOS DE LINKS ---
 const LINKS_DB = {
-    lm: {
-        label: "LM Forms",
-        links: [
-            { name: "Relatório de Ocorrências", url: "https://docs.google.com/forms/d/e/1FAIpQLSc6CamPehrREeVr7yCWMyqFETrFYYezNcLb_13W4yZDQkfY6Q/viewform", desc: "Reportar problemas operacionais | Aviso de pausas" },
-            { name: "Chamadas Excedidas (>50min)", url: "https://docs.google.com/forms/d/e/1FAIpQLSfE8EMHNJMTKYeA6XM2RZjZ9AQ4LhGk1Dwm_WLu3kcMdKMikA/viewform", desc: "Registro de chamadas longas" },
-            { name: "Relatório de Bugs", url: "https://docs.google.com/forms/d/e/1FAIpQLSfkqRqT2Kbf08IStz31fQPE84MDOtGxk7cetJmc3xzShXIXRA/viewform", desc: "Erros de sistema/ferramenta" },
-             { name: "Suporte LM", url: "https://script.google.com/a/macros/google.com/s/AKfycbxYMlFCMZvqgHMIImeS_u-lNZPiertXmem-5m9Fox3jvZaq0ZOQDoc5ma96ltSvWHY/exec", desc: "Enviar casos para BAU/Solicitar Descarte/Abrir Monitoria para AMs" }
-        ]
-    },
-    qa: {
-        label: "QA",
-        links: [
-            { name: "Elogios", url: "https://docs.google.com/forms/d/e/1FAIpQLSezY5K-trQDv0LkL5IoTlV0Tl0oOqGTEszylmgcbMRXcC9Weg/viewform", desc: "Feedback positivo dos Anunciantes" },
-            { name: "Casos Complexos", url: "https://docs.google.com/forms/d/e/1FAIpQLSe26q1LEloFNRfOAVZtA7DCOQTqdu1BAEeWuxtK6oPwZhLp-A/viewform?resourcekey=0-c1N4h8gntza2gQowqYAqMw", desc: "Casos complicados de atender" }
-        ]
-    },
-    suporte: {
-        label: "Central de Ajuda",
-        links: [
-            { name: "Suporte Google Ads", url: "https://support.google.com/google-ads/", desc: "Oficial" },
-            { name: "Suporte GA4", url: "https://support.google.com/analytics/", desc: "Oficial" },
-            { name: "Suporte Merchant Center", url: "https://support.google.com/merchants/gethelp", desc: "Oficial" },
-            { name: "Doc. CSP", url: "https://developers.google.com/tag-platform/tag-manager/web/csp?hl=pt-br.", desc: "Doc. oficial sobre CSP" },
-            { name: "Doc. Enhanced Conversion", url: "https://support.google.com/google-ads/answer/9888656?hl=pt-BR", desc: "Como funcionam as conversões otimizadas?" },
-            { name: "Doc. CoMo", url: "https://developers.google.com/tag-platform/security/concepts/consent-mode?hl=pt-br", desc: "Doc. oficial sobre Consent Mode" },
-
-  
-        ]
-    },
-    outros: {
-        label: "Diversos",
-        links: [
-            { name: "Solicitar Gravação", url: "https://support.google.com/policies/contact/sar", desc: "Form para solicitar gravação da chamada." }
-        ]
-    }
+  lm: {
+    label: "LM Forms",
+    links: [
+      {
+        name: "Relatório de Ocorrências",
+        url: "https://docs.google.com/forms/d/e/1FAIpQLSc6CamPehrREeVr7yCWMyqFETrFYYezNcLb_13W4yZDQkfY6Q/viewform",
+        desc: "Reportar problemas operacionais | Aviso de pausas",
+      },
+      {
+        name: "Chamadas Excedidas (>50min)",
+        url: "https://docs.google.com/forms/d/e/1FAIpQLSfE8EMHNJMTKYeA6XM2RZjZ9AQ4LhGk1Dwm_WLu3kcMdKMikA/viewform",
+        desc: "Registro de chamadas longas",
+      },
+      {
+        name: "Relatório de Bugs",
+        url: "https://docs.google.com/forms/d/e/1FAIpQLSfkqRqT2Kbf08IStz31fQPE84MDOtGxk7cetJmc3xzShXIXRA/viewform",
+        desc: "Erros de sistema/ferramenta",
+      },
+      {
+        name: "Suporte LM",
+        url: "https://script.google.com/a/macros/google.com/s/AKfycbxYMlFCMZvqgHMIImeS_u-lNZPiertXmem-5m9Fox3jvZaq0ZOQDoc5ma96ltSvWHY/exec",
+        desc: "Enviar casos para BAU/Solicitar Descarte/Abrir Monitoria para AMs",
+      },
+    ],
+  },
+  qa: {
+    label: "QA",
+    links: [
+      {
+        name: "Elogios",
+        url: "https://docs.google.com/forms/d/e/1FAIpQLSezY5K-trQDv0LkL5IoTlV0Tl0oOqGTEszylmgcbMRXcC9Weg/viewform",
+        desc: "Feedback positivo dos Anunciantes",
+      },
+      {
+        name: "Casos Complexos",
+        url: "https://docs.google.com/forms/d/e/1FAIpQLSe26q1LEloFNRfOAVZtA7DCOQTqdu1BAEeWuxtK6oPwZhLp-A/viewform?resourcekey=0-c1N4h8gntza2gQowqYAqMw",
+        desc: "Casos complicados de atender",
+      },
+    ],
+  },
+  suporte: {
+    label: "Central de Ajuda",
+    links: [
+      {
+        name: "Suporte Google Ads",
+        url: "https://support.google.com/google-ads/",
+        desc: "Oficial",
+      },
+      {
+        name: "Suporte GA4",
+        url: "https://support.google.com/analytics/",
+        desc: "Oficial",
+      },
+      {
+        name: "Suporte Merchant Center",
+        url: "https://support.google.com/merchants/gethelp",
+        desc: "Oficial",
+      },
+      {
+        name: "Doc. CSP",
+        url: "https://developers.google.com/tag-platform/tag-manager/web/csp?hl=pt-br.",
+        desc: "Doc. oficial sobre CSP",
+      },
+      {
+        name: "Doc. Enhanced Conversion",
+        url: "https://support.google.com/google-ads/answer/9888656?hl=en",
+        desc: "Como funcionam as conversões otimizadas?",
+      },
+      {
+        name: "Doc. CoMo",
+        url: "https://developers.google.com/tag-platform/security/concepts/consent-mode?hl=pt-br",
+        desc: "Doc. oficial sobre Consent Mode",
+      },
+    ],
+  },
+  outros: {
+    label: "Diversos",
+    links: [
+      {
+        name: "Solicitar Gravação",
+        url: "https://support.google.com/policies/contact/sar",
+        desc: "Form para solicitar gravação da chamada.",
+      },
+    ],
+  },
 };
 
 export function initFeedbackAssistant() {
-    const CURRENT_VERSION = "v2.3.1";
+  const CURRENT_VERSION = "v2.4.5";
 
-    let activeTab = 'lm'; 
-    let searchTerm = "";
+  let activeTab = "lm";
+  let searchTerm = "";
 
-   // --- ESTILOS LOCAIS ---
-const styleSearchInput = {
-        width: "100%", padding: "10px 12px 10px 36px",
-        borderRadius: "8px", border: "1px solid #dadce0", background: "#f8f9fa",
-        fontSize: "14px", boxSizing: "border-box", outline: "none",
-        color: "#3c4043", transition: "background 0.2s, border-color 0.2s",
-        // SVG Clean
-        backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="%235f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>')`,
-        backgroundRepeat: "no-repeat", backgroundPosition: "10px center"
-    };
+  // --- ESTILOS LOCAIS ---
+  const styleSearchInput = {
+    width: "100%",
+    padding: "10px 12px 10px 36px",
+    borderRadius: "8px",
+    border: "1px solid #dadce0",
+    background: "#f8f9fa",
+    fontSize: "14px",
+    boxSizing: "border-box",
+    outline: "none",
+    color: "#3c4043",
+    transition: "background 0.2s, border-color 0.2s",
+    backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="%235f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>')`,
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "10px center",
+  };
 
-    // CORREÇÃO: Adicionado flexWrap e removido overflowX
-    const styleTabContainer = {
-        display: "flex", 
-        flexWrap: "wrap", // <--- Isso faz os botões caírem para a linha de baixo
-        gap: "8px", 
-        paddingBottom: "8px", 
-        marginTop: "12px",
-        borderBottom: "1px solid #dadce0"
-        // Removido: overflowX: "auto" e scrollbarWidth: "none"
-    };
+  // Estilo Chips (Abas)
+  const styleTabContainer = {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: "8px",
+    paddingBottom: "8px",
+    // O marginTop e borderBottom são cuidados pelo container da toolbar agora
+  };
 
-    const styleTabButton = {
-        padding: "6px 16px", borderRadius: "16px", border: "1px solid #dadce0",
-        background: "transparent", color: "#5f6368", fontSize: "13px",
-        fontWeight: "500", cursor: "pointer", whiteSpace: "nowrap",
-        transition: "all 0.2s ease",
-        marginBottom: "4px" // <--- Adicionado para dar espaço vertical quando quebrar linha
-    };
+  const styleTabButton = {
+    padding: "6px 16px",
+    borderRadius: "16px",
+    border: "1px solid #dadce0",
+    background: "transparent",
+    color: "#5f6368",
+    fontSize: "13px",
+    fontWeight: "500",
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+    transition: "all 0.2s ease",
+    marginBottom: "4px",
+  };
 
-    const styleActiveTab = {
-        background: "#e8f0fe", color: "#1967d2", borderColor: "#e8f0fe", fontWeight: "600"
-    };
+  const styleActiveTab = {
+    background: "#e8f0fe",
+    color: "#1967d2",
+    borderColor: "#e8f0fe",
+    fontWeight: "600",
+  };
 
-    const styleListItem = {
-        display: "flex", flexDirection: "column", padding: "12px",
-        borderRadius: "8px", cursor: "pointer", border: "1px solid transparent",
-        marginBottom: "4px", transition: "background 0.1s"
-    };
-    // --- UI: Botão Flutuante ---
-    const btnContainer = document.createElement("div");
-    Object.assign(btnContainer.style, {
-        position: "fixed", bottom: "10%", right: "24px", zIndex: "9999",
-        display: "flex", alignItems: "center", flexDirection: "row-reverse", gap: "12px"
-    });
 
-    const btn = document.createElement("button");
-    btn.id = "feedback-floating-btn";
-    btn.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M19 18l2 1V3c0-1.1-.9-2-2-2H8.99C7.89 1 7 1.9 7 3h10c1.1 0 2 .9 2 2v13zM15 5H5c-1.1 0-2 .9-2 2v16l7-3 7 3V7c0-1.1-.9-2-2-2z"/></svg>`;
+  // --- NOVOS ESTILOS ---
+  
+  // Animação de entrada dos itens (Keyframes injetados via JS ou CSS global)
+  const styleListItem = {
+    display: "flex",
+    alignItems: "center", // Centraliza verticalmente
+    padding: "10px 14px", // Mais compacto e elegante
+    borderRadius: "12px", // Google Material 3
+    cursor: "pointer",
+    border: "1px solid transparent",
+    marginBottom: "6px",
+    background: "#ffffff", // Cards brancos sobre fundo cinza ficam ótimos
+    transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.2s",
+    boxShadow: "0 1px 2px rgba(0,0,0,0.02)", // Sombra sutilíssima
+    
+    // Preparação para animação de entrada
+    opacity: "0",
+    transform: "translateY(10px)",
+  };
 
-    Object.assign(btn.style, {
-        width: "48px", height: "48px", borderRadius: "50%",
-        background: "#34a853", color: "white", border: "none", cursor: "pointer",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        boxShadow: "0 4px 12px rgba(52, 168, 83, 0.4)", 
-        transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s"
-    });
+  // Ícone Lateral (Anchor)
+  const styleListIcon = {
+    width: "36px",
+    height: "36px",
+    borderRadius: "10px",
+    background: "#f1f3f4",
+    color: "#5f6368",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: "14px",
+    fontSize: "18px",
+    flexShrink: "0"
+  };
 
-    const tooltip = document.createElement("span");
-    tooltip.textContent = "Links & Forms";
-    Object.assign(tooltip.style, {
-        background: "rgba(0,0,0,0.7)", color: "white", padding: "4px 8px",
-        borderRadius: "4px", fontSize: "12px", opacity: "0", pointerEvents: "none",
-        transition: "opacity 0.2s", whiteSpace: "nowrap", fontWeight: "500"
-    });
-
-    btn.onmouseenter = () => {
-        btn.style.transform = "scale(1.1)";
-        btn.style.boxShadow = "0 6px 16px rgba(52, 168, 83, 0.5)";
-        tooltip.style.opacity = "1";
-    };
-    btn.onmouseleave = () => {
-        btn.style.transform = "scale(1)";
-        btn.style.boxShadow = "0 4px 12px rgba(52, 168, 83, 0.4)";
-        tooltip.style.opacity = "0";
-    };
-
-    btnContainer.appendChild(btn);
-    btnContainer.appendChild(tooltip);
-    document.body.appendChild(btnContainer);
-    makeDraggable(btnContainer);
-
-    // --- POPUP ---
-    const popup = document.createElement("div");
-    popup.id = "feedback-popup";
-    // CORREÇÃO: Largura aumentada para 420px
+  // --- POPUP (Com Animação) ---
+  const popup = document.createElement("div");
+  popup.id = "feedback-popup";
     Object.assign(popup.style, stylePopup, { 
-        right: "100px", width: "max-content", maxHeight: "600px",
-        display: "flex", flexDirection: "column", borderRadius: "12px"
-    }); 
-
-    // Header Principal
-    const header = document.createElement("div");
-    Object.assign(header.style, stylePopupHeader, { 
-        padding: "16px", 
-        borderBottom: "none", 
-        flexDirection: "column", 
-        alignItems: "stretch",
-        height: "auto"
+        right: "100px", // Afastado da pílula
+        width: "400px",
+        opacity: "0", 
+        pointerEvents: "none" 
     });
-    makeDraggable(popup, header);
 
-    // Linha 1: Topo
-    const headerTopRow = document.createElement("div");
-    Object.assign(headerTopRow.style, { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" });
+const CATEGORY_ICONS = {
+    lm: '📝',      // Forms
+    qa: '🛡️',      // QA/Quality
+    suporte: '📚', // Docs
+    outros: '⚡'   // Diversos
+};
 
-    const headerLeft = document.createElement("div");
-    Object.assign(headerLeft.style, { display: "flex", alignItems: "center", gap: "12px" });
+
+  // Refs para animação
+  const animRefs = {
+    popup,
+    googleLine: null,
+    focusElement: null,
+  };
+  let visible = false;
+
+  // 1. HEADER (Factory)
+  const header = createStandardHeader(
+    popup,
+    "Links Úteis",
+    CURRENT_VERSION,
+    "Acesso rápido a formulários internos (Ocorrências, Bugs) e documentações oficiais de suporte.", // <--- NOVO
+    animRefs,
+    () => toggleVisibility()
+  );
+  popup.appendChild(header);
+
+  // 2. TOOLBAR (Busca + Abas)
+  const toolbar = document.createElement("div");
+  Object.assign(toolbar.style, {
+    padding: "16px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "12px",
+    borderBottom: "1px solid #f1f3f4",
+    flexShrink: "0",
+    backgroundColor: "#fff",
+  });
+
+  const searchInput = document.createElement("input");
+  searchInput.type = "text";
+  searchInput.placeholder = "Buscar link, form ou ajuda...";
+  Object.assign(searchInput.style, styleSearchInput);
+  animRefs.focusElement = searchInput;
+
+  searchInput.onfocus = () => {
+    searchInput.style.borderColor = "#1a73e8";
+    searchInput.style.backgroundColor = "#fff";
+  };
+  searchInput.onblur = () => {
+    searchInput.style.borderColor = "#dadce0";
+    searchInput.style.backgroundColor = "#f8f9fa";
+  };
+
+  const tabsContainer = document.createElement("div");
+  Object.assign(tabsContainer.style, styleTabContainer);
+
+  toolbar.appendChild(searchInput);
+  toolbar.appendChild(tabsContainer);
+  popup.appendChild(toolbar);
+
+  // 3. CONTEÚDO
+  const contentArea = document.createElement("div");
+  Object.assign(contentArea.style, {
+    padding: "0 8px 8px 8px",
+    overflowY: "auto",
+    flexGrow: "1",
+  });
+  popup.appendChild(contentArea);
+
+  // 4. FOOTER
+  const footer = document.createElement("div");
+  Object.assign(footer.style, {
+    padding: "8px 16px",
+    borderTop: "1px solid #eee",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    fontSize: "10px",
+    color: "#9aa0a6",
+  });
+  footer.innerHTML = `<span>by lucaste@</span>`;
+  popup.appendChild(footer);
+
+  document.body.appendChild(popup);
+
+  // --- LÓGICA DE RENDERIZAÇÃO ---
+function renderTabs() {
+    tabsContainer.innerHTML = "";
     
-    const logo = document.createElement("img");
-    logo.src = "https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg";
-    Object.assign(logo.style, { width: "24px", height: "24px" });
-    
-    const titleContainer = document.createElement("div");
-    Object.assign(titleContainer.style, { display: 'flex', flexDirection: 'column' });
-    
-    const titleText = document.createElement("span");
-    titleText.textContent = "Links Úteis";
-    Object.assign(titleText.style, stylePopupTitle, { fontSize: "16px", lineHeight: "1.2" });
-    
-    const versionDisplay = document.createElement("div");
-    versionDisplay.textContent = CURRENT_VERSION;
-    Object.assign(versionDisplay.style, stylePopupVersion);
+    Object.keys(LINKS_DB).forEach((key) => {
+      const cat = LINKS_DB[key];
+      const btn = document.createElement("button");
+      
+      // Inclui o ícone da categoria no botão (Ex: 📝 LM Forms)
+      // Usa o objeto CATEGORY_ICONS que criamos no passo anterior
+      const icon = CATEGORY_ICONS[key] || '';
+      btn.innerHTML = `<span style="font-size:14px">${icon}</span> ${cat.label}`;
+      
+      Object.assign(btn.style, styleTabButton);
+      
+      // Estado Ativo
+      if (activeTab === key && searchTerm === "") {
+        Object.assign(btn.style, styleActiveTab);
+      }
+      
+      // Feedback Tátil (Apple Feel)
+      btn.onmousedown = () => btn.style.transform = "scale(0.95)";
+      btn.onmouseup = () => btn.style.transform = "scale(1)";
+      btn.onmouseleave = () => btn.style.transform = "scale(1)";
 
-    titleContainer.appendChild(titleText);
-    titleContainer.appendChild(versionDisplay);
-    
-    headerLeft.appendChild(logo);
-    headerLeft.appendChild(titleContainer);
-
-    const closeIcon = document.createElement("div");
-    closeIcon.textContent = "✕";
-    Object.assign(closeIcon.style, stylePopupCloseBtn, { fontSize: "14px", color: "#5f6368" });
-    closeIcon.onclick = () => togglePopup(false);
-
-    headerTopRow.appendChild(headerLeft);
-    headerTopRow.appendChild(closeIcon);
-    header.appendChild(headerTopRow);
-
-    // Linha 2: Busca
-    const searchContainer = document.createElement("div");
-    Object.assign(searchContainer.style, { position: "relative", width: "100%" });
-    const searchIcon = document.createElement("span");
-    searchIcon.innerHTML = "Filtrar links..."; 
-    Object.assign(searchIcon.style, { position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", fontSize: "14px", opacity: "0.5", pointerEvents: "none" });
-// Linha 2: Busca (Simplificada e Clean)
-    const searchInput = document.createElement("input");
-    searchInput.type = "text";
-    searchInput.placeholder = "Buscar link, form ou ajuda..."; // Sem emoji
-    Object.assign(searchInput.style, styleSearchInput);
-    
-    searchInput.onfocus = () => {
-        searchInput.style.borderColor = "#1a73e8"; // Azul no foco
-        searchInput.style.backgroundColor = "#fff";
-    };
-    searchInput.onblur = () => {
-        searchInput.style.borderColor = "#dadce0";
-        searchInput.style.backgroundColor = "#f8f9fa";
-    };
-
-    // Adiciona direto no header, sem container extra
-    header.appendChild(searchInput);
-
-    // Linha 3: Abas
-    const tabsContainer = document.createElement("div");
-    Object.assign(tabsContainer.style, styleTabContainer);
-    
-    // Esconde scrollbar
-    const styleSheet = document.createElement("style");
-    styleSheet.textContent = `#feedback-popup ::-webkit-scrollbar { display: none; }`;
-    popup.appendChild(styleSheet);
-    
-    header.appendChild(tabsContainer);
-    popup.appendChild(header);
-
-    // Conteúdo
-    const contentArea = document.createElement("div");
-    Object.assign(contentArea.style, {
-        padding: "0 8px 8px 8px", 
-        overflowY: "auto",
-        flexGrow: "1"
-    });
-    popup.appendChild(contentArea);
-
-    // Footer
-    const footer = document.createElement("div");
-    Object.assign(footer.style, { 
-        padding: "8px 16px", borderTop: "1px solid #eee", 
-        display: "flex", justifyContent: "space-between", alignItems: "center",
-        fontSize: "10px", color: "#9aa0a6"
-    });
-    footer.innerHTML = `<span>by lucaste@</span>`;
-    popup.appendChild(footer);
-
-    document.body.appendChild(popup);
-
-    // --- LÓGICA DE RENDERIZAÇÃO ---
-    function renderTabs() {
-        tabsContainer.innerHTML = '';
-        Object.keys(LINKS_DB).forEach(key => {
-            const cat = LINKS_DB[key];
-            const btn = document.createElement('button');
-            btn.textContent = cat.label;
-            Object.assign(btn.style, styleTabButton);
-            if (activeTab === key && searchTerm === "") {
-                Object.assign(btn.style, styleActiveTab);
-            }
-            btn.onclick = () => {
-                activeTab = key;
-                searchTerm = "";
-                searchInput.value = "";
-                renderTabs();
-                renderList();
-            };
-            tabsContainer.appendChild(btn);
-        });
-    }
-
-    function renderList() {
-        contentArea.innerHTML = '';
-        let linksToShow = [];
-
-        if (searchTerm.trim() !== "") {
-            Object.values(LINKS_DB).forEach(cat => {
-                const filtered = cat.links.filter(l => 
-                    l.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                    l.desc.toLowerCase().includes(searchTerm.toLowerCase())
-                );
-                filtered.forEach(item => item._categoryName = cat.label);
-                linksToShow = [...linksToShow, ...filtered];
-            });
-        } else {
-            linksToShow = LINKS_DB[activeTab].links;
-        }
-
-        if (linksToShow.length === 0) {
-            contentArea.innerHTML = `<div style="text-align:center; padding:20px; color:#9aa0a6; fontSize:13px;">Nenhum link encontrado.</div>`;
-            return;
-        }
-
-        linksToShow.forEach(link => {
-            const item = document.createElement('div');
-            Object.assign(item.style, styleListItem);
-
-            const titleRow = document.createElement('div');
-            Object.assign(titleRow.style, { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' });
-            
-            const nameSpan = document.createElement('span');
-            nameSpan.textContent = link.name;
-            Object.assign(nameSpan.style, { fontSize: '14px', color: '#202124', fontWeight: '500' });
-
-            const iconSpan = document.createElement('span');
-            iconSpan.innerHTML = '&#8599;'; 
-            Object.assign(iconSpan.style, { fontSize: '14px', color: '#dadce0' });
-
-            titleRow.appendChild(nameSpan);
-            titleRow.appendChild(iconSpan);
-
-            const descSpan = document.createElement('span');
-            descSpan.textContent = link.desc + (link._categoryName ? ` • ${link._categoryName}` : '');
-            Object.assign(descSpan.style, { fontSize: '11px', color: '#5f6368' });
-
-            item.appendChild(titleRow);
-            item.appendChild(descSpan);
-
-            item.onmouseenter = () => {
-                item.style.backgroundColor = '#f1f3f4';
-                iconSpan.style.color = '#1a73e8';
-            };
-            item.onmouseleave = () => {
-                item.style.backgroundColor = 'transparent';
-                iconSpan.style.color = '#dadce0';
-            };
-            item.onclick = () => window.open(link.url, '_blank');
-
-            contentArea.appendChild(item);
-        });
-    }
-
-    searchInput.addEventListener('input', (e) => {
-        searchTerm = e.target.value;
-        if (searchTerm !== "") {
-            Array.from(tabsContainer.children).forEach(c => {
-                c.style.backgroundColor = 'transparent';
-                c.style.color = '#5f6368';
-                c.style.borderColor = '#dadce0';
-            });
-        } else {
-            renderTabs();
-        }
+      btn.onclick = () => {
+        activeTab = key;
+        searchTerm = "";
+        searchInput.value = ""; // Limpa a busca ao trocar de aba
+        
+        // Re-renderiza para atualizar o estado visual
+        renderTabs();
+        // Anima a lista
         renderList();
+      };
+      
+      tabsContainer.appendChild(btn);
     });
+  }
 
-    function togglePopup(show) {
-        if (show) {
-            popup.style.opacity = "1";
-            popup.style.pointerEvents = "auto";
-            popup.style.transform = "scale(1)";
-            searchInput.focus();
-        } else {
-            popup.style.opacity = "0";
-            popup.style.pointerEvents = "none";
-            popup.style.transform = "scale(0.95)";
-        }
+  function renderList() {
+    contentArea.innerHTML = "";
+    let linksToShow = [];
+    const isSearching = searchTerm.trim() !== "";
+
+    // 1. Filtragem
+    if (isSearching) {
+      Object.entries(LINKS_DB).forEach(([key, cat]) => {
+        const filtered = cat.links.filter(
+          (l) =>
+            l.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            l.desc.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        // Passa o ícone da categoria pai para o item filho
+        filtered.forEach((item) => {
+            item._catIcon = CATEGORY_ICONS[key];
+            item._categoryName = cat.label;
+        });
+        linksToShow = [...linksToShow, ...filtered];
+      });
+    } else {
+      linksToShow = LINKS_DB[activeTab].links;
+      // Adiciona ícone da aba ativa
+      linksToShow.forEach(item => item._catIcon = CATEGORY_ICONS[activeTab]);
     }
 
- let visible = false;
-    btn.onclick = () => {
-        // --- PROTEÇÃO CONTRA ARRASTO ---
-        if (btnContainer.getAttribute('data-dragging') === 'true') {
-            return; 
-        }
-        // -------------------------------
+    // Empty State Bonito
+    if (linksToShow.length === 0) {
+      contentArea.innerHTML = `
+        <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px; opacity:0.6;">
+            <div style="font-size:32px; margin-bottom:10px;">🔍</div>
+            <div style="font-size:13px; color:#5f6368;">Nenhum link encontrado.</div>
+        </div>`;
+      return;
+    }
 
-        visible = !visible;
-        togglePopup(visible);
-    };
+    // 2. Renderização
+    linksToShow.forEach((link, index) => {
+      const item = document.createElement("div");
+      Object.assign(item.style, styleListItem);
 
-    renderTabs();
+      // --- ESTRUTURA DO CARD ---
+      
+      // A. Ícone Lateral (Visual Anchor)
+      const iconDiv = document.createElement("div");
+      Object.assign(iconDiv.style, styleListIcon);
+      iconDiv.textContent = link._catIcon || '🔗'; // Fallback
+      item.appendChild(iconDiv);
+
+      // B. Texto Central
+      const textDiv = document.createElement("div");
+      textDiv.style.flexGrow = "1";
+      
+      // Função Highlight
+      const highlight = (text) => {
+          if (!isSearching) return text;
+          const regex = new RegExp(`(${searchTerm})`, 'gi');
+          return text.replace(regex, '<span style="color:#1a73e8; font-weight:700;">$1</span>');
+      };
+
+      const nameHTML = `<div style="font-size:14px; font-weight:500; color:#202124;">${highlight(link.name)}</div>`;
+      const descHTML = `<div style="font-size:11px; color:#5f6368; margin-top:2px;">${highlight(link.desc)}</div>`;
+      
+      textDiv.innerHTML = nameHTML + descHTML;
+      item.appendChild(textDiv);
+
+      // C. Ações (Copiar + Abrir)
+      const actionsDiv = document.createElement("div");
+      actionsDiv.style.display = "flex";
+      actionsDiv.style.gap = "4px";
+      actionsDiv.style.opacity = "0"; // Esconde actions inicialmente
+      actionsDiv.style.transition = "opacity 0.2s";
+
+      // Botão Copiar (Refinado)
+      const copyBtn = document.createElement("div");
+      copyBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+      Object.assign(copyBtn.style, {
+          width: "32px", height: "32px", borderRadius: "50%",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: "#5f6368", cursor: "pointer", transition: "all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)"
+      });
+      
+      // Lógica de Copiar com Feedback Tátil
+      copyBtn.onclick = (e) => {
+        SoundManager.playClick();
+          e.stopPropagation();
+          navigator.clipboard.writeText(link.url);
+          
+          // Animação de Sucesso
+          copyBtn.style.transform = "scale(1.2)";
+          copyBtn.style.color = "#1e8e3e"; // Verde
+          copyBtn.style.backgroundColor = "#e6f4ea";
+          
+          // Volta ao normal
+          setTimeout(() => {
+              copyBtn.style.transform = "scale(1)";
+              copyBtn.style.color = "#5f6368";
+              copyBtn.style.backgroundColor = "transparent";
+          }, 800);
+      };
+      
+      copyBtn.onmouseenter = () => copyBtn.style.backgroundColor = "#f1f3f4";
+      copyBtn.onmouseleave = () => copyBtn.style.backgroundColor = "transparent";
+
+      actionsDiv.appendChild(copyBtn);
+      
+      // Seta de Abrir (Decorativa)
+      const arrow = document.createElement("div");
+      arrow.innerHTML = "↗";
+      Object.assign(arrow.style, {
+          width: "32px", height: "32px", display: "flex", alignItems: "center", justifyContent: "center",
+          color: "#dadce0", fontSize: "16px"
+      });
+      actionsDiv.appendChild(arrow);
+
+      item.appendChild(actionsDiv);
+
+      // --- EVENTOS DO CARD ---
+      item.onclick = () => window.open(link.url, '_blank');
+      
+      item.onmouseenter = () => {
+          item.style.backgroundColor = "#f8f9fa"; // Hover leve
+          item.style.transform = "scale(1.01)"; // Micro-zoom Apple
+          actionsDiv.style.opacity = "1";
+          arrow.style.color = "#1a73e8";
+      };
+      item.onmouseleave = () => {
+          item.style.backgroundColor = "#ffffff";
+          item.style.transform = "scale(1)";
+          actionsDiv.style.opacity = "0";
+          arrow.style.color = "#dadce0";
+      };
+
+      contentArea.appendChild(item);
+
+      // --- ANIMAÇÃO EM CASCATA (STAGGER) ---
+      // Atraso baseado no índice (0ms, 50ms, 100ms...)
+      requestAnimationFrame(() => {
+          item.style.transition = "opacity 0.3s ease, transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2)"; // Spring
+          setTimeout(() => {
+              item.style.opacity = "1";
+              item.style.transform = "translateY(0)";
+          }, index * 40); // 40ms de delay entre cada item
+      });
+    });
+  }
+
+  searchInput.addEventListener("input", (e) => {
+    searchTerm = e.target.value;
+    if (searchTerm !== "") {
+      Array.from(tabsContainer.children).forEach((c) => {
+        c.style.backgroundColor = "transparent";
+        c.style.color = "#5f6368";
+        c.style.borderColor = "#dadce0";
+      });
+    } else {
+      renderTabs();
+    }
     renderList();
+  });
+
+function toggleVisibility() {
+        visible = !visible;
+        toggleGenieAnimation(visible, popup, 'cw-btn-links'); 
+    }
+
+  renderTabs();
+  renderList();
+
+  return toggleVisibility;
 }

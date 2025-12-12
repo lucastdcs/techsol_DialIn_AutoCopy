@@ -1,6 +1,7 @@
 // src/modules/email/email-automation.js
 import { showToast } from '../shared/utils.js';
 import { getPageData } from '../shared/page-data.js'; 
+import { getAgentName } from '../shared/page-data.js';
 
 const esperar = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -274,14 +275,24 @@ export async function runEmailAutomation(cannedResponseText) {
 // ============================================================
 // FUNÇÃO 2: QUICK EMAIL
 // ============================================================
+// Certifique-se de que a função esperar/sleep existe no topo ou importad
+
 export async function runQuickEmail(template) {
     console.log(`🚀 Iniciando automação (Quick): ${template.name}`);
     showToast(`Preparando email...`, { duration: 3000 });
 
     const pageData = getPageData(); 
+    const agentName = getAgentName();
+    
+    // A função openAndClearEmail já deve ter suas próprias esperas internas, 
+    // mas uma segurança extra aqui ajuda.
     const emailPronto = await openAndClearEmail(); 
     
     if (!emailPronto) return;
+
+    // --- TRAVA 1: ESTABILIZAÇÃO DA JANELA ---
+    // Espera a animação de abertura do email terminar e os campos ficarem interativos
+    await esperar(600); 
 
     // 1. Assunto
     const subjectInput = document.querySelector('input[aria-label="Subject"]');
@@ -290,43 +301,47 @@ export async function runQuickEmail(template) {
         const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
         nativeInputValueSetter.call(subjectInput, template.subject);
         subjectInput.dispatchEvent(new Event('input', { bubbles: true }));
-        await esperar(300);
+        
+        // (Essa trava você já tinha, mantive pois é boa)
+        await esperar(300); 
     }
 
     // 2. Corpo
     const editorVisivel = getVisibleEditor();
     
-   if (editorVisivel) {
+    if (editorVisivel) {
          const wrapperGeral = editorVisivel.closest('.email-body-content') || document.body;
          const editorPai = wrapperGeral.querySelector('div[contenteditable="true"][aria-label="Email body"]');
          
          if (editorPai) {
              editorPai.focus();
+             // Simula um clique para garantir que o cursor está lá
+             editorPai.click(); 
              editorPai.dispatchEvent(new Event('input', { bubbles: true }));
          }
 
-        // --- CÁLCULO AUTOMÁTICO DA DATA (3 dias + FDS) ---
+        // --- TRAVA 2: PREPARAÇÃO PARA COLAGEM ---
+        // Espera o foco "pegar" de verdade antes de injetar HTML
+        await esperar(400);
+
+        // --- CÁLCULO DA DATA ---
         const date = new Date();
-        date.setDate(date.getDate() + 3); // Soma 3 dias corridos
+        date.setDate(date.getDate() + 3); 
         const day = date.getDay();
         
-        if (day === 6) { // Sábado -> joga para Segunda (+2)
-            date.setDate(date.getDate() + 2);
-        } else if (day === 0) { // Domingo -> joga para Segunda (+1)
-            date.setDate(date.getDate() + 1);
-        }
+        if (day === 6) date.setDate(date.getDate() + 2);
+        else if (day === 0) date.setDate(date.getDate() + 1);
+        
         const dataFormatada = date.toLocaleDateString('pt-BR');
-        // ------------------------------------------------
-
+        
         let finalBody = template.body;
         finalBody = finalBody.replace(/\[Nome do Cliente\]/g, pageData.advertiserName || "Cliente");
         finalBody = finalBody.replace(/\[INSERIR URL\]/g, pageData.websiteUrl || "seu site");
         finalBody = finalBody.replace(/\[URL\]/g, pageData.websiteUrl || "seu site");
-        finalBody = finalBody.replace(/\[Seu Nome\]/g, "Agente Google"); 
-        
-        // Substitui o placeholder de data pela data calculada
+        finalBody = finalBody.replace(/\[Seu Nome\]/g, agentName); 
         finalBody = finalBody.replace(/\[MM\/DD\/YYYY\]/g, dataFormatada);
 
+        // Inserção
         document.execCommand('insertHTML', false, finalBody);
         
         if (editorPai) {
@@ -335,6 +350,12 @@ export async function runQuickEmail(template) {
         }
         
         showToast("Email preenchido com sucesso!", { duration: 2000 });
+
+        // --- TRAVA 3: FINALIZAÇÃO (CRUCIAL) ---
+        // Espera o sistema "digerir" o texto colado antes de dizer que acabou.
+        // Isso sincroniza perfeitamente com o loader do Command Center.
+        await esperar(800); 
+
     } else {
         showToast("Erro ao focar no editor.", { error: true });
     }
