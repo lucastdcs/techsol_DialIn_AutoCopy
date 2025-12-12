@@ -2,6 +2,12 @@
 
 let audioCtx = null;
 
+// Configurações Globais de Mixagem (O "Equalizador" do Sistema)
+const MIXER = {
+    masterVolume: 0.2, // Volume geral baixo para não irritar
+    rolloff: 0.05,     // Tempo padrão de decaimento suave
+};
+
 function getContext() {
     if (!audioCtx) {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -15,184 +21,213 @@ function getContext() {
     return audioCtx;
 }
 
+// Helper: Cria um oscilador com envelope padrão (ADSR Simplificado)
+// Garante que todos os sons tenham o mesmo "ataque" e "fechamento" suave.
+function playTone({ type = 'sine', freq, duration, vol = 1.0, slideTo = null }) {
+    const ctx = getContext();
+    if (!ctx) return;
+    const t = ctx.currentTime;
+
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t);
+
+    // Efeito de "Slide" (Pitch Bend) - Dá a sensação de movimento físico
+    if (slideTo) {
+        osc.frequency.exponentialRampToValueAtTime(slideTo, t + duration);
+    }
+
+    // Envelope de Volume (Evita "cliques" digitais no inicio/fim)
+    const masterVol = vol * MIXER.masterVolume;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(masterVol, t + 0.01); // Ataque rápido (10ms)
+    gain.gain.exponentialRampToValueAtTime(0.001, t + duration); // Decaimento exponencial
+
+    osc.start(t);
+    osc.stop(t + duration + 0.1);
+}
+
+// Helper: Gera Ruído Branco/Rosa (Para texturas de ar e papel)
+function createNoiseBuffer(ctx) {
+    const bufferSize = ctx.sampleRate * 2.0; // 2 segundos
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+        // Pink Noise aproximado (mais suave que White Noise)
+        const white = Math.random() * 2 - 1;
+        data[i] = (lastOut + (0.02 * white)) / 1.02;
+        lastOut = data[i];
+        data[i] *= 3.5; 
+    }
+    return buffer;
+}
+let lastOut = 0;
+let noiseBufferCache = null;
+
 export const SoundManager = {
-    // 1. CLICK (Mecânico)
+    
+    // 1. CLICK (Material: Vidro/Cerâmica)
+    // Sensação: Toque preciso em tela de vidro. Curto, agudo, mas sem ser estridente.
     playClick: () => {
-        const ctx = getContext();
-        if (!ctx) return;
-        const t = ctx.currentTime;
-
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(800, t);
-        osc.frequency.exponentialRampToValueAtTime(100, t + 0.05);
-
-        gain.gain.setValueAtTime(0.1, t);
-        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.05);
-
-        osc.start(t);
-        osc.stop(t + 0.05);
+        // Um "tap" de alta frequência com queda rápida de tom
+        playTone({
+            type: 'sine',
+            freq: 800,
+            slideTo: 600, // Leve queda para dar "peso"
+            duration: 0.08,
+            vol: 0.6
+        });
     },
 
-    // 2. SWOOSH (Ar / Movimento)
+    // 2. SWOOSH (Material: Seda/Ar)
+    // Sensação: Movimento rápido e leve. Filtrado para não chiar.
     playSwoosh: () => {
         const ctx = getContext();
         if (!ctx) return;
         const t = ctx.currentTime;
-        
-        const bufferSize = ctx.sampleRate * 0.25;
-        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
 
-        const noise = ctx.createBufferSource();
-        noise.buffer = buffer;
+        if (!noiseBufferCache) noiseBufferCache = createNoiseBuffer(ctx);
 
+        const source = ctx.createBufferSource();
+        source.buffer = noiseBufferCache;
+
+        // Filtro Bandpass que se move (o segredo do swoosh)
         const filter = ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(200, t);
-        filter.frequency.linearRampToValueAtTime(800, t + 0.1);
-        filter.frequency.linearRampToValueAtTime(200, t + 0.25);
+        filter.type = 'bandpass';
+        filter.Q.value = 1.0; 
+        filter.frequency.setValueAtTime(400, t);
+        filter.frequency.exponentialRampToValueAtTime(1200, t + 0.2);
 
         const gain = ctx.createGain();
-        gain.gain.setValueAtTime(0.05, t);
-        gain.gain.linearRampToValueAtTime(0, t + 0.25);
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(MIXER.masterVolume * 0.5, t + 0.1);
+        gain.gain.linearRampToValueAtTime(0, t + 0.3);
 
-        noise.connect(filter);
+        source.connect(filter);
         filter.connect(gain);
         gain.connect(ctx.destination);
-        noise.start(t);
+        
+        source.start(t);
+        source.stop(t + 0.4);
     },
 
-    // 3. SUCCESS (Acorde Brilhante)
+    // 3. SUCCESS (Material: Cristal)
+    // Sensação: Dopamina elegante. Um acorde maior dedilhado rapidamente (Arpeggio).
+    // Notas: C6, E6, G6 (Tríade de Dó Maior em oitava alta)
     playSuccess: () => {
-        const ctx = getContext();
-        if (!ctx) return;
-        const t = ctx.currentTime;
+        const now = getContext()?.currentTime || 0;
+        const notes = [1046.50, 1318.51, 1567.98]; // C6, E6, G6
         
-        [523.25, 659.25, 783.99].forEach((freq, i) => { 
-            const osc = ctx.createOscillator();
-            const gain = ctx.createGain();
-            osc.connect(gain);
-            gain.connect(ctx.destination);
-            osc.type = 'sine';
-            osc.frequency.value = freq;
-            
-            const start = t + (i * 0.03);
-            gain.gain.setValueAtTime(0, start);
-            gain.gain.linearRampToValueAtTime(0.05, start + 0.05);
-            gain.gain.exponentialRampToValueAtTime(0.001, start + 0.6);
-            osc.start(start);
-            osc.stop(start + 0.7);
+        notes.forEach((freq, i) => {
+            setTimeout(() => {
+                playTone({
+                    type: 'sine', // Senoidal pura = som de sino/cristal
+                    freq: freq,
+                    duration: 0.6, // Cauda longa (sustain)
+                    vol: 0.4
+                });
+            }, i * 40); // 40ms de atraso entre notas (dedilhado)
         });
     },
 
-    // 4. RESET (Limpeza / Oco)
+    // 4. RESET (Material: Papel amassando/Voltando)
+    // Sensação: Desfazer algo. Som reverso ou oco.
     playReset: () => {
-        const ctx = getContext();
-        if (!ctx) return;
-        const t = ctx.currentTime;
-        
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(150, t);
-        osc.frequency.exponentialRampToValueAtTime(40, t + 0.2);
-        
-        gain.gain.setValueAtTime(0.1, t);
-        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
-        
-        osc.start(t);
-        osc.stop(t + 0.2);
+        playTone({
+            type: 'triangle', // Triangulo tem mais harmônicos, soa mais "oco"
+            freq: 300,
+            slideTo: 100, // Queda brusca de tom = "desligando" ou "limpando"
+            duration: 0.15,
+            vol: 0.5
+        });
     },
 
-    // --- NOVOS EFEITOS ---
-
-    // 5. ERROR (Parede de Borracha / Bloqueio)
-    // Usado quando falta campo obrigatório ou ação inválida
+    // 5. ERROR (Material: Borracha/Madeira Maciça)
+    // Sensação: Bloqueio físico. Não é um alarme, é um "bater na parede".
     playError: () => {
-        const ctx = getContext();
-        if (!ctx) return;
-        const t = ctx.currentTime;
-
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        // Onda Sawtooth filtrada soa como um "buzz" ou "bump"
-        osc.type = 'sawtooth'; 
-        osc.frequency.setValueAtTime(100, t);
-        osc.frequency.exponentialRampToValueAtTime(50, t + 0.15);
-
-        const filter = ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = 150; // Abafa o som para não ser agressivo
-        osc.disconnect();
-        osc.connect(filter);
-        filter.connect(gain);
-
-        gain.gain.setValueAtTime(0.1, t);
-        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
-
-        osc.start(t);
-        osc.stop(t + 0.15);
+        // Som grave e seco.
+        playTone({
+            type: 'sine', 
+            freq: 150, // Grave
+            duration: 0.1, // Muito curto
+            vol: 0.8
+        });
+        
+        // Adiciona uma segunda camada para textura (vibração)
+        setTimeout(() => {
+             playTone({ type: 'square', freq: 50, duration: 0.05, vol: 0.1 });
+        }, 10);
     },
 
-    // 6. NOTIFICATION (Sino de Atenção)
-    // Para o futuro Módulo de Avisos
+    // 6. NOTIFICATION (Material: Metal Polido)
+    // Sensação: Um "Ping" educado pedindo atenção.
     playNotification: () => {
-        const ctx = getContext();
-        if (!ctx) return;
-        const t = ctx.currentTime;
-
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, t); // Lá (A5) - Alta frequência
-
-        // Envelope de Sino (Decay longo)
-        gain.gain.setValueAtTime(0, t);
-        gain.gain.linearRampToValueAtTime(0.05, t + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 1.5);
-
-        osc.start(t);
-        osc.stop(t + 1.5);
+        // Duas notas rápidas (Intervalo de terça menor = elegante)
+        // A5 (880) -> C6 (1046)
+        playTone({ type: 'sine', freq: 880, duration: 0.3, vol: 0.5 });
+        setTimeout(() => {
+            playTone({ type: 'sine', freq: 1046, duration: 0.6, vol: 0.5 });
+        }, 100);
     },
 
-    // 7. TYPING (Teclado Mecânico Suave)
-    // Para quando a IA estiver escrevendo
+    // 7. TYPING (Material: Teclado Mecânico Silencioso)
+    // Sensação: Produtividade. Quase imperceptível.
     playTyping: () => {
         const ctx = getContext();
         if (!ctx) return;
         const t = ctx.currentTime;
 
-        // Ruído curto e seco
-        const bufferSize = ctx.sampleRate * 0.03; // 30ms
-        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) { data[i] = Math.random() * 2 - 1; }
+        if (!noiseBufferCache) noiseBufferCache = createNoiseBuffer(ctx);
 
-        const noise = ctx.createBufferSource();
-        noise.buffer = buffer;
+        const source = ctx.createBufferSource();
+        source.buffer = noiseBufferCache;
 
+        // Filtro Highpass tira o "grave", deixa só o "clique" agudo
         const filter = ctx.createBiquadFilter();
-        filter.type = 'highpass'; // Tira o grave, deixa só o "click"
-        filter.frequency.value = 1000;
+        filter.type = 'highpass';
+        filter.frequency.value = 2000;
 
         const gain = ctx.createGain();
-        gain.gain.value = 0.03; // Muito baixo
+        gain.gain.setValueAtTime(MIXER.masterVolume * 0.2, t); // Bem baixinho
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05); // Ultra curto (50ms)
+
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        
+        source.start(t);
+        source.stop(t + 0.06);
+    },
+
+    // 8. GENIE OPEN (Material: Magia Sci-Fi)
+    // Sensação: Abertura de portal. O som assinatura da ferramenta.
+    playGenieOpen: () => {
+        const ctx = getContext();
+        if (!ctx) return;
+        const t = ctx.currentTime;
+
+        // Camada 1: O "Pop" de abertura (impacto inicial)
+        playTone({ type: 'triangle', freq: 200, slideTo: 600, duration: 0.2, vol: 0.5 });
+
+        // Camada 2: O "Brilho" (textura mágica)
+        if (!noiseBufferCache) noiseBufferCache = createNoiseBuffer(ctx);
+        const noise = ctx.createBufferSource();
+        noise.buffer = noiseBufferCache;
+
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(100, t);
+        filter.frequency.exponentialRampToValueAtTime(3000, t + 0.4); // O filtro abre revelando o brilho
+
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0, t);
+        gain.gain.linearRampToValueAtTime(MIXER.masterVolume * 0.4, t + 0.1);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
 
         noise.connect(filter);
         filter.connect(gain);
@@ -200,128 +235,41 @@ export const SoundManager = {
         noise.start(t);
     },
 
-    // 8. GENIE OPEN (Dinâmico / Variação Tonal)
-playGenieOpen: () => {
-        const ctx = getContext();
-        if (!ctx) return;
-        const t = ctx.currentTime;
-        const duration = 0.3; // Curto e rápido
-
-        // --- VARIAÇÃO SUTIL DE TEXTURA (Não musical) ---
-        // Em vez de mudar a nota (Dó, Ré, Mi), mudamos o "Brilho" do filtro.
-        // Isso faz o som parecer ligeiramente diferente a cada clique, 
-        // mas sem parecer que está tocando uma música.
-        const brightness = 800 + (Math.random() * 400); // Entre 800Hz e 1200Hz
-
-        // 1. O DESLOCAMENTO DE AR (Swoosh de Alta Qualidade)
-        const bufferSize = ctx.sampleRate * duration;
-        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        
-        // Pink Noise (Mais suave e agradável que o White Noise)
-        let b0, b1, b2, b3, b4, b5, b6;
-        b0 = b1 = b2 = b3 = b4 = b5 = b6 = 0.0;
-        for (let i = 0; i < bufferSize; i++) {
-            const white = Math.random() * 2 - 1;
-            b0 = 0.99886 * b0 + white * 0.0555179;
-            b1 = 0.99332 * b1 + white * 0.0750759;
-            b2 = 0.96900 * b2 + white * 0.1538520;
-            b3 = 0.86650 * b3 + white * 0.3104856;
-            b4 = 0.55000 * b4 + white * 0.5329522;
-            b5 = -0.7616 * b5 - white * 0.0168980;
-            data[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
-            data[i] *= 0.11; // Compensa o ganho do Pink Noise
-            b6 = white * 0.115926;
-        }
-
-        const noise = ctx.createBufferSource();
-        noise.buffer = buffer;
-
-        // Filtro Bandpass: Cria a sensação de "movimento" sem nota musical
-        const noiseFilter = ctx.createBiquadFilter();
-        noiseFilter.type = 'bandpass';
-        noiseFilter.Q.value = 1.0; // Largura de banda suave
-        
-        // O filtro se move, simulando a abertura rápida
-        noiseFilter.frequency.setValueAtTime(200, t);
-        noiseFilter.frequency.exponentialRampToValueAtTime(brightness, t + 0.15);
-
-        const noiseGain = ctx.createGain();
-        noiseGain.gain.setValueAtTime(0.08, t); // Volume discreto
-        noiseGain.gain.exponentialRampToValueAtTime(0.001, t + duration);
-
-        noise.connect(noiseFilter);
-        noiseFilter.connect(noiseGain);
-        noiseGain.connect(ctx.destination);
-        noise.start(t);
-
-        // 2. O "SNAP" MECÂNICO (Substitui o som de "fiuuu")
-        // Um clique ultra-curto grave para dar "peso" ao início da animação
-        const clickOsc = ctx.createOscillator();
-        const clickGain = ctx.createGain();
-        
-        clickOsc.connect(clickGain);
-        clickGain.connect(ctx.destination);
-        
-        // Onda triangular filtrada soa como madeira ou plástico batendo
-        clickOsc.type = 'triangle'; 
-        clickOsc.frequency.setValueAtTime(150, t); // Grave e seco
-        
-        // Envelope ultra-rápido (apenas um estalo)
-        clickGain.gain.setValueAtTime(0.05, t);
-        clickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
-
-        clickOsc.start(t);
-        clickOsc.stop(t + 0.05);
-    },
+    // 9. STARTUP (Material: Cinema / THX)
+    // Sensação: Poder e Carregamento. Um "Drone" que sobe e estabiliza.
     playStartup: () => {
         const ctx = getContext();
         if (!ctx) return;
         const t = ctx.currentTime;
 
-        // 1. O SUB-GRAVE (Peso Físico)
-        const subOsc = ctx.createOscillator();
-        const subGain = ctx.createGain();
-        subOsc.connect(subGain);
-        subGain.connect(ctx.destination);
-        subOsc.type = 'sine';
-        subOsc.frequency.value = 65.41; // C2 (Grave profundo)
-        
-        // Envelope Sub
-        subGain.gain.setValueAtTime(0, t);
-        subGain.gain.linearRampToValueAtTime(0.4, t + 1.0); // Demora 1s para encher
-        subGain.gain.exponentialRampToValueAtTime(0.001, t + 4.0); // Longo decay
-        subOsc.start(t);
-        subOsc.stop(t + 4.0);
+        // Acorde Suspenso (C4 + F4 + G4) - Cria expectativa e modernidade
+        const freqs = [261.63, 349.23, 392.00];
 
-        // 2. A TEXTURA (Drone Cinematográfico)
-        // Criamos 2 osciladores levemente desafinados para dar efeito "Stereo/Largo"
-        const freqs = [130.81, 131.5]; // C3 e C3 levemente desafinado
-        
-        // Filtro Lowpass (O segredo do som "abafado" que abre)
-        const filter = ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(100, t); // Começa fechado (abafado)
-        filter.frequency.exponentialRampToValueAtTime(2000, t + 2.5); // Abre devagar
-
-        freqs.forEach(f => {
+        freqs.forEach((f, i) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             
-            osc.type = 'sawtooth'; // Onda com "rasgo"
-            osc.frequency.value = f;
+            // Onda Sawtooth filtrada = som de sintetizador analógico quente
+            osc.type = 'sawtooth';
+            osc.frequency.value = f * 0.5; // Começa uma oitava abaixo
+            osc.frequency.linearRampToValueAtTime(f, t + 2); // Sobe para a nota correta
 
-            osc.connect(filter); // Passa pelo filtro primeiro
+            // Filtro Lowpass que abre devagar (efeito "nascer do sol")
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(50, t);
+            filter.frequency.exponentialRampToValueAtTime(1500, t + 1.5);
+
+            osc.connect(filter);
             filter.connect(gain);
             gain.connect(ctx.destination);
 
-            // Envelope
             gain.gain.setValueAtTime(0, t);
-            gain.gain.linearRampToValueAtTime(0.08, t + 0.5); // Volume baixo pois sawtooth é forte
-            gain.gain.exponentialRampToValueAtTime(0.001, t + 3.5);
+            gain.gain.linearRampToValueAtTime(MIXER.masterVolume * 0.3, t + 1);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 4);
 
             osc.start(t);
-            osc.stop(t + 4.0);
+            osc.stop(t + 4.1);
         });
     }
 };
