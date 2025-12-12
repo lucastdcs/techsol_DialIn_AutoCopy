@@ -39,6 +39,7 @@ import {
   copyHtmlToClipboard,
   ensureNoteCardIsOpen,
   triggerInputEvents,
+  createGoogleSelect
 } from "./notes-bridge.js";
 
 // MÓDULOS DE LÓGICA

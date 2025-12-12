@@ -119,3 +119,112 @@ export async function ensureNoteCardIsOpen() {
     // Retorna explicitamente o novo editor encontrado
     return novoEditor;
 }
+
+/**
+ * Cria um dropdown estilo Google que substitui o visual nativo.
+ * Retorna o elemento container, mas expõe o select nativo via .nativeSelect
+ */
+export function createGoogleSelect(id, options, placeholder = "Selecione...") {
+    // 1. O Select Nativo (Invisível, para manter a lógica funcionando)
+    const nativeSelect = document.createElement('select');
+    nativeSelect.id = id;
+    nativeSelect.style.display = 'none'; // Esconde o feio
+
+    options.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt.value;
+        option.textContent = opt.label;
+        if (opt.value === "") option.disabled = true;
+        nativeSelect.appendChild(option);
+    });
+
+    // 2. A Estrutura Visual (O Bonito)
+    const container = document.createElement('div');
+    container.className = 'cw-dropdown-container';
+
+    // Trigger (Botão)
+    const trigger = document.createElement('div');
+    trigger.className = 'cw-dropdown-trigger';
+    trigger.innerHTML = `
+        <span class="cw-current-val">${placeholder}</span>
+        <div class="cw-dropdown-arrow"></div>
+    `;
+
+    // Menu (Lista)
+    const menu = document.createElement('div');
+    menu.className = 'cw-dropdown-menu';
+
+    // Gera itens visuais
+    options.forEach(opt => {
+        if (opt.value === "") return; // Pula placeholder
+        const item = document.createElement('div');
+        item.className = 'cw-dropdown-option';
+        item.textContent = opt.label;
+        item.dataset.value = opt.value;
+        
+        // Clique na opção
+        item.onclick = (e) => {
+            e.stopPropagation();
+            // 1. Atualiza visual
+            trigger.querySelector('.cw-current-val').textContent = opt.label;
+            menu.querySelectorAll('.cw-dropdown-option').forEach(el => el.classList.remove('selected'));
+            item.classList.add('selected');
+            
+            // 2. Fecha menu
+            closeMenu();
+
+            // 3. Atualiza o select nativo e dispara evento para o resto do código saber
+            nativeSelect.value = opt.value;
+            nativeSelect.dispatchEvent(new Event('change'));
+        };
+        menu.appendChild(item);
+    });
+
+    // Lógica Abrir/Fechar
+    function openMenu() {
+        if (trigger.classList.contains('disabled')) return;
+        menu.classList.add('open');
+        trigger.classList.add('active');
+        // Fecha ao clicar fora
+        document.addEventListener('click', closeMenuOutside);
+    }
+
+    function closeMenu() {
+        menu.classList.remove('open');
+        trigger.classList.remove('active');
+        document.removeEventListener('click', closeMenuOutside);
+    }
+
+    function closeMenuOutside(e) {
+        if (!container.contains(e.target)) closeMenu();
+    }
+
+    trigger.onclick = () => {
+        if (menu.classList.contains('open')) closeMenu();
+        else openMenu();
+    };
+
+    // Montagem
+    container.appendChild(trigger);
+    container.appendChild(menu);
+    container.appendChild(nativeSelect);
+
+    // Método público para desabilitar visualmente
+    container.setDisabled = (isDisabled) => {
+        if (isDisabled) trigger.classList.add('disabled');
+        else trigger.classList.remove('disabled');
+        nativeSelect.disabled = isDisabled;
+    };
+    
+    // Método público para resetar
+    container.reset = () => {
+        trigger.querySelector('.cw-current-val').textContent = placeholder;
+        nativeSelect.value = "";
+        menu.querySelectorAll('.cw-dropdown-option').forEach(el => el.classList.remove('selected'));
+    };
+
+    // Expose o select nativo para você adicionar listeners depois
+    container.nativeSelect = nativeSelect;
+
+    return container;
+}
