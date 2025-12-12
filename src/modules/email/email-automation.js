@@ -50,13 +50,17 @@ function getVisibleEditor() {
 }
 
 // --- FUNÇÃO COMPARTILHADA: ABRIR E LIMPAR ---
+// --- FUNÇÃO COMPARTILHADA: ABRIR E LIMPAR (LÓGICA SEQUENCIAL CORRIGIDA) ---
 async function openAndClearEmail() {
-    // 1. ABRIR EMAIL
+    console.log("🚀 FASE 1: Abrindo janela de email...");
+
+    // =========================================================================
+    // FASE 1: ABRIR A JANELA
+    // =========================================================================
     let emailAberto = false;
     const todosIcones = Array.from(document.querySelectorAll('i.material-icons-extended'));
     const iconeEmail = todosIcones.find(el => el.innerText.trim() === 'email');
 
-    // Tenta achar botão de email VISÍVEL
     if (iconeEmail && iconeEmail.offsetParent !== null) {
         const botaoAlvo = iconeEmail.closest('material-button') || iconeEmail.closest('material-fab') || iconeEmail;
         if (botaoAlvo.style) {
@@ -87,139 +91,134 @@ async function openAndClearEmail() {
         }
     }
 
-    // === ESPERA PELO EDITOR VISÍVEL E VÁLIDO ===
-    let tentativas = 0;
-    let editorVisivel = getVisibleEditor(); // Usa a nova função filtrada
-
-    console.log("⏳ Aguardando editor EDITÁVEL...");
-    
-    while (!editorVisivel && tentativas < 30) {
-        await esperar(500);
-        editorVisivel = getVisibleEditor();
-        tentativas++;
-    }
-
-    if (!editorVisivel) {
-        showToast("Erro: Editor de email não apareceu.", { error: true });
+    if (!emailAberto) {
+        showToast("Erro: Botão de email não encontrado.", { error: true });
         return false;
     }
 
-    console.log("🕵️ Verificando existência de rascunhos (Ghost Drafts)...");
-
-// =========================================================================
-    // 2. DETECÇÃO E ELIMINAÇÃO DE RASCUNHO (Lógica Nova)
     // =========================================================================
-    // Cole isso LOGO APÓS clicar para abrir o e-mail
+    // FASE 2: CAÇA AO RASCUNHO (PRIORIDADE MÁXIMA)
+    // =========================================================================
+    // Aqui nós NÃO procuramos o editor ainda. Procuramos o problema (rascunho).
     
-    console.log("🕵️ Procurando barra de rascunho (Polling)...");
+    console.log("🚀 FASE 2: Verificando rascunhos (Polling de 3s)...");
     
     let draftButton = null;
     let attempts = 0;
     
-    // Tenta achar o botão de descarte por até 2.5 segundos
-    // Motivo: A barra amarela/azul aparece com delay
-    while (attempts < 12) {
+    // Loop de espera exclusivo para o botão de rascunho
+    while (attempts < 15) { // Tenta por 3 segundos (15 * 200ms)
         await esperar(200);
         
-        // Seletor EXATO baseado no HTML que você mandou
         const candidates = document.querySelectorAll('material-button[debug-id="discard-prewrite-draft-button"]');
-        
-        // Pega apenas o visível
         draftButton = Array.from(candidates).find(el => el.offsetParent !== null);
         
+        // Se achou o botão, PARA TUDO e foca nele
         if (draftButton) break;
+        
+        // Se, durante a busca pelo rascunho, o EDITOR FINAL aparecer,
+        // significa que não tinha rascunho. Podemos sair do loop mais cedo.
+        const editorJaApareceu = getVisibleEditor();
+        if (editorJaApareceu) {
+            console.log("ℹ️ Editor apareceu limpo. Sem rascunhos.");
+            break; 
+        }
+
         attempts++;
     }
 
     if (draftButton) {
-        console.log("⚠️ RASCUNHO ENCONTRADO! Iniciando sequência de descarte...");
+        console.log("⚠️ RASCUNHO LOCALIZADO! Executando descarte...");
         
-        // --- CLIQUE REFORÇADO ---
-        // 1. Simula eventos completos no botão
+        // 1. Clique agressivo no Discard
         simularCliqueReal(draftButton);
-        
-        // 2. Clica no texto interno (às vezes o evento está na div do texto)
         const textInside = draftButton.querySelector('.buttonText');
         if (textInside) simularCliqueReal(textInside);
-        
-        // 3. Método nativo por garantia
         draftButton.click();
 
-        // --- ESPERA O MODAL DE CONFIRMAÇÃO ---
-        console.log("⏳ Aguardando botão Confirm...");
-        
+        // 2. Espera o Modal de Confirmação
+        console.log("⏳ Aguardando Confirm...");
         let confirmBtn = null;
         let confirmAttempts = 0;
         
-        while (confirmAttempts < 15) { // Espera até 3 segundos pelo modal
+        while (confirmAttempts < 20) { // Espera até 4s (modais são lentos)
             await esperar(200);
-            
-            // Seletor EXATO do Confirm baseado no HTML
             const confirms = document.querySelectorAll('material-button[debug-id="confirm-button"]');
             confirmBtn = Array.from(confirms).find(el => el.offsetParent !== null);
-            
             if (confirmBtn) break;
             confirmAttempts++;
         }
 
         if (confirmBtn) {
-            console.log("✅ Botão Confirm achado! Clicando...");
-            
+            console.log("✅ Confirmando...");
             simularCliqueReal(confirmBtn);
-            
-            // Tenta clicar no conteúdo do botão também
             const confirmContent = confirmBtn.querySelector('.content');
             if (confirmContent) simularCliqueReal(confirmContent);
             
-            // Espera o sistema processar o descarte e recarregar o editor
-            // Esse tempo é necessário para o DOM antigo morrer e o novo nascer
-            showToast("Rascunho descartado. Aguarde...", { duration: 2000 });
-            await esperar(2500); 
+            showToast("Limpando rascunho...", { duration: 2000 });
+            
+            // O PULO DO GATO:
+            // Depois de confirmar, TEMOS que esperar o editor antigo morrer e o novo nascer.
+            console.log("⏳ Aguardando reload do editor pós-descarte...");
+            await esperar(3000); 
         } else {
-            console.warn("❌ O botão 'Discard' foi clicado, mas o modal de confirmação não apareceu.");
+            console.warn("❌ Confirm não apareceu.");
         }
-    } else {
-        console.log("ℹ️ Nenhum rascunho detectado. Seguindo.");
     }
 
-    // 3. LIMPEZA NUCLEAR NO EDITOR CORRETO
-    if (editorVisivel) {
-        const containerTopo = editorVisivel.closest('[id="email-body-content-top"]');
-        const wrapperGeral = editorVisivel.closest('.email-body-content') || document.body;
-        const editorPai = wrapperGeral.querySelector('div[contenteditable="true"][aria-label="Email body"]');
+    // =========================================================================
+    // FASE 3: O EDITOR FINAL (Só agora nos importamos com ele)
+    // =========================================================================
+    
+    console.log("🚀 FASE 3: Buscando editor final para limpeza...");
 
-        if (containerTopo) {
-            if (editorPai) {
-                const ancestral = editorPai.closest('[aria-hidden="true"]');
-                if (ancestral) ancestral.removeAttribute('aria-hidden');
-                editorPai.focus();
-            }
-            
-            await esperar(300);
+    let tentativasEditor = 0;
+    let editorVisivel = getVisibleEditor(); 
+    
+    while (!editorVisivel && tentativasEditor < 20) {
+        await esperar(500);
+        editorVisivel = getVisibleEditor();
+        tentativasEditor++;
+    }
 
-            // LIMPEZA
-            containerTopo.innerHTML = `
-                <div id="email-body-content-top-content" style="font:normal 13px/17px Roboto,sans-serif;display:block">
-                    <span id="cases-body-field"><br></span>
-                </div>
-            `;
-            
-            // REPOSICIONA CURSOR
-            const novoElementoSagrado = containerTopo.querySelector('#cases-body-field');
-            if (novoElementoSagrado) {
-                const range = document.createRange();
-                range.selectNodeContents(novoElementoSagrado);
-                range.collapse(true); 
-                const sel = window.getSelection();
-                sel.removeAllRanges();
-                sel.addRange(range);
-            }
-            
-            return true; // Sucesso
+    if (!editorVisivel) {
+        showToast("Erro: Editor não carregou após a abertura.", { error: true });
+        return false;
+    }
+
+    // LIMPEZA DO HTML (Igual ao anterior)
+    const containerTopo = editorVisivel.closest('[id="email-body-content-top"]');
+    const wrapperGeral = editorVisivel.closest('.email-body-content') || document.body;
+    const editorPai = wrapperGeral.querySelector('div[contenteditable="true"][aria-label="Email body"]');
+
+    if (containerTopo) {
+        if (editorPai) {
+            const ancestral = editorPai.closest('[aria-hidden="true"]');
+            if (ancestral) ancestral.removeAttribute('aria-hidden');
+            editorPai.focus();
         }
+        
+        await esperar(300);
+
+        containerTopo.innerHTML = `
+            <div id="email-body-content-top-content" style="font:normal 13px/17px Roboto,sans-serif;display:block">
+                <span id="cases-body-field"><br></span>
+            </div>
+        `;
+        
+        const novoElementoSagrado = containerTopo.querySelector('#cases-body-field');
+        if (novoElementoSagrado) {
+            const range = document.createRange();
+            range.selectNodeContents(novoElementoSagrado);
+            range.collapse(true); 
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+        
+        return true; 
     }
     
-    showToast("Erro crítico ao acessar editor.", { error: true });
     return false;
 }
 
