@@ -5,7 +5,7 @@ let noiseBufferCache = null;
 
 // Configurações de "Mixagem de Escritório"
 // Volume muito baixo para ser percebido apenas pelo subconsciente
-const MASTER_GAIN = 0.08; 
+const MASTER_GAIN = 0.1; 
 
 function getContext() {
     if (!audioCtx) {
