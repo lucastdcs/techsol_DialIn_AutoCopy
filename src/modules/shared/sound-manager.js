@@ -177,62 +177,46 @@ export const SoundManager = {
     },
     
 
-    playStartup: () => {
+   playStartup: async () => {
         const ctx = getContext();
         if (!ctx) return;
-        const t = ctx.currentTime;
-
-        // PARTE 1: O "TA" (O Impacto Percussivo / Batida na Madeira)
-        const kickOsc = ctx.createOscillator();
-        const kickGain = ctx.createGain();
         
-        kickOsc.connect(kickGain);
-        kickGain.connect(ctx.destination);
-
-        kickOsc.type = 'sine';
-        kickOsc.frequency.setValueAtTime(120, t); // Começa "alto"
-        kickOsc.frequency.exponentialRampToValueAtTime(40, t + 0.15); // Cai brusco (Bumbo)
-
-        kickGain.gain.setValueAtTime(MASTER_GAIN * 1.5, t); // Ataque forte
-        kickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.3); // Some rápido
-
-        kickOsc.start(t);
-        kickOsc.stop(t + 0.3);
-
-
-        // PARTE 2: O "DUM" (O Acorde Sombrio/Cinemático)
-        // Usamos 3 osciladores desafinados para criar o efeito "Wide" (Estéreo)
-        const freqs = [55, 55.4, 110]; // Lá Grave (A1) + Oitava
-
-        freqs.forEach((f, i) => {
-            const osc = ctx.createOscillator();
+        // Se já decodificamos antes, usa o cache (Performance instantânea)
+        if (SoundManager._startupBuffer) {
+            const source = ctx.createBufferSource();
+            source.buffer = SoundManager._startupBuffer;
+            
             const gain = ctx.createGain();
-            const filter = ctx.createBiquadFilter();
-
-            // Sawtooth dá a textura "rasgada" e rica
-            osc.type = 'sawtooth';
-            osc.frequency.value = f;
-
-            // Filtro Lowpass: Corta o chiado agudo, deixa só o "peso" do grave
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(100, t); 
-            filter.frequency.linearRampToValueAtTime(600, t + 0.3); // O filtro abre um pouco (Bloom)
-            filter.frequency.exponentialRampToValueAtTime(100, t + 2.5); // Fecha no final
-
-            osc.connect(filter);
-            filter.connect(gain);
+            gain.gain.value = MASTER_GAIN * 2.0; // Um pouco mais alto que os cliques
+            
+            source.connect(gain);
             gain.connect(ctx.destination);
+            source.start(0);
+            return;
+        }
 
-            // Envelope do "Dum"
-            gain.gain.setValueAtTime(0, t);
-            // Pequeno atraso (0.05s) para separar do "Ta"
-            gain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.4, t + 0.1); 
-            // Sustain longo e dramático
-            gain.gain.exponentialRampToValueAtTime(0.001, t + 3.5);
+        // Se é a primeira vez, decodifica a string Base64
+        try {
+            const response = await fetch(STARTUP_SOUND);
+            const arrayBuffer = await response.arrayBuffer();
+            const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+            
+            // Salva no cache para a próxima vez ser imediata
+            SoundManager._startupBuffer = audioBuffer;
 
-            osc.start(t);
-            osc.stop(t + 3.6);
-        });
+            // Toca
+            const source = ctx.createBufferSource();
+            source.buffer = audioBuffer;
+            
+            const gain = ctx.createGain();
+            gain.gain.value = MASTER_GAIN * 2.0;
+
+            source.connect(gain);
+            gain.connect(ctx.destination);
+            source.start(0);
+        } catch (e) {
+            console.error("Erro ao tocar som de startup:", e);
+        }
     },
     playNotification: () => {
         const ctx = getContext();
