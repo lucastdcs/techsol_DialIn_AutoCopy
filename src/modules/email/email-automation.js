@@ -104,24 +104,44 @@ async function openAndClearEmail() {
         return false;
     }
 
-    // 2. DESCARTAR RASCUNHO
-// 2. DESCARTAR RASCUNHO (Lógica Blindada)
-    // Busca TODOS os botões de descarte possíveis
-    const todosDescartes = Array.from(document.querySelectorAll('material-button[debug-id="discard-prewrite-draft-button"]'));
-    // Filtra apenas o que está visível na tela
-    const btnDiscardDraft = todosDescartes.find(el => el.offsetParent !== null);
+    console.log("🕵️ Verificando existência de rascunhos (Ghost Drafts)...");
+
+    let btnDiscardDraft = null;
+    let tentativasDraft = 0;
+    
+    // Tenta encontrar o botão por até 2 segundos (10 tentativas de 200ms)
+    // Isso dá tempo da barra de aviso deslizar na tela
+    while (!btnDiscardDraft && tentativasDraft < 10) {
+        const todosDescartes = Array.from(document.querySelectorAll('material-button[debug-id="discard-prewrite-draft-button"], material-button[debug-id="discard-draft-button"]'));
+        
+        // Filtra pelo que está VISÍVEL na tela
+        btnDiscardDraft = todosDescartes.find(el => el.offsetParent !== null);
+        
+        if (!btnDiscardDraft) {
+            await esperar(200); // Espera um pouco antes de tentar de novo
+            tentativasDraft++;
+        }
+    }
     
     if (btnDiscardDraft) {
-        console.log("⚠️ Rascunho detectado. Clicando em Discard...");
+        console.log("⚠️ Rascunho detectado! Clicando em Discard...");
+        
+        // Tenta clicar no botão e também no ícone dentro dele (às vezes o evento está no filho)
         simularCliqueReal(btnDiscardDraft);
+        const iconInside = btnDiscardDraft.querySelector('i') || btnDiscardDraft.querySelector('.content');
+        if (iconInside) simularCliqueReal(iconInside);
         
         // Espera ativa pelo botão de confirmação (o modal pode demorar a aparecer)
         let btnConfirm = null;
         let tentativasConfirm = 0;
         
-        while (!btnConfirm && tentativasConfirm < 10) { // Espera até 2s
+        console.log("⏳ Aguardando modal de confirmação...");
+        while (!btnConfirm && tentativasConfirm < 15) { // Aumentei para 3s (margem de segurança)
             await esperar(200);
-            const todosConfirms = Array.from(document.querySelectorAll('material-button[debug-id="confirm-button"]'));
+            // Busca botão 'Confirm' ou 'Discard' dentro do modal (dialog)
+            // O seletor foi expandido para garantir que pegue o botão certo do modal
+            const todosConfirms = Array.from(document.querySelectorAll('material-dialog material-button[debug-id="confirm-button"], material-button[debug-id="discard-button"]'));
+            
             btnConfirm = todosConfirms.find(el => el.offsetParent !== null);
             tentativasConfirm++;
         }
@@ -130,15 +150,23 @@ async function openAndClearEmail() {
             console.log("✅ Confirmando descarte...");
             simularCliqueReal(btnConfirm);
             
-            // Espera crítica: O editor recarrega após o descarte.
-            // Precisamos esperar o editor antigo sumir e o novo aparecer, ou apenas esperar um tempo seguro.
-            await esperar(2500); 
+            // Espera CRÍTICA: 
+            // Quando descarta, o editor pisca e recarrega. Precisamos esperar ele estabilizar.
+            showToast("Rascunho descartado. Recarregando...", { duration: 2000 });
+            await esperar(3000); 
             
-            // Atualiza a referência do editor, pois o DOM mudou
-            // Não precisamos fazer nada aqui, pois a função vai buscar o editor novamente abaixo
+            // IMPORTANTE: Atualiza a referência do editorVisivel, pois o elemento antigo do DOM pode ter sido destruído
+            editorVisivel = getVisibleEditor();
+            if (!editorVisivel) {
+                 // Tenta buscar mais uma vez caso o reload tenha demorado
+                 await esperar(1000);
+                 editorVisivel = getVisibleEditor();
+            }
         } else {
-            console.warn("⚠️ Cliquei em Discard, mas o botão Confirm não apareceu.");
+            console.warn("⚠️ Cliquei em Discard, mas o botão Confirm não apareceu a tempo.");
         }
+    } else {
+        console.log("✅ Nenhum rascunho detectado após verificação.");
     }
 
     // 3. LIMPEZA NUCLEAR NO EDITOR CORRETO
