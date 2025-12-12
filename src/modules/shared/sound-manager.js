@@ -177,7 +177,7 @@ export const SoundManager = {
     },
     
 
-_playStartupSynth: () => {
+_playStartup: () => {
         const ctx = getContext();
         if (!ctx) return;
         const t = ctx.currentTime;
