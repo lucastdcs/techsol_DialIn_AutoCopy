@@ -179,80 +179,91 @@ export const SoundManager = {
 
 // --- OPÇÃO: NETFLIX REPLICA (Pure JS Synthesis) ---
     playStartup: () => {
+
         const ctx = getContext();
         if (!ctx) return;
         const t = ctx.currentTime;
 
-        // --- CAMADA 1: O "TA" (O Impacto Seco / Madeira) ---
-        // Usamos uma onda Quadrada filtrada para dar o som de "Toc-Toc"
-        const clickOsc = ctx.createOscillator();
-        const clickGain = ctx.createGain();
-        const clickFilter = ctx.createBiquadFilter();
+        // DEFINIÇÃO DO TEMPO (O Segredo do Ritmo)
+        // O "TA" acontece em t=0
+        // O "DUM" começa sutilmente em t=0.05 mas explode em t=0.15
+        const dumDelay = 0.12; 
 
-        clickOsc.type = 'square'; // Onda quadrada tem o som de "madeira/plástico"
-        clickOsc.frequency.setValueAtTime(150, t);
-        clickOsc.frequency.exponentialRampToValueAtTime(10, t + 0.1); // Cai rápido
+        // === EVENTO 1: O "TA" (O Impacto Seco) ===
+        // Precisa ser agudo no início para cortar a mixagem
+        
+        // 1.1 O Estalo (Knock)
+        const snapOsc = ctx.createOscillator();
+        const snapGain = ctx.createGain();
+        const snapFilter = ctx.createBiquadFilter();
 
-        clickFilter.type = 'lowpass';
-        clickFilter.frequency.value = 300; // Corta o agudo irritante
+        snapOsc.type = 'square'; // Quadrada = Som oco/madeira
+        // Começa bem agudo (400Hz) e cai instantaneamente. Isso dá o "T" do "Ta"
+        snapOsc.frequency.setValueAtTime(400, t); 
+        snapOsc.frequency.exponentialRampToValueAtTime(50, t + 0.1); 
 
-        clickGain.gain.setValueAtTime(MASTER_GAIN * 3.0, t); // Ataque forte
-        clickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.15); // Muito curto
+        snapFilter.type = 'lowpass';
+        snapFilter.frequency.setValueAtTime(800, t); 
+        snapFilter.frequency.exponentialRampToValueAtTime(100, t + 0.1); // Filtra o final
 
-        clickOsc.connect(clickFilter);
-        clickFilter.connect(clickGain);
-        clickGain.connect(ctx.destination);
-        clickOsc.start(t); clickOsc.stop(t + 0.2);
+        snapGain.gain.setValueAtTime(MASTER_GAIN * 4.0, t); // Volume alto!
+        snapGain.gain.exponentialRampToValueAtTime(0.001, t + 0.1); // Muito curto (100ms)
 
+        snapOsc.connect(snapFilter);
+        snapFilter.connect(snapGain);
+        snapGain.connect(ctx.destination);
+        snapOsc.start(t); snapOsc.stop(t + 0.12);
 
-        // --- CAMADA 2: O "BUM" (O Peso Sub-Grave) ---
-        // O corpo do som, que bate no peito.
+        // 1.2 O Peso do TA (Kick)
+        // Um suporte grave para o estalo não ficar magro
         const kickOsc = ctx.createOscillator();
         const kickGain = ctx.createGain();
-        
         kickOsc.type = 'sine';
-        kickOsc.frequency.setValueAtTime(100, t);
-        kickOsc.frequency.exponentialRampToValueAtTime(30, t + 0.5); // Cai mais devagar que o click
-
-        kickGain.gain.setValueAtTime(MASTER_GAIN * 2.5, t);
-        kickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
-
+        kickOsc.frequency.setValueAtTime(150, t);
+        kickOsc.frequency.exponentialRampToValueAtTime(50, t + 0.15);
+        
+        kickGain.gain.setValueAtTime(MASTER_GAIN * 1.5, t);
+        kickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+        
         kickOsc.connect(kickGain);
         kickGain.connect(ctx.destination);
-        kickOsc.start(t); kickOsc.stop(t + 0.5);
+        kickOsc.start(t); kickOsc.stop(t + 0.15);
 
 
-        // --- CAMADA 3: O "BLOOM" (A Textura Cinematográfica) ---
-        // O acorde que "abre" (Wahhh). O segredo da Netflix.
-        // Usamos 3 osciladores levemente desafinados para criar o efeito "Wide" (Estéreo)
-        const freqs = [55, 55.4, 110]; // Lá Grave (A1) + Oitava acima
+        // === EVENTO 2: O "DUM" (O Bloom Cinematográfico) ===
+        // Só começa DEPOIS que o TA bateu (usando a variável dumDelay)
 
-        freqs.forEach((f, i) => {
+        const freqs = [55, 55.4, 110.5]; // Lá A1 + Oitava (Chorus effect)
+
+        freqs.forEach((f) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             const filter = ctx.createBiquadFilter();
 
-            osc.type = 'sawtooth'; // Sawtooth dá a textura rasgada/rica
+            osc.type = 'sawtooth'; // Rico em harmônicos
             osc.frequency.value = f;
 
-            // O SEGREDO ESTÁ AQUI: O Filtro Lowpass Dinâmico
+            // FILTRO DE ABERTURA (O "Wahhh")
             filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(20, t); // Começa totalmente fechado (mudo)
-            // Abre rapidinho (O efeito "Wa-Dum")
-            filter.frequency.linearRampToValueAtTime(800, t + 0.2); 
-            // Fecha devagar (O fade out dramático)
-            filter.frequency.exponentialRampToValueAtTime(50, t + 2.5); 
+            filter.frequency.setValueAtTime(30, t); // Começa fechado
+            // Abre o filtro EXATAMENTE após o delay
+            filter.frequency.linearRampToValueAtTime(900, t + dumDelay + 0.2); 
+            // Fecha devagar
+            filter.frequency.exponentialRampToValueAtTime(40, t + 3.0); 
 
+            // VOLUME (Fade In)
             gain.gain.setValueAtTime(0, t);
-            // Entra um pouquinho depois da batida (0.05s de delay)
-            gain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.5, t + 0.1); 
-            gain.gain.exponentialRampToValueAtTime(0.001, t + 3.0);
+            // O volume sobe só depois do delay, criando a separação
+            gain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.6, t + dumDelay + 0.1); 
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 3.5);
 
             osc.connect(filter);
             filter.connect(gain);
             gain.connect(ctx.destination);
             
-            osc.start(t); osc.stop(t + 3.1);
+            // Note que o oscilador começa mudo em t, mas só aparece em t + dumDelay
+            osc.start(t); 
+            osc.stop(t + 3.6);
         });
     },
     playNotification: () => {
