@@ -177,47 +177,76 @@ export const SoundManager = {
     },
     
 
-playStartup: () => {
+// --- OPÇÃO: NETFLIX REPLICA (Pure JS Synthesis) ---
+    playStartup: () => {
         const ctx = getContext();
         if (!ctx) return;
         const t = ctx.currentTime;
 
-        // CAMADA 1: O "KICK" (A batida na mesa)
-        // Um som curto e seco para marcar o início
-        const kick = ctx.createOscillator();
+        // --- CAMADA 1: O "TA" (O Impacto Seco / Madeira) ---
+        // Usamos uma onda Quadrada filtrada para dar o som de "Toc-Toc"
+        const clickOsc = ctx.createOscillator();
+        const clickGain = ctx.createGain();
+        const clickFilter = ctx.createBiquadFilter();
+
+        clickOsc.type = 'square'; // Onda quadrada tem o som de "madeira/plástico"
+        clickOsc.frequency.setValueAtTime(150, t);
+        clickOsc.frequency.exponentialRampToValueAtTime(10, t + 0.1); // Cai rápido
+
+        clickFilter.type = 'lowpass';
+        clickFilter.frequency.value = 300; // Corta o agudo irritante
+
+        clickGain.gain.setValueAtTime(MASTER_GAIN * 3.0, t); // Ataque forte
+        clickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.15); // Muito curto
+
+        clickOsc.connect(clickFilter);
+        clickFilter.connect(clickGain);
+        clickGain.connect(ctx.destination);
+        clickOsc.start(t); clickOsc.stop(t + 0.2);
+
+
+        // --- CAMADA 2: O "BUM" (O Peso Sub-Grave) ---
+        // O corpo do som, que bate no peito.
+        const kickOsc = ctx.createOscillator();
         const kickGain = ctx.createGain();
-        kick.connect(kickGain);
+        
+        kickOsc.type = 'sine';
+        kickOsc.frequency.setValueAtTime(100, t);
+        kickOsc.frequency.exponentialRampToValueAtTime(30, t + 0.5); // Cai mais devagar que o click
+
+        kickGain.gain.setValueAtTime(MASTER_GAIN * 2.5, t);
+        kickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+
+        kickOsc.connect(kickGain);
         kickGain.connect(ctx.destination);
+        kickOsc.start(t); kickOsc.stop(t + 0.5);
 
-        kick.frequency.setValueAtTime(150, t);
-        kick.frequency.exponentialRampToValueAtTime(40, t + 0.1); // Cai rápido
-        
-        kickGain.gain.setValueAtTime(MASTER_GAIN * 2.0, t);
-        kickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-        
-        kick.start(t); kick.stop(t + 0.2);
 
-        // CAMADA 2: O "BLOOM" (A textura que abre)
-        // Usamos ondas Sawtooth (serrilhadas) para ter aquela textura de sintetizador analógico
-        const freqs = [55, 55.5, 110]; // Lá Grave desafinado (efeito Chorus)
+        // --- CAMADA 3: O "BLOOM" (A Textura Cinematográfica) ---
+        // O acorde que "abre" (Wahhh). O segredo da Netflix.
+        // Usamos 3 osciladores levemente desafinados para criar o efeito "Wide" (Estéreo)
+        const freqs = [55, 55.4, 110]; // Lá Grave (A1) + Oitava acima
 
         freqs.forEach((f, i) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             const filter = ctx.createBiquadFilter();
 
-            osc.type = 'sawtooth';
+            osc.type = 'sawtooth'; // Sawtooth dá a textura rasgada/rica
             osc.frequency.value = f;
 
-            // O Filtro é o segredo da Netflix: Ele começa fechado (abafado) e abre
+            // O SEGREDO ESTÁ AQUI: O Filtro Lowpass Dinâmico
             filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(50, t); 
-            filter.frequency.linearRampToValueAtTime(800, t + 0.3); // Abre (Wahhh)
-            filter.frequency.exponentialRampToValueAtTime(50, t + 2.0); // Fecha
+            filter.frequency.setValueAtTime(20, t); // Começa totalmente fechado (mudo)
+            // Abre rapidinho (O efeito "Wa-Dum")
+            filter.frequency.linearRampToValueAtTime(800, t + 0.2); 
+            // Fecha devagar (O fade out dramático)
+            filter.frequency.exponentialRampToValueAtTime(50, t + 2.5); 
 
             gain.gain.setValueAtTime(0, t);
-            gain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.5, t + 0.1); // Entra suave depois do Kick
-            gain.gain.exponentialRampToValueAtTime(0.001, t + 3.0); // Longo sustain
+            // Entra um pouquinho depois da batida (0.05s de delay)
+            gain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.5, t + 0.1); 
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 3.0);
 
             osc.connect(filter);
             filter.connect(gain);
