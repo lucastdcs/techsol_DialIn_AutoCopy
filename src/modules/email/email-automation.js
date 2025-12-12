@@ -106,67 +106,80 @@ async function openAndClearEmail() {
 
     console.log("🕵️ Verificando existência de rascunhos (Ghost Drafts)...");
 
-    let btnDiscardDraft = null;
-    let tentativasDraft = 0;
+// =========================================================================
+    // 2. DETECÇÃO E ELIMINAÇÃO DE RASCUNHO (Lógica Nova)
+    // =========================================================================
+    // Cole isso LOGO APÓS clicar para abrir o e-mail
     
-    // Tenta encontrar o botão por até 2 segundos (10 tentativas de 200ms)
-    // Isso dá tempo da barra de aviso deslizar na tela
-    while (!btnDiscardDraft && tentativasDraft < 10) {
-        const todosDescartes = Array.from(document.querySelectorAll('material-button[debug-id="discard-prewrite-draft-button"], material-button[debug-id="discard-draft-button"]'));
+    console.log("🕵️ Procurando barra de rascunho (Polling)...");
+    
+    let draftButton = null;
+    let attempts = 0;
+    
+    // Tenta achar o botão de descarte por até 2.5 segundos
+    // Motivo: A barra amarela/azul aparece com delay
+    while (attempts < 12) {
+        await esperar(200);
         
-        // Filtra pelo que está VISÍVEL na tela
-        btnDiscardDraft = todosDescartes.find(el => el.offsetParent !== null);
+        // Seletor EXATO baseado no HTML que você mandou
+        const candidates = document.querySelectorAll('material-button[debug-id="discard-prewrite-draft-button"]');
         
-        if (!btnDiscardDraft) {
-            await esperar(200); // Espera um pouco antes de tentar de novo
-            tentativasDraft++;
-        }
+        // Pega apenas o visível
+        draftButton = Array.from(candidates).find(el => el.offsetParent !== null);
+        
+        if (draftButton) break;
+        attempts++;
     }
-    
-    if (btnDiscardDraft) {
-        console.log("⚠️ Rascunho detectado! Clicando em Discard...");
+
+    if (draftButton) {
+        console.log("⚠️ RASCUNHO ENCONTRADO! Iniciando sequência de descarte...");
         
-        // Tenta clicar no botão e também no ícone dentro dele (às vezes o evento está no filho)
-        simularCliqueReal(btnDiscardDraft);
-        const iconInside = btnDiscardDraft.querySelector('i') || btnDiscardDraft.querySelector('.content');
-        if (iconInside) simularCliqueReal(iconInside);
+        // --- CLIQUE REFORÇADO ---
+        // 1. Simula eventos completos no botão
+        simularCliqueReal(draftButton);
         
-        // Espera ativa pelo botão de confirmação (o modal pode demorar a aparecer)
-        let btnConfirm = null;
-        let tentativasConfirm = 0;
+        // 2. Clica no texto interno (às vezes o evento está na div do texto)
+        const textInside = draftButton.querySelector('.buttonText');
+        if (textInside) simularCliqueReal(textInside);
         
-        console.log("⏳ Aguardando modal de confirmação...");
-        while (!btnConfirm && tentativasConfirm < 15) { // Aumentei para 3s (margem de segurança)
+        // 3. Método nativo por garantia
+        draftButton.click();
+
+        // --- ESPERA O MODAL DE CONFIRMAÇÃO ---
+        console.log("⏳ Aguardando botão Confirm...");
+        
+        let confirmBtn = null;
+        let confirmAttempts = 0;
+        
+        while (confirmAttempts < 15) { // Espera até 3 segundos pelo modal
             await esperar(200);
-            // Busca botão 'Confirm' ou 'Discard' dentro do modal (dialog)
-            // O seletor foi expandido para garantir que pegue o botão certo do modal
-            const todosConfirms = Array.from(document.querySelectorAll('material-dialog material-button[debug-id="confirm-button"], material-button[debug-id="discard-button"]'));
             
-            btnConfirm = todosConfirms.find(el => el.offsetParent !== null);
-            tentativasConfirm++;
+            // Seletor EXATO do Confirm baseado no HTML
+            const confirms = document.querySelectorAll('material-button[debug-id="confirm-button"]');
+            confirmBtn = Array.from(confirms).find(el => el.offsetParent !== null);
+            
+            if (confirmBtn) break;
+            confirmAttempts++;
         }
 
-        if (btnConfirm) {
-            console.log("✅ Confirmando descarte...");
-            simularCliqueReal(btnConfirm);
+        if (confirmBtn) {
+            console.log("✅ Botão Confirm achado! Clicando...");
             
-            // Espera CRÍTICA: 
-            // Quando descarta, o editor pisca e recarrega. Precisamos esperar ele estabilizar.
-            showToast("Rascunho descartado. Recarregando...", { duration: 2000 });
-            await esperar(3000); 
+            simularCliqueReal(confirmBtn);
             
-            // IMPORTANTE: Atualiza a referência do editorVisivel, pois o elemento antigo do DOM pode ter sido destruído
-            editorVisivel = getVisibleEditor();
-            if (!editorVisivel) {
-                 // Tenta buscar mais uma vez caso o reload tenha demorado
-                 await esperar(1000);
-                 editorVisivel = getVisibleEditor();
-            }
+            // Tenta clicar no conteúdo do botão também
+            const confirmContent = confirmBtn.querySelector('.content');
+            if (confirmContent) simularCliqueReal(confirmContent);
+            
+            // Espera o sistema processar o descarte e recarregar o editor
+            // Esse tempo é necessário para o DOM antigo morrer e o novo nascer
+            showToast("Rascunho descartado. Aguarde...", { duration: 2000 });
+            await esperar(2500); 
         } else {
-            console.warn("⚠️ Cliquei em Discard, mas o botão Confirm não apareceu a tempo.");
+            console.warn("❌ O botão 'Discard' foi clicado, mas o modal de confirmação não apareceu.");
         }
     } else {
-        console.log("✅ Nenhum rascunho detectado após verificação.");
+        console.log("ℹ️ Nenhum rascunho detectado. Seguindo.");
     }
 
     // 3. LIMPEZA NUCLEAR NO EDITOR CORRETO
