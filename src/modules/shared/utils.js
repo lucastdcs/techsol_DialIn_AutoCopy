@@ -88,6 +88,70 @@ export function initGlobalStylesAndFont() {
             background: transparent;
             border: 1px dashed var(--cw-border);
         }
+
+        /* Classe base para todos os selects do projeto */
+    .cw-select {
+        /* 1. Resetando o estilo nativo (O segredo) */
+        appearance: none;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        
+        /* 2. Dimensões e Fonte */
+        width: 100%;
+        padding: 10px 36px 10px 12px; /* Espaço extra na direita para a seta */
+        font-family: 'Google Sans', Roboto, Arial, sans-serif;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1.5;
+        color: #3C4043; /* Google Grey 800 */
+        
+        /* 3. A Caixa (Material Design) */
+        background-color: #FFFFFF;
+        border: 1px solid #DADCE0; /* Borda suave */
+        border-radius: 6px; /* Canto levemente arredondado */
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        
+        /* 4. A Seta Customizada (SVG via Data URI) */
+        /* Isso desenha um chevron cinza escuro, igual ao do Gmail */
+        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%235F6368%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+        background-repeat: no-repeat;
+        background-position: right 8px center;
+        background-size: 18px;
+    }
+
+    /* Hover: Escurece levemente a borda e o fundo */
+    .cw-select:hover {
+        border-color: #202124;
+        background-color: #F8F9FA;
+    }
+
+    /* Focus: O anel azul característico do Google */
+    .cw-select:focus {
+        border-color: #1A73E8;
+        box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+        outline: none;
+        background-color: #FFFFFF;
+    }
+
+    /* Disabled: Visual apagado */
+    .cw-select:disabled {
+        background-color: #F1F3F4;
+        color: #9AA0A6;
+        cursor: not-allowed;
+        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%239AA0A6%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+    }
+    
+    /* Label flutuante (Opcional, se você usar labels acima dos selects) */
+    .cw-input-label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: #5F6368;
+        margin-bottom: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
     `;
     document.head.appendChild(style);
 }

@@ -280,44 +280,66 @@ export function initCaseNotesAssistant() {
   step0Div.appendChild(typeContainer);
   popupContent.appendChild(step0Div);
 
-  // --- STEP 1: Status ---
+  // --- STEP 1: Status (Refatorado Profissional) ---
   const step1Div = document.createElement("div");
   step1Div.id = "step-1-selection";
+
+  // 1. LABEL PRINCIPAL
   const mainStatusLabel = document.createElement("label");
-  Object.assign(mainStatusLabel.style, styles.label);
+  mainStatusLabel.className = "cw-input-label"; // Usa o estilo global
+  mainStatusLabel.textContent = "Status Principal"; 
+
+  // 2. SELECT PRINCIPAL
   const mainStatusSelect = document.createElement("select");
   mainStatusSelect.id = "main-status";
-  Object.assign(mainStatusSelect.style, styleSelect);
-  mainStatusSelect.innerHTML = `<option value="">-- Selecione --</option><option value="NI">NI - Need Info</option><option value="SO">SO - Solution Offered</option><option value="IN">IN - Inactive</option><option value="AS">AS - Assigned</option>`;
+  mainStatusSelect.className = "cw-select"; // Usa o estilo Google Dropdown
+  
+  // Placeholder inteligente (não selecionável) + Opções
+  mainStatusSelect.innerHTML = `
+      <option value="" disabled selected hidden>Selecione uma opção...</option>
+      <option value="NI">NI - Need Info</option>
+      <option value="SO">SO - Solution Offered</option>
+      <option value="IN">IN - Inactive</option>
+      <option value="AS">AS - Assigned</option>
+  `;
 
+  // 3. HEADER DO SUB-STATUS (Label + Link)
   const subStatusHeader = document.createElement("div");
-  Object.assign(subStatusHeader.style, {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "baseline",
-    marginTop: "16px",
-    marginBottom: "8px",
-  });
+  // Flexbox simples para alinhar Label e Link
+  subStatusHeader.style.cssText = "display: flex; justify-content: space-between; align-items: baseline; margin-top: 16px; margin-bottom: 6px;";
+
   const subStatusLabel = document.createElement("label");
-  Object.assign(subStatusLabel.style, styles.label, {
-    marginTop: "0",
-    marginBottom: "0",
-  });
+  subStatusLabel.className = "cw-input-label"; // Usa o estilo global
+  subStatusLabel.textContent = "Sub-status";
+  subStatusLabel.style.marginBottom = "0"; // Remove margem extra pois já tem no header
+
+  // Link de Ajuda (Mantido igual, apenas limpo)
   const subStatusHelpLink = document.createElement("a");
+  subStatusHelpLink.href = "https://seu-link-do-guia-aqui.com"; // Adicione o link real se tiver
   subStatusHelpLink.target = "_blank";
-  subStatusHelpLink.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Guia de Substatus`;
-  Object.assign(subStatusHelpLink.style, styles.helpLink);
+  subStatusHelpLink.className = "cw-info-link"; // Se tiver classe de link, ou mantém styles inline abaixo
+  // Ícone SVG + Texto
+  subStatusHelpLink.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px; transform:translateY(1px)"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>Guia de Substatus`;
+  // Estilos inline específicos do link (se não houver classe global para isso)
+  Object.assign(subStatusHelpLink.style, styles.helpLink); 
+
   subStatusHeader.appendChild(subStatusLabel);
   subStatusHeader.appendChild(subStatusHelpLink);
 
+  // 4. SELECT SUB-STATUS
   const subStatusSelect = document.createElement("select");
   subStatusSelect.id = "sub-status";
-  Object.assign(subStatusSelect.style, styleSelect);
+  subStatusSelect.className = "cw-select"; // Usa o estilo Google Dropdown
   subStatusSelect.disabled = true;
+  // Placeholder inicial para quando está desabilitado
+  subStatusSelect.innerHTML = `<option value="" disabled selected hidden>Aguardando status principal...</option>`;
+
+  // 5. MONTAGEM
   step1Div.appendChild(mainStatusLabel);
   step1Div.appendChild(mainStatusSelect);
   step1Div.appendChild(subStatusHeader);
   step1Div.appendChild(subStatusSelect);
+  
   popupContent.appendChild(step1Div);
 
   // --- STEPS OCULTOS ---
