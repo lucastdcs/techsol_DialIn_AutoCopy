@@ -181,102 +181,96 @@ playStartup: () => {
         const ctx = getContext();
         if (!ctx) return;
         const t = ctx.currentTime;
-        const startTime = t + 0.1; // Pequeno respiro inicial
 
         // ====================================================================
-        // CAMADA 1: "O ARMARIO DE MADEIRA" (O TU)
-        // Objetivo: Som seco, oco, curto. Não é uma nota musical.
+        // CAMADA 1: O "REACTOR" (Energia/Sub-grave)
+        // Sensação: O computador ligando a energia principal. Um "Vuum" rápido.
         // ====================================================================
-        
-        // Usamos uma onda Triângulo (mais suave que quadrada) filtrada para simular madeira
-        const woodOsc = ctx.createOscillator();
-        const woodGain = ctx.createGain();
-        const woodFilter = ctx.createBiquadFilter();
+        const powerOsc = ctx.createOscillator();
+        const powerGain = ctx.createGain();
 
-        woodOsc.type = 'triangle'; 
-        // A madeira ressoa em frequências baixas/médias
-        woodOsc.frequency.setValueAtTime(120, startTime); 
-        // Pitch Drop rápido (o som da batida parando)
-        woodOsc.frequency.exponentialRampToValueAtTime(40, startTime + 0.1);
+        powerOsc.type = 'sine'; // Senoidal pura = Eletricidade limpa
+        powerOsc.frequency.setValueAtTime(50, t); 
+        // Slide rápido para cima (Power Up)
+        powerOsc.frequency.exponentialRampToValueAtTime(150, t + 0.3); 
 
-        // Filtro Lowpass com Ressonância (Q) para simular a caixa oca do armário
-        woodFilter.type = 'lowpass';
-        woodFilter.frequency.setValueAtTime(250, startTime); 
-        woodFilter.Q.value = 5; // Aumenta a ressonância no ponto de corte (O "Tuc")
+        powerGain.gain.setValueAtTime(0, t);
+        // Entra suave
+        powerGain.gain.linearRampToValueAtTime(MASTER_GAIN * 1.5, t + 0.05); 
+        // Sai rápido
+        powerGain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
 
-        // Envelope de volume EXTREMAMENTE curto e percussivo
-        woodGain.gain.setValueAtTime(0, startTime);
-        woodGain.gain.linearRampToValueAtTime(MASTER_GAIN * 4.5, startTime + 0.01); // Ataque imediato
-        woodGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.08); // Decay de 80ms (Muito seco)
-
-        woodOsc.connect(woodFilter);
-        woodFilter.connect(woodGain);
-        woodGain.connect(ctx.destination);
-        
-        woodOsc.start(startTime);
-        woodOsc.stop(startTime + 0.1);
+        powerOsc.connect(powerGain);
+        powerGain.connect(ctx.destination);
+        powerOsc.start(t); powerOsc.stop(t + 0.4);
 
 
         // ====================================================================
-        // CAMADA 2: "O BLOSSOM" (O DUM)
-        // Objetivo: Largo, cinematográfico, entra suave e abre.
+        // CAMADA 2: O "INTERFACE CHIME" (Jarvis UI)
+        // Sensação: Confirmação holográfica. Dois tons rápidos e cristalinos.
         // ====================================================================
         
-        // Delay estratégico: O DUM entra exatamente quando o TU termina
-        const bloomStart = startTime + 0.10; 
+        // Vamos usar um intervalo de "Quinta Justa" (Intervalo heróico/estável)
+        // Notas: Lá (880Hz) e Mi (1318Hz) - Bem agudo e tecnológico
+        const tones = [
+            { freq: 880, start: 0.1 },  // Primeiro Bip
+            { freq: 1318, start: 0.18 } // Segundo Bip (ligeiramente atrasado)
+        ];
 
-        // 3 Osciladores Sawtooth desafinados para criar o efeito "Wide" (Estéreo/Cinema)
-        // Frequências baseadas em Ré (D) grave -> D1
-        const freqs = [36.71, 36.90, 73.42]; // Sub-graves + Oitava
-
-        freqs.forEach((f, i) => {
+        tones.forEach(tone => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
-            const filter = ctx.createBiquadFilter();
 
-            osc.type = 'sawtooth'; // Rico e rasgado
-            osc.frequency.value = f;
+            osc.type = 'sine'; // Sem distorção, vidro puro
+            osc.frequency.setValueAtTime(tone.freq, t);
 
-            // O Efeito "Netflix": O filtro abre (Wahhh)
-            filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(50, bloomStart); // Começa abafado
-            // Abre até os médios
-            filter.frequency.exponentialRampToValueAtTime(600, bloomStart + 0.4); 
-            // Fecha devagar para o fim
-            filter.frequency.linearRampToValueAtTime(100, bloomStart + 2.5);
+            gain.gain.setValueAtTime(0, t);
+            // Ataque instantâneo no tempo certo
+            gain.gain.setValueAtTime(0, t + tone.start); 
+            gain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.8, t + tone.start + 0.02);
+            // Decay curto e seco (Tecnologia precisa não tem eco longo)
+            gain.gain.exponentialRampToValueAtTime(0.001, t + tone.start + 0.3);
 
-            // Envelope de Volume (Swell)
-            gain.gain.setValueAtTime(0, bloomStart);
-            // Ataque suave (não percussivo)
-            gain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.8, bloomStart + 0.2); 
-            // Release longo
-            gain.gain.exponentialRampToValueAtTime(0.001, bloomStart + 3.0);
-
-            osc.connect(filter);
-            filter.connect(gain);
+            osc.connect(gain);
             gain.connect(ctx.destination);
             
-            osc.start(bloomStart);
-            osc.stop(bloomStart + 3.5);
+            osc.start(t); 
+            osc.stop(t + tone.start + 0.35);
         });
 
         // ====================================================================
-        // CAMADA 3: "O BRILHO" (O Detalhe Final)
-        // Um toque sutil agudo para dar definição de estúdio
+        // CAMADA 3: O "AIR SWOOSH" (O detalhe do Batman)
+        // Um sopro de ar comprimido/hightech de fundo
         // ====================================================================
-        const shineOsc = ctx.createOscillator();
-        const shineGain = ctx.createGain();
-        
-        shineOsc.type = 'sine';
-        shineOsc.frequency.setValueAtTime(2000, bloomStart); // Nota aguda
-        
-        shineGain.gain.setValueAtTime(0, bloomStart);
-        shineGain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.05, bloomStart + 0.1); // Muito baixo
-        shineGain.gain.exponentialRampToValueAtTime(0.001, bloomStart + 0.5);
+        // Para isso precisamos do noise buffer (ruído branco)
+        try {
+            const noiseBuffer = getNoiseBuffer(ctx); // Usa sua função auxiliar existente
+            const noiseSrc = ctx.createBufferSource();
+            const noiseFilter = ctx.createBiquadFilter();
+            const noiseGain = ctx.createGain();
 
-        shineOsc.connect(shineGain);
-        shineGain.connect(ctx.destination);
-        shineOsc.start(bloomStart); shineOsc.stop(bloomStart + 0.6);
+            noiseSrc.buffer = noiseBuffer;
+            noiseSrc.loop = true;
+
+            // Filtro Highpass: Tira o grave, deixa só o "chiado" de ar
+            noiseFilter.type = 'highpass';
+            noiseFilter.frequency.setValueAtTime(2000, t);
+            // O filtro se move, criando sensação de movimento (Scan)
+            noiseFilter.frequency.linearRampToValueAtTime(5000, t + 0.3);
+
+            noiseGain.gain.setValueAtTime(0, t);
+            noiseGain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.2, t + 0.05); // Volume baixo
+            noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+
+            noiseSrc.connect(noiseFilter);
+            noiseFilter.connect(noiseGain);
+            noiseGain.connect(ctx.destination);
+            
+            noiseSrc.start(t);
+            noiseSrc.stop(t + 0.4);
+        } catch(e) {
+            // Se der erro no buffer de noise, ignoramos essa camada sutil
+        }
     },
     playNotification: () => {
         const ctx = getContext();
