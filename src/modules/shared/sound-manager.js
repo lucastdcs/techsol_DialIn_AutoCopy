@@ -177,100 +177,107 @@ export const SoundManager = {
     },
     
 
-playStartup: () => {
+  playStartup: () => {
+
         const ctx = getContext();
         if (!ctx) return;
         const t = ctx.currentTime;
 
-        // ====================================================================
-        // CAMADA 1: O "REACTOR" (Energia/Sub-grave)
-        // Sensação: O computador ligando a energia principal. Um "Vuum" rápido.
-        // ====================================================================
-        const powerOsc = ctx.createOscillator();
-        const powerGain = ctx.createGain();
-
-        powerOsc.type = 'sine'; // Senoidal pura = Eletricidade limpa
-        powerOsc.frequency.setValueAtTime(50, t); 
-        // Slide rápido para cima (Power Up)
-        powerOsc.frequency.exponentialRampToValueAtTime(150, t + 0.3); 
-
-        powerGain.gain.setValueAtTime(0, t);
-        // Entra suave
-        powerGain.gain.linearRampToValueAtTime(MASTER_GAIN * 1.5, t + 0.05); 
-        // Sai rápido
-        powerGain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
-
-        powerOsc.connect(powerGain);
-        powerGain.connect(ctx.destination);
-        powerOsc.start(t); powerOsc.stop(t + 0.4);
+        // DEFINIÇÃO DO TEMPO (O Segredo do Ritmo)
+        // O "TA" acontece em t=0
+        // O "DUM" começa sutilmente em t=0.05 mas explode em t=0.15
+        const dumDelay = 0.12; 
 
 
-        // ====================================================================
-        // CAMADA 2: O "INTERFACE CHIME" (Jarvis UI)
-        // Sensação: Confirmação holográfica. Dois tons rápidos e cristalinos.
-        // ====================================================================
+
+
+
+
+
+
+
+
+
+
+        // === EVENTO 1: O "TA" (O Impacto Seco) ===
+        // Precisa ser agudo no início para cortar a mixagem
         
-        // Vamos usar um intervalo de "Quinta Justa" (Intervalo heróico/estável)
-        // Notas: Lá (880Hz) e Mi (1318Hz) - Bem agudo e tecnológico
-        const tones = [
-            { freq: 880, start: 0.1 },  // Primeiro Bip
-            { freq: 1318, start: 0.18 } // Segundo Bip (ligeiramente atrasado)
-        ];
+        // 1.1 O Estalo (Knock)
+        const snapOsc = ctx.createOscillator();
+        const snapGain = ctx.createGain();
+        const snapFilter = ctx.createBiquadFilter();
 
-        tones.forEach(tone => {
+        snapOsc.type = 'square'; // Quadrada = Som oco/madeira
+        // Começa bem agudo (400Hz) e cai instantaneamente. Isso dá o "T" do "Ta"
+        snapOsc.frequency.setValueAtTime(400, t); 
+        snapOsc.frequency.exponentialRampToValueAtTime(50, t + 0.1); 
+
+        snapFilter.type = 'lowpass';
+        snapFilter.frequency.setValueAtTime(800, t); 
+        snapFilter.frequency.exponentialRampToValueAtTime(100, t + 0.1); // Filtra o final
+
+        snapGain.gain.setValueAtTime(MASTER_GAIN * 4.0, t); // Volume alto!
+        snapGain.gain.exponentialRampToValueAtTime(0.001, t + 0.1); // Muito curto (100ms)
+
+        snapOsc.connect(snapFilter);
+        snapFilter.connect(snapGain);
+        snapGain.connect(ctx.destination);
+        snapOsc.start(t); snapOsc.stop(t + 0.12);
+
+        // 1.2 O Peso do TA (Kick)
+        // Um suporte grave para o estalo não ficar magro
+        const kickOsc = ctx.createOscillator();
+        const kickGain = ctx.createGain();
+
+        kickOsc.type = 'sine';
+        kickOsc.frequency.setValueAtTime(150, t);
+        kickOsc.frequency.exponentialRampToValueAtTime(50, t + 0.15);
+        
+        kickGain.gain.setValueAtTime(MASTER_GAIN * 1.5, t);
+        kickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+        
+        kickOsc.connect(kickGain);
+        kickGain.connect(ctx.destination);
+        kickOsc.start(t); kickOsc.stop(t + 0.15);
+
+
+        // === EVENTO 2: O "DUM" (O Bloom Cinematográfico) ===
+        // Só começa DEPOIS que o TA bateu (usando a variável dumDelay)
+
+
+
+        const freqs = [55, 55.4, 110.5]; // Lá A1 + Oitava (Chorus effect)
+
+        freqs.forEach((f) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
 
-            osc.type = 'sine'; // Sem distorção, vidro puro
-            osc.frequency.setValueAtTime(tone.freq, t);
+            osc.type = 'sawtooth'; // Rico em harmônicos
+            osc.frequency.value = f;
 
+            // FILTRO DE ABERTURA (O "Wahhh")
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(30, t); // Começa fechado
+            // Abre o filtro EXATAMENTE após o delay
+            filter.frequency.linearRampToValueAtTime(900, t + dumDelay + 0.2); 
+            // Fecha devagar
+            filter.frequency.exponentialRampToValueAtTime(40, t + 3.0); 
+
+            // VOLUME (Fade In)
             gain.gain.setValueAtTime(0, t);
-            // Ataque instantâneo no tempo certo
-            gain.gain.setValueAtTime(0, t + tone.start); 
-            gain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.8, t + tone.start + 0.02);
-            // Decay curto e seco (Tecnologia precisa não tem eco longo)
-            gain.gain.exponentialRampToValueAtTime(0.001, t + tone.start + 0.3);
+            // O volume sobe só depois do delay, criando a separação
+            gain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.6, t + dumDelay + 0.1); 
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 3.5);
 
-            osc.connect(gain);
+            osc.connect(filter);
+            filter.connect(gain);
             gain.connect(ctx.destination);
-            
+
+            // Note que o oscilador começa mudo em t, mas só aparece em t + dumDelay
             osc.start(t); 
-            osc.stop(t + tone.start + 0.35);
+            osc.stop(t + 3.6);
         });
-
-        // ====================================================================
-        // CAMADA 3: O "AIR SWOOSH" (O detalhe do Batman)
-        // Um sopro de ar comprimido/hightech de fundo
-        // ====================================================================
-        // Para isso precisamos do noise buffer (ruído branco)
-        try {
-            const noiseBuffer = getNoiseBuffer(ctx); // Usa sua função auxiliar existente
-            const noiseSrc = ctx.createBufferSource();
-            const noiseFilter = ctx.createBiquadFilter();
-            const noiseGain = ctx.createGain();
-
-            noiseSrc.buffer = noiseBuffer;
-            noiseSrc.loop = true;
-
-            // Filtro Highpass: Tira o grave, deixa só o "chiado" de ar
-            noiseFilter.type = 'highpass';
-            noiseFilter.frequency.setValueAtTime(2000, t);
-            // O filtro se move, criando sensação de movimento (Scan)
-            noiseFilter.frequency.linearRampToValueAtTime(5000, t + 0.3);
-
-            noiseGain.gain.setValueAtTime(0, t);
-            noiseGain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.2, t + 0.05); // Volume baixo
-            noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
-
-            noiseSrc.connect(noiseFilter);
-            noiseFilter.connect(noiseGain);
-            noiseGain.connect(ctx.destination);
-            
-            noiseSrc.start(t);
-            noiseSrc.stop(t + 0.4);
-        } catch(e) {
-            // Se der erro no buffer de noise, ignoramos essa camada sutil
-        }
     },
     playNotification: () => {
         const ctx = getContext();
