@@ -2,12 +2,12 @@ import { TASKS_DB } from "../notes-data.js";
 
 // --- 1. DESIGN SYSTEM & CONFIG ---
 const DS = {
-  bg: "#F9FAFB", // Fundo Apple Gray
+  bg: "#F9FAFB", 
   white: "#FFFFFF",
   border: "#E5E7EB",
   textMain: "#111827",
   textSub: "#6B7280",
-  blue: "#007AFF", // Apple Blue
+  blue: "#007AFF", 
   blueLight: "#EBF5FF",
   // Cores Oficiais das Ferramentas
   brands: {
@@ -70,10 +70,9 @@ const ICONS = {
 };
 
 export function createStepTasksComponent(onUpdateCallback) {
-  const selection = {}; // { taskId: { count, data, brand } }
+  const selection = {}; 
   let currentMode = "implementation";
 
-  // --- HEURÍSTICA DE MARCA (Auto-Categorização) ---
   function getBrand(name) {
     const n = name.toLowerCase();
     if (
@@ -94,21 +93,20 @@ export function createStepTasksComponent(onUpdateCallback) {
     return DS.brands.default;
   }
 
-  // --- ORGANIZAÇÃO DOS DADOS ---
   // 1. Populares (Hero)
   const heroTasks = Object.entries(TASKS_DB).filter(([_, t]) => t.popular);
 
   // 2. Agrupamento por Categoria (Accordion)
   const groupedTasks = {};
   Object.entries(TASKS_DB).forEach(([key, task]) => {
-    if (task.popular) return; // Não duplica os heróis na lista
+    if (task.popular) return; 
     const brand = getBrand(task.name);
     if (!groupedTasks[brand.label])
       groupedTasks[brand.label] = { brand, tasks: [] };
     groupedTasks[brand.label].tasks.push({ key, ...task });
   });
 
-  // --- INJEÇÃO DE CSS (Zen Style + Fixes) ---
+
   const styleId = "cw-zen-tasks";
   if (!document.getElementById(styleId)) {
     const style = document.createElement("style");
@@ -431,16 +429,16 @@ export function createStepTasksComponent(onUpdateCallback) {
     document.head.appendChild(style);
   }
 
-  // --- CRIAÇÃO DO DOM ---
+
   const container = document.createElement("div");
   container.className = "cw-zen-container";
 
-  // Container Invisível de Prints (Para o Step 3)
+
   const screenshotsContainer = document.createElement("div");
   Object.assign(screenshotsContainer.style, { display: "none" });
 
   const screenList = document.createElement("div");
-  screenList.className = "cw-screens-container"; // <--- ADICIONE ESTA CLASSE
+  screenList.className = "cw-screens-container"; 
 
   screenshotsContainer.appendChild(screenList);
 
@@ -475,9 +473,6 @@ export function createStepTasksComponent(onUpdateCallback) {
   const statusText = container.querySelector(".cw-status-text");
   const footerIcons = container.querySelector(".cw-footer-icons");
 
-  // --- RENDERIZAÇÃO ---
-
-  // 1. Heroes
   // 1. Heroes
   heroTasks.forEach(([key, task]) => {
     const brand = getBrand(task.name);
@@ -485,7 +480,6 @@ export function createStepTasksComponent(onUpdateCallback) {
     card.className = "cw-hero-card";
     card.id = `hero-${key}`;
 
-    // Injeção da cor da marca para o CSS usar
     card.style.setProperty("--hero-color", brand.color);
 
     card.innerHTML = `
@@ -501,7 +495,6 @@ export function createStepTasksComponent(onUpdateCallback) {
             </div>
         `;
 
-    // Zonas de Clique: Corpo = Toggle, Botões = Stepper
     card.onclick = (e) => {
       if (e.target.closest(".cw-step-btn")) return;
       const current = selection[key] ? selection[key].count : 0;
@@ -510,13 +503,12 @@ export function createStepTasksComponent(onUpdateCallback) {
     card.querySelector(".minus").onclick = () => updateTask(key, -1, task);
     card.querySelector(".plus").onclick = () => updateTask(key, 1, task);
 
-    // Dataset para updateUI (mantido para lógica legada se houver)
     card.dataset.color = brand.color;
 
     heroGrid.appendChild(card);
   });
 
-  // 2. Helper para criar linhas da lista (Rica com Ícones)
+
   function createListItem(key, task) {
     const brand = getBrand(task.name);
     const row = document.createElement("div");
@@ -550,7 +542,7 @@ export function createStepTasksComponent(onUpdateCallback) {
     return row;
   }
 
-  // 3. Render Accordions
+
   Object.entries(groupedTasks).forEach(([catName, data]) => {
     const group = document.createElement("div");
     group.className = "cw-acc-group";
@@ -584,7 +576,6 @@ export function createStepTasksComponent(onUpdateCallback) {
     accContainer.appendChild(group);
   });
 
-  // --- LÓGICA DE ATUALIZAÇÃO ---
 
   function updateTask(key, delta, taskData) {
     if (!selection[key])
@@ -602,7 +593,7 @@ export function createStepTasksComponent(onUpdateCallback) {
   }
 
   function updateUI() {
-    // 1. Heroes
+
     heroTasks.forEach(([key]) => {
       const card = heroGrid.querySelector(`#hero-${key}`);
       if (!card) return;
@@ -610,16 +601,16 @@ export function createStepTasksComponent(onUpdateCallback) {
 
       if (sel) {
         card.classList.add("active");
-        // Removemos injeção de style direto, o CSS var(--hero-color) cuida disso
+
         card.querySelector(".cw-step-val").textContent = sel.count;
-        // Cor do texto do count pode seguir a marca
+
         card.querySelector(".cw-step-val").style.color = card.dataset.color;
       } else {
         card.classList.remove("active");
       }
     });
 
-    // 2. List Items
+
     const allItems = container.querySelectorAll(".cw-task-item");
     allItems.forEach((row) => {
       const key = row.dataset.id;
@@ -632,7 +623,7 @@ export function createStepTasksComponent(onUpdateCallback) {
       }
     });
 
-    // 3. Status Bar (Real Count + Stack)
+
     const keys = Object.keys(selection);
     let totalCount = 0;
     const iconStack = [];
@@ -640,7 +631,6 @@ export function createStepTasksComponent(onUpdateCallback) {
     keys.forEach((k) => {
       const item = selection[k];
       totalCount += item.count;
-      // Adiciona ao stack N vezes
       for (let i = 0; i < item.count; i++) {
         if (iconStack.length < 6) iconStack.push(item.brand);
       }
@@ -656,16 +646,13 @@ export function createStepTasksComponent(onUpdateCallback) {
       iconStack.forEach((brand) => {
         const mini = document.createElement("div");
         mini.className = "cw-mini-icon";
-        // REMOVIDO: mini.style.backgroundColor = brand.color; (Agora é branco no CSS)
 
         mini.innerHTML = ICONS[brand.icon] || ICONS.default;
 
-        // Ajuste fino do SVG dentro da bolinha
         const svg = mini.querySelector("svg");
         if (svg) {
           svg.style.width = "14px";
           svg.style.height = "14px";
-          // SVG original já tem cores, não precisa de fill
         }
 
         footerIcons.appendChild(mini);
@@ -675,7 +662,7 @@ export function createStepTasksComponent(onUpdateCallback) {
     }
   }
 
-  // Busca
+
   searchInput.addEventListener("input", (e) => {
     const term = e.target.value.toLowerCase();
     if (term.length > 0) {
@@ -705,16 +692,13 @@ export function createStepTasksComponent(onUpdateCallback) {
     }
   });
 
-  // Screenshots Logic (Adaptado)
-  // --- LÓGICA DE RENDERIZAÇÃO DOS PRINTS ---
-  // --- LÓGICA DE RENDERIZAÇÃO DOS PRINTS (Com Classes) ---
+
   function renderScreenshots() {
 
 screenList.innerHTML = "";
     const keys = Object.keys(selection);
     let hasAny = false;
 
-    // --- MUDANÇA AQUI: DETECÇÃO AUTOMÁTICA ---
     // 1. Tenta achar o input de substatus pelo ID (AJUSTE O ID SE NECESSÁRIO)
     const subStatusEl = document.getElementById("sub-status"); 
     
@@ -725,7 +709,7 @@ screenList.innerHTML = "";
     if (subStatusEl && subStatusEl.value.toLowerCase().includes("education")) {
         type = "education";
     }
-    // -----------------------------------------
+
 
     if (keys.length === 0) {
       screenList.innerHTML = `<div class="cw-empty-state">Selecione tarefas para ver os campos.</div>`;
@@ -747,7 +731,7 @@ screenList.innerHTML = "";
             </span>
         `;
     screenList.appendChild(disclaimer);
-    // -------------------------------------
+ 
 
     keys.forEach((key) => {
       const task = selection[key].data;
@@ -799,7 +783,7 @@ screenList.innerHTML = "";
           header.appendChild(titleWrap);
           card.appendChild(header);
 
-          // INPUTS (Mantidos iguais)
+          
           prints.forEach((req, idx) => {
             const group = document.createElement("div");
             group.className = "cw-input-group";
@@ -851,38 +835,33 @@ screenList.innerHTML = "";
         }),
       }));
     },
-    // --- ADICIONE ISTO AQUI ---
+
     toggleTask: (key, forceState = true) => {
-      // Se forceState é true, garante que esteja selecionado (pelo menos 1)
-      // Se false, garante que esteja desmarcado
+
       const current = selection[key];
       if (forceState && !current) {
-        // Adiciona (Busca dados no DB global importado no topo)
+
         updateTask(key, 1, TASKS_DB[key]);
       } else if (!forceState && current) {
-        // Remove (Zera o contador)
+
         updateTask(key, -current.count, TASKS_DB[key]);
       }
     },
     setMode: (mode) => {
         // mode deve ser 'implementation' ou 'education'
         currentMode = mode;
-        renderScreenshots(); // Atualiza a lista visualmente na hora
+        renderScreenshots(); 
     },
     // ---------------------------
     reset: () => {
       for (const key in selection) delete selection[key];
 
-      // 2. Limpa o campo de busca visualmente
       searchInput.value = "";
 
-      // 3. Restaura a visualização de categorias (sai do modo busca)
       accContainer.style.display = "block";
       resultsContainer.style.display = "none";
-
-      // 4. Chama as funções de atualização para apagar visualmente
-      updateUI(); // Desmarca cards, listas e esconde o footer
-      renderScreenshots(); // Remove os inputs de print
+      updateUI();
+      renderScreenshots(); 
     },
   };
 }

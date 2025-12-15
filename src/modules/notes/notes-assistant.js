@@ -15,8 +15,8 @@ import {
   styleExpandButton,
   typeBtnStyle,
   getRandomGoogleStyle,
-  styleResizeHandle, // <--- Novo
-  makeResizable      // <--- Novo
+  styleResizeHandle, 
+  makeResizable      
 } from "../shared/utils.js";
 
 import {
@@ -34,7 +34,7 @@ import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from "../shared/animations.js";
 import { triggerProcessingAnimation } from "../shared/command-center.js";
 import { constrainToViewport } from '../shared/utils.js';
-import { createScenariosComponent } from "./components/step-scenarios.js"; // <--- NOVO
+import { createScenariosComponent } from "./components/step-scenarios.js"; 
 import {
   copyHtmlToClipboard,
   ensureNoteCardIsOpen,
@@ -44,7 +44,7 @@ import {
 
 // MÓDULOS DE LÓGICA
 import { createTagSupportModule } from "./tag-support.js";
-import { createStepTasksComponent } from "./components/step-tasks.js"; // O "Steps"
+import { createStepTasksComponent } from "./components/step-tasks.js"; 
 
 export function initCaseNotesAssistant() {
   const CURRENT_VERSION = "v3.6.0";
@@ -54,9 +54,6 @@ export function initCaseNotesAssistant() {
   let isPortugalCase = false;
   let visible = false;
 
-  // =========================================================================
-  // 1. ESTILOS LOCAIS (Para a UI construída manualmente)
-  // =========================================================================
   const styles = {
     input: {
       width: "100%",
@@ -160,16 +157,14 @@ export function initCaseNotesAssistant() {
     },
   };
 
-  // =========================================================================
-  // 2. INICIALIZAÇÃO DE COMPONENTES
-  // =========================================================================
+
 
   const tagSupport = createTagSupportModule();
 
-  // O componente "Steps" que cuida da lista e dos prints
+
   const stepTasks = createStepTasksComponent(() => {
-    // Callback: Sempre que uma task muda, atualiza o Tag Support
-    // Usamos o método público do componente para pegar o que está marcado
+
+  
     const checkedElements = stepTasks.getCheckedElements();
     const checkedValues = checkedElements.map((c) => c.value);
 
@@ -178,16 +173,13 @@ export function initCaseNotesAssistant() {
     }
   });
 
-  // =========================================================================
-  // 3. CONSTRUÇÃO DA UI (Manual)
-  // =========================================================================
 
   // --- Popup ---
   const popup = document.createElement("div");
   popup.id = "autofill-popup";
   Object.assign(popup.style, stylePopup, {
-    right: "100px", // Afastado da pílula
-    width: "400px", // A classe .open põe a sombra
+    right: "100px", 
+    width: "400px", 
     opacity: "0",
     pointerEvents: "none",
     transition:
@@ -281,21 +273,21 @@ export function initCaseNotesAssistant() {
   step0Div.appendChild(typeContainer);
   popupContent.appendChild(step0Div);
 
-  // --- STEP 1: Status (Refatorado Profissional) ---
+  // --- STEP 1: Status---
   const step1Div = document.createElement("div");
   step1Div.id = "step-1-selection";
 
   // 1. LABEL PRINCIPAL
   const mainStatusLabel = document.createElement("label");
-  mainStatusLabel.className = "cw-input-label"; // Usa o estilo global
+  mainStatusLabel.className = "cw-input-label"; 
   mainStatusLabel.textContent = "Status Principal"; 
 
   // 2. SELECT PRINCIPAL
   const mainStatusSelect = document.createElement("select");
   mainStatusSelect.id = "main-status";
-  mainStatusSelect.className = "cw-select"; // Usa o estilo Google Dropdown
+  mainStatusSelect.className = "cw-select";
   
-  // Placeholder inteligente (não selecionável) + Opções
+
   mainStatusSelect.innerHTML = `
       <option value="" disabled selected hidden>Selecione uma opção...</option>
       <option value="NI">NI - Need Info</option>
@@ -306,22 +298,22 @@ export function initCaseNotesAssistant() {
 
   // 3. HEADER DO SUB-STATUS (Label + Link)
   const subStatusHeader = document.createElement("div");
-  // Flexbox simples para alinhar Label e Link
+
   subStatusHeader.style.cssText = "display: flex; justify-content: space-between; align-items: baseline; margin-top: 16px; margin-bottom: 6px;";
 
   const subStatusLabel = document.createElement("label");
-  subStatusLabel.className = "cw-input-label"; // Usa o estilo global
+  subStatusLabel.className = "cw-input-label"; 
   subStatusLabel.textContent = "Sub-status";
-  subStatusLabel.style.marginBottom = "0"; // Remove margem extra pois já tem no header
+  subStatusLabel.style.marginBottom = "0"; 
 
-  // Link de Ajuda (Mantido igual, apenas limpo)
+
   const subStatusHelpLink = document.createElement("a");
-  subStatusHelpLink.href = "https://seu-link-do-guia-aqui.com"; // Adicione o link real se tiver
+  subStatusHelpLink.href = "https://seu-link-do-guia-aqui.com"; 
   subStatusHelpLink.target = "_blank";
-  subStatusHelpLink.className = "cw-info-link"; // Se tiver classe de link, ou mantém styles inline abaixo
-  // Ícone SVG + Texto
+  subStatusHelpLink.className = "cw-info-link"; 
+
   subStatusHelpLink.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px; transform:translateY(1px)"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>Guia de Substatus`;
-  // Estilos inline específicos do link (se não houver classe global para isso)
+
   Object.assign(subStatusHelpLink.style, styles.helpLink); 
 
   subStatusHeader.appendChild(subStatusLabel);
@@ -330,9 +322,9 @@ export function initCaseNotesAssistant() {
   // 4. SELECT SUB-STATUS
   const subStatusSelect = document.createElement("select");
   subStatusSelect.id = "sub-status";
-  subStatusSelect.className = "cw-select"; // Usa o estilo Google Dropdown
+  subStatusSelect.className = "cw-select"; 
   subStatusSelect.disabled = true;
-  // Placeholder inicial para quando está desabilitado
+
   subStatusSelect.innerHTML = `<option value="" disabled selected hidden>Aguardando status principal...</option>`;
 
   // 5. MONTAGEM
@@ -811,20 +803,16 @@ export function initCaseNotesAssistant() {
         }
     });
 
-    // LÓGICA DE APLICAÇÃO:
-    
-    // 1. Desliga o que foi desmarcado...
+  
     tasksToDisable.forEach(taskId => {
-        // ...MAS CUIDADO: Só desliga se a task NÃO estiver na lista de "Ligar".
-        // (Isso previne bugs se você tiver 2 checkboxes para a mesma task e apenas 1 estiver marcado)
         if (!tasksToEnable.has(taskId)) {
-            stepTasks.toggleTask(taskId, false); // false = Forçar OFF
+            stepTasks.toggleTask(taskId, false); 
         }
     });
 
-    // 2. Liga o que foi marcado
+
     tasksToEnable.forEach(taskId => {
-        stepTasks.toggleTask(taskId, true); // true = Forçar ON
+        stepTasks.toggleTask(taskId, true); 
     });
   }
 
@@ -945,12 +933,12 @@ export function initCaseNotesAssistant() {
     if (templateData.requiresTasks) {
       optionalTaskBtn.style.display = "none";
       step2Title.style.display = "block";
-      stepTasks.selectionElement.style.display = "block"; // Mostra
+      stepTasks.selectionElement.style.display = "block";
       step2Div.style.display = "block";
     } else {
       optionalTaskBtn.style.display = "block";
       step2Title.style.display = "none";
-      stepTasks.selectionElement.style.display = "none"; // Esconde
+      stepTasks.selectionElement.style.display = "none";
       step2Div.style.display = "block";
     }
 
@@ -1028,16 +1016,16 @@ export function initCaseNotesAssistant() {
     else emailAutomationDiv.style.display = "none";
     buttonContainer.style.display = "flex";
 
-    // Atualiza Tag Support
+
     const checked = stepTasks.getCheckedElements().map((c) => c.value);
     tagSupport.updateVisibility(selectedSubStatusKey, checked);
   };
 
-  // Evento do botão opcional
+
   optionalTaskBtn.onclick = () => {
     optionalTaskBtn.style.display = "none";
     step2Title.style.display = "block";
-    stepTasks.selectionElement.style.display = "block"; // Mostra a lista do componente
+    stepTasks.selectionElement.style.display = "block"; 
   };
 function generateOutputHtml() {
         const selectedSubStatusKey = subStatusSelect.value;
@@ -1050,8 +1038,7 @@ function generateOutputHtml() {
         let tagNames = [];
         let screenshotsText = '';
 
-        // --- 1. CAPTURA DE TAGS (Via Task Manager) ---
-        // O método retorna objetos { value: 'id', closest: ... } que simulam o DOM antigo
+
         const checkedBoxes = stepTasks.getCheckedElements();
         
         if (checkedBoxes.length > 0) {
@@ -1059,8 +1046,6 @@ function generateOutputHtml() {
                 const taskKey = cb.value;
                 const task = TASKS_DB[taskKey];
                 
-                // Pega o valor do stepper (o método .closest() do mock retorna o elemento com textContent)
-                // Nota: No command-center.js, implementamos um mock que retorna { querySelector: ... }
                 const countSpan = cb.closest().querySelector('.stepper-count'); 
                 const count = countSpan ? parseInt(countSpan.textContent) : 1;
 
@@ -1069,24 +1054,18 @@ function generateOutputHtml() {
             });
         }
 
-        // --- 2. CAPTURA DE PRINTS (Via Container do Módulo) ---
-        // Busca apenas dentro do container de screenshots do Task Manager
+
        const screenshotsContainer = stepTasks.screenshotsElement;
         
         if (screenshotsContainer) {
-            // Busca inputs de nome dentro do container
+
             const nameInputs = Array.from(screenshotsContainer.querySelectorAll('input[id^="name-"]'));
-            
-            // Removemos o filtro de visibilidade (offsetParent) pois o container pode estar oculto
-            // no momento da geração (se o usuário estiver no passo final), mas os dados existem.
+
             
             if (nameInputs.length > 0) {
                 nameInputs.forEach(nameInput => {
                     const customName = nameInput.value;
-                    
-                    // CORREÇÃO AQUI: 
-                    // Em vez de navegar por parentNode, buscamos o cartão ancestral pela classe.
-                    // Isso garante que acharemos o cartão independente da estrutura interna do header.
+
                     const card = nameInput.closest('.cw-screen-card');
                     
                     if (card) {
@@ -1096,17 +1075,14 @@ function generateOutputHtml() {
                         let itemsHtml = '';
 
                         printInputs.forEach(printInput => {
-                            // Encontra o label associado (irmão anterior do wrapper ou do input)
-                            // Na nova estrutura, o label está dentro de .cw-input-group, antes do wrapper
+
                             const group = printInput.closest('.cw-input-group');
                             const labelEl = group ? group.querySelector('.cw-input-label') : null;
                             
                             const labelText = labelEl ? labelEl.textContent : 'Evidência';
                             const val = printInput.value.trim();
                             const displayVal = val ? ` ${val}` : '';
-                            
-                            // Adiciona linha mesmo se vazio (para template) ou só se tiver valor?
-                            // Geralmente mantemos para mostrar o checklist.
+
                             itemsHtml += `<li>${labelText} -${displayVal}</li>`;
                             hasPrints = true;
                         });
@@ -1120,7 +1096,7 @@ function generateOutputHtml() {
             }
         }
 
-        // --- 3. INJEÇÃO NO TEMPLATE ---
+
 
         // Tags
         if (outputText.includes('{TAGS_IMPLEMENTED}')) {
@@ -1136,7 +1112,7 @@ function generateOutputHtml() {
             outputText += `<br>${screenshotsText}`;
         }
 
-        // --- 4. CAMPOS PADRÃO (Portugal/Consentimento) ---
+
         if (currentLang === 'pt' && isPortugalCase) {
             const consentValue = consentRadioSim.checked ? t('sim') : t('nao');
             outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, `<br><b>${t('consentiu_gravacao')}</b> ${consentValue}<br><br>`);
@@ -1149,14 +1125,14 @@ function generateOutputHtml() {
             outputText = outputText.replace(/{CONSENTIU_GRAVACAO}/g, '');
         }
 
-        // --- 5. CAMPOS DINÂMICOS ---
+
         const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
         inputs.forEach(input => {
             const fieldName = input.id.replace('field-', '');
             const placeholderRegex = new RegExp(`{${fieldName}}`, 'g');
             let value = input.value;
             
-            // Lógica de Radio Buttons (Snippets)
+
             if (fieldName === 'REASON_COMMENTS' && (selectedSubStatusKey.startsWith('NI_') || selectedSubStatusKey.startsWith('IN_'))) {
                 const checkedRadio = snippetContainer.querySelector('input[type="radio"]:checked');
                 if (checkedRadio && scenarioSnippets[checkedRadio.id]) {
@@ -1164,7 +1140,6 @@ function generateOutputHtml() {
                 }
             }
 
-            // Formatação de Lista/Parágrafo
             if (textareaListFields.includes(fieldName) && value.trim() !== '') {
                 const lines = value.split('\n').map(l => l.trim()).filter(l => l !== '' && l !== '•')
                     .map(l => l.startsWith('• ') ? l.substring(2) : l)
@@ -1176,12 +1151,12 @@ function generateOutputHtml() {
                 value = value.replace(/\n/g, '<br>'); 
             }
             
-            // Limpeza Inteligente (Remove linhas vazias do template)
+
             const textContent = value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim();
             const isEmpty = textContent === '' || textContent === '•' || textContent.toLowerCase() === 'n/a';
 
             if (isEmpty) {
-                // Tenta remover a linha inteira (Label + Placeholder)
+
                 const lineRegex = new RegExp(`(?:<br>\\s*)?<[b|strong]+>[^<]+:\\s*<\\/[b|strong]+>\\s*\\{${fieldName}\\}(?:<br>\\s*)?`, 'gi');
                 if (lineRegex.test(outputText)) outputText = outputText.replace(lineRegex, '');
                 else outputText = outputText.replace(placeholderRegex, '');
@@ -1190,11 +1165,11 @@ function generateOutputHtml() {
             }
         });
         
-        // Limpeza Final de Placeholders
+
         outputText = outputText.replace(/{([A-Z0-9_]+)}/g, ''); 
         outputText = outputText.replace(/(<br>){3,}/g, '<br><br>');
         
-        // Tag Support
+
         if (typeof tagSupport !== 'undefined' && tagSupport.getOutput) {
             outputText += tagSupport.getOutput();
         }
@@ -1221,22 +1196,20 @@ function generateOutputHtml() {
       return;
     }
 
-    // 1. Copia e Fecha a Janela (Efeito Gênio)
+
     copyHtmlToClipboard(htmlOutput);
     toggleVisibility();
 
-    // 2. INICIA A ANIMAÇÃO e guarda o gatilho de fim
-    // A tela escurece e a pílula começa a "pensar"
     const finishLoading = triggerProcessingAnimation();
 
-    // 3. Processamento
+ 
     const campo = await ensureNoteCardIsOpen();
     
     if (campo) {
       try {
         campo.focus();
         
-        // Lógica de Limpeza do Campo
+
         const isEmpty =
           campo.innerHTML.trim() === "<p><br></p>" ||
           campo.innerHTML.trim() === "<br>" ||
@@ -1272,18 +1245,14 @@ function generateOutputHtml() {
 
         if (hasEmailToRun) {
             const emailCode = SUBSTATUS_SHORTCODES[selectedSubStatusKey];
-            
-            // MUDANÇA AQUI: Adicionamos o 'await'
-            // O código PARA aqui e espera o email terminar o trabalho dele
+
             await runEmailAutomation(emailCode);
-            
-            // Opcional: Um pequeno respiro extra pós-email para não ser brusco
+
             await new Promise(r => setTimeout(r, 500)); 
         }
 
         // 2. FINALIZA A ANIMAÇÃO
-        // Se teve email, chega aqui depois de tudo pronto.
-        // Se não teve, chega aqui rápido (e o timer interno do command-center segura a onda para ficar bonito).
+
         finishLoading();
 
         // 3. Limpeza Final
@@ -1295,7 +1264,7 @@ function generateOutputHtml() {
       } catch (err) {
         console.error(err);
         showToast("Erro ao inserir.", { error: true });
-        finishLoading(); // Destrava mesmo com erro
+        finishLoading(); 
       }
   };
 }
@@ -1307,13 +1276,13 @@ function generateOutputHtml() {
     }
     if (startFrom <= 2) {
       step2Div.style.display = "none";
-      stepTasks.reset(); // Reset Módulo
+      stepTasks.reset(); 
       optionalTaskBtn.style.display = "none";
     }
     if (startFrom <= 3) {
       step3Div.style.display = "none";
       dynamicFormFieldsContainer.innerHTML = "";
-      tagSupport.reset(); // Reset Módulo
+      tagSupport.reset(); 
       buttonContainer.style.display = "none";
       emailAutomationDiv.style.display = "none";
     }
@@ -1323,19 +1292,17 @@ function toggleVisibility() {
     visible = !visible;
     
     if (visible) {
-        // --- RESET DO EXPAND ---
-        // Procura o botão pela classe que adicionamos
+
         const btnExpand = popup.querySelector('.cw-expand-btn');
-        
-        // Se o botão existe e tem a função de reset que criamos, execute-a
+
         if (btnExpand && typeof btnExpand.resetState === 'function') {
             btnExpand.resetState();
         }
     }
 
-    toggleGenieAnimation(visible, popup, "cw-btn-notes"); // ou seu ID correto
+    toggleGenieAnimation(visible, popup, "cw-btn-notes"); 
   }
-  // INICIALIZAÇÃO
+
   setCaseType("bau");
   setLanguage("pt");
 

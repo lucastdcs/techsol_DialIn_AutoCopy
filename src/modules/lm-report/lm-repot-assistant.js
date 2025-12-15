@@ -110,7 +110,7 @@ export function initFeedbackAssistant() {
   let activeTab = "lm";
   let searchTerm = "";
 
-  // --- ESTILOS LOCAIS ---
+  
   const styleSearchInput = {
     width: "100%",
     padding: "10px 12px 10px 36px",
@@ -127,13 +127,13 @@ export function initFeedbackAssistant() {
     backgroundPosition: "10px center",
   };
 
-  // Estilo Chips (Abas)
+ 
   const styleTabContainer = {
     display: "flex",
     flexWrap: "wrap",
     gap: "8px",
     paddingBottom: "8px",
-    // O marginTop e borderBottom são cuidados pelo container da toolbar agora
+ 
   };
 
   const styleTabButton = {
@@ -158,27 +158,24 @@ export function initFeedbackAssistant() {
   };
 
 
-  // --- NOVOS ESTILOS ---
   
-  // Animação de entrada dos itens (Keyframes injetados via JS ou CSS global)
   const styleListItem = {
     display: "flex",
-    alignItems: "center", // Centraliza verticalmente
-    padding: "10px 14px", // Mais compacto e elegante
-    borderRadius: "12px", // Google Material 3
+    alignItems: "center", 
+    padding: "10px 14px", 
+    borderRadius: "12px", 
     cursor: "pointer",
     border: "1px solid transparent",
     marginBottom: "6px",
-    background: "#ffffff", // Cards brancos sobre fundo cinza ficam ótimos
+    background: "#ffffff",
     transition: "transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.2s",
-    boxShadow: "0 1px 2px rgba(0,0,0,0.02)", // Sombra sutilíssima
-    
-    // Preparação para animação de entrada
+    boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
+
     opacity: "0",
     transform: "translateY(10px)",
   };
 
-  // Ícone Lateral (Anchor)
+ 
   const styleListIcon = {
     width: "36px",
     height: "36px",
@@ -193,7 +190,7 @@ export function initFeedbackAssistant() {
     flexShrink: "0"
   };
 
-  // --- POPUP (Com Animação) ---
+
   const popup = document.createElement("div");
   popup.id = "feedback-popup";
     Object.assign(popup.style, stylePopup, { 
@@ -211,7 +208,6 @@ const CATEGORY_ICONS = {
 };
 
 
-  // Refs para animação
   const animRefs = {
     popup,
     googleLine: null,
@@ -289,27 +285,25 @@ const CATEGORY_ICONS = {
 
   document.body.appendChild(popup);
 
-  // --- LÓGICA DE RENDERIZAÇÃO ---
+
 function renderTabs() {
     tabsContainer.innerHTML = "";
     
     Object.keys(LINKS_DB).forEach((key) => {
       const cat = LINKS_DB[key];
       const btn = document.createElement("button");
-      
-      // Inclui o ícone da categoria no botão (Ex: 📝 LM Forms)
-      // Usa o objeto CATEGORY_ICONS que criamos no passo anterior
+
       const icon = CATEGORY_ICONS[key] || '';
       btn.innerHTML = `<span style="font-size:14px">${icon}</span> ${cat.label}`;
       
       Object.assign(btn.style, styleTabButton);
       
-      // Estado Ativo
+
       if (activeTab === key && searchTerm === "") {
         Object.assign(btn.style, styleActiveTab);
       }
       
-      // Feedback Tátil (Apple Feel)
+
       btn.onmousedown = () => btn.style.transform = "scale(0.95)";
       btn.onmouseup = () => btn.style.transform = "scale(1)";
       btn.onmouseleave = () => btn.style.transform = "scale(1)";
@@ -317,11 +311,9 @@ function renderTabs() {
       btn.onclick = () => {
         activeTab = key;
         searchTerm = "";
-        searchInput.value = ""; // Limpa a busca ao trocar de aba
-        
-        // Re-renderiza para atualizar o estado visual
+        searchInput.value = ""; 
+
         renderTabs();
-        // Anima a lista
         renderList();
       };
       
@@ -351,11 +343,10 @@ function renderTabs() {
       });
     } else {
       linksToShow = LINKS_DB[activeTab].links;
-      // Adiciona ícone da aba ativa
+
       linksToShow.forEach(item => item._catIcon = CATEGORY_ICONS[activeTab]);
     }
 
-    // Empty State Bonito
     if (linksToShow.length === 0) {
       contentArea.innerHTML = `
         <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:40px; opacity:0.6;">
@@ -370,19 +361,16 @@ function renderTabs() {
       const item = document.createElement("div");
       Object.assign(item.style, styleListItem);
 
-      // --- ESTRUTURA DO CARD ---
-      
-      // A. Ícone Lateral (Visual Anchor)
       const iconDiv = document.createElement("div");
       Object.assign(iconDiv.style, styleListIcon);
-      iconDiv.textContent = link._catIcon || '🔗'; // Fallback
+      iconDiv.textContent = link._catIcon || '🔗'; 
       item.appendChild(iconDiv);
 
       // B. Texto Central
       const textDiv = document.createElement("div");
       textDiv.style.flexGrow = "1";
       
-      // Função Highlight
+
       const highlight = (text) => {
           if (!isSearching) return text;
           const regex = new RegExp(`(${searchTerm})`, 'gi');
@@ -399,10 +387,9 @@ function renderTabs() {
       const actionsDiv = document.createElement("div");
       actionsDiv.style.display = "flex";
       actionsDiv.style.gap = "4px";
-      actionsDiv.style.opacity = "0"; // Esconde actions inicialmente
+      actionsDiv.style.opacity = "0"; 
       actionsDiv.style.transition = "opacity 0.2s";
 
-      // Botão Copiar (Refinado)
       const copyBtn = document.createElement("div");
       copyBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
       Object.assign(copyBtn.style, {
@@ -464,14 +451,12 @@ function renderTabs() {
 
       contentArea.appendChild(item);
 
-      // --- ANIMAÇÃO EM CASCATA (STAGGER) ---
-      // Atraso baseado no índice (0ms, 50ms, 100ms...)
       requestAnimationFrame(() => {
           item.style.transition = "opacity 0.3s ease, transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.2)"; // Spring
           setTimeout(() => {
               item.style.opacity = "1";
               item.style.transform = "translateY(0)";
-          }, index * 40); // 40ms de delay entre cada item
+          }, index * 40); 
       });
     });
   }

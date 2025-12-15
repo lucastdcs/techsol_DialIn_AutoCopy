@@ -1,54 +1,101 @@
-# 🚀 Cases Wizard
 
-![Build Status](https://img.shields.io/github/actions/workflow/status/lucastdcs/techsol_DialIn_AutoCopy/deploy.yml?label=Build&style=flat-square)
-![Version](https://img.shields.io/badge/version-v3.5.2-blue?style=flat-square)
-![License](https://img.shields.io/github/license/lucastdcs/techsol_DialIn_AutoCopy?style=flat-square)
 
-Uma suíte de ferramentas completa via **Bookmarklet** projetada para otimizar o fluxo de trabalho de Consultores de Soluções Técnicas. Este projeto automatiza tarefas repetitivas, padroniza notas de casos, agiliza o envio de e-mails e fornece scripts de atendimento em tempo real.
+# 🚀 TechSol Operations Assistant
 
----
+> **Suite de produtividade e automação para o CRM corporativo.**
+> *Desenvolvido para aumentar a eficiência dos agentes e padronizar a comunicação.*
 
-## ✨ Funcionalidades Principais
+Este projeto é uma **camada de aplicação (Overlay)** injetada via JavaScript Bookmarklet. Ele roda "on top" do CRM nativo, manipulando o DOM para adicionar funcionalidades avançadas como automação de e-mails, sistema de broadcast, sons de feedback e melhorias de UX (Material Design).
 
-A ferramenta é dividida em módulos flutuantes independentes:
+-----
 
-### 📝 Case Notes Assistant
-O módulo mais robusto da suíte.
-* **Fluxos Inteligentes:** Selecione entre BAU/LM e o idioma (PT/ES).
-* **Templates Dinâmicos:** Preenchimento automático baseado no Status e Substatus.
-* **Seleção de Tasks:** Interface visual com busca e contadores para múltiplas implementações.
-* **Screenshots Organizados:** Gera campos para evidências de forma estruturada.
-* **Compliance:** Verifica automaticamente a necessidade de Tag Support e Consentimento.
-* **Limpeza Segura:** Insere a nota no editor do caso sem quebrar a formatação existente.
+## 🛠️ Instalação (Bookmarklets)
 
-### 📧 Quick Email Assistant
-Automação de comunicação com o cliente.
-* **Modo Sniper:** Abre e foca no editor de e-mail automaticamente.
-* **Templates Prontos:** NRP, Contato Inicial, Agendamento, etc.
-* **Substituição de Variáveis:** Preenche automaticamente nome do cliente, URL e datas (com cálculo de dias úteis).
+Para utilizar a ferramenta, crie um favorito no seu navegador e cole o código correspondente no campo URL.
 
-### 📞 Call Script Assistant
-Guia de atendimento em tempo real.
-* **Checklists:** Roteiros de início e fim de chamada (PT/ES/EN).
-* **Interativo:** Marque os itens conforme fala com o cliente.
+### 🟢 1. Versão Estável (Produção)
 
-### 🔗 Quick Links & Feedback
-* Acesso rápido a formulários internos (Ocorrências, Bugs).
-* Links diretos para suporte (Ads, Analytics, Merchant).
-
----
-
-## 📥 Instalação
-
-Escolha a versão adequada para o seu uso.
-
-### 🔹 Opção 1: Versão Estável (Recomendada)
-*Para uso diário em atendimentos reais. Esta versão é testada e segura.*
-
-1.  Mostre a sua barra de favoritos (`Ctrl + Shift + B`).
-2.  Clique com o botão direito na barra e selecione **"Adicionar página"**.
-3.  **Nome:** `Case Wizard`
-4.  **URL:** Cole o código abaixo:
+*Recomendada para uso diário. Possui bypass de segurança (CSP) e carregamento otimizado.*
 
 ```javascript
-javascript:(function(){var s=document.createElement('script');s.src='[https://lucastdcs.github.io/techsol_DialIn_AutoCopy/dist/bundle.js?t='+new](https://lucastdcs.github.io/techsol_DialIn_AutoCopy/dist/bundle.js?t='+new) Date().getTime();document.body.appendChild(s);})();
+javascript:(function(){    const cacheBuster = '?t=' + new Date().getTime();    const scriptUrl = 'https://lucastdcs.github.io/techsol_DialIn_AutoCopy/bundle.js' + cacheBuster;        const policy = trustedTypes.createPolicy('default', {         createHTML: (string) => string,         createScriptURL: string => string,         createScript: string => string,     });    const oldScript = document.getElementById('techsol-app-bundle');    if(oldScript) oldScript.remove();        const script = document.createElement('script');    script.id = 'techsol-app-bundle';    script.src = policy.createScriptURL(scriptUrl);    document.body.appendChild(script);})();
+```
+
+### 🟡 2. Versão Development (Dev/Debug)
+
+*Para desenvolvedores. Aponta para o bundle de desenvolvimento e inclui logs de console.*
+
+```javascript
+javascript:(function(){    var s = document.createElement('script');    s.src = 'https://lucastdcs.github.io/techsol_DialIn_AutoCopy/bundle-dev.js?t=' + new Date().getTime();    s.onload = function() { console.log('✅ TechSol DEV carregado!'); };    s.onerror = function() { alert('❌ Erro ao carregar TechSol DEV: Arquivo não encontrado ou bloqueado.'); };    document.body.appendChild(s);})();
+```
+
+-----
+
+## ⚙️ Arquitetura Técnica
+
+O projeto funciona como uma **Single Script Application** injetada externamente. Aqui está o fluxo de execução:
+
+### 1\. Script Injection & Cache Busting
+
+O CRM alvo possui cache agressivo. Para garantir que os agentes sempre recebam a última versão, o bookmarklet anexa um timestamp (`?t=12345...`) na requisição do script:
+
+```javascript
+const cacheBuster = '?t=' + new Date().getTime();
+```
+
+### 2\. Bypass de CSP (Content Security Policy)
+
+O ambiente do CRM utiliza diretivas de segurança estritas. A versão estável utiliza a API `trustedTypes` para criar uma política de segurança que permite a injeção do script externo hospedado no GitHub Pages, evitando bloqueios do navegador.
+
+### 3\. DOM Manipulation & Event Loop
+
+Uma vez carregado, o `bundle.js`:
+
+1.  **Inicializa o Sound Manager:** Carrega buffers de áudio (Base64) para evitar latência de rede.
+2.  **Monta a UI:** Injeta o botão flutuante e os popups usando Web Components nativos ou elementos HTML puros estilizados via CSS-in-JS.
+3.  **Observers:** Monitora mudanças na URL e no DOM para detectar quando o usuário entra em uma página de caso ou e-mail.
+
+-----
+
+## 📦 Funcionalidades Principais
+
+### 📧 Automação de E-mail
+
+  * **Detecção de Rascunho:** Algoritmo de *polling* que identifica, descarta e limpa rascunhos "fantasmas" antes de inserir um novo template.
+  * **Quick Responses:** Inserção inteligente de texto rico (HTML) com substituição de variáveis (`{{cliente}}`, `{{data}}`).
+
+### 📢 Broadcast System
+
+  * Sistema de avisos globais consumindo JSON remoto.
+  * Persistência de leitura via `localStorage`.
+  * Suporte a emojis customizados (parser interno de shortcodes).
+
+### 🎨 UX & Sound Design
+
+  * **Sound UX:** Feedback auditivo para ações (Sucesso, Erro, Notificação) e Startup Sound estilo "Netflix/Cinema".
+  * **Google Material Look:** Componentes visuais (Dropdowns, Inputs) recriados para se misturar nativamente à interface do Google.
+
+-----
+
+## 💻 Desenvolvimento Local
+
+Este projeto não possui um servidor local (localhost) devido às restrições de HTTPS e CORS do CRM alvo.
+
+**Fluxo de Trabalho Sugerido:**
+
+1.  Faça alterações nos arquivos `.js` locais (`src/`).
+2.  Compile o projeto (se houver build step) para `bundle-dev.js`.
+3.  Faça push para o branch que alimenta o GitHub Pages.
+4.  Use o **Bookmarklet de Dev** para testar as alterações em tempo real no ambiente de produção.
+
+-----
+
+## ⚠️ Notas Importantes
+
+  * **Bloqueios de Rede:** O script depende de acesso ao domínio `github.io`. Se a rede corporativa bloquear, o script não carregará.
+  * **Persistência:** As preferências de usuário (posição do widget, mute de som) são salvas no `localStorage` do navegador. Limpar o cache do navegador resetará essas configurações.
+
+-----
+
+> **Status do Projeto:** 🟢 Estável (v2.5)
+> **Mantenedor:** [Seu Nome/Time TechSol]

@@ -30,15 +30,10 @@ function getFollowUpDate() {
     // Formata para DD/MM/AAAA (Padrão BR/PT)
     return date.toLocaleDateString('pt-BR');
 }
-// --- FUNÇÃO AUXILIAR: ENCONTRAR EDITOR VISÍVEL E EDITÁVEL ---
+
 function getVisibleEditor() {
-    // Pega todos os candidatos a corpo de email
+
     const todos = Array.from(document.querySelectorAll('[id="email-body-content-top-content"]'));
-    
-    // FILTRO DE SEGURANÇA:
-    // 1. Deve estar visível (offsetParent !== null)
-    // 2. NÃO pode estar dentro de um 'case-message-view' (email enviado/leitura)
-    // 3. DEVE estar dentro de um 'editor' ou 'write-card' (email sendo escrito)
     
     return todos.find(el => {
         const isVisible = el.offsetParent !== null;
@@ -49,14 +44,9 @@ function getVisibleEditor() {
     });
 }
 
-// --- FUNÇÃO COMPARTILHADA: ABRIR E LIMPAR ---
-// --- FUNÇÃO COMPARTILHADA: ABRIR E LIMPAR (LÓGICA SEQUENCIAL CORRIGIDA) ---
 async function openAndClearEmail() {
     console.log("🚀 FASE 1: Abrindo janela de email...");
 
-    // =========================================================================
-    // FASE 1: ABRIR A JANELA
-    // =========================================================================
     let emailAberto = false;
     const todosIcones = Array.from(document.querySelectorAll('i.material-icons-extended'));
     const iconeEmail = todosIcones.find(el => el.innerText.trim() === 'email');
@@ -70,7 +60,7 @@ async function openAndClearEmail() {
         simularCliqueReal(botaoAlvo);
         emailAberto = true;
     } else {
-        // Fallback Menu (+)
+
         const speedDial = document.querySelector('material-fab-speed-dial');
         if (speedDial) {
             const triggerBtn = speedDial.querySelector('.trigger');
@@ -95,29 +85,20 @@ async function openAndClearEmail() {
         showToast("Erro: Botão de email não encontrado.", { error: true });
         return false;
     }
-
-    // =========================================================================
-    // FASE 2: CAÇA AO RASCUNHO (PRIORIDADE MÁXIMA)
-    // =========================================================================
-    // Aqui nós NÃO procuramos o editor ainda. Procuramos o problema (rascunho).
     
     console.log("🚀 FASE 2: Verificando rascunhos (Polling de 3s)...");
     
     let draftButton = null;
     let attempts = 0;
     
-    // Loop de espera exclusivo para o botão de rascunho
-    while (attempts < 15) { // Tenta por 3 segundos (15 * 200ms)
+    while (attempts < 15) { 
         await esperar(200);
         
         const candidates = document.querySelectorAll('material-button[debug-id="discard-prewrite-draft-button"]');
-        draftButton = Array.from(candidates).find(el => el.offsetParent !== null);
-        
-        // Se achou o botão, PARA TUDO e foca nele
+        draftButton = Array.from(candidates).find(el => el.offsetParent !== null);    
+
         if (draftButton) break;
         
-        // Se, durante a busca pelo rascunho, o EDITOR FINAL aparecer,
-        // significa que não tinha rascunho. Podemos sair do loop mais cedo.
         const editorJaApareceu = getVisibleEditor();
         if (editorJaApareceu) {
             console.log("ℹ️ Editor apareceu limpo. Sem rascunhos.");
@@ -130,7 +111,7 @@ async function openAndClearEmail() {
     if (draftButton) {
         console.log("⚠️ RASCUNHO LOCALIZADO! Executando descarte...");
         
-        // 1. Clique agressivo no Discard
+
         simularCliqueReal(draftButton);
         const textInside = draftButton.querySelector('.buttonText');
         if (textInside) simularCliqueReal(textInside);
@@ -166,9 +147,6 @@ async function openAndClearEmail() {
         }
     }
 
-    // =========================================================================
-    // FASE 3: O EDITOR FINAL (Só agora nos importamos com ele)
-    // =========================================================================
     
     console.log("🚀 FASE 3: Buscando editor final para limpeza...");
 
@@ -186,7 +164,7 @@ async function openAndClearEmail() {
         return false;
     }
 
-    // LIMPEZA DO HTML (Igual ao anterior)
+
     const containerTopo = editorVisivel.closest('[id="email-body-content-top"]');
     const wrapperGeral = editorVisivel.closest('.email-body-content') || document.body;
     const editorPai = wrapperGeral.querySelector('div[contenteditable="true"][aria-label="Email body"]');
@@ -222,9 +200,6 @@ async function openAndClearEmail() {
     return false;
 }
 
-// ============================================================
-// FUNÇÃO 1: CANNED RESPONSE
-// ============================================================
 export async function runEmailAutomation(cannedResponseText) {
     if (!cannedResponseText) return;
     showToast(`Preparando email...`, { duration: 3000 });
@@ -233,7 +208,7 @@ export async function runEmailAutomation(cannedResponseText) {
     const emailPronto = await openAndClearEmail();
     if (!emailPronto) return;
 
-    // --- LÓGICA CANNED RESPONSE ---
+
     await esperar(500);
     const btnCanned = document.querySelector('material-button[debug-id="canned_response_button"]');
     
@@ -271,7 +246,7 @@ export async function runEmailAutomation(cannedResponseText) {
                 simularCliqueReal(opcaoAlvo);
                 await esperar(2000); 
 
-                // Substituir Nome
+
                 function encontrarNoDeTexto(elemento, textoParaAchar) {
                     if (elemento.nodeType === 3 && elemento.nodeValue.includes(textoParaAchar)) return elemento;
                     if (!elemento.childNodes) return null;
@@ -282,7 +257,7 @@ export async function runEmailAutomation(cannedResponseText) {
                     return null;
                 }
 
-                // Busca no container visível
+
                 const editorVisivel = getVisibleEditor();
                 const containerTopo = editorVisivel ? editorVisivel.closest('[id="email-body-content-top"]') : document.body;
                 
@@ -312,10 +287,6 @@ export async function runEmailAutomation(cannedResponseText) {
     }
 }
 
-// ============================================================
-// FUNÇÃO 2: QUICK EMAIL
-// ============================================================
-// Certifique-se de que a função esperar/sleep existe no topo ou importad
 
 export async function runQuickEmail(template) {
     console.log(`🚀 Iniciando automação (Quick): ${template.name}`);
@@ -324,17 +295,13 @@ export async function runQuickEmail(template) {
     const pageData = getPageData(); 
     const agentName = getAgentName();
     
-    // A função openAndClearEmail já deve ter suas próprias esperas internas, 
-    // mas uma segurança extra aqui ajuda.
     const emailPronto = await openAndClearEmail(); 
     
     if (!emailPronto) return;
 
-    // --- TRAVA 1: ESTABILIZAÇÃO DA JANELA ---
-    // Espera a animação de abertura do email terminar e os campos ficarem interativos
     await esperar(600); 
 
-    // 1. Assunto
+
     const subjectInput = document.querySelector('input[aria-label="Subject"]');
     if (subjectInput && template.subject) {
         subjectInput.focus();
@@ -342,11 +309,11 @@ export async function runQuickEmail(template) {
         nativeInputValueSetter.call(subjectInput, template.subject);
         subjectInput.dispatchEvent(new Event('input', { bubbles: true }));
         
-        // (Essa trava você já tinha, mantive pois é boa)
+
         await esperar(300); 
     }
 
-    // 2. Corpo
+
     const editorVisivel = getVisibleEditor();
     
     if (editorVisivel) {
@@ -355,16 +322,15 @@ export async function runQuickEmail(template) {
          
          if (editorPai) {
              editorPai.focus();
-             // Simula um clique para garantir que o cursor está lá
+
              editorPai.click(); 
              editorPai.dispatchEvent(new Event('input', { bubbles: true }));
          }
 
-        // --- TRAVA 2: PREPARAÇÃO PARA COLAGEM ---
-        // Espera o foco "pegar" de verdade antes de injetar HTML
+
         await esperar(400);
 
-        // --- CÁLCULO DA DATA ---
+
         const date = new Date();
         date.setDate(date.getDate() + 3); 
         const day = date.getDay();
@@ -381,7 +347,7 @@ export async function runQuickEmail(template) {
         finalBody = finalBody.replace(/\[Seu Nome\]/g, agentName); 
         finalBody = finalBody.replace(/\[MM\/DD\/YYYY\]/g, dataFormatada);
 
-        // Inserção
+
         document.execCommand('insertHTML', false, finalBody);
         
         if (editorPai) {
@@ -391,9 +357,6 @@ export async function runQuickEmail(template) {
         
         showToast("Email preenchido com sucesso!", { duration: 2000 });
 
-        // --- TRAVA 3: FINALIZAÇÃO (CRUCIAL) ---
-        // Espera o sistema "digerir" o texto colado antes de dizer que acabou.
-        // Isso sincroniza perfeitamente com o loader do Command Center.
         await esperar(800); 
 
     } else {

@@ -120,10 +120,7 @@ export async function ensureNoteCardIsOpen() {
     return novoEditor;
 }
 
-/**
- * Cria um dropdown estilo Google que substitui o visual nativo.
- * Retorna o elemento container, mas expõe o select nativo via .nativeSelect
- */
+
 export function createGoogleSelect(id, options, placeholder = "Selecione...") {
     // 1. O Select Nativo (Invisível, para manter a lógica funcionando)
     const nativeSelect = document.createElement('select');

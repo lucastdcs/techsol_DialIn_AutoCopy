@@ -5,12 +5,12 @@ import {
   styleResizeHandle,
   makeResizable,
   showToast,
-  parseEmojiCodes // <--- 1. IMPORTADO DO UTILS
+  parseEmojiCodes 
 } from "../shared/utils.js";
 import { SoundManager } from "../shared/sound-manager.js";
 import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from "../shared/animations.js";
-import { BROADCAST_MESSAGES, setBroadcastMessages } from "./broadcast-data.js"; // Removi EMOJI_MAP daqui
+import { BROADCAST_MESSAGES, setBroadcastMessages } from "./broadcast-data.js"; 
 import { DataService } from "../shared/data-service.js";
 
 export function initBroadcastAssistant() {
@@ -75,7 +75,7 @@ export function initBroadcastAssistant() {
 
       let html = rawText;
 
-      // 1. Auto-Link (Links clicáveis)
+
       const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/g;
       html = html.replace(urlRegex, (url) => {
           let href = url;
@@ -83,15 +83,13 @@ export function initBroadcastAssistant() {
           return `<a href="${href}" target="_blank" style="color:#1967d2; text-decoration:underline;">${url}</a>`;
       });
 
-      // 2. Markdown Básico
+
       html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
       html = html.replace(/_(.*?)_/g, '<i>$1</i>');
       
-      // 3. Quebra de Linha
+
       html = html.replace(/\n/g, '<br>');
 
-      // 4. TRADUÇÃO DE EMOJIS (A Correção)
-      // Usa a função centralizada no utils.js para trocar :frog-eat: por 🐸
       html = parseEmojiCodes(html);
 
       // 5. Menções Especiais
@@ -135,7 +133,7 @@ export function initBroadcastAssistant() {
           const allIds = BROADCAST_MESSAGES.map(m => m.id);
           localStorage.setItem("cw_read_broadcasts", JSON.stringify(allIds));
           renderFeed(); 
-          updateBadge(); // Atualiza a bolinha vermelha
+          updateBadge(); 
       };
       actionContainer.insertBefore(markAll, actionContainer.firstChild);
   }
@@ -147,7 +145,7 @@ export function initBroadcastAssistant() {
   Object.assign(feed.style, styles.feedContainer);
   popup.appendChild(feed);
 
-  // --- LÓGICA DE DADOS ---
+
   async function checkForUpdates() {
       let statusEl = document.getElementById('cw-update-status');
       if (visible) {
