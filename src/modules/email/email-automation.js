@@ -30,15 +30,10 @@ function getFollowUpDate() {
     // Formata para DD/MM/AAAA (Padrão BR/PT)
     return date.toLocaleDateString('pt-BR');
 }
-// --- FUNÇÃO AUXILIAR: ENCONTRAR EDITOR VISÍVEL E EDITÁVEL ---
+
 function getVisibleEditor() {
-    // Pega todos os candidatos a corpo de email
+
     const todos = Array.from(document.querySelectorAll('[id="email-body-content-top-content"]'));
-    
-    // FILTRO DE SEGURANÇA:
-    // 1. Deve estar visível (offsetParent !== null)
-    // 2. NÃO pode estar dentro de um 'case-message-view' (email enviado/leitura)
-    // 3. DEVE estar dentro de um 'editor' ou 'write-card' (email sendo escrito)
     
     return todos.find(el => {
         const isVisible = el.offsetParent !== null;
@@ -49,14 +44,13 @@ function getVisibleEditor() {
     });
 }
 
-// --- FUNÇÃO COMPARTILHADA: ABRIR E LIMPAR ---
 async function openAndClearEmail() {
-    // 1. ABRIR EMAIL
+    console.log("🚀 FASE 1: Abrindo janela de email...");
+
     let emailAberto = false;
     const todosIcones = Array.from(document.querySelectorAll('i.material-icons-extended'));
     const iconeEmail = todosIcones.find(el => el.innerText.trim() === 'email');
 
-    // Tenta achar botão de email VISÍVEL
     if (iconeEmail && iconeEmail.offsetParent !== null) {
         const botaoAlvo = iconeEmail.closest('material-button') || iconeEmail.closest('material-fab') || iconeEmail;
         if (botaoAlvo.style) {
@@ -66,7 +60,7 @@ async function openAndClearEmail() {
         simularCliqueReal(botaoAlvo);
         emailAberto = true;
     } else {
-        // Fallback Menu (+)
+
         const speedDial = document.querySelector('material-fab-speed-dial');
         if (speedDial) {
             const triggerBtn = speedDial.querySelector('.trigger');
@@ -87,104 +81,125 @@ async function openAndClearEmail() {
         }
     }
 
-    // === ESPERA PELO EDITOR VISÍVEL E VÁLIDO ===
-    let tentativas = 0;
-    let editorVisivel = getVisibleEditor(); // Usa a nova função filtrada
-
-    console.log("⏳ Aguardando editor EDITÁVEL...");
+    if (!emailAberto) {
+        showToast("Erro: Botão de email não encontrado.", { error: true });
+        return false;
+    }
     
-    while (!editorVisivel && tentativas < 30) {
+    console.log("🚀 FASE 2: Verificando rascunhos (Polling de 3s)...");
+    
+    let draftButton = null;
+    let attempts = 0;
+    
+    while (attempts < 15) { 
+        await esperar(200);
+        
+        const candidates = document.querySelectorAll('material-button[debug-id="discard-prewrite-draft-button"]');
+        draftButton = Array.from(candidates).find(el => el.offsetParent !== null);    
+
+        if (draftButton) break;
+        
+        const editorJaApareceu = getVisibleEditor();
+        if (editorJaApareceu) {
+            console.log("ℹ️ Editor apareceu limpo. Sem rascunhos.");
+            break; 
+        }
+
+        attempts++;
+    }
+
+    if (draftButton) {
+        console.log("⚠️ RASCUNHO LOCALIZADO! Executando descarte...");
+        
+
+        simularCliqueReal(draftButton);
+        const textInside = draftButton.querySelector('.buttonText');
+        if (textInside) simularCliqueReal(textInside);
+        draftButton.click();
+
+        // 2. Espera o Modal de Confirmação
+        console.log("⏳ Aguardando Confirm...");
+        let confirmBtn = null;
+        let confirmAttempts = 0;
+        
+        while (confirmAttempts < 20) { // Espera até 4s (modais são lentos)
+            await esperar(200);
+            const confirms = document.querySelectorAll('material-button[debug-id="confirm-button"]');
+            confirmBtn = Array.from(confirms).find(el => el.offsetParent !== null);
+            if (confirmBtn) break;
+            confirmAttempts++;
+        }
+
+        if (confirmBtn) {
+            console.log("✅ Confirmando...");
+            simularCliqueReal(confirmBtn);
+            const confirmContent = confirmBtn.querySelector('.content');
+            if (confirmContent) simularCliqueReal(confirmContent);
+            
+            showToast("Limpando rascunho...", { duration: 2000 });
+            
+            // O PULO DO GATO:
+            // Depois de confirmar, TEMOS que esperar o editor antigo morrer e o novo nascer.
+            console.log("⏳ Aguardando reload do editor pós-descarte...");
+            await esperar(3000); 
+        } else {
+            console.warn("❌ Confirm não apareceu.");
+        }
+    }
+
+    
+    console.log("🚀 FASE 3: Buscando editor final para limpeza...");
+
+    let tentativasEditor = 0;
+    let editorVisivel = getVisibleEditor(); 
+    
+    while (!editorVisivel && tentativasEditor < 20) {
         await esperar(500);
         editorVisivel = getVisibleEditor();
-        tentativas++;
+        tentativasEditor++;
     }
 
     if (!editorVisivel) {
-        showToast("Erro: Editor de email não apareceu.", { error: true });
+        showToast("Erro: Editor não carregou após a abertura.", { error: true });
         return false;
     }
 
-    // 2. DESCARTAR RASCUNHO
-// 2. DESCARTAR RASCUNHO (Lógica Blindada)
-    // Busca TODOS os botões de descarte possíveis
-    const todosDescartes = Array.from(document.querySelectorAll('material-button[debug-id="discard-prewrite-draft-button"]'));
-    // Filtra apenas o que está visível na tela
-    const btnDiscardDraft = todosDescartes.find(el => el.offsetParent !== null);
-    
-    if (btnDiscardDraft) {
-        console.log("⚠️ Rascunho detectado. Clicando em Discard...");
-        simularCliqueReal(btnDiscardDraft);
+
+    const containerTopo = editorVisivel.closest('[id="email-body-content-top"]');
+    const wrapperGeral = editorVisivel.closest('.email-body-content') || document.body;
+    const editorPai = wrapperGeral.querySelector('div[contenteditable="true"][aria-label="Email body"]');
+
+    if (containerTopo) {
+        if (editorPai) {
+            const ancestral = editorPai.closest('[aria-hidden="true"]');
+            if (ancestral) ancestral.removeAttribute('aria-hidden');
+            editorPai.focus();
+        }
         
-        // Espera ativa pelo botão de confirmação (o modal pode demorar a aparecer)
-        let btnConfirm = null;
-        let tentativasConfirm = 0;
+        await esperar(300);
+
+        containerTopo.innerHTML = `
+            <div id="email-body-content-top-content" style="font:normal 13px/17px Roboto,sans-serif;display:block">
+                <span id="cases-body-field"><br></span>
+            </div>
+        `;
         
-        while (!btnConfirm && tentativasConfirm < 10) { // Espera até 2s
-            await esperar(200);
-            const todosConfirms = Array.from(document.querySelectorAll('material-button[debug-id="confirm-button"]'));
-            btnConfirm = todosConfirms.find(el => el.offsetParent !== null);
-            tentativasConfirm++;
+        const novoElementoSagrado = containerTopo.querySelector('#cases-body-field');
+        if (novoElementoSagrado) {
+            const range = document.createRange();
+            range.selectNodeContents(novoElementoSagrado);
+            range.collapse(true); 
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
         }
-
-        if (btnConfirm) {
-            console.log("✅ Confirmando descarte...");
-            simularCliqueReal(btnConfirm);
-            
-            // Espera crítica: O editor recarrega após o descarte.
-            // Precisamos esperar o editor antigo sumir e o novo aparecer, ou apenas esperar um tempo seguro.
-            await esperar(2500); 
-            
-            // Atualiza a referência do editor, pois o DOM mudou
-            // Não precisamos fazer nada aqui, pois a função vai buscar o editor novamente abaixo
-        } else {
-            console.warn("⚠️ Cliquei em Discard, mas o botão Confirm não apareceu.");
-        }
-    }
-
-    // 3. LIMPEZA NUCLEAR NO EDITOR CORRETO
-    if (editorVisivel) {
-        const containerTopo = editorVisivel.closest('[id="email-body-content-top"]');
-        const wrapperGeral = editorVisivel.closest('.email-body-content') || document.body;
-        const editorPai = wrapperGeral.querySelector('div[contenteditable="true"][aria-label="Email body"]');
-
-        if (containerTopo) {
-            if (editorPai) {
-                const ancestral = editorPai.closest('[aria-hidden="true"]');
-                if (ancestral) ancestral.removeAttribute('aria-hidden');
-                editorPai.focus();
-            }
-            
-            await esperar(300);
-
-            // LIMPEZA
-            containerTopo.innerHTML = `
-                <div id="email-body-content-top-content" style="font:normal 13px/17px Roboto,sans-serif;display:block">
-                    <span id="cases-body-field"><br></span>
-                </div>
-            `;
-            
-            // REPOSICIONA CURSOR
-            const novoElementoSagrado = containerTopo.querySelector('#cases-body-field');
-            if (novoElementoSagrado) {
-                const range = document.createRange();
-                range.selectNodeContents(novoElementoSagrado);
-                range.collapse(true); 
-                const sel = window.getSelection();
-                sel.removeAllRanges();
-                sel.addRange(range);
-            }
-            
-            return true; // Sucesso
-        }
+        
+        return true; 
     }
     
-    showToast("Erro crítico ao acessar editor.", { error: true });
     return false;
 }
 
-// ============================================================
-// FUNÇÃO 1: CANNED RESPONSE
-// ============================================================
 export async function runEmailAutomation(cannedResponseText) {
     if (!cannedResponseText) return;
     showToast(`Preparando email...`, { duration: 3000 });
@@ -193,7 +208,7 @@ export async function runEmailAutomation(cannedResponseText) {
     const emailPronto = await openAndClearEmail();
     if (!emailPronto) return;
 
-    // --- LÓGICA CANNED RESPONSE ---
+
     await esperar(500);
     const btnCanned = document.querySelector('material-button[debug-id="canned_response_button"]');
     
@@ -231,7 +246,7 @@ export async function runEmailAutomation(cannedResponseText) {
                 simularCliqueReal(opcaoAlvo);
                 await esperar(2000); 
 
-                // Substituir Nome
+
                 function encontrarNoDeTexto(elemento, textoParaAchar) {
                     if (elemento.nodeType === 3 && elemento.nodeValue.includes(textoParaAchar)) return elemento;
                     if (!elemento.childNodes) return null;
@@ -242,7 +257,7 @@ export async function runEmailAutomation(cannedResponseText) {
                     return null;
                 }
 
-                // Busca no container visível
+
                 const editorVisivel = getVisibleEditor();
                 const containerTopo = editorVisivel ? editorVisivel.closest('[id="email-body-content-top"]') : document.body;
                 
@@ -272,10 +287,6 @@ export async function runEmailAutomation(cannedResponseText) {
     }
 }
 
-// ============================================================
-// FUNÇÃO 2: QUICK EMAIL
-// ============================================================
-// Certifique-se de que a função esperar/sleep existe no topo ou importad
 
 export async function runQuickEmail(template) {
     console.log(`🚀 Iniciando automação (Quick): ${template.name}`);
@@ -284,17 +295,13 @@ export async function runQuickEmail(template) {
     const pageData = getPageData(); 
     const agentName = getAgentName();
     
-    // A função openAndClearEmail já deve ter suas próprias esperas internas, 
-    // mas uma segurança extra aqui ajuda.
     const emailPronto = await openAndClearEmail(); 
     
     if (!emailPronto) return;
 
-    // --- TRAVA 1: ESTABILIZAÇÃO DA JANELA ---
-    // Espera a animação de abertura do email terminar e os campos ficarem interativos
     await esperar(600); 
 
-    // 1. Assunto
+
     const subjectInput = document.querySelector('input[aria-label="Subject"]');
     if (subjectInput && template.subject) {
         subjectInput.focus();
@@ -302,11 +309,11 @@ export async function runQuickEmail(template) {
         nativeInputValueSetter.call(subjectInput, template.subject);
         subjectInput.dispatchEvent(new Event('input', { bubbles: true }));
         
-        // (Essa trava você já tinha, mantive pois é boa)
+
         await esperar(300); 
     }
 
-    // 2. Corpo
+
     const editorVisivel = getVisibleEditor();
     
     if (editorVisivel) {
@@ -315,16 +322,15 @@ export async function runQuickEmail(template) {
          
          if (editorPai) {
              editorPai.focus();
-             // Simula um clique para garantir que o cursor está lá
+
              editorPai.click(); 
              editorPai.dispatchEvent(new Event('input', { bubbles: true }));
          }
 
-        // --- TRAVA 2: PREPARAÇÃO PARA COLAGEM ---
-        // Espera o foco "pegar" de verdade antes de injetar HTML
+
         await esperar(400);
 
-        // --- CÁLCULO DA DATA ---
+
         const date = new Date();
         date.setDate(date.getDate() + 3); 
         const day = date.getDay();
@@ -341,7 +347,7 @@ export async function runQuickEmail(template) {
         finalBody = finalBody.replace(/\[Seu Nome\]/g, agentName); 
         finalBody = finalBody.replace(/\[MM\/DD\/YYYY\]/g, dataFormatada);
 
-        // Inserção
+
         document.execCommand('insertHTML', false, finalBody);
         
         if (editorPai) {
@@ -351,9 +357,6 @@ export async function runQuickEmail(template) {
         
         showToast("Email preenchido com sucesso!", { duration: 2000 });
 
-        // --- TRAVA 3: FINALIZAÇÃO (CRUCIAL) ---
-        // Espera o sistema "digerir" o texto colado antes de dizer que acabou.
-        // Isso sincroniza perfeitamente com o loader do Command Center.
         await esperar(800); 
 
     } else {

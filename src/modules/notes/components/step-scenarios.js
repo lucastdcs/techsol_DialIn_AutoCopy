@@ -4,7 +4,7 @@ import { scenarioSnippets } from "../notes-data.js";
 import { SoundManager } from "../../shared/sound-manager.js";
 
 export function createScenariosComponent(onSelectCallback) {
-  // Container Principal
+
   const container = document.createElement("div");
   container.className = "cw-step-scenarios";
   
@@ -38,13 +38,10 @@ export function createScenariosComponent(onSelectCallback) {
   // Estado interno
   let activeValue = null;
 
-  // Renderiza os Snippets
-  // scenarioSnippets vem do notes-data.js: { "key": "Texto...", "key2": "Texto..." }
   Object.entries(scenarioSnippets).forEach(([label, textValue]) => {
     const chip = document.createElement("div");
-    chip.textContent = label; // Ex: "Sem Acesso", "Cliente Ausente"
+    chip.textContent = label; 
     
-    // Estilo Base do Chip (Google Material)
     Object.assign(chip.style, {
       padding: "6px 12px",
       borderRadius: "16px",
@@ -60,7 +57,6 @@ export function createScenariosComponent(onSelectCallback) {
       gap: "6px"
     });
 
-    // Eventos
     
     // 1. Hover (Preview)
     chip.onmouseenter = () => {
@@ -70,21 +66,20 @@ export function createScenariosComponent(onSelectCallback) {
         previewBox.style.color = "#202124";
         previewBox.textContent = `"${textValue.substring(0, 120)}${textValue.length > 120 ? '...' : ''}"`;
       }
-      // Efeito tátil
+
       if (activeValue !== textValue) chip.style.background = "#f1f3f4";
     };
 
     chip.onmouseleave = () => {
       if (activeValue !== textValue) {
-        // Reseta preview se não tiver nada selecionado
+
         if (!activeValue) {
              previewBox.style.background = "#f8f9fa";
              previewBox.style.borderColor = "#dadce0";
              previewBox.style.color = "#5f6368";
              previewBox.innerHTML = "<span>Passe o mouse sobre um cenário para visualizar o texto...</span>";
         } else {
-            // Volta a mostrar o selecionado
-            // (Opcional, depende da preferência. Eu prefiro limpar para não confundir)
+
         }
         chip.style.background = "#ffffff";
       }
@@ -93,31 +88,29 @@ export function createScenariosComponent(onSelectCallback) {
     // 2. Clique (Seleção)
     chip.onclick = () => {
       SoundManager.playClick();
-      // Toggle (Se clicar no mesmo, desmarca)
+
       if (activeValue === textValue) {
         activeValue = null;
         updateVisuals();
-        onSelectCallback(""); // Envia vazio
+        onSelectCallback(""); 
       } else {
         activeValue = textValue;
         updateVisuals();
         
-        // Efeito de "Pulo" ao selecionar
         chip.style.transform = "scale(0.95)";
         setTimeout(() => chip.style.transform = "scale(1)", 150);
         
-        onSelectCallback(textValue); // Envia o texto
+        onSelectCallback(textValue); 
       }
     };
 
     grid.appendChild(chip);
   });
 
-  // Função para atualizar classes visuais (Ativo/Inativo)
+
   function updateVisuals() {
     Array.from(grid.children).forEach(child => {
-        // Precisamos achar o texto correspondente ao chip. 
-        // Como o chip.textContent é a chave, buscamos no scenarioSnippets
+
         const chipText = scenarioSnippets[child.textContent];
         
         if (chipText === activeValue) {

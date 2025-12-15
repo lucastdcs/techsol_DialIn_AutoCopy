@@ -5,44 +5,33 @@ import {
   styleResizeHandle,
   makeResizable,
   showToast,
+  parseEmojiCodes 
 } from "../shared/utils.js";
 import { SoundManager } from "../shared/sound-manager.js";
 import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from "../shared/animations.js";
-import { BROADCAST_MESSAGES, EMOJI_MAP, setBroadcastMessages } from "./broadcast-data.js"; 
+import { BROADCAST_MESSAGES, setBroadcastMessages } from "./broadcast-data.js"; 
 import { DataService } from "../shared/data-service.js";
 
 export function initBroadcastAssistant() {
-  const CURRENT_VERSION = "v2.4 (Live & Pop)";
+  const CURRENT_VERSION = "v2.5 (Emoji Fix)";
   let visible = false;
   let pollInterval = null;
 
   // --- 1. CONFIGURAÇÕES ---
   const POLL_TIME_MS = 60 * 1000; // 1 minuto
 
-  // --- 2. FORMATADOR DE DATA (Corrigido) ---
+  // --- 2. FORMATADOR DE DATA ---
   function formatFriendlyDate(dateInput) {
       if (!dateInput) return "";
-      
       try {
           const date = new Date(dateInput);
-          
-          // Se data inválida, retorna original
           if (isNaN(date.getTime())) return String(dateInput); 
-
-          // Formata usando o Locale do navegador (pt-BR)
-          // Isso converte automaticamente o "Z" (UTC) para o horário do Brasil
           return date.toLocaleString('pt-BR', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-          }).replace(',', ' às'); // "10/12/2025 às 13:12"
-          
-      } catch (e) {
-          return String(dateInput);
-      }
+              day: '2-digit', month: '2-digit', year: 'numeric',
+              hour: '2-digit', minute: '2-digit'
+          }).replace(',', ' às'); 
+      } catch (e) { return String(dateInput); }
   }
 
   const TYPE_THEMES = {
@@ -53,25 +42,17 @@ export function initBroadcastAssistant() {
 
   const styles = {
       feedContainer: { padding: "24px", overflowY: "auto", flexGrow: "1", background: "#FAFAFA", display: "flex", flexDirection: "column", gap: "20px" },
-      
-      // CARD CORRIGIDO (flexShrink: 0 impede o corte)
       card: { 
           background: "#FFFFFF", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.06)", 
           boxShadow: "0 4px 12px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02)", 
           overflow: "hidden", transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)", 
-          position: "relative", width: "100%", boxSizing: "border-box",
-          flexShrink: "0" // <--- A CORREÇÃO DO CORTE
+          position: "relative", width: "100%", boxSizing: "border-box", flexShrink: "0" 
       },
-      
       cardHistory: { background: "#FFFFFF", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.04)", boxShadow: "none", opacity: "0.8", filter: "grayscale(0.3)", marginBottom: "16px", flexShrink: "0" },
-      
       cardHeader: { padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(0,0,0,0.04)", fontSize: "12px", fontWeight: "600", letterSpacing: "0.5px", textTransform: "uppercase" },
       msgTitle: { padding: "20px 20px 8px 20px", fontSize: "16px", fontWeight: "700", color: "#202124", letterSpacing: "-0.01em", lineHeight: "1.4" },
       metaContainer: { padding: "0 20px 12px 20px", display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "#5f6368" },
-      
-      // Card Body com word-break melhorado
       cardBody: { padding: "0 20px 24px 20px", fontSize: "14px", color: "#3c4043", lineHeight: "1.6", whiteSpace: "pre-wrap", fontFamily: "'Google Sans', Roboto, sans-serif", wordBreak: "break-word", overflowWrap: "break-word" },
-      
       emojiImg: "height: 20px; vertical-align: text-bottom; margin: 0 2px;",
       dismissBtn: { width: "28px", height: "28px", borderRadius: "50%", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", color: "#5f6368", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease", marginLeft: "12px" },
       markAllBtn: { fontSize: "12px", color: "#1a73e8", cursor: "pointer", fontWeight: "600", background: "transparent", border: "none", padding: "8px", transition: "opacity 0.2s" },
@@ -88,54 +69,34 @@ export function initBroadcastAssistant() {
       document.head.appendChild(s);
   }
 
-function parseMessageText(rawText) {
-    // 1. Proteção contra Crash (que fizemos antes)
-    if (!rawText || typeof rawText !== 'string') {
-        return ""; 
-    }
+  // --- PARSER CENTRALIZADO ---
+  function parseMessageText(rawText) {
+      if (!rawText || typeof rawText !== 'string') return ""; 
 
-    let html = rawText;
+      let html = rawText;
 
-    // 2. Sanitização Básica (Opcional, mas recomendada se o input for de usuário)
-    // Se você confia na fonte, pode pular. Se for chat aberto, previne injeção de script.
-    // html = html.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-    // 3. Auto-Link (Detecta http/https e www)
-    // Regex simples para capturar URLs e transformar em <a href>
-    const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/g;
-    html = html.replace(urlRegex, (url) => {
-        let href = url;
-        if (!href.startsWith('http')) href = 'http://' + href;
-        return `<a href="${href}" target="_blank" style="color:#1967d2; text-decoration:underline;">${url}</a>`;
-    });
+      const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/g;
+      html = html.replace(urlRegex, (url) => {
+          let href = url;
+          if (!href.startsWith('http')) href = 'http://' + href;
+          return `<a href="${href}" target="_blank" style="color:#1967d2; text-decoration:underline;">${url}</a>`;
+      });
 
-    // 4. Markdown Básico
-    // Negrito: **texto** -> <b>texto</b>
-    html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-    // Itálico: _texto_ -> <i>texto</i>
-    html = html.replace(/_(.*?)_/g, '<i>$1</i>');
-    
-    // 5. Quebra de Linha (\n -> <br>)
-    html = html.replace(/\n/g, '<br>');
 
-    // 6. Seus Emojis (Mantido igual)
-    Object.keys(EMOJI_MAP).forEach((shortcode) => {
-      const url = EMOJI_MAP[shortcode];
-      // Nota: Como o Auto-link roda antes, ele não vai quebrar essa tag <img>
-      // pois neste ponto o shortcode ainda é texto puro (ex: :smile:)
-      if (url.startsWith("http")) {
-        const imgTag = `<img src="${url}" style="${styles.emojiImg}" alt="${shortcode}">`;
-        html = html.split(shortcode).join(imgTag);
-      } else {
-        html = html.split(shortcode).join(url);
-      }
-    });
+      html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+      html = html.replace(/_(.*?)_/g, '<i>$1</i>');
+      
 
-    // 7. Menção @todos (Mantido igual)
-    html = html.replace(/@todos|@all/gi, '<span style="background:#e8f0fe; color:#1967d2; padding:1px 5px; border-radius:4px; font-weight:600; font-size:12px;">@todos</span>');
+      html = html.replace(/\n/g, '<br>');
 
-    return html;
-}
+      html = parseEmojiCodes(html);
+
+      // 5. Menções Especiais
+      html = html.replace(/@todos|@all/gi, '<span style="background:#e8f0fe; color:#1967d2; padding:1px 5px; border-radius:4px; font-weight:600; font-size:12px;">@todos</span>');
+
+      return html;
+  }
 
   // --- UI SETUP ---
   const popup = document.createElement("div");
@@ -172,6 +133,7 @@ function parseMessageText(rawText) {
           const allIds = BROADCAST_MESSAGES.map(m => m.id);
           localStorage.setItem("cw_read_broadcasts", JSON.stringify(allIds));
           renderFeed(); 
+          updateBadge(); 
       };
       actionContainer.insertBefore(markAll, actionContainer.firstChild);
   }
@@ -183,22 +145,14 @@ function parseMessageText(rawText) {
   Object.assign(feed.style, styles.feedContainer);
   popup.appendChild(feed);
 
-  // --- 3. LÓGICA DE DADOS, POLLING E SOM ---
-  
-// --- 3. LÓGICA DE DADOS, POLLING E SOM ---
-  
+
   async function checkForUpdates() {
-      // 1. UI de Loading (Barra de status visual)
       let statusEl = document.getElementById('cw-update-status');
-      
-      // Só cria/mostra feedback visual se o popup estiver ABERTO
       if (visible) {
           if (!statusEl) {
               statusEl = document.createElement('div');
               statusEl.id = 'cw-update-status';
-              // Estilo: barra sutil no topo da lista
               statusEl.style.cssText = "padding: 6px; text-align: center; font-size: 11px; color: #5f6368; background: #f8f9fa; border-bottom: 1px solid #e0e0e0;";
-              // Insere logo antes da div do feed (feedContainer)
               feed.parentNode.insertBefore(statusEl, feed); 
           }
           statusEl.innerHTML = '⏳ Verificando atualizações...';
@@ -209,27 +163,21 @@ function parseMessageText(rawText) {
       const readIds = JSON.parse(localStorage.getItem("cw_read_broadcasts") || "[]");
 
       try {
-          // 2. Busca na Nuvem
           const data = await DataService.fetchData();
           
           if (data && data.broadcast) {
-              // Feedback Visual de Sucesso
               if (visible && statusEl) {
-                  // Se chegou mensagem nova que não tinha antes
                   const temNovidade = data.broadcast.some(m => !currentIds.includes(m.id));
-                  
                   if (temNovidade) {
                       statusEl.innerHTML = '✅ Novos avisos sincronizados!';
-                      statusEl.style.backgroundColor = '#e6f4ea'; // Verde claro
+                      statusEl.style.backgroundColor = '#e6f4ea';
                       statusEl.style.color = '#137333';
                   } else {
                       statusEl.innerHTML = '🔹 Tudo atualizado.';
                   }
-                  // Some após 1.5 segundos
                   setTimeout(() => { if(statusEl) statusEl.style.display = 'none'; }, 1500);
               }
 
-              // Lógica de Som (Mantida)
               if (currentIds.length > 0) { 
                   const newMessages = data.broadcast.filter(m => !currentIds.includes(m.id));
                   const unreadNew = newMessages.filter(m => !readIds.includes(m.id));
@@ -246,10 +194,9 @@ function parseMessageText(rawText) {
           }
       } catch (error) {
           console.error("Erro no update:", error);
-          // Feedback Visual de Erro
           if (visible && statusEl) {
               statusEl.innerHTML = '⚠️ Falha na conexão.';
-              statusEl.style.backgroundColor = '#fce8e6'; // Vermelho claro
+              statusEl.style.backgroundColor = '#fce8e6';
           }
       }
   }
@@ -280,7 +227,6 @@ function parseMessageText(rawText) {
       }
   }
 
-  // --- INICIALIZAÇÃO ---
   const cachedData = DataService.getCachedBroadcasts();
   if (cachedData.length > 0) {
       setBroadcastMessages(cachedData);
@@ -293,7 +239,6 @@ function parseMessageText(rawText) {
       pollInterval = setInterval(checkForUpdates, POLL_TIME_MS);
   }
 
-  // --- RENDERIZAÇÃO ---
   function renderFeed() {
       feed.innerHTML = "";
       const readMessages = JSON.parse(localStorage.getItem("cw_read_broadcasts") || "[]");

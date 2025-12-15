@@ -6,6 +6,7 @@ let noiseBufferCache = null;
 // Configurações de "Mixagem de Escritório"
 // Volume muito baixo para ser percebido apenas pelo subconsciente
 const MASTER_GAIN = 0.3; 
+const STARTUP_SOUND = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTYXdmZ29vZCBjbGljawBUTkMyAAAAIQAAA1MvdW5kZWZpbmVkIC0gU21hbGwgQnV0dG9uIENsaWNrAP/7kGQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABYaW5nAAAADwAAAAoAAAAzAazFxsfIyMnKysvLzM3Nzs/P0NHT1NbW19jZ2tvc3d7e3+Dh4uPk5ebm6Onp6uzt7u/w8fLz9PT19vf3+Pj5+vv7/Pz9/f7+/v///wAAADxMYW1lMy4xMDCqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr/+5JkAAALOAAVAAAAAAjqACgAAAAAxtYwAAAAACNoAKAAAAABqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//uSZCAACzoAFQAAAAAI6gAoAAAAAMbWMAAAAAAjaACgAAAAAaqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr/+5JkTAALOgAVAAAAAAjqACgAAAAAxtYwAAAAACNoAKAAAAABqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqv/7kmRgAAs6ABUAAAAACOoAKAAAAADG1jAAAAAAI2gAoAAAAAGqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq";
 
 function getContext() {
     if (!audioCtx) {
@@ -175,35 +176,141 @@ export const SoundManager = {
         osc.stop(t + 0.2);
     },
     
-    // 6. STARTUP (Ambiente)
-    // Ref: Som de boot de sistemas premium.
-    // Um "Swell" (crescendo) muito suave, quase etéreo.
-    playStartup: () => {
+
+  playStartup: () => {
+
         const ctx = getContext();
         if (!ctx) return;
         const t = ctx.currentTime;
 
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
+        // DEFINIÇÃO DO TEMPO (O Segredo do Ritmo)
+        // O "TA" acontece em t=0
+        // O "DUM" começa sutilmente em t=0.05 mas explode em t=0.15
+        const dumDelay = 0.12; 
+
+
+
+
+
+
+
+
+
+
+
+
+        // === EVENTO 1: O "TA" (O Impacto Seco) ===
+        // Precisa ser agudo no início para cortar a mixagem
         
-        osc.type = 'sine';
-        osc.frequency.value = 440; // A4 (Neutro)
+        // 1.1 O Estalo (Knock)
+        const snapOsc = ctx.createOscillator();
+        const snapGain = ctx.createGain();
+        const snapFilter = ctx.createBiquadFilter();
 
-        const filter = ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.value = 200;
+        snapOsc.type = 'square'; // Quadrada = Som oco/madeira
+        // Começa bem agudo (400Hz) e cai instantaneamente. Isso dá o "T" do "Ta"
+        snapOsc.frequency.setValueAtTime(400, t); 
+        snapOsc.frequency.exponentialRampToValueAtTime(50, t + 0.1); 
 
-        // Cresce devagar (Fade in)
-        gain.gain.setValueAtTime(0, t);
-        gain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.4, t + 0.8);
-        gain.gain.linearRampToValueAtTime(0, t + 1.6);
+        snapFilter.type = 'lowpass';
+        snapFilter.frequency.setValueAtTime(800, t); 
+        snapFilter.frequency.exponentialRampToValueAtTime(100, t + 0.1); // Filtra o final
 
-        osc.connect(filter);
-        filter.connect(gain);
-        gain.connect(ctx.destination);
+        snapGain.gain.setValueAtTime(MASTER_GAIN * 4.0, t); // Volume alto!
+        snapGain.gain.exponentialRampToValueAtTime(0.001, t + 0.1); // Muito curto (100ms)
+
+        snapOsc.connect(snapFilter);
+        snapFilter.connect(snapGain);
+        snapGain.connect(ctx.destination);
+        snapOsc.start(t); snapOsc.stop(t + 0.12);
+
+        // 1.2 O Peso do TA (Kick)
+        // Um suporte grave para o estalo não ficar magro
+        const kickOsc = ctx.createOscillator();
+        const kickGain = ctx.createGain();
+
+        kickOsc.type = 'sine';
+        kickOsc.frequency.setValueAtTime(150, t);
+        kickOsc.frequency.exponentialRampToValueAtTime(50, t + 0.15);
         
-        osc.start(t);
-        osc.stop(t + 2.0);
+        kickGain.gain.setValueAtTime(MASTER_GAIN * 1.5, t);
+        kickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+        
+        kickOsc.connect(kickGain);
+        kickGain.connect(ctx.destination);
+        kickOsc.start(t); kickOsc.stop(t + 0.15);
+
+
+        // === EVENTO 2: O "DUM" (O Bloom Cinematográfico) ===
+        // Só começa DEPOIS que o TA bateu (usando a variável dumDelay)
+
+
+
+        const freqs = [55, 55.4, 110.5]; // Lá A1 + Oitava (Chorus effect)
+
+        freqs.forEach((f) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            const filter = ctx.createBiquadFilter();
+
+            osc.type = 'sawtooth'; // Rico em harmônicos
+            osc.frequency.value = f;
+
+            // FILTRO DE ABERTURA (O "Wahhh")
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(30, t); // Começa fechado
+            // Abre o filtro EXATAMENTE após o delay
+            filter.frequency.linearRampToValueAtTime(900, t + dumDelay + 0.2); 
+            // Fecha devagar
+            filter.frequency.exponentialRampToValueAtTime(40, t + 3.0); 
+
+            // VOLUME (Fade In)
+            gain.gain.setValueAtTime(0, t);
+            // O volume sobe só depois do delay, criando a separação
+            gain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.6, t + dumDelay + 0.1); 
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 3.5);
+
+            osc.connect(filter);
+            filter.connect(gain);
+            gain.connect(ctx.destination);
+
+            // Note que o oscilador começa mudo em t, mas só aparece em t + dumDelay
+            osc.start(t); 
+            osc.stop(t + 3.6);
+        });
+    },
+    playNotification: () => {
+        const ctx = getContext();
+        if (!ctx) return;
+        const t = ctx.currentTime;
+
+        // Usamos duas ondas senoidais (Sine) para criar um acorde harmônico simples (Oitava)
+        // Isso dá a sensação de "brilho" do vidro.
+        const tones = [
+            { freq: 880,  dur: 1.2, vol: 0.6 }, // A5 (Corpo do som)
+            { freq: 1760, dur: 0.6, vol: 0.3 }  // A6 (Brilho/Harmônico)
+        ];
+
+        tones.forEach(tone => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(tone.freq, t);
+
+            // Envelope "Sino": Ataque instantâneo e cauda longa
+            gain.gain.setValueAtTime(0, t);
+            // Ataque muito rápido (4ms) para simular o impacto físico
+            gain.gain.linearRampToValueAtTime(MASTER_GAIN * tone.vol, t + 0.004); 
+            // Decaimento exponencial longo (o som "ressoa")
+            gain.gain.exponentialRampToValueAtTime(0.001, t + tone.dur);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            osc.start(t);
+            osc.stop(t + tone.dur + 0.1);
+        });
     },
 
     // Manter compatibilidade com chamadas antigas

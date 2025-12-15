@@ -152,6 +152,81 @@ export function initGlobalStylesAndFont() {
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
+        /* Container do Dropdown Customizado */
+.cw-dropdown-container {
+    position: relative;
+    width: 100%;
+    font-family: 'Google Sans', Roboto, sans-serif;
+}
+
+/* O Botão (A caixa fechada) */
+.cw-dropdown-trigger {
+    background: #fff;
+    border: 1px solid #DADCE0;
+    border-radius: 6px;
+    padding: 10px 12px;
+    font-size: 14px;
+    color: #3C4043;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+}
+.cw-dropdown-trigger:hover { background: #F8F9FA; border-color: #202124; }
+.cw-dropdown-trigger.active { 
+    border-color: #1A73E8; 
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2); 
+}
+.cw-dropdown-trigger.disabled { 
+    background: #F1F3F4; color: #9AA0A6; pointer-events: none; 
+}
+
+/* A Seta */
+.cw-dropdown-arrow {
+    width: 18px; height: 18px;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235F6368' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: center;
+    transition: transform 0.2s;
+}
+.cw-dropdown-trigger.active .cw-dropdown-arrow { transform: rotate(180deg); }
+
+/* A Lista (O menu aberto) */
+.cw-dropdown-menu {
+    position: absolute;
+    top: 100%; left: 0; width: 100%;
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 4px 6px rgba(32,33,36,0.28);
+    margin-top: 4px;
+    padding: 6px 0;
+    z-index: 9999;
+    display: none;
+    max-height: 250px;
+    overflow-y: auto;
+    opacity: 0; transform: translateY(-10px);
+    transition: opacity 0.2s, transform 0.2s;
+}
+.cw-dropdown-menu.open { 
+    display: block; 
+    opacity: 1; transform: translateY(0); 
+}
+
+/* As Opções */
+.cw-dropdown-option {
+    padding: 10px 16px;
+    font-size: 14px;
+    color: #3C4043;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+.cw-dropdown-option:hover { background-color: #F1F3F4; }
+.cw-dropdown-option.selected { 
+    color: #1A73E8; 
+    background-color: #E8F0FE; 
+    font-weight: 500;
+}
     `;
     document.head.appendChild(style);
 }
@@ -889,4 +964,58 @@ export function makeResizable(element, handle) {
   // Feedback visual no hover do handle
   handle.onmouseenter = () => handle.style.opacity = "1";
   handle.onmouseleave = () => handle.style.opacity = "0.6";
+}
+
+/**
+ * Converte shortcodes do Slack/System (:frog-eat:) para Emojis reais (🐸).
+ * @param {string} text - O texto cru com códigos
+ * @returns {string} - Texto formatado com emojis
+ */
+// src/modules/shared/utils.js
+
+export function parseEmojiCodes(text) {
+    if (!text) return "";
+
+    const emojiMap = {
+        // --- CUSTOMIZADOS DA EMPRESA (Novos Adicionados) ---
+        ":bufo-alarma:": "🐸🚨",       // Sapo + Sirene
+        ":frog-hype-1:": "🐸🥳",       // Sapo + Festa
+        ":coffee-intensifies:": "☕⚡", // Café + Raio (Energia)
+        ":frog-eat:": "🐸☕",          // Sapo bebendo
+
+        // --- Padrões Universais ---
+        ":alert-01:": "⚠️",
+        ":alert-circle-i-notice:": "ℹ️",
+        ":wind-face-animated:": "🌬️",
+        ":smile:": "🙂",
+        ":warning:": "⚠️",
+        ":check:": "✅",
+        ":white_check_mark:": "✅",
+        ":x:": "❌",
+        ":rocket:": "🚀",
+        ":tada:": "🎉",
+        ":party_popper:": "🎉",
+        ":thumbsup:": "👍",
+        ":+1:": "👍",
+        ":purple_heart:": "💜",
+        ":heart:": "❤️",
+        ":fire:": "🔥",
+        ":sunny:": "🌞",
+        ":star:": "⭐",
+        ":coffee:": "☕"
+    };
+
+    // REGEX: Procura por padrões :qualquer-coisa:
+    return text.replace(/:([a-zA-Z0-9-_+]+):/g, (match) => {
+        // 1. Se achou no mapa, retorna o Emoji bonito
+        if (emojiMap[match]) {
+            return emojiMap[match];
+        }
+        
+        // 2. A MELHORIA DE SEGURANÇA:
+        // Se não achou (ex: :emoji-novo-que-criaram-ontem:),
+        // retorna uma string vazia "".
+        // Isso "apaga" o código feio da tela, deixando a frase legível.
+        return ""; 
+    });
 }
