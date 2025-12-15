@@ -1,6 +1,6 @@
 // src/modules/automation/case-log-scraper.js
-import { showToast } from '../shared/utils.js';
-import { SoundManager } from '../shared/sound-manager.js';
+import { showToast } from '../../shared/utils.js';
+import { SoundManager } from '../../shared/sound-manager.js';
 
 const esperar = (ms) => new Promise(r => setTimeout(r, ms));
 
