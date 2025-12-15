@@ -973,44 +973,62 @@ subStatusSelect.onchange = () => {
       Object.assign(label.style, styles.label);
 
       // ============================================================
-      // [NOVO] INJEÇÃO DO BOTÃO "PEGAR ID"
+      // [PREMIUM] BOTÃO MAGIC SEARCH (Estilo Apple/Google Hybrid)
       // ============================================================
       if (fieldName === "SPEAKEASY_ID") {
-          const btnSearch = document.createElement('span');
-          // Estilo 'Pílula' moderna e discreta
-          btnSearch.innerHTML = `<span style="font-size:12px; margin-right:3px;">🔍</span>AUTO-BUSCA`;
+          const btnSearch = document.createElement('button'); // Mudamos de span para button para melhor semântica
+          
+          // Ícone SVG "Magic Sparkles"
+          const magicIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>`;
+          
+          btnSearch.innerHTML = `${magicIcon}Auto Busca`;
+          
           btnSearch.style.cssText = `
-              font-size: 10px; 
-              color: #1a73e8; 
-              cursor: pointer; 
-              margin-left: 10px; 
-              font-weight: 700; 
-              background: #e8f0fe; 
-              padding: 4px 10px; 
-              border-radius: 12px;
-              border: 1px solid rgba(26, 115, 232, 0.2);
-              vertical-align: middle;
+              font-family: 'Google Sans', sans-serif;
+              font-size: 11px;
+              font-weight: 600;
+              color: #1a73e8;
+              background: linear-gradient(180deg, #ffffff 0%, #f1f3f4 100%);
+              border: 1px solid rgba(218, 220, 224, 0.8);
+              border-radius: 20px; /* Pílula completa */
+              padding: 4px 12px;
+              margin-left: 10px;
+              cursor: pointer;
               display: inline-flex;
               align-items: center;
-              transition: all 0.2s ease;
+              box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+              transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+              outline: none;
+              vertical-align: middle;
+              text-transform: uppercase;
               letter-spacing: 0.5px;
           `;
-          btnSearch.title = "Buscar ID automaticamente no histórico do caso";
           
-          // Efeitos de Hover
+          btnSearch.title = "Localizar Speakeasy ID automaticamente";
+
+          // Efeitos de Interação
           btnSearch.onmouseover = () => {
-             btnSearch.style.backgroundColor = "#d2e3fc";
-             btnSearch.style.boxShadow = "0 1px 2px rgba(0,0,0,0.1)";
+              btnSearch.style.boxShadow = "0 2px 4px rgba(26, 115, 232, 0.15)";
+              btnSearch.style.borderColor = "#1a73e8";
+              btnSearch.style.background = "#fff";
+              btnSearch.style.transform = "translateY(-1px)";
           };
+          
           btnSearch.onmouseout = () => {
-             btnSearch.style.backgroundColor = "#e8f0fe";
-             btnSearch.style.boxShadow = "none";
+              btnSearch.style.boxShadow = "0 1px 2px rgba(0,0,0,0.05)";
+              btnSearch.style.borderColor = "rgba(218, 220, 224, 0.8)";
+              btnSearch.style.background = "linear-gradient(180deg, #ffffff 0%, #f1f3f4 100%)";
+              btnSearch.style.transform = "translateY(0)";
           };
 
-          // Ação do Clique
+          btnSearch.onmousedown = () => {
+              btnSearch.style.transform = "translateY(1px)";
+              btnSearch.style.boxShadow = "none";
+              btnSearch.style.background = "#e8f0fe";
+          };
+
           btnSearch.onclick = (e) => {
               e.preventDefault(); 
-              // field-SPEAKEASY_ID é o ID que será gerado logo abaixo
               fetchAndInsertSpeakeasyId(`field-${fieldName}`);
           };
           
