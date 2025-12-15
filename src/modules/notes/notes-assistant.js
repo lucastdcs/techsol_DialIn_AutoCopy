@@ -18,7 +18,8 @@ import {
   styleResizeHandle, 
   makeResizable      
 } from "../shared/utils.js";
-
+// No topo do src/modules/notes/notes-assistant.js
+import { fetchAndInsertSpeakeasyId } from "./automation/case-log-scraper.js";
 import {
   TASKS_DB,
   SUBSTATUS_TEMPLATES,
@@ -838,7 +839,8 @@ export function initCaseNotesAssistant() {
     subStatusSelect.disabled = false;
   };
 
-  subStatusSelect.onchange = () => {
+subStatusSelect.onchange = () => {
+    
     const selectedSubStatusKey = subStatusSelect.value;
     resetSteps(1.5);
     if (!selectedSubStatusKey) return;
@@ -945,6 +947,7 @@ export function initCaseNotesAssistant() {
     dynamicFormFieldsContainer.innerHTML = "";
     const placeholders = templateData.template.match(/{([A-Z0-9_]+)}/g) || [];
     const uniquePlaceholders = [...new Set(placeholders)];
+    
     uniquePlaceholders.forEach((placeholder) => {
       if (
         [
@@ -955,16 +958,66 @@ export function initCaseNotesAssistant() {
         ].includes(placeholder)
       )
         return;
+      
       const fieldName = placeholder.slice(1, -1);
       const label = document.createElement("label");
       const translatedLabel = t(fieldName.toLowerCase());
+      
       label.textContent =
         translatedLabel !== fieldName.toLowerCase()
           ? translatedLabel
           : fieldName
               .replace(/_/g, " ")
               .replace(/\b\w/g, (l) => l.toUpperCase()) + ":";
+      
       Object.assign(label.style, styles.label);
+
+      // ============================================================
+      // [NOVO] INJEÇÃO DO BOTÃO "PEGAR ID"
+      // ============================================================
+      if (fieldName === "SPEAKEASY_ID") {
+          const btnSearch = document.createElement('span');
+          // Estilo 'Pílula' moderna e discreta
+          btnSearch.innerHTML = `<span style="font-size:12px; margin-right:3px;">🔍</span>AUTO-BUSCA`;
+          btnSearch.style.cssText = `
+              font-size: 10px; 
+              color: #1a73e8; 
+              cursor: pointer; 
+              margin-left: 10px; 
+              font-weight: 700; 
+              background: #e8f0fe; 
+              padding: 4px 10px; 
+              border-radius: 12px;
+              border: 1px solid rgba(26, 115, 232, 0.2);
+              vertical-align: middle;
+              display: inline-flex;
+              align-items: center;
+              transition: all 0.2s ease;
+              letter-spacing: 0.5px;
+          `;
+          btnSearch.title = "Buscar ID automaticamente no histórico do caso";
+          
+          // Efeitos de Hover
+          btnSearch.onmouseover = () => {
+             btnSearch.style.backgroundColor = "#d2e3fc";
+             btnSearch.style.boxShadow = "0 1px 2px rgba(0,0,0,0.1)";
+          };
+          btnSearch.onmouseout = () => {
+             btnSearch.style.backgroundColor = "#e8f0fe";
+             btnSearch.style.boxShadow = "none";
+          };
+
+          // Ação do Clique
+          btnSearch.onclick = (e) => {
+              e.preventDefault(); 
+              // field-SPEAKEASY_ID é o ID que será gerado logo abaixo
+              fetchAndInsertSpeakeasyId(`field-${fieldName}`);
+          };
+          
+          label.appendChild(btnSearch);
+      }
+      // ============================================================
+
       let field;
       if (textareaListFields.includes(fieldName)) {
         field = document.createElement("textarea");
@@ -978,6 +1031,7 @@ export function initCaseNotesAssistant() {
         field = document.createElement("input");
         field.type = "text";
         Object.assign(field.style, styles.input);
+        
         if (
           fieldName === "REASON_COMMENTS" &&
           (selectedSubStatusKey.startsWith("NI_") ||
