@@ -18,7 +18,8 @@ import {
   styleResizeHandle, 
   makeResizable      
 } from "../shared/utils.js";
-
+// No topo do src/modules/notes/notes-assistant.js
+import { fetchAndInsertSpeakeasyId } from "./automation/case-log-scraper.js";
 import {
   TASKS_DB,
   SUBSTATUS_TEMPLATES,
@@ -838,7 +839,8 @@ export function initCaseNotesAssistant() {
     subStatusSelect.disabled = false;
   };
 
-  subStatusSelect.onchange = () => {
+subStatusSelect.onchange = () => {
+    
     const selectedSubStatusKey = subStatusSelect.value;
     resetSteps(1.5);
     if (!selectedSubStatusKey) return;
@@ -945,6 +947,7 @@ export function initCaseNotesAssistant() {
     dynamicFormFieldsContainer.innerHTML = "";
     const placeholders = templateData.template.match(/{([A-Z0-9_]+)}/g) || [];
     const uniquePlaceholders = [...new Set(placeholders)];
+    
     uniquePlaceholders.forEach((placeholder) => {
       if (
         [
@@ -955,16 +958,84 @@ export function initCaseNotesAssistant() {
         ].includes(placeholder)
       )
         return;
+      
       const fieldName = placeholder.slice(1, -1);
       const label = document.createElement("label");
       const translatedLabel = t(fieldName.toLowerCase());
+      
       label.textContent =
         translatedLabel !== fieldName.toLowerCase()
           ? translatedLabel
           : fieldName
               .replace(/_/g, " ")
               .replace(/\b\w/g, (l) => l.toUpperCase()) + ":";
+      
       Object.assign(label.style, styles.label);
+
+      // ============================================================
+      // [PREMIUM] BOTÃO MAGIC SEARCH (Estilo Apple/Google Hybrid)
+      // ============================================================
+      if (fieldName === "SPEAKEASY_ID") {
+          const btnSearch = document.createElement('button'); // Mudamos de span para button para melhor semântica
+          
+          // Ícone SVG "Magic Sparkles"
+          const magicIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>`;
+          
+          btnSearch.innerHTML = `${magicIcon}Auto Busca`;
+          
+          btnSearch.style.cssText = `
+              font-family: 'Google Sans', sans-serif;
+              font-size: 11px;
+              font-weight: 600;
+              color: #1a73e8;
+              background: linear-gradient(180deg, #ffffff 0%, #f1f3f4 100%);
+              border: 1px solid rgba(218, 220, 224, 0.8);
+              border-radius: 20px; /* Pílula completa */
+              padding: 4px 12px;
+              margin-left: 10px;
+              cursor: pointer;
+              display: inline-flex;
+              align-items: center;
+              box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+              transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+              outline: none;
+              vertical-align: middle;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+          `;
+          
+          btnSearch.title = "Localizar Speakeasy ID automaticamente";
+
+          // Efeitos de Interação
+          btnSearch.onmouseover = () => {
+              btnSearch.style.boxShadow = "0 2px 4px rgba(26, 115, 232, 0.15)";
+              btnSearch.style.borderColor = "#1a73e8";
+              btnSearch.style.background = "#fff";
+              btnSearch.style.transform = "translateY(-1px)";
+          };
+          
+          btnSearch.onmouseout = () => {
+              btnSearch.style.boxShadow = "0 1px 2px rgba(0,0,0,0.05)";
+              btnSearch.style.borderColor = "rgba(218, 220, 224, 0.8)";
+              btnSearch.style.background = "linear-gradient(180deg, #ffffff 0%, #f1f3f4 100%)";
+              btnSearch.style.transform = "translateY(0)";
+          };
+
+          btnSearch.onmousedown = () => {
+              btnSearch.style.transform = "translateY(1px)";
+              btnSearch.style.boxShadow = "none";
+              btnSearch.style.background = "#e8f0fe";
+          };
+
+          btnSearch.onclick = (e) => {
+              e.preventDefault(); 
+              fetchAndInsertSpeakeasyId(`field-${fieldName}`);
+          };
+          
+          label.appendChild(btnSearch);
+      }
+      // ============================================================
+
       let field;
       if (textareaListFields.includes(fieldName)) {
         field = document.createElement("textarea");
@@ -978,6 +1049,7 @@ export function initCaseNotesAssistant() {
         field = document.createElement("input");
         field.type = "text";
         Object.assign(field.style, styles.input);
+        
         if (
           fieldName === "REASON_COMMENTS" &&
           (selectedSubStatusKey.startsWith("NI_") ||
