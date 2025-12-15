@@ -177,100 +177,106 @@ export const SoundManager = {
     },
     
 
-// --- OPÇÃO: NETFLIX REPLICA (Pure JS Synthesis) ---
 playStartup: () => {
         const ctx = getContext();
         if (!ctx) return;
         const t = ctx.currentTime;
-
-        // --- AJUSTE DE TIMING (A "Respiração" entre as notas) ---
-        // Aumentei um pouco o delay para separar bem o TU do DUM
-        const dumDelay = 0.14; 
+        const startTime = t + 0.1; // Pequeno respiro inicial
 
         // ====================================================================
-        // EVENTO 1: O "TU" (Impacto Seco / Madeira)
-        // O segredo aqui é: POUCO GRAVE, MUITO ATAQUE.
+        // CAMADA 1: "O ARMARIO DE MADEIRA" (O TU)
+        // Objetivo: Som seco, oco, curto. Não é uma nota musical.
         // ====================================================================
         
-        // 1.1 O Estalo Agudo (O "T" do Tu)
-        const snapOsc = ctx.createOscillator();
-        const snapGain = ctx.createGain();
-        const snapFilter = ctx.createBiquadFilter();
+        // Usamos uma onda Triângulo (mais suave que quadrada) filtrada para simular madeira
+        const woodOsc = ctx.createOscillator();
+        const woodGain = ctx.createGain();
+        const woodFilter = ctx.createBiquadFilter();
 
-        snapOsc.type = 'square'; // Quadrada continua sendo melhor para som de "oco"
-        snapOsc.frequency.setValueAtTime(800, t); // Começa BEM agudo
-        snapOsc.frequency.exponentialRampToValueAtTime(100, t + 0.05); // Cai muito rápido
+        woodOsc.type = 'triangle'; 
+        // A madeira ressoa em frequências baixas/médias
+        woodOsc.frequency.setValueAtTime(120, startTime); 
+        // Pitch Drop rápido (o som da batida parando)
+        woodOsc.frequency.exponentialRampToValueAtTime(40, startTime + 0.1);
 
-        // Filtro Bandpass para focar no som de "madeira" (médios)
-        snapFilter.type = 'bandpass'; 
-        snapFilter.frequency.setValueAtTime(400, t); 
-        snapFilter.Q.value = 1.0; // Fator de qualidade para dar uma ressonância curta
+        // Filtro Lowpass com Ressonância (Q) para simular a caixa oca do armário
+        woodFilter.type = 'lowpass';
+        woodFilter.frequency.setValueAtTime(250, startTime); 
+        woodFilter.Q.value = 5; // Aumenta a ressonância no ponto de corte (O "Tuc")
 
-        snapGain.gain.setValueAtTime(MASTER_GAIN * 3.5, t); 
-        snapGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08); // Extremamente curto (80ms)
+        // Envelope de volume EXTREMAMENTE curto e percussivo
+        woodGain.gain.setValueAtTime(0, startTime);
+        woodGain.gain.linearRampToValueAtTime(MASTER_GAIN * 4.5, startTime + 0.01); // Ataque imediato
+        woodGain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.08); // Decay de 80ms (Muito seco)
 
-        snapOsc.connect(snapFilter);
-        snapFilter.connect(snapGain);
-        snapGain.connect(ctx.destination);
-        snapOsc.start(t); snapOsc.stop(t + 0.1);
-
-        // 1.2 O Corpo do TU (O "U" do Tu)
-        // Reduzi o decay aqui. Antes estava longo (DUM), agora é curto (TU).
-        const thudOsc = ctx.createOscillator();
-        const thudGain = ctx.createGain();
+        woodOsc.connect(woodFilter);
+        woodFilter.connect(woodGain);
+        woodGain.connect(ctx.destination);
         
-        thudOsc.type = 'sine';
-        thudOsc.frequency.setValueAtTime(180, t); // Um pouco mais alto que um sub-grave
-        thudOsc.frequency.exponentialRampToValueAtTime(60, t + 0.1);
-        
-        thudGain.gain.setValueAtTime(MASTER_GAIN * 2.0, t);
-        // O SEGREDO DO "TU": O som morre muito rápido (0.08s)
-        thudGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08); 
-        
-        thudOsc.connect(thudGain);
-        thudGain.connect(ctx.destination);
-        thudOsc.start(t); thudOsc.stop(t + 0.1);
+        woodOsc.start(startTime);
+        woodOsc.stop(startTime + 0.1);
 
 
         // ====================================================================
-        // EVENTO 2: O "DUM" (O Bloom Cinematográfico)
-        // Entra atrasado e "abre" o som
+        // CAMADA 2: "O BLOSSOM" (O DUM)
+        // Objetivo: Largo, cinematográfico, entra suave e abre.
         // ====================================================================
+        
+        // Delay estratégico: O DUM entra exatamente quando o TU termina
+        const bloomStart = startTime + 0.10; 
 
-        const freqs = [55, 55.6, 110.8]; // Lá A1 + Oitava (Levemente desafinados para largura)
+        // 3 Osciladores Sawtooth desafinados para criar o efeito "Wide" (Estéreo/Cinema)
+        // Frequências baseadas em Ré (D) grave -> D1
+        const freqs = [36.71, 36.90, 73.42]; // Sub-graves + Oitava
 
-        freqs.forEach((f) => {
+        freqs.forEach((f, i) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             const filter = ctx.createBiquadFilter();
 
-            osc.type = 'sawtooth'; // Dente de serra para textura rica
+            osc.type = 'sawtooth'; // Rico e rasgado
             osc.frequency.value = f;
 
-            // FILTRO (O Efeito Wahhh)
+            // O Efeito "Netflix": O filtro abre (Wahhh)
             filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(10, t); // Começa MUDO
-            // Abre o filtro devagar
-            filter.frequency.linearRampToValueAtTime(800, t + dumDelay + 0.3); 
-            // Fecha bem devagar
-            filter.frequency.exponentialRampToValueAtTime(30, t + 3.0); 
+            filter.frequency.setValueAtTime(50, bloomStart); // Começa abafado
+            // Abre até os médios
+            filter.frequency.exponentialRampToValueAtTime(600, bloomStart + 0.4); 
+            // Fecha devagar para o fim
+            filter.frequency.linearRampToValueAtTime(100, bloomStart + 2.5);
 
-            // VOLUME (Fade In Suave)
-            gain.gain.setValueAtTime(0, t);
-            
-            // O volume sobe DEPOIS do dumDelay, garantindo que o primeiro som já acabou
-            gain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.7, t + dumDelay + 0.15); 
-            
-            // Sustain longo e dramático
-            gain.gain.exponentialRampToValueAtTime(0.001, t + 3.5);
+            // Envelope de Volume (Swell)
+            gain.gain.setValueAtTime(0, bloomStart);
+            // Ataque suave (não percussivo)
+            gain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.8, bloomStart + 0.2); 
+            // Release longo
+            gain.gain.exponentialRampToValueAtTime(0.001, bloomStart + 3.0);
 
             osc.connect(filter);
             filter.connect(gain);
             gain.connect(ctx.destination);
             
-            osc.start(t); 
-            osc.stop(t + 3.6);
+            osc.start(bloomStart);
+            osc.stop(bloomStart + 3.5);
         });
+
+        // ====================================================================
+        // CAMADA 3: "O BRILHO" (O Detalhe Final)
+        // Um toque sutil agudo para dar definição de estúdio
+        // ====================================================================
+        const shineOsc = ctx.createOscillator();
+        const shineGain = ctx.createGain();
+        
+        shineOsc.type = 'sine';
+        shineOsc.frequency.setValueAtTime(2000, bloomStart); // Nota aguda
+        
+        shineGain.gain.setValueAtTime(0, bloomStart);
+        shineGain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.05, bloomStart + 0.1); // Muito baixo
+        shineGain.gain.exponentialRampToValueAtTime(0.001, bloomStart + 0.5);
+
+        shineOsc.connect(shineGain);
+        shineGain.connect(ctx.destination);
+        shineOsc.start(bloomStart); shineOsc.stop(bloomStart + 0.6);
     },
     playNotification: () => {
         const ctx = getContext();
