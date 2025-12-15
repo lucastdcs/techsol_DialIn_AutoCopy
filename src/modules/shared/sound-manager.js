@@ -178,90 +178,96 @@ export const SoundManager = {
     
 
 // --- OPÇÃO: NETFLIX REPLICA (Pure JS Synthesis) ---
-    playStartup: () => {
-
+playStartup: () => {
         const ctx = getContext();
         if (!ctx) return;
         const t = ctx.currentTime;
 
-        // DEFINIÇÃO DO TEMPO (O Segredo do Ritmo)
-        // O "TA" acontece em t=0
-        // O "DUM" começa sutilmente em t=0.05 mas explode em t=0.15
-        const dumDelay = 0.12; 
+        // --- AJUSTE DE TIMING (A "Respiração" entre as notas) ---
+        // Aumentei um pouco o delay para separar bem o TU do DUM
+        const dumDelay = 0.14; 
 
-        // === EVENTO 1: O "TA" (O Impacto Seco) ===
-        // Precisa ser agudo no início para cortar a mixagem
+        // ====================================================================
+        // EVENTO 1: O "TU" (Impacto Seco / Madeira)
+        // O segredo aqui é: POUCO GRAVE, MUITO ATAQUE.
+        // ====================================================================
         
-        // 1.1 O Estalo (Knock)
+        // 1.1 O Estalo Agudo (O "T" do Tu)
         const snapOsc = ctx.createOscillator();
         const snapGain = ctx.createGain();
         const snapFilter = ctx.createBiquadFilter();
 
-        snapOsc.type = 'square'; // Quadrada = Som oco/madeira
-        // Começa bem agudo (400Hz) e cai instantaneamente. Isso dá o "T" do "Ta"
-        snapOsc.frequency.setValueAtTime(400, t); 
-        snapOsc.frequency.exponentialRampToValueAtTime(50, t + 0.1); 
+        snapOsc.type = 'square'; // Quadrada continua sendo melhor para som de "oco"
+        snapOsc.frequency.setValueAtTime(800, t); // Começa BEM agudo
+        snapOsc.frequency.exponentialRampToValueAtTime(100, t + 0.05); // Cai muito rápido
 
-        snapFilter.type = 'lowpass';
-        snapFilter.frequency.setValueAtTime(800, t); 
-        snapFilter.frequency.exponentialRampToValueAtTime(100, t + 0.1); // Filtra o final
+        // Filtro Bandpass para focar no som de "madeira" (médios)
+        snapFilter.type = 'bandpass'; 
+        snapFilter.frequency.setValueAtTime(400, t); 
+        snapFilter.Q.value = 1.0; // Fator de qualidade para dar uma ressonância curta
 
-        snapGain.gain.setValueAtTime(MASTER_GAIN * 4.0, t); // Volume alto!
-        snapGain.gain.exponentialRampToValueAtTime(0.001, t + 0.1); // Muito curto (100ms)
+        snapGain.gain.setValueAtTime(MASTER_GAIN * 3.5, t); 
+        snapGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08); // Extremamente curto (80ms)
 
         snapOsc.connect(snapFilter);
         snapFilter.connect(snapGain);
         snapGain.connect(ctx.destination);
-        snapOsc.start(t); snapOsc.stop(t + 0.12);
+        snapOsc.start(t); snapOsc.stop(t + 0.1);
 
-        // 1.2 O Peso do TA (Kick)
-        // Um suporte grave para o estalo não ficar magro
-        const kickOsc = ctx.createOscillator();
-        const kickGain = ctx.createGain();
-        kickOsc.type = 'sine';
-        kickOsc.frequency.setValueAtTime(150, t);
-        kickOsc.frequency.exponentialRampToValueAtTime(50, t + 0.15);
+        // 1.2 O Corpo do TU (O "U" do Tu)
+        // Reduzi o decay aqui. Antes estava longo (DUM), agora é curto (TU).
+        const thudOsc = ctx.createOscillator();
+        const thudGain = ctx.createGain();
         
-        kickGain.gain.setValueAtTime(MASTER_GAIN * 1.5, t);
-        kickGain.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+        thudOsc.type = 'sine';
+        thudOsc.frequency.setValueAtTime(180, t); // Um pouco mais alto que um sub-grave
+        thudOsc.frequency.exponentialRampToValueAtTime(60, t + 0.1);
         
-        kickOsc.connect(kickGain);
-        kickGain.connect(ctx.destination);
-        kickOsc.start(t); kickOsc.stop(t + 0.15);
+        thudGain.gain.setValueAtTime(MASTER_GAIN * 2.0, t);
+        // O SEGREDO DO "TU": O som morre muito rápido (0.08s)
+        thudGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08); 
+        
+        thudOsc.connect(thudGain);
+        thudGain.connect(ctx.destination);
+        thudOsc.start(t); thudOsc.stop(t + 0.1);
 
 
-        // === EVENTO 2: O "DUM" (O Bloom Cinematográfico) ===
-        // Só começa DEPOIS que o TA bateu (usando a variável dumDelay)
+        // ====================================================================
+        // EVENTO 2: O "DUM" (O Bloom Cinematográfico)
+        // Entra atrasado e "abre" o som
+        // ====================================================================
 
-        const freqs = [55, 55.4, 110.5]; // Lá A1 + Oitava (Chorus effect)
+        const freqs = [55, 55.6, 110.8]; // Lá A1 + Oitava (Levemente desafinados para largura)
 
         freqs.forEach((f) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
             const filter = ctx.createBiquadFilter();
 
-            osc.type = 'sawtooth'; // Rico em harmônicos
+            osc.type = 'sawtooth'; // Dente de serra para textura rica
             osc.frequency.value = f;
 
-            // FILTRO DE ABERTURA (O "Wahhh")
+            // FILTRO (O Efeito Wahhh)
             filter.type = 'lowpass';
-            filter.frequency.setValueAtTime(30, t); // Começa fechado
-            // Abre o filtro EXATAMENTE após o delay
-            filter.frequency.linearRampToValueAtTime(900, t + dumDelay + 0.2); 
-            // Fecha devagar
-            filter.frequency.exponentialRampToValueAtTime(40, t + 3.0); 
+            filter.frequency.setValueAtTime(10, t); // Começa MUDO
+            // Abre o filtro devagar
+            filter.frequency.linearRampToValueAtTime(800, t + dumDelay + 0.3); 
+            // Fecha bem devagar
+            filter.frequency.exponentialRampToValueAtTime(30, t + 3.0); 
 
-            // VOLUME (Fade In)
+            // VOLUME (Fade In Suave)
             gain.gain.setValueAtTime(0, t);
-            // O volume sobe só depois do delay, criando a separação
-            gain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.6, t + dumDelay + 0.1); 
+            
+            // O volume sobe DEPOIS do dumDelay, garantindo que o primeiro som já acabou
+            gain.gain.linearRampToValueAtTime(MASTER_GAIN * 0.7, t + dumDelay + 0.15); 
+            
+            // Sustain longo e dramático
             gain.gain.exponentialRampToValueAtTime(0.001, t + 3.5);
 
             osc.connect(filter);
             filter.connect(gain);
             gain.connect(ctx.destination);
             
-            // Note que o oscilador começa mudo em t, mas só aparece em t + dumDelay
             osc.start(t); 
             osc.stop(t + 3.6);
         });
