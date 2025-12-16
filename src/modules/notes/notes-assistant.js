@@ -178,15 +178,22 @@ export function initCaseNotesAssistant() {
   // --- Popup ---
   const popup = document.createElement("div");
   popup.id = "autofill-popup";
+
+  // 1. [CRUCIAL] Adiciona a classe que conecta com o animations.js
+  popup.classList.add("cw-module-window"); 
+
   Object.assign(popup.style, stylePopup, {
     right: "100px", 
     width: "400px", 
-    opacity: "0",
-    pointerEvents: "none",
-    transition:
-      "width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease, transform 0.3s ease",
+    
+    // 2. [AJUSTE] Removemos opacity e pointerEvents daqui, 
+    // pois a classe .cw-module-window já define isso (opacity: 0).
+    
+    // 3. [AJUSTE] Removemos a transição de transform/opacity daqui.
+    // Deixamos apenas a de 'width' (para o resize), senão o inline
+    // bloqueia a animação "Genie" do arquivo animations.js.
+    transition: "width 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)",
   });
-  popup.style.transition += ", width 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)";
 
   const animRefs = { popup, googleLine: null };
 
