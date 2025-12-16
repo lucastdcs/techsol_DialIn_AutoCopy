@@ -3,7 +3,18 @@ import { showToast } from '../shared/utils.js';
 import { getPageData } from '../shared/page-data.js'; 
 import { getAgentName } from '../shared/page-data.js';
 
+// --- UTILITÁRIOS ---
 const esperar = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+function log(msg, type = 'info') {
+    const styles = {
+        info: 'background: #e8f0fe; color: #1a73e8; padding: 2px 5px; border-radius: 3px;',
+        warn: 'background: #fef7e0; color: #b06000; padding: 2px 5px; border-radius: 3px;',
+        error: 'background: #fce8e6; color: #c5221f; padding: 2px 5px; border-radius: 3px;',
+        success: 'background: #e6f4ea; color: #137333; padding: 2px 5px; border-radius: 3px;'
+    };
+    console.log(`%c[EMAIL-BOT] ${msg}`, styles[type] || styles.info);
+}
 
 function simularCliqueReal(elemento) {
     if (!elemento) return;
@@ -13,117 +24,109 @@ function simularCliqueReal(elemento) {
     );
 }
 
-function getFollowUpDate() {
-    const date = new Date();
-    date.setDate(date.getDate() + 3); // Soma 3 dias corridos
-
-    const dayOfWeek = date.getDay(); // 0 = Domingo, 6 = Sábado
-
-    if (dayOfWeek === 6) { 
-        // Se cair no Sábado, joga para Segunda (+2 dias)
-        date.setDate(date.getDate() + 2);
-    } else if (dayOfWeek === 0) { 
-        // Se cair no Domingo, joga para Segunda (+1 dia)
-        date.setDate(date.getDate() + 1);
-    }
-
-    // Formata para DD/MM/AAAA (Padrão BR/PT)
-    return date.toLocaleDateString('pt-BR');
-}
-
 function getVisibleEditor() {
-
+    // Procura por qualquer área de conteúdo de email
     const todos = Array.from(document.querySelectorAll('[id="email-body-content-top-content"]'));
     
-    return todos.find(el => {
+    const editor = todos.find(el => {
+        // Verifica se o elemento ocupa espaço na tela (não está display:none)
         const isVisible = el.offsetParent !== null;
+        // Verifica se não está dentro de uma mensagem antiga (histórico)
         const isReadOnly = el.closest('case-message-view') !== null;
+        // Verifica se está dentro de uma estrutura de edição
         const isEditable = el.closest('.editor') !== null || el.closest('write-card') !== null;
         
         return isVisible && !isReadOnly && isEditable;
     });
+
+    if (editor) log("Editor visualmente detectado.", 'success');
+    return editor;
 }
 
+// --- CORE: ABRIR E LIMPAR ---
 async function openAndClearEmail() {
-    console.log("🚀 FASE 1: Abrindo janela de email...");
+    log("🚀 FASE 1: Tentando abrir a janela de email...");
 
     let emailAberto = false;
+    
+    // Tenta achar o botão de email pelo ícone
     const todosIcones = Array.from(document.querySelectorAll('i.material-icons-extended'));
     const iconeEmail = todosIcones.find(el => el.innerText.trim() === 'email');
 
     if (iconeEmail && iconeEmail.offsetParent !== null) {
+        log("Botão de email direto encontrado.");
         const botaoAlvo = iconeEmail.closest('material-button') || iconeEmail.closest('material-fab') || iconeEmail;
-        if (botaoAlvo.style) {
-            botaoAlvo.style.display = 'block';
-            botaoAlvo.style.visibility = 'visible';
-        }
         simularCliqueReal(botaoAlvo);
         emailAberto = true;
     } else {
-
+        log("Botão direto não visível. Tentando Speed Dial (+)...", 'warn');
         const speedDial = document.querySelector('material-fab-speed-dial');
         if (speedDial) {
             const triggerBtn = speedDial.querySelector('.trigger');
             if (triggerBtn) {
-                triggerBtn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
                 simularCliqueReal(triggerBtn);
-                await esperar(1000);
+                await esperar(800);
                 
+                // Re-escaneia ícones após abrir o menu
                 const iconesNovos = Array.from(document.querySelectorAll('i.material-icons-extended'));
                 const emailBtnNovo = iconesNovos.find(el => el.innerText.trim() === 'email');
                 if (emailBtnNovo) {
+                    log("Botão de email no Speed Dial encontrado.");
                     simularCliqueReal(emailBtnNovo);
                     emailAberto = true;
                 }
-            } else {
-                speedDial.click();
             }
         }
     }
 
     if (!emailAberto) {
+        log("FATAL: Não consegui clicar no botão de email.", 'error');
         showToast("Erro: Botão de email não encontrado.", { error: true });
         return false;
     }
     
-    console.log("🚀 FASE 2: Verificando rascunhos (Polling de 3s)...");
+    // ============================================================
+    // FASE 2: CAÇA AO RASCUNHO (A parte crítica)
+    // ============================================================
+    log("🚀 FASE 2: Verificando existência de rascunhos...");
     
     let draftButton = null;
     let attempts = 0;
-    
-    while (attempts < 15) { 
-        await esperar(200);
+    const MAX_ATTEMPTS = 20; // Aumentei para dar tempo da UI renderizar
+
+    while (attempts < MAX_ATTEMPTS) {
+        await esperar(250); // Polling a cada 250ms
         
+        // Seletor específico do botão de lixeira do rascunho
         const candidates = document.querySelectorAll('material-button[debug-id="discard-prewrite-draft-button"]');
         draftButton = Array.from(candidates).find(el => el.offsetParent !== null);    
 
-        if (draftButton) break;
-        
-        const editorJaApareceu = getVisibleEditor();
-        if (editorJaApareceu) {
-            console.log("ℹ️ Editor apareceu limpo. Sem rascunhos.");
-            break; 
+        if (draftButton) {
+            log(`⚠️ Rascunho detectado na tentativa ${attempts + 1}!`, 'warn');
+            break;
         }
-
+        
+        // Log para saber que ainda está procurando
+        if (attempts % 5 === 0) log(`Procurando botão de descartar... (${attempts}/${MAX_ATTEMPTS})`);
+        
         attempts++;
     }
 
+    // SE ACHOU O BOTÃO DE DESCARTAR
     if (draftButton) {
-        console.log("⚠️ RASCUNHO LOCALIZADO! Executando descarte...");
+        log("🗑️ Iniciando protocolo de descarte...");
         
-
+        // 1. Clica na Lixeira
         simularCliqueReal(draftButton);
-        const textInside = draftButton.querySelector('.buttonText');
-        if (textInside) simularCliqueReal(textInside);
-        draftButton.click();
+        draftButton.click(); // Redundância
 
-        // 2. Espera o Modal de Confirmação
-        console.log("⏳ Aguardando Confirm...");
+        // 2. Espera o Modal de Confirmação (Pode demorar)
+        log("⏳ Aguardando Modal de Confirmação...");
         let confirmBtn = null;
         let confirmAttempts = 0;
         
-        while (confirmAttempts < 20) { // Espera até 4s (modais são lentos)
-            await esperar(200);
+        while (confirmAttempts < 15) {
+            await esperar(300);
             const confirms = document.querySelectorAll('material-button[debug-id="confirm-button"]');
             confirmBtn = Array.from(confirms).find(el => el.offsetParent !== null);
             if (confirmBtn) break;
@@ -131,59 +134,72 @@ async function openAndClearEmail() {
         }
 
         if (confirmBtn) {
-            console.log("✅ Confirmando...");
+            log("✅ Modal encontrado. Confirmando exclusão...", 'success');
             simularCliqueReal(confirmBtn);
-            const confirmContent = confirmBtn.querySelector('.content');
-            if (confirmContent) simularCliqueReal(confirmContent);
             
-            showToast("Limpando rascunho...", { duration: 2000 });
+            showToast("Limpando rascunho antigo...", { duration: 2000 });
             
-            // O PULO DO GATO:
-            // Depois de confirmar, TEMOS que esperar o editor antigo morrer e o novo nascer.
-            console.log("⏳ Aguardando reload do editor pós-descarte...");
-            await esperar(3000); 
+            // 3. ESPERA O RASCUNHO MORRER
+            // Isso é crucial. Se o script continuar antes do rascunho sumir, ele quebra.
+            log("⏳ Esperando o editor antigo ser destruído...");
+            await esperar(2500); 
         } else {
-            console.warn("❌ Confirm não apareceu.");
+            log("❌ ERRO: Cliquei na lixeira, mas o confirmar não apareceu.", 'error');
         }
+    } else {
+        log("ℹ️ Nenhum botão de rascunho encontrado após varredura. Assumindo editor limpo.");
     }
 
-    
-    console.log("🚀 FASE 3: Buscando editor final para limpeza...");
+    // ============================================================
+    // FASE 3: INJEÇÃO NO EDITOR NOVO
+    // ============================================================
+    log("🚀 FASE 3: Buscando editor final para escrita...");
 
     let tentativasEditor = 0;
-    let editorVisivel = getVisibleEditor(); 
+    let editorVisivel = null;
     
-    while (!editorVisivel && tentativasEditor < 20) {
-        await esperar(500);
+    // Tenta achar o editor por até 5 segundos
+    while (tentativasEditor < 20) {
         editorVisivel = getVisibleEditor();
+        if (editorVisivel) break;
+        
+        await esperar(250);
         tentativasEditor++;
     }
 
     if (!editorVisivel) {
-        showToast("Erro: Editor não carregou após a abertura.", { error: true });
+        log("FATAL: O editor não apareceu na tela a tempo.", 'error');
+        showToast("Erro: Editor não carregou.", { error: true });
         return false;
     }
 
+    log("📝 Editor localizado! Preparando para limpar...", 'success');
 
+    // Seleciona o container pai para garantir foco
     const containerTopo = editorVisivel.closest('[id="email-body-content-top"]');
     const wrapperGeral = editorVisivel.closest('.email-body-content') || document.body;
     const editorPai = wrapperGeral.querySelector('div[contenteditable="true"][aria-label="Email body"]');
 
     if (containerTopo) {
         if (editorPai) {
+            // Remove atributo que as vezes bloqueia a escrita
             const ancestral = editorPai.closest('[aria-hidden="true"]');
             if (ancestral) ancestral.removeAttribute('aria-hidden');
+            
             editorPai.focus();
+            simularCliqueReal(editorPai); // Garante foco real
         }
         
         await esperar(300);
 
+        // Reseta o HTML do editor para garantir pureza
         containerTopo.innerHTML = `
             <div id="email-body-content-top-content" style="font:normal 13px/17px Roboto,sans-serif;display:block">
                 <span id="cases-body-field"><br></span>
             </div>
         `;
         
+        // Coloca o cursor no lugar certo
         const novoElementoSagrado = containerTopo.querySelector('#cases-body-field');
         if (novoElementoSagrado) {
             const range = document.createRange();
@@ -194,152 +210,108 @@ async function openAndClearEmail() {
             sel.addRange(range);
         }
         
+        log("✨ Editor limpo e pronto.");
         return true; 
     }
     
     return false;
 }
 
+// --- FUNÇÕES DE APLICAÇÃO (Canned & Quick) ---
+
 export async function runEmailAutomation(cannedResponseText) {
     if (!cannedResponseText) return;
-    showToast(`Preparando email...`, { duration: 3000 });
-
-    const pageData = getPageData();
+    
     const emailPronto = await openAndClearEmail();
     if (!emailPronto) return;
 
+    log(`Iniciando Canned Response: ${cannedResponseText}`);
+    const pageData = getPageData();
 
     await esperar(500);
     const btnCanned = document.querySelector('material-button[debug-id="canned_response_button"]');
     
     if (btnCanned) {
-        btnCanned.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        await esperar(200); 
         simularCliqueReal(btnCanned);
         
-        await esperar(1500); 
+        await esperar(1000); // Espera popup abrir
         const searchInput = document.querySelector('material-auto-suggest-input input');
         
         if (searchInput) {
             simularCliqueReal(searchInput);
-            await esperar(200);
-            
             document.execCommand('insertText', false, cannedResponseText);
             searchInput.dispatchEvent(new Event('input', { bubbles: true }));
             
-            let opcaoAlvo = null;
-            let tentativas = 0;
-            while (tentativas < 20) { 
-                await esperar(500);
-                tentativas++;
-                const opcoes = Array.from(document.querySelectorAll('material-select-dropdown-item'));
-                if (opcoes.length > 0) {
-                     opcaoAlvo = opcoes.find(opt => 
-                        opt.innerText.toLowerCase().includes(cannedResponseText.toLowerCase())
-                    );
-                    if (!opcaoAlvo && opcoes.length === 1) opcaoAlvo = opcoes[0];
-                    if (opcaoAlvo) break;
-                }
-            }
+            // Espera filtrar
+            await esperar(800);
 
-            if (opcaoAlvo) {
-                simularCliqueReal(opcaoAlvo);
-                await esperar(2000); 
+            // Tenta clicar na primeira opção visível
+            const primeiraOpcao = document.querySelector('material-select-dropdown-item');
+            if (primeiraOpcao) {
+                simularCliqueReal(primeiraOpcao);
+                await esperar(1500); // Espera o texto entrar
 
-
-                function encontrarNoDeTexto(elemento, textoParaAchar) {
-                    if (elemento.nodeType === 3 && elemento.nodeValue.includes(textoParaAchar)) return elemento;
-                    if (!elemento.childNodes) return null;
-                    for (let child of elemento.childNodes) {
-                        const achou = encontrarNoDeTexto(child, textoParaAchar);
-                        if (achou) return achou;
-                    }
-                    return null;
-                }
-
-
+                // Substituição de variáveis do Canned
                 const editorVisivel = getVisibleEditor();
-                const containerTopo = editorVisivel ? editorVisivel.closest('[id="email-body-content-top"]') : document.body;
-                
-                let noAlvo = encontrarNoDeTexto(containerTopo, '{%ADVERTISER_NAME%}');
-
-                if (noAlvo) {
-                    const rangeToken = document.createRange();
-                    const start = noAlvo.nodeValue.indexOf('{%ADVERTISER_NAME%}');
-                    rangeToken.setStart(noAlvo, start);
-                    rangeToken.setEnd(noAlvo, start + '{%ADVERTISER_NAME%}'.length);
-                    
-                    const sel = window.getSelection();
-                    sel.removeAllRanges();
-                    sel.addRange(rangeToken);
-                    
-                    document.execCommand('insertText', false, pageData.advertiserName);
-                    showToast("Email preenchido!");
-                } else {
-                    showToast("Email inserido (Nome não substituído).");
+                if (editorVisivel && pageData.advertiserName) {
+                    const html = editorVisivel.innerHTML;
+                    if (html.includes('{%ADVERTISER_NAME%}')) {
+                        editorVisivel.innerHTML = html.replace(/{%ADVERTISER_NAME%}/g, pageData.advertiserName);
+                    }
                 }
+                showToast("Canned Response aplicada!");
             } else {
+                log("Opção de Canned não encontrada no dropdown.", 'warn');
                 showToast(`Template '${cannedResponseText}' não encontrado.`, { error: true });
             }
         }
     } else {
-        showToast("Botão Canned Response não achado.", { error: true });
+        log("Botão Canned Response não encontrado na toolbar.", 'error');
     }
 }
 
-
 export async function runQuickEmail(template) {
-    console.log(`🚀 Iniciando automação (Quick): ${template.name}`);
-    showToast(`Preparando email...`, { duration: 3000 });
+    log(`🚀 Iniciando Quick Email: ${template.name}`);
+    
+    const emailPronto = await openAndClearEmail(); 
+    if (!emailPronto) return;
 
     const pageData = getPageData(); 
     const agentName = getAgentName();
-    
-    const emailPronto = await openAndClearEmail(); 
-    
-    if (!emailPronto) return;
 
     await esperar(600); 
 
-
+    // Preenche Assunto
     const subjectInput = document.querySelector('input[aria-label="Subject"]');
     if (subjectInput && template.subject) {
         subjectInput.focus();
         const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
         nativeInputValueSetter.call(subjectInput, template.subject);
         subjectInput.dispatchEvent(new Event('input', { bubbles: true }));
-        
-
         await esperar(300); 
     }
-
 
     const editorVisivel = getVisibleEditor();
     
     if (editorVisivel) {
+         // Garante foco
          const wrapperGeral = editorVisivel.closest('.email-body-content') || document.body;
          const editorPai = wrapperGeral.querySelector('div[contenteditable="true"][aria-label="Email body"]');
          
          if (editorPai) {
              editorPai.focus();
-
-             editorPai.click(); 
-             editorPai.dispatchEvent(new Event('input', { bubbles: true }));
+             simularCliqueReal(editorPai);
          }
 
-
-        await esperar(400);
-
-
+        // Calcula Data (+3 dias úteis simplificado)
         const date = new Date();
         date.setDate(date.getDate() + 3); 
         const day = date.getDay();
-        
         if (day === 6) date.setDate(date.getDate() + 2);
         else if (day === 0) date.setDate(date.getDate() + 1);
-        
         const dataFormatada = date.toLocaleDateString('pt-BR');
         
+        // Substituição de Variáveis
         let finalBody = template.body;
         finalBody = finalBody.replace(/\[Nome do Cliente\]/g, pageData.advertiserName || "Cliente");
         finalBody = finalBody.replace(/\[INSERIR URL\]/g, pageData.websiteUrl || "seu site");
@@ -347,19 +319,20 @@ export async function runQuickEmail(template) {
         finalBody = finalBody.replace(/\[Seu Nome\]/g, agentName); 
         finalBody = finalBody.replace(/\[MM\/DD\/YYYY\]/g, dataFormatada);
 
-
+        // Insere HTML
         document.execCommand('insertHTML', false, finalBody);
         
+        // Dispara eventos de mudança
         if (editorPai) {
             editorPai.dispatchEvent(new Event('input', { bubbles: true }));
             editorPai.dispatchEvent(new Event('change', { bubbles: true }));
         }
         
         showToast("Email preenchido com sucesso!", { duration: 2000 });
-
-        await esperar(800); 
+        log("✅ Processo finalizado com sucesso.", 'success');
 
     } else {
+        log("Erro final: Editor não encontrado para inserção.", 'error');
         showToast("Erro ao focar no editor.", { error: true });
     }
 }
