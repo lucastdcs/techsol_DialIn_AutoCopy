@@ -43,6 +43,26 @@ export const QUICK_EMAILS = {
                     <p>Atenciosamente,</p>
                     <p><strong>[Seu Nome]</strong><br>Time de Soluções Técnicas Cognizant, em nome do Google.</p>
                 `
+            },
+            {
+                id: 'max_reschedules',
+                name: 'Limite de Reagendamentos Excedido',
+                subject: 'Status do Agendamento - Time de Soluções Técnicas do Google',
+                body: `
+                    <p>Olá, <strong>[Nome do Cliente]</strong>,</p>
+                    <br>
+                    <p>Espero que este e-mail o encontre bem.</p>
+                    <p>Escrevo em nome do time do Google Ads para informar sobre o seu pedido de reagendamento para a implementação das tags.</p>
+                    <br>
+                    <p>Infelizmente, <strong>não podemos mais reagendar este caso específico</strong>, pois excedemos o limite máximo de agendamentos permitido.</p>
+                    <br>
+                    <p>Se você deseja prosseguir com a implementação das tags, será necessário abrir um <strong>novo caso</strong> diretamente com a <a href="https://support.google.com/google-ads">Ajuda do Google Ads</a>. Isso garantirá que você receba o acompanhamento e o suporte necessário para dar continuidade à sua solicitação.</p>
+                    <br>
+                    <p>Agradecemos o seu envolvimento neste processo e a oportunidade de ajudar. Esperamos continuar a nossa colaboração.</p>
+                    <br>
+                    <p>Atenciosamente,</p>
+                    <p><strong>[Seu Nome]</strong><br>Time de Soluções Técnicas Cognizant, em nome do Google</p>
+                `
             }
         ]
     },
