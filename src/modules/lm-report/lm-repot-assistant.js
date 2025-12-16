@@ -204,12 +204,17 @@ const popup = document.createElement("div");
   });
 
   // (Seus ícones permanecem iguais)
-  const CATEGORY_ICONS = {
-      lm: '📝',      // Forms
-      qa: '🛡️',      // QA/Quality
-      suporte: '📚', // Docs
-      outros: '⚡'   // Diversos
-  };
+// Ícones SVG Inline (Material Design 24px)
+// fill="currentColor" permite que eles herdem a cor do texto onde estiverem inseridos
+const CATEGORY_ICONS = {
+    lm: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>', // Assignment
+    
+    qa: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>', // Verified/Shield
+    
+    suporte: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z"/></svg>', // Menu Book
+    
+    outros: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-1.99.9-1.99 2v3.8H3.5c-1.49 0-2.61 1.12-2.61 2.5s1.12 2.5 2.61 2.5H2v4c0 1.1.9 2 2 2h4v1.5c0 1.49 1.12 2.61 2.5 2.61s2.5-1.12 2.5-2.61V19h4c1.1 0 2-.9 2-2v-4h1.5c1.49 0 2.61-1.12 2.61-2.5S21.99 11 20.5 11z"/></svg>' // Extension
+};
 
   const animRefs = {
     popup,
@@ -360,31 +365,28 @@ function renderTabs() {
     }
 
     // 2. Renderização
+// ... dentro de renderList ...
     linksToShow.forEach((link, index) => {
       const item = document.createElement("div");
       Object.assign(item.style, styleListItem);
 
+      // --- ICON DIV (Estilização) ---
       const iconDiv = document.createElement("div");
       Object.assign(iconDiv.style, styleListIcon);
-      iconDiv.textContent = link._catIcon || '🔗'; 
+      
+      // [NOVO] INJETA O SVG EM VEZ DE TEXTO
+      // Usamos innerHTML porque o CATEGORY_ICONS agora contém strings SVG completas (<svg>...</svg>)
+      iconDiv.innerHTML = link._catIcon || '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>'; // Link Icon Default
+      
+      // [NOVO] ALINHAMENTO FLEXBOX PARA SVGs
+      // Garante que o ícone fique centralizado e na cor certa
+      iconDiv.style.display = "flex";
+      iconDiv.style.alignItems = "center";
+      iconDiv.style.justifyContent = "center";
+      iconDiv.style.color = "#5f6368"; // Cinza Google Padrão
+
       item.appendChild(iconDiv);
-
-      // B. Texto Central
-      const textDiv = document.createElement("div");
-      textDiv.style.flexGrow = "1";
-      
-
-      const highlight = (text) => {
-          if (!isSearching) return text;
-          const regex = new RegExp(`(${searchTerm})`, 'gi');
-          return text.replace(regex, '<span style="color:#1a73e8; font-weight:700;">$1</span>');
-      };
-
-      const nameHTML = `<div style="font-size:14px; font-weight:500; color:#202124;">${highlight(link.name)}</div>`;
-      const descHTML = `<div style="font-size:11px; color:#5f6368; margin-top:2px;">${highlight(link.desc)}</div>`;
-      
-      textDiv.innerHTML = nameHTML + descHTML;
-      item.appendChild(textDiv);
+      // ...
 
       // C. Ações (Copiar + Abrir)
       const actionsDiv = document.createElement("div");
