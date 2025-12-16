@@ -398,7 +398,31 @@ function renderTabs() {
 
       item.appendChild(iconDiv);
       // ...
+// ... (fim da configuração do iconDiv)
+      item.appendChild(iconDiv);
 
+      // ============================================================
+      // [TRECHO FALTANTE] B. Texto Central (Nome e Descrição)
+      // ============================================================
+      const textDiv = document.createElement("div");
+      textDiv.style.flexGrow = "1";
+
+      const highlight = (text) => {
+          if (!isSearching) return text;
+          const regex = new RegExp(`(${searchTerm})`, 'gi');
+          return text.replace(regex, '<span style="color:#1a73e8; font-weight:700;">$1</span>');
+      };
+
+      const nameHTML = `<div style="font-size:14px; font-weight:500; color:#202124;">${highlight(link.name)}</div>`;
+      const descHTML = `<div style="font-size:11px; color:#5f6368; margin-top:2px;">${highlight(link.desc)}</div>`;
+      
+      textDiv.innerHTML = nameHTML + descHTML;
+      item.appendChild(textDiv);
+      // ============================================================
+
+      // C. Ações (Copiar + Abrir)
+      const actionsDiv = document.createElement("div");
+      // ... (resto do código continua igual)
       // C. Ações (Copiar + Abrir)
       const actionsDiv = document.createElement("div");
       actionsDiv.style.display = "flex";
