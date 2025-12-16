@@ -302,9 +302,20 @@ function renderTabs() {
       const btn = document.createElement("button");
 
       const icon = CATEGORY_ICONS[key] || '';
-      btn.innerHTML = `<span style="font-size:14px">${icon}</span> ${cat.label}`;
+      
+      // Ajuste o innerHTML para incluir o container flex para o ícone
+      btn.innerHTML = `
+        <span style="display:inline-flex; align-items:center; margin-right:6px; vertical-align:middle;">
+            ${icon}
+        </span> 
+        ${cat.label}
+      `;
       
       Object.assign(btn.style, styleTabButton);
+      
+      // Precisamos garantir que o botão também alinhe tudo ao centro
+      btn.style.display = "inline-flex";
+      btn.style.alignItems = "center";
       
 
       if (activeTab === key && searchTerm === "") {
