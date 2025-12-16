@@ -475,47 +475,86 @@ export function initCaseNotesAssistant() {
   popupContent.appendChild(stepSnippetsDiv);
 
   // --- STEP 2: TASKS (Integrado com Componente) ---
-  const step2Div = document.createElement("div");
-  step2Div.id = "step-2-tasks";
-  Object.assign(step2Div.style, styles.stepBlock, { display: "none" });
-  const optionalTaskBtn = document.createElement("button");
-  optionalTaskBtn.textContent = "+ Gostaria de selecionar uma task?";
-  Object.assign(optionalTaskBtn.style, styles.optionalBtn);
-  optionalTaskBtn.onmouseover = () => {
-    optionalTaskBtn.style.background = "#e8f0fe";
-  };
-  optionalTaskBtn.onmouseout = () => {
-    optionalTaskBtn.style.background = "white";
-  };
-  const step2Title = document.createElement("h3");
-  Object.assign(step2Title.style, styles.h3);
+  // const step2Div = document.createElement("div");
+  // step2Div.id = "step-2-tasks";
+  // Object.assign(step2Div.style, styles.stepBlock, { display: "none" });
+  // const optionalTaskBtn = document.createElement("button");
+  // optionalTaskBtn.textContent = "+ Gostaria de selecionar uma task?";
+  // Object.assign(optionalTaskBtn.style, styles.optionalBtn);
+  // optionalTaskBtn.onmouseover = () => {
+  //   optionalTaskBtn.style.background = "#e8f0fe";
+  // };
+  // optionalTaskBtn.onmouseout = () => {
+  //   optionalTaskBtn.style.background = "white";
+  // };
+  // const step2Title = document.createElement("h3");
+  // Object.assign(step2Title.style, styles.h3);
 
-  const taskCheckboxesContainer = document.createElement("div");
-  taskCheckboxesContainer.id = "task-checkboxes-container";
+  // const taskCheckboxesContainer = document.createElement("div");
+  // taskCheckboxesContainer.id = "task-checkboxes-container";
 
-  step2Div.appendChild(optionalTaskBtn);
-  step2Div.appendChild(taskCheckboxesContainer);
-  step2Div.appendChild(step2Title);
-  step2Div.appendChild(stepTasks.selectionElement); // <--- ELEMENTO DO COMPONENTE AQUI
-  popupContent.appendChild(step2Div);
+  // step2Div.appendChild(optionalTaskBtn);
+  // step2Div.appendChild(taskCheckboxesContainer);
+  // step2Div.appendChild(step2Title);
+  // step2Div.appendChild(stepTasks.selectionElement); // <--- ELEMENTO DO COMPONENTE AQUI
+  // popupContent.appendChild(step2Div);
 
   // --- STEP 3: FORMS ---
+  // --- STEP 3: FORMS E TASKS (Unificados) ---
   const step3Div = document.createElement("div");
   step3Div.id = "step-3-form";
   Object.assign(step3Div.style, styles.stepBlock, { display: "none" });
+
+  // 1. Título Geral
   const step3Title = document.createElement("h3");
   Object.assign(step3Title.style, styles.h3);
   step3Div.appendChild(step3Title);
+
+  // 2. Campos de Texto (Reason, Contexto, etc)
   const dynamicFormFieldsContainer = document.createElement("div");
   dynamicFormFieldsContainer.id = "dynamic-form-fields-container";
   step3Div.appendChild(dynamicFormFieldsContainer);
 
-  // Injeta Módulos
-  step3Div.appendChild(tagSupport.element); // Tag Support
-  step3Div.appendChild(stepTasks.screenshotsElement); // Screenshots do Componente
+  // -----------------------------------------------------------
+  // [MUDANÇA] Inserção da Lógica de Tasks AQUI (Meio do sanduíche)
+  // -----------------------------------------------------------
+  
+  // Botão "+ Selecionar Task"
+  const optionalTaskBtn = document.createElement("button");
+  optionalTaskBtn.textContent = "+ Gostaria de selecionar uma task?";
+  Object.assign(optionalTaskBtn.style, styles.optionalBtn);
+  
+  // Efeitos do botão
+  optionalTaskBtn.onmouseover = () => optionalTaskBtn.style.background = "#e8f0fe";
+  optionalTaskBtn.onmouseout = () => optionalTaskBtn.style.background = "white";
+  optionalTaskBtn.onclick = () => {
+    optionalTaskBtn.style.display = "none";
+    step2Title.style.display = "block";
+    stepTasks.selectionElement.style.display = "block"; 
+  };
+
+  // Título das Tasks (ex: "Selecione as Tasks")
+  const step2Title = document.createElement("h3");
+  Object.assign(step2Title.style, styles.h3, { marginTop: "20px" }); // Margem extra para separar dos inputs
+
+  // Container de Checkboxes (O componente visual)
+  const tasksContainer = stepTasks.selectionElement;
+  Object.assign(tasksContainer.style, { marginBottom: "20px" });
+
+  // Adiciona ao DOM na ordem desejada
+  step3Div.appendChild(optionalTaskBtn);
+  step3Div.appendChild(step2Title);
+  step3Div.appendChild(tasksContainer);
+  
+  // -----------------------------------------------------------
+
+  // 3. Tag Support (Pílulas de tags aplicadas)
+  step3Div.appendChild(tagSupport.element); 
+
+  // 4. Screenshots (Ficam por último, como solicitado)
+  step3Div.appendChild(stepTasks.screenshotsElement); 
 
   popupContent.appendChild(step3Div);
-
   // Email
   const emailAutomationDiv = document.createElement("div");
   emailAutomationDiv.id = "step-4-email";
