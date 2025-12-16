@@ -191,22 +191,25 @@ export function initFeedbackAssistant() {
   };
 
 
-  const popup = document.createElement("div");
+const popup = document.createElement("div");
   popup.id = "feedback-popup";
-    Object.assign(popup.style, stylePopup, { 
-        right: "100px", // Afastado da pílula
-        width: "400px",
-        opacity: "0", 
-        pointerEvents: "none" 
-    });
+  
+  // 1. Conecta ao animations.js
+  popup.classList.add("cw-module-window");
 
-const CATEGORY_ICONS = {
-    lm: '📝',      // Forms
-    qa: '🛡️',      // QA/Quality
-    suporte: '📚', // Docs
-    outros: '⚡'   // Diversos
-};
+  Object.assign(popup.style, stylePopup, { 
+      right: "100px", // Afastado da pílula
+      width: "400px",
+      // Removemos opacity/pointerEvents daqui
+  });
 
+  // (Seus ícones permanecem iguais)
+  const CATEGORY_ICONS = {
+      lm: '📝',      // Forms
+      qa: '🛡️',      // QA/Quality
+      suporte: '📚', // Docs
+      outros: '⚡'   // Diversos
+  };
 
   const animRefs = {
     popup,

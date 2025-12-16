@@ -71,13 +71,20 @@ export function initQuickEmailAssistant() {
     };
 
     // --- CRIAÇÃO DO POPUP ---
-    let visible = false;
+let visible = false;
     const popup = document.createElement("div");
     popup.id = "quick-email-popup";
 
+    // 1. Conecta ao animations.js
+    popup.classList.add("cw-module-window");
+
     Object.assign(popup.style, stylePopup, {
-        right: "100px", width: "480px", height: "600px",
- opacity: "0", pointerEvents: "none"
+        right: "100px", 
+        width: "480px", 
+        height: "600px",
+        // Removemos opacity/pointerEvents daqui
+        // Mantemos apenas transition de resize se necessário, senão deixe o CSS cuidar
+        transition: "width 0.3s ease, height 0.3s ease" 
     });
 
     const animRefs = { popup, googleLine: null, focusElement: null };
