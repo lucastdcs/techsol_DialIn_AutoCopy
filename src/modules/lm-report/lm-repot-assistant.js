@@ -199,7 +199,7 @@ const popup = document.createElement("div");
 
   Object.assign(popup.style, stylePopup, { 
       right: "100px", 
-      width: "400px",
+      width: "500px",
 
   });
 
