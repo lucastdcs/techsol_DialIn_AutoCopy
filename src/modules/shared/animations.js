@@ -6,54 +6,72 @@ if (!document.getElementById('cw-module-styles')) {
     const style = document.createElement('style');
     style.id = 'cw-module-styles';
     style.innerHTML = `
-        /* MÓDULO BASE */
+        /* MÓDULO BASE (Estado Ativo/Normal) */
         .cw-module-window {
-            /* Animação Apple Spring (Ida e Volta) */
             transition: 
                 opacity 0.3s ease,
                 transform 0.45s cubic-bezier(0.25, 1, 0.5, 1), 
-                filter 0.3s ease,
+                background 0.3s ease,
+                backdrop-filter 0.3s ease,
                 box-shadow 0.3s ease;
             
             opacity: 0; 
             pointer-events: none;
-            transform: scale(0.05); /* Começa dentro do botão */
+            transform: scale(0.05);
             
-            /* Visual Ceramic Light */
-            background: #F8F9FA;
-            backdrop-filter: blur(12px);
+            /* Visual Ceramic Light (Sólido quando ativo para leitura fácil) */
+            background: rgba(248, 249, 250, 0.95); /* Quase sólido */
+            backdrop-filter: blur(20px) saturate(180%); /* Blur pesado (Apple Material) */
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            
             box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.18);
-            border: 1px solid rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             border-radius: 16px;
             overflow: hidden;
-            
-            /* Fonte Base */
             font-family: 'Google Sans', Roboto, sans-serif;
         }
 
-        /* ESTADO ABERTO (Ativo) */
+        /* ESTADO ABERTO (Foco Total) */
         .cw-module-window.open {
             opacity: 1; 
             transform: scale(1); 
             pointer-events: auto;
-            filter: brightness(1);
-            /* Sombra alta */
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            /* Sombra flutuante */
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.25);
+            border-color: rgba(255, 255, 255, 0.8);
         }
 
-        /* ESTADO IDLE (Segundo Plano) */
+        /* --- O EFEITO APPLE GLASS (IDLE) --- */
         .cw-module-window.idle {
-            /* FIX DO DESLOCAMENTO: */
-            /* Scale muito sutil (0.99) para não "puxar" para o lado */
-            transform: scale(0.99); 
+            /* 1. Recua fisicamente */
+            transform: scale(0.96) translateY(4px); 
             
-            /* O efeito vem daqui: */
-            opacity: 0.9;
-            filter: brightness(0.96) saturate(0.5);
-            border-color: rgba(0, 0, 0, 0.2);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1); /* Sombra cai (encostou na mesa) */
+            /* 2. Vidro Transparente */
+            /* Aqui está o segredo: diminuímos a opacidade do BRANCO, não do elemento todo */
+            background: rgba(255, 255, 255, 0.40); 
             
-            cursor: pointer; /* Indica clicável */
+            /* 3. Aumentamos o Blur do fundo para destacar o que está atrás */
+            backdrop-filter: blur(8px) saturate(100%);
+            -webkit-backdrop-filter: blur(8px) saturate(100%);
+            
+            /* 4. Removemos a sombra pesada (encostou na mesa) */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            
+            /* 5. Borda sutil para definir o vidro */
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            
+            /* Opacidade geral cai um pouco para o texto ficar cinza */
+            opacity: 0.85; 
+            
+            cursor: pointer;
+            z-index: 100 !important; /* Garante que fique atrás */
+        }
+
+        /* Hover no Idle: Convida o usuário a clicar */
+        .cw-module-window.idle:hover {
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(0.97) translateY(4px);
+            opacity: 0.95;
         }
     `;
     document.head.appendChild(style);
