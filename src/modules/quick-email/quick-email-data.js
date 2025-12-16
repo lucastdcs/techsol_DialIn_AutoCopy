@@ -90,6 +90,25 @@ export const QUICK_EMAILS = {
                     <p>Fico à disposição.</p>
                     <p><strong>[Seu Nome]</strong><br>Time de Soluções Técnicas Cognizant, em nome do Google</p>
                 `
+            },
+            {
+                id: '2_6_completed_reschedule',
+                name: 'Ações Concluídas (Solicitar Reagendamento)',
+                subject: 'Continuidade da Implementação - Soluções Técnicas do Google',
+                body: `
+                    <p>Olá, tudo bem?</p>
+                    <br>
+                    <p>Maravilha! Muito bom saber que conseguiu concluir as ações pendentes. Sendo assim, agora podemos continuar com a implementação das configurações em sua conta.</p>
+                    <br>
+                    <p>Para isso, peço, por favor, que me envie algumas datas e horários em que está disponível a partir do dia <strong>[Disponibilidade em BAU]</strong>.</p>
+                    <p>Assim que me enviar essa informação, irei criar um reagendamento para que um de nossos agentes continue te ajudando.</p>
+                    <br>
+                    <p>Também informo que se não houver resposta a este email, realizarei um acompanhamento neste caso durante 6 dias, onde entrarei em contato a cada 3 dias para tentarmos reagendar seu caso o mais breve possível.</p>
+                    <p>Reforço que minha agenda é dinâmica, sendo assim, a qualquer momento um atendimento pode ser marcado para os dias disponíveis. Logo, quanto mais rápido conseguir me responder, mais garantido será o agendamento de data e horário.</p>
+                    <br>
+                    <p>Atenciosamente,</p>
+                    <p><strong>[Seu Nome]</strong><br>Time de Soluções Técnicas Cognizant, em nome do Google.</p>
+                `
             }
         ]
     },
