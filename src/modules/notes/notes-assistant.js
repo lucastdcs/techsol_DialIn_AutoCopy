@@ -986,19 +986,19 @@ subStatusSelect.onchange = () => {
       }
     });
     if (filteredScenarios.length > 0) stepSnippetsDiv.style.display = "block";
-
-    if (templateData.requiresTasks) {
-      optionalTaskBtn.style.display = "none";
-      step2Title.style.display = "block";
-      stepTasks.selectionElement.style.display = "block";
-      step2Div.style.display = "block";
+if (templateData.requiresTasks) {
+      // Se a task é obrigatória (ex: SO_Implementation):
+      optionalTaskBtn.style.display = "none";       // Esconde botão opcional
+      step2Title.style.display = "block";           // Mostra título "Selecione as Tasks"
+      stepTasks.selectionElement.style.display = "block"; // Mostra checkboxes
     } else {
-      optionalTaskBtn.style.display = "block";
-      step2Title.style.display = "none";
-      stepTasks.selectionElement.style.display = "none";
-      step2Div.style.display = "block";
+      // Se a task é opcional (ex: NI_Awaiting):
+      optionalTaskBtn.style.display = "block";      // Mostra botão "+ Task"
+      step2Title.style.display = "none";            // Esconde título
+      stepTasks.selectionElement.style.display = "none"; // Esconde checkboxes
     }
 
+    // Gera os campos de formulário (Mantido igual)
     dynamicFormFieldsContainer.innerHTML = "";
     const placeholders = templateData.template.match(/{([A-Z0-9_]+)}/g) || [];
     const uniquePlaceholders = [...new Set(placeholders)];
@@ -1388,15 +1388,15 @@ function generateOutputHtml() {
   };
 }
 
-  function resetSteps(startFrom = 1.5) {
+function resetSteps(startFrom = 1.5) {
     if (startFrom <= 1.5) {
       stepSnippetsDiv.style.display = "none";
       snippetContainer.innerHTML = "";
     }
+    // O antigo passo 2 foi absorvido pelo 3, então limpamos as tasks aqui
     if (startFrom <= 2) {
-      step2Div.style.display = "none";
-      stepTasks.reset(); 
-      optionalTaskBtn.style.display = "none";
+        stepTasks.reset(); 
+        optionalTaskBtn.style.display = "none";
     }
     if (startFrom <= 3) {
       step3Div.style.display = "none";
@@ -1406,7 +1406,6 @@ function generateOutputHtml() {
       emailAutomationDiv.style.display = "none";
     }
   }
-
 function toggleVisibility() {
     visible = !visible;
     
