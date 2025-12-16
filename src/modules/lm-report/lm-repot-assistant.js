@@ -198,14 +198,11 @@ const popup = document.createElement("div");
   popup.classList.add("cw-module-window");
 
   Object.assign(popup.style, stylePopup, { 
-      right: "100px", // Afastado da pílula
+      right: "100px", 
       width: "400px",
-      // Removemos opacity/pointerEvents daqui
+
   });
 
-  // (Seus ícones permanecem iguais)
-// Ícones SVG Inline (Material Design 24px)
-// fill="currentColor" permite que eles herdem a cor do texto onde estiverem inseridos
 const CATEGORY_ICONS = {
     lm: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>', // Assignment
     
@@ -376,34 +373,24 @@ function renderTabs() {
     }
 
     // 2. Renderização
-// ... dentro de renderList ...
     linksToShow.forEach((link, index) => {
       const item = document.createElement("div");
       Object.assign(item.style, styleListItem);
 
-      // --- ICON DIV (Estilização) ---
+   
       const iconDiv = document.createElement("div");
       Object.assign(iconDiv.style, styleListIcon);
-      
-      // [NOVO] INJETA O SVG EM VEZ DE TEXTO
-      // Usamos innerHTML porque o CATEGORY_ICONS agora contém strings SVG completas (<svg>...</svg>)
+
       iconDiv.innerHTML = link._catIcon || '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>'; // Link Icon Default
       
-      // [NOVO] ALINHAMENTO FLEXBOX PARA SVGs
-      // Garante que o ícone fique centralizado e na cor certa
+
       iconDiv.style.display = "flex";
       iconDiv.style.alignItems = "center";
       iconDiv.style.justifyContent = "center";
       iconDiv.style.color = "#5f6368"; // Cinza Google Padrão
 
       item.appendChild(iconDiv);
-      // ...
-// ... (fim da configuração do iconDiv)
-      item.appendChild(iconDiv);
-
-      // ============================================================
-      // [TRECHO FALTANTE] B. Texto Central (Nome e Descrição)
-      // ============================================================
+      
       const textDiv = document.createElement("div");
       textDiv.style.flexGrow = "1";
 
@@ -418,11 +405,7 @@ function renderTabs() {
       
       textDiv.innerHTML = nameHTML + descHTML;
       item.appendChild(textDiv);
-      // ============================================================
 
-      // C. Ações (Copiar + Abrir)
-      const actionsDiv = document.createElement("div");
-      // ... (resto do código continua igual)
       // C. Ações (Copiar + Abrir)
       const actionsDiv = document.createElement("div");
       actionsDiv.style.display = "flex";
