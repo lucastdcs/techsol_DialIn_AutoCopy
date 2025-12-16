@@ -390,6 +390,13 @@ export const SUBSTATUS_TEMPLATES = {
         name: 'SO - Troubleshooting Only',
         requiresTasks: true,
         template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>On Call (Call Started) signaled on time?</b> {ON_CALL}{CASO_PORTUGAL}{CONSENTIU_GRAVACAO}<b>Substatus:</b> SO - Troubleshooting Only<br><br><b>Reason/comments:</b> Consultoria utilizada para testar e solucinar problemas da conversão.<br><br><b>OnCall Comments:</b><br><b>Problema inicial:</b><br>{PROBLEMAS}<br><b>Resoluções/Explicações:</b><br>{RESOLUCOES}<br><br><b>GTM/GA4 Verificado:</b> {GTM_GA4_VERIFICADO}<br><br><b>Tag Implemented:</b> {TAGS_IMPLEMENTED}<br><br><b>Screenshots:</b><br>{SCREENSHOTS_LIST}<br><b>Multiple CIDs:</b> {CIDS}`
+    },
+    'DC_Other': {
+        status: 'DC',
+        name: 'DC - Other',
+        requiresTasks: false,
+        // Template minimalista para LM Discard
+        template: `<b>Speakeasy ID:</b> {SPEAKEASY_ID}<br><br><b>Substatus:</b> DC - Other<br><br><b>Reason/comments:</b> {REASON_COMMENTS}<br><br><b>OnCall Comments:</b><br>{COMENTARIOS}<br><br>Obs.: Sigo as orientações presentes na documentação do treinamento (https://screenshot.googleplex.com/rUtQqsLxRNfjcr)`
     }
 };
 
@@ -416,7 +423,8 @@ export const SUBSTATUS_SHORTCODES = {
     'SO_Verified_No_Recent_Conversion': 'ts so verif nrc',
     'SO_Unverified': 'ts so unv',
     'SO_Education_Only': 'ts so Edu',
-    'SO_Troubleshooting_Only': 'ts so trbl'
+    'SO_Troubleshooting_Only': 'ts so trbl',
+    'DC_Other': null
 };
 
 export const textareaListFields = [
@@ -549,5 +557,10 @@ export const scenarioSnippets = {
         type: 'all',
         'field-REASON_COMMENTS': "Outro (Manual)",
         'field-GTM_GA4_VERIFICADO': "N/A"
+    },
+    'quickfill-dc-lm-no-access': {
+        type: 'lm', // Restringe apenas para LM (se o botão LM estiver ativo)
+        'field-REASON_COMMENTS': "Discard - Falta de acessos (Reagendamento solicitado)",
+        'field-COMENTARIOS': "Não conseguimos implementar nada durante a consultoria, já que o adv não tinha os acessos.\n\nIrei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando em conta a falta de acessos e solicitação de reagendamento do mesmo."
     }
 };

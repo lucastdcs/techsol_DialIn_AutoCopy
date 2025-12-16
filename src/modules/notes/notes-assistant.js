@@ -302,6 +302,7 @@ export function initCaseNotesAssistant() {
       <option value="SO">SO - Solution Offered</option>
       <option value="IN">IN - Inactive</option>
       <option value="AS">AS - Assigned</option>
+      <option value="DC">DC - Discard</option>
   `;
 
   // 3. HEADER DO SUB-STATUS (Label + Link)
@@ -924,6 +925,14 @@ subStatusSelect.onchange = () => {
         },
         { id: "quickfill-in-manual", text: "Outro (Manual)" },
       ];
+    } else if (selectedSubStatusKey.startsWith("DC_")) {
+        inputType = "radio";
+        scenarios = [
+            { 
+                id: "quickfill-dc-lm-no-access", 
+                text: "LM - Sem acessos (Reagendar em BAU)" 
+            }
+        ];
     }
 
     const filteredScenarios = scenarios.filter((s) => {
