@@ -332,54 +332,72 @@
             Voltar
         </button>
     `,setTimeout(()=>{let s=i.querySelector("#close-help-internal");s&&(s.onmouseover=()=>s.style.backgroundColor="#f8f9fa",s.onmouseout=()=>s.style.backgroundColor="white",s.onclick=()=>{i.style.opacity="0",i.style.pointerEvents="none"})},0),t.appendChild(i),i}if(!document.getElementById("cw-module-styles")){let t=document.createElement("style");t.id="cw-module-styles",t.innerHTML=`
-        /* M\xD3DULO BASE */
+        /* M\xD3DULO BASE (Estado Ativo/Normal) */
         .cw-module-window {
-            /* Anima\xE7\xE3o Apple Spring (Ida e Volta) */
             transition: 
                 opacity 0.3s ease,
                 transform 0.45s cubic-bezier(0.25, 1, 0.5, 1), 
-                filter 0.3s ease,
+                background 0.3s ease,
+                backdrop-filter 0.3s ease,
                 box-shadow 0.3s ease;
             
             opacity: 0; 
             pointer-events: none;
-            transform: scale(0.05); /* Come\xE7a dentro do bot\xE3o */
+            transform: scale(0.05);
             
-            /* Visual Ceramic Light */
-            background: #F8F9FA;
-            backdrop-filter: blur(12px);
+            /* Visual Ceramic Light (S\xF3lido quando ativo para leitura f\xE1cil) */
+            background: rgba(248, 249, 250, 0.95); /* Quase s\xF3lido */
+            backdrop-filter: blur(20px) saturate(180%); /* Blur pesado (Apple Material) */
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            
             box-shadow: 0 24px 48px -12px rgba(0, 0, 0, 0.18);
-            border: 1px solid rgba(0, 0, 0, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.4);
             border-radius: 16px;
             overflow: hidden;
-            
-            /* Fonte Base */
             font-family: 'Google Sans', Roboto, sans-serif;
         }
 
-        /* ESTADO ABERTO (Ativo) */
+        /* ESTADO ABERTO (Foco Total) */
         .cw-module-window.open {
             opacity: 1; 
             transform: scale(1); 
             pointer-events: auto;
-            filter: brightness(1);
-            /* Sombra alta */
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            /* Sombra flutuante */
+            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.25);
+            border-color: rgba(255, 255, 255, 0.8);
         }
 
-        /* ESTADO IDLE (Segundo Plano) */
+        /* --- O EFEITO APPLE GLASS (IDLE) --- */
         .cw-module-window.idle {
-            /* FIX DO DESLOCAMENTO: */
-            /* Scale muito sutil (0.99) para n\xE3o "puxar" para o lado */
-            transform: scale(0.99); 
+            /* 1. Recua fisicamente */
+            transform: scale(0.96) translateY(4px); 
             
-            /* O efeito vem daqui: */
-            opacity: 0.9;
-            filter: brightness(0.96) saturate(0.5);
-            border-color: rgba(0, 0, 0, 0.2);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1); /* Sombra cai (encostou na mesa) */
+            /* 2. Vidro Transparente */
+            /* Aqui est\xE1 o segredo: diminu\xEDmos a opacidade do BRANCO, n\xE3o do elemento todo */
+            background: rgba(255, 255, 255, 0.40); 
             
-            cursor: pointer; /* Indica clic\xE1vel */
+            /* 3. Aumentamos o Blur do fundo para destacar o que est\xE1 atr\xE1s */
+            backdrop-filter: blur(8px) saturate(100%);
+            -webkit-backdrop-filter: blur(8px) saturate(100%);
+            
+            /* 4. Removemos a sombra pesada (encostou na mesa) */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            
+            /* 5. Borda sutil para definir o vidro */
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            
+            /* Opacidade geral cai um pouco para o texto ficar cinza */
+            opacity: 0.85; 
+            
+            cursor: pointer;
+            z-index: 100 !important; /* Garante que fique atr\xE1s */
+        }
+
+        /* Hover no Idle: Convida o usu\xE1rio a clicar */
+        .cw-module-window.idle:hover {
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(0.97) translateY(4px);
+            opacity: 0.95;
         }
     `,document.head.appendChild(t)}function Ee(t,e,n){let o=document.getElementById(n);if(!e)return;let i=e.getAttribute("data-moved")==="true",s={x:0,y:0};if(o){let u=o.getBoundingClientRect();s.x=u.left+u.width/2,s.y=u.top+u.height/2}let a,c;if(!i)a=window.innerWidth/2,c=window.innerHeight/2;else{let u=e.getBoundingClientRect();a=u.left+u.width/2,c=u.top+u.height/2,a===0&&c===0&&(a=window.innerWidth/2,c=window.innerHeight/2)}let g=s.x-a,m=s.y-c;t?(Q.playGenieOpen(),e.style.transition="none",e.style.opacity="0",e.style.pointerEvents="auto",i?e.style.transform=`translate(${g}px, ${m}px) scale(0.05)`:e.style.transform=`translate(calc(-50% + ${g}px), calc(-50% + ${m}px)) scale(0.05)`,e.offsetWidth,requestAnimationFrame(()=>{e.classList.add("open"),o&&o.classList.add("active"),e.style.transition="opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1)",e.style.opacity="1",i?e.style.transform="translate(0, 0) scale(1)":e.style.transform="translate(-50%, -50%) scale(1)"}),typeof Jt=="function"&&Jt(e,n)):(Q.playSwoosh(),e.style.transition="opacity 0.25s ease, transform 0.3s cubic-bezier(0.5, 0, 1, 1)",e.style.pointerEvents="none",requestAnimationFrame(()=>{e.style.opacity="0",i?e.style.transform=`translate(${g}px, ${m}px) scale(0.1)`:e.style.transform=`translate(calc(-50% + ${g}px), calc(-50% + ${m}px)) scale(0.1)`}),setTimeout(()=>{e.classList.remove("open"),o&&o.classList.remove("active"),e.style.transition="",e.style.transform=""},300),typeof Tt=="function"&&Tt(e))}function Jt(t,e){Tt(t);let n=o=>{if(!t.classList.contains("open"))return;let i=t.contains(o.target),s=document.querySelector(".cw-pill"),a=s&&s.contains(o.target);i?(t.classList.remove("idle"),t.style.zIndex="2147483648"):a||(t.classList.add("idle"),t.style.zIndex="2147483646")};t._idleHandler=n,document.addEventListener("mousedown",n)}function Tt(t){t._idleHandler&&(document.removeEventListener("mousedown",t._idleHandler),t._idleHandler=null)}var to="https://script.google.com/a/macros/google.com/s/AKfycbwxxY5EhL3U1ZIEvs_y28FFeIFr7rMfSzNIljclqPd9Mk58-gx7pBRfZ8pQmXt2P1IMjw/exec",kt="cw_data_broadcast",Zt="cw_data_tips",Co=["Processando sua solicita\xE7\xE3o...","Dica: Mantenha suas notas organizadas.","Aguarde um momento...","Quase l\xE1..."];function eo(t){return new Promise((e,n)=>{let o="cw_cb_"+Math.round(1e4*Math.random()),i=document.createElement("script");window[o]=s=>{document.body.removeChild(i),delete window[o],e(s)},i.src=`${to}?op=${t}&callback=${o}&t=${Date.now()}`,i.onerror=()=>{document.body.removeChild(i),delete window[o],n(new Error("JSONP Load Error"))},document.body.appendChild(i)})}var je={fetchTips:async()=>{try{console.log("\u{1F4E5} Baixando dicas via JSONP...");let t=await eo("tips");t&&t.tips&&Array.isArray(t.tips)&&(localStorage.setItem(Zt,JSON.stringify(t.tips)),console.log("\u2705 Dicas atualizadas:",t.tips.length))}catch(t){console.warn("TechSol: Erro ao baixar dicas (Offline).",t)}},fetchData:async()=>{try{console.log("\u{1F4E5} Baixando Broadcasts via JSONP...");let t=await eo("broadcast");if(t&&t.broadcast)return localStorage.setItem(kt,JSON.stringify(t.broadcast)),console.log("\u2705 Broadcasts atualizados:",t.broadcast.length),t}catch(t){console.warn("TechSol: Erro ao buscar Broadcasts.",t)}return{broadcast:JSON.parse(localStorage.getItem(kt)||"[]")}},getCachedBroadcasts:()=>JSON.parse(localStorage.getItem(kt)||"[]"),getRandomTip:()=>{let t=Co,e=localStorage.getItem(Zt);if(e)try{t=JSON.parse(e)}catch{}return t[Math.floor(Math.random()*t.length)]},logUsage:(t,e="")=>{let o={op:"log",user:window._USER_ID||"agente_anonimo",action:t,meta:e};fetch(to,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(o)}).catch(i=>console.log("Log fail",i))}};var ae={glassBg:"rgba(61, 61, 61, 0.77)",glassBorder:"rgba(255, 255, 255, 0.15)",glassActive:"rgba(79, 79, 79, 0.89)",glassHighlight:"rgba(255, 255, 255, 0.08)",iconIdle:"#c2c5c8ff",iconActive:"#FFFFFF",blue:"#8AB4F8",red:"#F28B82",purple:"#C58AF9",green:"#81C995",orange:"#F9AB00"},lt=t=>new Promise(e=>setTimeout(e,t));function oo(t){let e="cw-command-center-style";if(!document.getElementById(e)){let b=document.createElement("style");b.id=e,b.innerHTML=`
             @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@500&display=swap');
