@@ -88,8 +88,8 @@ function createFloatingWarning(targetElement, message) {
         popup.style.transform = 'translateY(0)';
     });
     
-    // Auto-remove após 20s para não poluir se o usuário ignorar
-    setTimeout(() => { if(document.body.contains(popup)) closeBtn.click(); }, 20000);
+    // Auto-remove após 25s (aumentei um pouco para dar tempo de clicar no link)
+    setTimeout(() => { if(document.body.contains(popup)) closeBtn.click(); }, 25000);
 }
 
 // --- UTILITÁRIO: PREENCHER CAMPO DE EMAIL (CHIP) ---
@@ -278,7 +278,7 @@ export async function runEmailAutomation(cannedResponseText) {
             simularCliqueReal(searchInput);
             document.execCommand('insertText', false, cannedResponseText);
             searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-            await esperar(1500);
+            await esperar(800);
 
             const primeiraOpcao = document.querySelector('material-select-dropdown-item');
             if (primeiraOpcao) {
@@ -337,12 +337,25 @@ export async function runQuickEmail(template) {
         }
     }
 
-    // C. Preencher BCC (Interno)
+    // C. Preencher BCC (Interno) - COM LINK DE AJUDA
     if (pageData.internalEmail) {
         const bccInput = document.querySelector('input[aria-label="Enter Bcc email address"]');
         if (bccInput) {
             await fillField(bccInput, pageData.internalEmail);
-            createFloatingWarning(bccInput, "<strong>Atenção:</strong> Verifique se o e-mail do AM deve estar em cópia.");
+            
+            // Link de consulta
+            const linkUrl = "https://mail.google.com/mail/u/0?ui=2&ik=ed23fb3167&attid=0.1&permmsgid=msg-f:1843445102914241244&th=19953b8dda2302dc&view=fimg&fur=ip&permmsgid=msg-f:1843445102914241244&sz=s0-l75-ft&attbid=ANGjdJ9m7O33cM36sxBYohVD6Qsapyux4PNr8qmTBlZ8zkp_LR79suGZhnxFJtBoFDeyMFygsH_tvCts5fnX0WV4rdClw9YqqR7guLnaXU9UzmZRRMRXEoC7T_MPbwo&disp=emb&realattid=ii_mfmv7wjm1&zw";
+            
+            const warningMsg = `
+                <strong>Atenção:</strong> Verifique se o e-mail do AM deve estar em cópia.
+                <div style="margin-top:4px;">
+                    <a href="${linkUrl}" target="_blank" style="color:#1a73e8;text-decoration:none;font-weight:500;display:inline-flex;align-items:center;">
+                        Consultar Regra <span style="font-size:14px;margin-left:2px;">↗</span>
+                    </a>
+                </div>
+            `;
+            
+            createFloatingWarning(bccInput, warningMsg);
         }
     }
 
