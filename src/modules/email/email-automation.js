@@ -249,7 +249,7 @@ export async function runEmailAutomation(cannedResponseText) {
             const primeiraOpcao = document.querySelector('material-select-dropdown-item');
             if (primeiraOpcao) {
                 simularCliqueReal(primeiraOpcao);
-                await esperar(1500); // Espera o texto entrar
+                await esperar(10000); // Espera o texto entrar
 
                 // Substituição de variáveis do Canned
                 const editorVisivel = getVisibleEditor();
