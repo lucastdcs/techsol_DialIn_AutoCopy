@@ -2,7 +2,7 @@
 
 import {
     stylePopup,
-    styleCredit,
+    // styleCredit (Removido pois não estava sendo usado, mantendo o código limpo)
 } from "../shared/utils.js";
 
 import { createStandardHeader } from "../shared/header-factory.js";
@@ -18,72 +18,104 @@ export function initQuickEmailAssistant() {
     let activeCategory = Object.keys(QUICK_EMAILS)[0];
     let searchTerm = "";
     let currentView = 'list'; // 'list' ou 'detail'
+    let visible = false;
 
-    // --- 1. ESTILOS (Refinados) ---
+    // --- 1. ESTILOS (Refinados: Apple Spring & Google Colors) ---
 
     const styleContainer = {
-        display: "flex", flexDirection: "column", height: "100%", position: "relative", overflow: "hidden",
-        background: "#FAFAFA" // Fundo geral levemente cinza para destacar os cards brancos
+        display: "flex", 
+        flexDirection: "column", 
+        height: "100%", 
+        position: "relative", 
+        overflow: "hidden",
+        background: "#FAFAFA" // Fundo off-white para contraste com cards
     };
 
     const styleNavView = {
-        display: "flex", width: "200%", height: "100%", // Slider
-        transition: "transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)", // Apple Spring
-        transform: "translateX(0)"
+        display: "flex", 
+        width: "200%", // Container com dobro de largura para o slide
+        height: "100%", 
+        transition: "transform 0.5s cubic-bezier(0.19, 1, 0.22, 1)", // Curva 'Apple' suave
+        transform: "translateX(0)",
+        willChange: "transform"
     };
 
     const styleViewPage = {
-        width: "50%", height: "100%", display: "flex", flexDirection: "column",
+        width: "50%", 
+        height: "100%", 
+        display: "flex", 
+        flexDirection: "column",
         overflow: "hidden",
         position: "relative"
     };
 
     const styleSearchInput = {
-        width: "100%", padding: "10px 12px 10px 36px",
-        borderRadius: "8px", border: "none", background: "#F0F2F5",
-        fontSize: "14px", color: "#202124", boxSizing: "border-box", outline: "none",
+        width: "100%", 
+        padding: "10px 12px 10px 36px",
+        borderRadius: "8px", 
+        border: "none", 
+        background: "#F0F2F5",
+        fontSize: "14px", 
+        color: "#202124", 
+        boxSizing: "border-box", 
+        outline: "none",
         transition: "all 0.2s ease",
         backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="%235f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>')`,
-        backgroundRepeat: "no-repeat", backgroundPosition: "10px center",
+        backgroundRepeat: "no-repeat", 
+        backgroundPosition: "10px center",
     };
 
     const styleTabs = {
-        display: "flex", gap: "6px", padding: "4px 4px 8px 4px",
-        overflowX: "auto", scrollbarWidth: "none"
+        display: "flex", 
+        gap: "6px", 
+        padding: "4px 4px 8px 4px",
+        overflowX: "auto", 
+        scrollbarWidth: "none"
     };
 
     const styleTabBtn = {
-        padding: "6px 12px", borderRadius: "16px", border: "1px solid transparent",
-        background: "transparent", color: "#5f6368", fontSize: "12px", fontWeight: "500",
-        cursor: "pointer", transition: "all 0.2s ease", flexShrink: "0"
+        padding: "6px 12px", 
+        borderRadius: "16px", 
+        border: "1px solid transparent",
+        background: "transparent", 
+        color: "#5f6368", 
+        fontSize: "12px", 
+        fontWeight: "500",
+        cursor: "pointer", 
+        transition: "all 0.2s ease", 
+        flexShrink: "0"
     };
 
     const styleTabActive = {
-        background: "#E8F0FE", color: "#1967D2", fontWeight: "600"
+        background: "#E8F0FE", // Azul Google muito claro
+        color: "#1967D2",      // Azul Google escuro
+        fontWeight: "600"
     };
 
     const styleEmailRow = {
-        display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "12px 16px", marginBottom: "6px", borderRadius: "8px",
-        background: "#fff", border: "1px solid #dadce0",
-        cursor: "pointer", transition: "all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)",
-        position: "relative", overflow: "hidden"
+        display: "flex", 
+        alignItems: "center", 
+        justifyContent: "space-between",
+        padding: "12px 16px", 
+        marginBottom: "6px", 
+        borderRadius: "8px",
+        background: "#fff", 
+        border: "1px solid #dadce0",
+        cursor: "pointer", 
+        transition: "all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)",
+        position: "relative", 
+        overflow: "hidden"
     };
 
     // --- CRIAÇÃO DO POPUP ---
-let visible = false;
     const popup = document.createElement("div");
     popup.id = "quick-email-popup";
-
-    // 1. Conecta ao animations.js
     popup.classList.add("cw-module-window");
 
     Object.assign(popup.style, stylePopup, {
         right: "100px", 
         width: "480px", 
         height: "600px",
-        // Removemos opacity/pointerEvents daqui
-        // Mantemos apenas transition de resize se necessário, senão deixe o CSS cuidar
         transition: "width 0.3s ease, height 0.3s ease" 
     });
 
@@ -92,6 +124,7 @@ let visible = false;
     function toggleVisibility() {
         visible = !visible;
         toggleGenieAnimation(visible, popup, 'cw-btn-email');
+        // Reseta para a lista ao fechar
         if (!visible) setTimeout(() => showListView(), 300);
     }
 
@@ -102,21 +135,26 @@ let visible = false;
         animRefs, () => toggleVisibility()
     );
 
-    // CONTAINER
+    // CONTAINER PRINCIPAL
     const mainContainer = document.createElement("div");
     Object.assign(mainContainer.style, styleContainer);
+    
     const slider = document.createElement("div");
     Object.assign(slider.style, styleNavView);
 
-    // --- PÁGINA 1: LISTA ---
+    // --- PÁGINA 1: LISTA (LIST VIEW) ---
     const pageList = document.createElement("div");
     Object.assign(pageList.style, styleViewPage);
 
     const toolbar = document.createElement("div");
     Object.assign(toolbar.style, {
         padding: "16px 16px 4px 16px",
-        flexShrink: "0", background: "#fff", zIndex: "10",
-        display: "flex", flexDirection: "column", gap: "8px",
+        flexShrink: "0", 
+        background: "#fff", 
+        zIndex: "10",
+        display: "flex", 
+        flexDirection: "column", 
+        gap: "8px",
         borderBottom: "1px solid #f1f3f4"
     });
 
@@ -131,21 +169,31 @@ let visible = false;
     Object.assign(tabsContainer.style, styleTabs);
 
     const listContent = document.createElement("div");
-    Object.assign(listContent.style, { padding: "12px 16px", overflowY: "auto", flexGrow: "1" });
+    Object.assign(listContent.style, { 
+        padding: "12px 16px", 
+        overflowY: "auto", 
+        flexGrow: "1" 
+    });
 
     toolbar.appendChild(searchInput);
     toolbar.appendChild(tabsContainer);
     pageList.appendChild(toolbar);
     pageList.appendChild(listContent);
 
-    // --- PÁGINA 2: DETALHE ---
+    // --- PÁGINA 2: DETALHE (DETAIL VIEW) ---
     const pageDetail = document.createElement("div");
     Object.assign(pageDetail.style, styleViewPage);
+    
     const detailContent = document.createElement("div");
-    Object.assign(detailContent.style, { padding: "0", overflowY: "auto", flexGrow: "1", background: "#fff" });
+    Object.assign(detailContent.style, { 
+        padding: "0", 
+        overflowY: "auto", 
+        flexGrow: "1", 
+        background: "#fff" 
+    });
     pageDetail.appendChild(detailContent);
 
-    // Montagem
+    // Montagem da Estrutura
     slider.appendChild(pageList);
     slider.appendChild(pageDetail);
     mainContainer.appendChild(slider);
@@ -155,38 +203,61 @@ let visible = false;
     // Footer
     const footer = document.createElement("div");
     Object.assign(footer.style, {
-        padding: "8px 16px", borderTop: "1px solid #eee", textAlign: "center",
-        fontSize: "10px", color: "#9aa0a6", background: "#fff", flexShrink: "0"
+        padding: "8px 16px", 
+        borderTop: "1px solid #eee", 
+        textAlign: "center",
+        fontSize: "10px", 
+        color: "#9aa0a6", 
+        background: "#fff", 
+        flexShrink: "0"
     });
     footer.textContent = "created by lucaste@";
     popup.appendChild(footer);
 
     document.body.appendChild(popup);
 
-    // --- NAVEGAÇÃO ---
+    // --- FUNÇÕES DE NAVEGAÇÃO E LÓGICA ---
+
+    // Função centralizada para executar o envio com animação
+    async function handleExecution(email, finishCallback) {
+        try {
+            // 1. Fecha janela imediatamente
+            if (visible) toggleVisibility();
+
+            // 2. Inicia animação global
+            const finishLoading = triggerProcessingAnimation();
+
+            // 3. Pausa "dramática" para UX (usuário ver que algo está ocorrendo)
+            await new Promise(resolve => setTimeout(resolve, 800));
+
+            // 4. Executa a inserção do email
+            await runQuickEmail(email);
+
+            // 5. Finaliza animação com sucesso
+            finishLoading();
+
+        } catch (error) {
+            console.error("❌ Erro ao inserir template:", error);
+            // Tenta limpar animação em caso de erro
+            const elOverlay = document.querySelector('.cw-focus-backdrop');
+            if (elOverlay) elOverlay.classList.remove('active');
+        } finally {
+            if (finishCallback) finishCallback();
+        }
+    }
+
     function showDetailView(email) {
         currentView = 'detail';
         slider.style.transform = "translateX(-50%)";
+        
         const iconBack = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`;
         const iconSendWhite = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
 
         detailContent.innerHTML = `
         <style>
-            /* CSS Local para limpar a formatação nativa e deixar elegante */
-            .cw-email-body-content p {
-                margin: 0 0 10px 0 !important; /* Apenas uma margem suave abaixo */
-                line-height: 1.5 !important;
-            }
-            /* Se houver <br> entre <p>, isso evita buracos duplos */
-            .cw-email-body-content br {
-                display: block;
-                content: "";
-                margin-top: 0;
-            }
-            /* Remove margem do último p para não sobrar espaço no fim */
-            .cw-email-body-content p:last-child {
-                margin-bottom: 0 !important;
-            }
+            .cw-email-body-content p { margin: 0 0 10px 0 !important; line-height: 1.5 !important; }
+            .cw-email-body-content br { display: block; content: ""; margin-top: 0; }
+            .cw-email-body-content p:last-child { margin-bottom: 0 !important; }
         </style>
 
         <div style="
@@ -215,13 +286,7 @@ let visible = false;
             
             <div>
                 <div style="font-size:11px; font-weight:700; color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Mensagem</div>
-                
-                <div class="cw-email-body-content" style="
-                    font-size:13px; 
-                    color:#3c4043; 
-                    white-space: normal; /* Mudado de pre-wrap para normal */
-                    padding: 0 4px;
-                ">
+                <div class="cw-email-body-content" style="font-size:13px; color:#3c4043; white-space: normal; padding: 0 4px;">
                     ${email.body}
                 </div>
             </div>
@@ -245,56 +310,27 @@ let visible = false;
             </button>
         </div>
       `;
+      
         const backBtn = detailContent.querySelector('#csa-back-btn');
         backBtn.onmouseover = () => backBtn.style.backgroundColor = "#f1f3f4";
         backBtn.onmouseout = () => backBtn.style.backgroundColor = "transparent";
         backBtn.onclick = showListView;
+
         const insertBtn = detailContent.querySelector('#csa-insert-btn');
         insertBtn.onmouseover = () => insertBtn.style.backgroundColor = "#174ea6";
         insertBtn.onmouseout = () => insertBtn.style.backgroundColor = "#1a73e8";
-        insertBtn.onclick = async () => {
-            console.log("🔍 DEBUG: Clique detectado");
-
-            // Teste do Import
-            console.log("🔍 DEBUG: triggerProcessingAnimation é:", typeof triggerProcessingAnimation);
-
+        
+        insertBtn.onclick = () => {
             insertBtn.style.transform = "scale(0.96)";
-            toggleVisibility();
-            console.log("🔍 DEBUG: Janela fechada");
-
-            try {
-                console.log("🔍 DEBUG: Chamando animação...");
-                const finishLoading = triggerProcessingAnimation();
-
-                // Verifica se a função retornou algo (se retornou, é porque achou os elementos)
-                console.log("🔍 DEBUG: finishLoading é:", typeof finishLoading);
-
-                console.log("🔍 DEBUG: Iniciando espera de 1s...");
-                await new Promise(resolve => setTimeout(resolve, 1000));
-
-                console.log("🔍 DEBUG: Rodando lógica do email...");
-                await runQuickEmail(email);
-
-                console.log("🔍 DEBUG: Finalizando animação...");
-                if (typeof finishLoading === 'function') {
-                    finishLoading();
-                } else {
-                    console.error("❌ ERRO: finishLoading não é uma função! A animação falhou ao iniciar.");
-                }
-
-            } catch (error) {
-                console.error("❌ ERRO NO PROCESSO:", error);
-                // Tenta limpar mesmo assim
-                const elOverlay = document.querySelector('.cw-focus-backdrop');
-                if (elOverlay) elOverlay.classList.remove('active');
-            }
-
-            setTimeout(() => {
-                insertBtn.style.transform = "scale(1)";
-                if (typeof showListView === 'function') showListView();
-            }, 300);
-        }
+            handleExecution(email, () => {
+                setTimeout(() => {
+                    insertBtn.style.transform = "scale(1)";
+                    showListView(); // Volta pra lista após o envio
+                }, 300);
+            });
+        };
     }
+
     function showListView() {
         currentView = 'list';
         slider.style.transform = "translateX(0)";
@@ -309,7 +345,14 @@ let visible = false;
             chip.textContent = catData.title;
             Object.assign(chip.style, styleTabBtn);
             if (activeCategory === catKey && searchTerm === "") Object.assign(chip.style, styleTabActive);
-            chip.onclick = () => { activeCategory = catKey; searchTerm = ""; searchInput.value = ""; renderTabs(); renderEmailList(); };
+            
+            chip.onclick = () => { 
+                activeCategory = catKey; 
+                searchTerm = ""; 
+                searchInput.value = ""; 
+                renderTabs(); 
+                renderEmailList(); 
+            };
             tabsContainer.appendChild(chip);
         });
     }
@@ -327,7 +370,11 @@ let visible = false;
         }
 
         if (emailsToShow.length === 0) {
-            listContent.innerHTML = `<div style="text-align:center; padding:60px 20px; color:#9aa0a6;"><div style="font-size:24px; margin-bottom:8px;">🔍</div><div style="font-size:14px;">Nenhum template encontrado.</div></div>`;
+            listContent.innerHTML = `
+                <div style="text-align:center; padding:60px 20px; color:#9aa0a6;">
+                    <div style="font-size:24px; margin-bottom:8px;">🔍</div>
+                    <div style="font-size:14px;">Nenhum template encontrado.</div>
+                </div>`;
             return;
         }
 
@@ -338,16 +385,18 @@ let visible = false;
             const row = document.createElement("div");
             Object.assign(row.style, styleEmailRow);
             const shortDesc = email.subject.length > 50 ? email.subject.substring(0, 50) + "..." : email.subject;
+            
             row.innerHTML = `
-        <div style="flex-grow: 1; margin-right: 12px; min-width: 0;">
-            <div style="font-size:13px; font-weight:600; color:#202124; margin-bottom:2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${email.name}</div>
-            <div style="font-size:12px; color:#5f6368; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${shortDesc}</div>
-        </div>
-        <div style="display:flex; gap:6px;">
-            <button class="action-btn view" title="Visualizar" style="width:32px; height:32px; border-radius:50%; border:none; background:#f1f3f4; color:#5f6368; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s;">${iconEye}</button>
-            <button class="action-btn send" title="Inserir Agora" style="width:32px; height:32px; border-radius:50%; border:none; background:#e8f0fe; color:#1a73e8; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s;">${iconSend}</button>
-        </div>
-      `;
+                <div style="flex-grow: 1; margin-right: 12px; min-width: 0;">
+                    <div style="font-size:13px; font-weight:600; color:#202124; margin-bottom:2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${email.name}</div>
+                    <div style="font-size:12px; color:#5f6368; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${shortDesc}</div>
+                </div>
+                <div style="display:flex; gap:6px;">
+                    <button class="action-btn view" title="Visualizar" style="width:32px; height:32px; border-radius:50%; border:none; background:#f1f3f4; color:#5f6368; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s;">${iconEye}</button>
+                    <button class="action-btn send" title="Inserir Agora" style="width:32px; height:32px; border-radius:50%; border:none; background:#e8f0fe; color:#1a73e8; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s;">${iconSend}</button>
+                </div>
+            `;
+            
             row.onmouseenter = () => { row.style.background = "#F8F9FA"; row.style.borderColor = "#1a73e8"; };
             row.onmouseleave = () => { row.style.background = "#fff"; row.style.borderColor = "#dadce0"; };
 
@@ -357,40 +406,15 @@ let visible = false;
             btnView.onmouseleave = () => { btnView.style.background = "#f1f3f4"; btnView.style.color = "#5f6368"; };
 
             const btnSend = row.querySelector('.send');
-            // ... (criação do botão acima) ...
-
-            btnSend.onclick = async (e) => { 
+            btnSend.onclick = (e) => { 
                 e.stopPropagation(); 
-                
-                // 1. Feedback Tátil
                 btnSend.style.transform = "scale(0.9)"; 
-                setTimeout(() => btnSend.style.transform = "scale(1)", 150); 
+                setTimeout(() => btnSend.style.transform = "scale(1)", 150);
                 
-                // 2. Fecha a Janela IMEDIATAMENTE
-                toggleVisibility(); 
-
-                // 3. LIGA A ANIMAÇÃO (O passo que faltava)
-                // Certifique-se que triggerProcessingAnimation está importado no topo deste arquivo!
-                const finishLoading = triggerProcessingAnimation();
-
-                try {
-                    // 4. PAUSA DRAMÁTICA (800ms)
-                    // Essencial para o usuário ver o loader antes do Gmail abrir
-                    await new Promise(resolve => setTimeout(resolve, 800));
-
-                    // 5. Executa o Email
-                    await runQuickEmail(email);
-                    
-                    // 6. Finaliza (Check Verde)
-                    finishLoading();
-
-                } catch (err) {
-                    console.error("Erro no envio rápido:", err);
-                    finishLoading(); // Destrava em caso de erro
-                }
+                // Usa a função centralizada handleExecution
+                handleExecution(email);
             };
             
-            // ... (os onmouseenter/leave continuam iguais) ...
             btnSend.onmouseenter = () => { btnSend.style.background = "#1a73e8"; btnSend.style.color = "#fff"; btnSend.style.boxShadow = "0 2px 6px rgba(26,115,232,0.3)"; };
             btnSend.onmouseleave = () => { btnSend.style.background = "#e8f0fe"; btnSend.style.color = "#1a73e8"; btnSend.style.boxShadow = "none"; };
 
