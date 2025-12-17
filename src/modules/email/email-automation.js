@@ -278,7 +278,7 @@ export async function runEmailAutomation(cannedResponseText) {
             simularCliqueReal(searchInput);
             document.execCommand('insertText', false, cannedResponseText);
             searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-            await esperar(800);
+            await esperar(3500);
 
             const primeiraOpcao = document.querySelector('material-select-dropdown-item');
             if (primeiraOpcao) {
