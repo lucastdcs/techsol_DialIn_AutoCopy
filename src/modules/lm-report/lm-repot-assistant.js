@@ -90,6 +90,11 @@ const LINKS_DB = {
         url: "https://developers.google.com/tag-platform/security/concepts/consent-mode?hl=pt-br",
         desc: "Doc. oficial sobre Consent Mode",
       },
+      {
+        name: "Cursos SkillShop",
+        url: "https://skillshop.withgoogle.com/intl/pt-BR_ALL/",
+        desc: "Cursos sobre as ferramentas do Google.",
+      },
     ],
   },
   outros: {
