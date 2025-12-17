@@ -2,17 +2,16 @@
 
 import {
     stylePopup,
-    // styleCredit (Removido pois não estava sendo usado, mantendo o código limpo)
 } from "../shared/utils.js";
 
 import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from '../shared/animations.js';
-import { QUICK_EMAILS } from "./quick-email-data.js";
+import { QUICK_EMAILS } from "./quick-email-data.js"; // Pode manter o nome do arquivo de dados ou renomear se preferir
 import { runQuickEmail } from "../email/email-automation.js";
 import { triggerProcessingAnimation } from "../shared/command-center.js";
 
-export function initQuickEmailAssistant() {
-    const CURRENT_VERSION = "v4.0.0"; // Versão Master-Detail Final
+export function initCRAssistant() { // Renomeado para refletir CR Assistant
+    const CURRENT_VERSION = "v4.1.0 CR"; // Versão focada em CRs
 
     // --- ESTADO ---
     let activeCategory = Object.keys(QUICK_EMAILS)[0];
@@ -28,14 +27,14 @@ export function initQuickEmailAssistant() {
         height: "100%", 
         position: "relative", 
         overflow: "hidden",
-        background: "#FAFAFA" // Fundo off-white para contraste com cards
+        background: "#FAFAFA"
     };
 
     const styleNavView = {
         display: "flex", 
-        width: "200%", // Container com dobro de largura para o slide
+        width: "200%", 
         height: "100%", 
-        transition: "transform 0.5s cubic-bezier(0.19, 1, 0.22, 1)", // Curva 'Apple' suave
+        transition: "transform 0.5s cubic-bezier(0.19, 1, 0.22, 1)", // Apple Spring
         transform: "translateX(0)",
         willChange: "transform"
     };
@@ -51,9 +50,9 @@ export function initQuickEmailAssistant() {
 
     const styleSearchInput = {
         width: "100%", 
-        padding: "10px 12px 10px 36px",
-        borderRadius: "8px", 
-        border: "none", 
+        padding: "12px 12px 12px 40px", // Um pouco mais alto para facilidade de toque
+        borderRadius: "12px", // Bordas mais arredondadas (estilo iOS Moderno)
+        border: "1px solid transparent", 
         background: "#F0F2F5",
         fontSize: "14px", 
         color: "#202124", 
@@ -62,22 +61,22 @@ export function initQuickEmailAssistant() {
         transition: "all 0.2s ease",
         backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="%235f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>')`,
         backgroundRepeat: "no-repeat", 
-        backgroundPosition: "10px center",
+        backgroundPosition: "12px center",
     };
 
     const styleTabs = {
         display: "flex", 
-        gap: "6px", 
-        padding: "4px 4px 8px 4px",
+        gap: "8px", 
+        padding: "8px 4px 12px 4px",
         overflowX: "auto", 
         scrollbarWidth: "none"
     };
 
     const styleTabBtn = {
-        padding: "6px 12px", 
-        borderRadius: "16px", 
-        border: "1px solid transparent",
-        background: "transparent", 
+        padding: "6px 14px", 
+        borderRadius: "20px", 
+        border: "1px solid #dadce0", // Borda sutil para parecer "Tags"
+        background: "#fff", 
         color: "#5f6368", 
         fontSize: "12px", 
         fontWeight: "500",
@@ -87,29 +86,31 @@ export function initQuickEmailAssistant() {
     };
 
     const styleTabActive = {
-        background: "#E8F0FE", // Azul Google muito claro
-        color: "#1967D2",      // Azul Google escuro
+        background: "#E8F0FE", 
+        color: "#1967D2",      
+        borderColor: "#E8F0FE",
         fontWeight: "600"
     };
 
-    const styleEmailRow = {
+    const styleCRRow = {
         display: "flex", 
         alignItems: "center", 
         justifyContent: "space-between",
-        padding: "12px 16px", 
-        marginBottom: "6px", 
-        borderRadius: "8px",
+        padding: "14px 16px", 
+        marginBottom: "8px", 
+        borderRadius: "12px", // Cards mais modernos
         background: "#fff", 
         border: "1px solid #dadce0",
         cursor: "pointer", 
         transition: "all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)",
         position: "relative", 
-        overflow: "hidden"
+        overflow: "hidden",
+        boxShadow: "0 1px 2px rgba(0,0,0,0.02)"
     };
 
     // --- CRIAÇÃO DO POPUP ---
     const popup = document.createElement("div");
-    popup.id = "quick-email-popup";
+    popup.id = "cr-assistant-popup"; // ID atualizado
     popup.classList.add("cw-module-window");
 
     Object.assign(popup.style, stylePopup, {
@@ -123,15 +124,15 @@ export function initQuickEmailAssistant() {
 
     function toggleVisibility() {
         visible = !visible;
-        toggleGenieAnimation(visible, popup, 'cw-btn-email');
-        // Reseta para a lista ao fechar
+        // Assume que existe um botão com ID 'cw-btn-cr' ou mantém 'cw-btn-email'
+        toggleGenieAnimation(visible, popup, 'cw-btn-email'); 
         if (!visible) setTimeout(() => showListView(), 300);
     }
 
-    // HEADER
+    // HEADER (Atualizado para "Smart CRs")
     const header = createStandardHeader(
-        popup, "Emails Rápidos", CURRENT_VERSION,
-        "Selecione, visualize e insira com um clique.",
+        popup, "Smart CRs", CURRENT_VERSION,
+        "Biblioteca de Respostas Prontas (Canned Responses)",
         animRefs, () => toggleVisibility()
     );
 
@@ -142,27 +143,37 @@ export function initQuickEmailAssistant() {
     const slider = document.createElement("div");
     Object.assign(slider.style, styleNavView);
 
-    // --- PÁGINA 1: LISTA (LIST VIEW) ---
+    // --- PÁGINA 1: LISTA (CR CATALOG) ---
     const pageList = document.createElement("div");
     Object.assign(pageList.style, styleViewPage);
 
     const toolbar = document.createElement("div");
     Object.assign(toolbar.style, {
-        padding: "16px 16px 4px 16px",
+        padding: "20px 20px 4px 20px", // Mais respiro
         flexShrink: "0", 
         background: "#fff", 
         zIndex: "10",
         display: "flex", 
         flexDirection: "column", 
-        gap: "8px",
+        gap: "10px",
         borderBottom: "1px solid #f1f3f4"
     });
 
     const searchInput = document.createElement("input");
-    searchInput.placeholder = "Buscar template...";
+    searchInput.placeholder = "Buscar CR por nome ou assunto...";
     Object.assign(searchInput.style, styleSearchInput);
-    searchInput.onfocus = () => { searchInput.style.background = "#fff"; searchInput.style.boxShadow = "0 2px 8px rgba(0,0,0,0.05)"; };
-    searchInput.onblur = () => { searchInput.style.background = "#F0F2F5"; searchInput.style.boxShadow = "none"; };
+    
+    // Efeito de foco mais "Apple"
+    searchInput.onfocus = () => { 
+        searchInput.style.background = "#fff"; 
+        searchInput.style.border = "1px solid #1a73e8";
+        searchInput.style.boxShadow = "0 0 0 4px rgba(26, 115, 232, 0.1)"; 
+    };
+    searchInput.onblur = () => { 
+        searchInput.style.background = "#F0F2F5"; 
+        searchInput.style.border = "1px solid transparent";
+        searchInput.style.boxShadow = "none"; 
+    };
     animRefs.focusElement = searchInput;
 
     const tabsContainer = document.createElement("div");
@@ -170,7 +181,7 @@ export function initQuickEmailAssistant() {
 
     const listContent = document.createElement("div");
     Object.assign(listContent.style, { 
-        padding: "12px 16px", 
+        padding: "16px 20px", 
         overflowY: "auto", 
         flexGrow: "1" 
     });
@@ -180,7 +191,7 @@ export function initQuickEmailAssistant() {
     pageList.appendChild(toolbar);
     pageList.appendChild(listContent);
 
-    // --- PÁGINA 2: DETALHE (DETAIL VIEW) ---
+    // --- PÁGINA 2: DETALHE (CR PREVIEW) ---
     const pageDetail = document.createElement("div");
     Object.assign(pageDetail.style, styleViewPage);
     
@@ -193,7 +204,7 @@ export function initQuickEmailAssistant() {
     });
     pageDetail.appendChild(detailContent);
 
-    // Montagem da Estrutura
+    // Montagem
     slider.appendChild(pageList);
     slider.appendChild(pageDetail);
     mainContainer.appendChild(slider);
@@ -203,42 +214,34 @@ export function initQuickEmailAssistant() {
     // Footer
     const footer = document.createElement("div");
     Object.assign(footer.style, {
-        padding: "8px 16px", 
+        padding: "10px 16px", 
         borderTop: "1px solid #eee", 
         textAlign: "center",
-        fontSize: "10px", 
+        fontSize: "11px", 
         color: "#9aa0a6", 
         background: "#fff", 
-        flexShrink: "0"
+        flexShrink: "0",
+        fontFamily: "monospace" // Estilo tech
     });
-    footer.textContent = "created by lucaste@";
+    footer.textContent = "CR MANAGER SYSTEM • BY LUCASTE@";
     popup.appendChild(footer);
 
     document.body.appendChild(popup);
 
     // --- FUNÇÕES DE NAVEGAÇÃO E LÓGICA ---
 
-    // Função centralizada para executar o envio com animação
     async function handleExecution(email, finishCallback) {
         try {
-            // 1. Fecha janela imediatamente
             if (visible) toggleVisibility();
-
-            // 2. Inicia animação global
             const finishLoading = triggerProcessingAnimation();
-
-            // 3. Pausa "dramática" para UX (usuário ver que algo está ocorrendo)
+            
+            // Simula o tempo de "Fetching CR..."
             await new Promise(resolve => setTimeout(resolve, 800));
-
-            // 4. Executa a inserção do email
+            
             await runQuickEmail(email);
-
-            // 5. Finaliza animação com sucesso
             finishLoading();
-
         } catch (error) {
-            console.error("❌ Erro ao inserir template:", error);
-            // Tenta limpar animação em caso de erro
+            console.error("❌ Erro ao aplicar CR:", error);
             const elOverlay = document.querySelector('.cw-focus-backdrop');
             if (elOverlay) elOverlay.classList.remove('active');
         } finally {
@@ -251,42 +254,47 @@ export function initQuickEmailAssistant() {
         slider.style.transform = "translateX(-50%)";
         
         const iconBack = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`;
-        const iconSendWhite = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
+        const iconCheck = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
 
         detailContent.innerHTML = `
         <style>
-            .cw-email-body-content p { margin: 0 0 10px 0 !important; line-height: 1.5 !important; }
-            .cw-email-body-content br { display: block; content: ""; margin-top: 0; }
-            .cw-email-body-content p:last-child { margin-bottom: 0 !important; }
+            .cw-cr-content p { margin: 0 0 10px 0 !important; line-height: 1.6 !important; }
+            .cw-cr-content br { display: block; content: ""; margin-top: 0; }
         </style>
 
         <div style="
             position: sticky; top: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(10px);
-            border-bottom: 1px solid #f1f3f4; padding: 12px 20px; z-index: 10;
-            display: flex; align-items: center; gap: 8px;
+            border-bottom: 1px solid #f1f3f4; padding: 16px 20px; z-index: 10;
+            display: flex; align-items: center; gap: 12px;
         ">
             <button id="csa-back-btn" style="
-                background:none; border:none; cursor:pointer; display:flex; align-items:center; justify-content: center;
-                color:#5f6368; width: 32px; height: 32px; margin-left:-8px; border-radius:50%; transition:background 0.2s;
+                background: #f1f3f4; border:none; cursor:pointer; display:flex; align-items:center; justify-content: center;
+                color:#5f6368; width: 36px; height: 36px; border-radius:50%; transition:all 0.2s;
             ">
                 ${iconBack}
             </button>
-            <div style="font-size:15px; font-weight:600; color:#202124; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                ${email.name}
+            <div style="flex-grow:1;">
+                <div style="font-size:10px; font-weight:700; color:#9aa0a6; text-transform:uppercase; letter-spacing:0.5px;">Visualizando CR</div>
+                <div style="font-size:16px; font-weight:600; color:#202124; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width:320px;">
+                    ${email.name}
+                </div>
             </div>
         </div>
 
-        <div style="padding: 20px 20px 0 20px;">
-            <div style="margin-bottom: 16px;">
-                <div style="font-size:11px; font-weight:700; color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Assunto</div>
-                <div style="font-size:13px; font-weight:500; color:#202124; padding: 10px; background: #F8F9FA; border-radius: 8px; border: 1px solid #eee;">
+        <div style="padding: 24px 24px 0 24px;">
+            <div style="margin-bottom: 20px;">
+                <div style="font-size:11px; font-weight:700; color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Assunto (Subject)</div>
+                <div style="font-size:14px; font-weight:400; color:#202124; padding: 12px 16px; background: #fff; border-radius: 8px; border: 1px solid #dadce0; box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);">
                     ${email.subject}
                 </div>
             </div>
             
             <div>
-                <div style="font-size:11px; font-weight:700; color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px;">Mensagem</div>
-                <div class="cw-email-body-content" style="font-size:13px; color:#3c4043; white-space: normal; padding: 0 4px;">
+                <div style="font-size:11px; font-weight:700; color:#1a73e8; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Corpo (Body)</div>
+                <div class="cw-cr-content" style="
+                    font-size:13px; color:#3c4043; white-space: normal; padding: 16px;
+                    background: #f8f9fa; border-radius: 8px; border: 1px dashed #dadce0;
+                ">
                     ${email.body}
                 </div>
             </div>
@@ -295,26 +303,26 @@ export function initQuickEmailAssistant() {
         <div style="
             position: sticky; bottom: 0; left: 0; width: 100%; 
             padding: 20px; box-sizing: border-box;
-            background: linear-gradient(to top, #ffffff 80%, rgba(255,255,255,0)); 
-            margin-top: auto; 
+            background: linear-gradient(to top, #ffffff 90%, rgba(255,255,255,0)); 
+            margin-top: auto; display: flex; flex-direction: column; gap: 8px;
         ">
             <button id="csa-insert-btn" style="
-                width: 100%; padding: 12px; 
-                background: #1a73e8; color: white; border: none; border-radius: 8px; 
+                width: 100%; padding: 14px; 
+                background: #1a73e8; color: white; border: none; border-radius: 12px; 
                 font-weight: 600; font-size: 14px; cursor: pointer; 
-                box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+                box-shadow: 0 4px 12px rgba(26, 115, 232, 0.25);
                 display: flex; align-items: center; justify-content: center; gap: 8px;
                 transition: transform 0.1s, background 0.2s;
             ">
-                ${iconSendWhite} Inserir Template
+                ${iconCheck} Aplicar esta CR
             </button>
         </div>
       `;
       
         const backBtn = detailContent.querySelector('#csa-back-btn');
-        backBtn.onmouseover = () => backBtn.style.backgroundColor = "#f1f3f4";
-        backBtn.onmouseout = () => backBtn.style.backgroundColor = "transparent";
         backBtn.onclick = showListView;
+        backBtn.onmouseenter = () => backBtn.style.background = "#e8eaed";
+        backBtn.onmouseleave = () => backBtn.style.background = "#f1f3f4";
 
         const insertBtn = detailContent.querySelector('#csa-insert-btn');
         insertBtn.onmouseover = () => insertBtn.style.backgroundColor = "#174ea6";
@@ -325,7 +333,7 @@ export function initQuickEmailAssistant() {
             handleExecution(email, () => {
                 setTimeout(() => {
                     insertBtn.style.transform = "scale(1)";
-                    showListView(); // Volta pra lista após o envio
+                    showListView(); 
                 }, 300);
             });
         };
@@ -342,7 +350,7 @@ export function initQuickEmailAssistant() {
         Object.keys(QUICK_EMAILS).forEach((catKey) => {
             const catData = QUICK_EMAILS[catKey];
             const chip = document.createElement("button");
-            chip.textContent = catData.title;
+            chip.textContent = catData.title; // Ex: "Projetos", "Financeiro"
             Object.assign(chip.style, styleTabBtn);
             if (activeCategory === catKey && searchTerm === "") Object.assign(chip.style, styleTabActive);
             
@@ -360,9 +368,14 @@ export function initQuickEmailAssistant() {
     function renderEmailList() {
         listContent.innerHTML = "";
         let emailsToShow = [];
+        
+        // Lógica de busca refinada
         if (searchTerm.trim() !== "") {
             Object.values(QUICK_EMAILS).forEach((cat) => {
-                const found = cat.emails.filter((e) => e.name.toLowerCase().includes(searchTerm.toLowerCase()));
+                const found = cat.emails.filter((e) => 
+                    e.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                    e.subject.toLowerCase().includes(searchTerm.toLowerCase())
+                );
                 emailsToShow = [...emailsToShow, ...found];
             });
         } else if (QUICK_EMAILS[activeCategory]) {
@@ -371,52 +384,52 @@ export function initQuickEmailAssistant() {
 
         if (emailsToShow.length === 0) {
             listContent.innerHTML = `
-                <div style="text-align:center; padding:60px 20px; color:#9aa0a6;">
-                    <div style="font-size:24px; margin-bottom:8px;">🔍</div>
-                    <div style="font-size:14px;">Nenhum template encontrado.</div>
+                <div style="text-align:center; padding:80px 20px; color:#9aa0a6;">
+                    <div style="font-size:32px; margin-bottom:12px; opacity:0.5;">📂</div>
+                    <div style="font-size:15px; font-weight:500;">Nenhuma CR encontrada</div>
+                    <div style="font-size:12px; margin-top:4px;">Tente buscar por outro termo.</div>
                 </div>`;
             return;
         }
 
-        const iconSend = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
-        const iconEye = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+        const iconArrow = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dadce0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+        const iconDoc = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>`;
 
         emailsToShow.forEach((email) => {
             const row = document.createElement("div");
-            Object.assign(row.style, styleEmailRow);
-            const shortDesc = email.subject.length > 50 ? email.subject.substring(0, 50) + "..." : email.subject;
+            Object.assign(row.style, styleCRRow);
+            const shortDesc = email.subject.length > 45 ? email.subject.substring(0, 45) + "..." : email.subject;
             
             row.innerHTML = `
-                <div style="flex-grow: 1; margin-right: 12px; min-width: 0;">
-                    <div style="font-size:13px; font-weight:600; color:#202124; margin-bottom:2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${email.name}</div>
-                    <div style="font-size:12px; color:#5f6368; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${shortDesc}</div>
+                <div style="
+                    width:36px; height:36px; border-radius:8px; background:#E8F0FE; 
+                    display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-right:14px;
+                ">
+                    ${iconDoc}
                 </div>
-                <div style="display:flex; gap:6px;">
-                    <button class="action-btn view" title="Visualizar" style="width:32px; height:32px; border-radius:50%; border:none; background:#f1f3f4; color:#5f6368; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s;">${iconEye}</button>
-                    <button class="action-btn send" title="Inserir Agora" style="width:32px; height:32px; border-radius:50%; border:none; background:#e8f0fe; color:#1a73e8; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all 0.2s;">${iconSend}</button>
+                <div style="flex-grow: 1; min-width: 0;">
+                    <div style="font-size:14px; font-weight:600; color:#202124; margin-bottom:3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        ${email.name}
+                    </div>
+                    <div style="font-size:12px; color:#5f6368; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        ${shortDesc}
+                    </div>
                 </div>
+                <div style="margin-left:8px;">${iconArrow}</div>
             `;
             
-            row.onmouseenter = () => { row.style.background = "#F8F9FA"; row.style.borderColor = "#1a73e8"; };
-            row.onmouseleave = () => { row.style.background = "#fff"; row.style.borderColor = "#dadce0"; };
-
-            const btnView = row.querySelector('.view');
-            btnView.onclick = (e) => { e.stopPropagation(); showDetailView(email); };
-            btnView.onmouseenter = () => { btnView.style.background = "#d2e3fc"; btnView.style.color = "#174ea6"; };
-            btnView.onmouseleave = () => { btnView.style.background = "#f1f3f4"; btnView.style.color = "#5f6368"; };
-
-            const btnSend = row.querySelector('.send');
-            btnSend.onclick = (e) => { 
-                e.stopPropagation(); 
-                btnSend.style.transform = "scale(0.9)"; 
-                setTimeout(() => btnSend.style.transform = "scale(1)", 150);
-                
-                // Usa a função centralizada handleExecution
-                handleExecution(email);
+            row.onmouseenter = () => { 
+                row.style.background = "#fff"; 
+                row.style.borderColor = "#1a73e8"; 
+                row.style.boxShadow = "0 4px 12px rgba(26,115,232,0.1)";
+                row.style.transform = "translateY(-1px)";
             };
-            
-            btnSend.onmouseenter = () => { btnSend.style.background = "#1a73e8"; btnSend.style.color = "#fff"; btnSend.style.boxShadow = "0 2px 6px rgba(26,115,232,0.3)"; };
-            btnSend.onmouseleave = () => { btnSend.style.background = "#e8f0fe"; btnSend.style.color = "#1a73e8"; btnSend.style.boxShadow = "none"; };
+            row.onmouseleave = () => { 
+                row.style.background = "#fff"; 
+                row.style.borderColor = "#dadce0"; 
+                row.style.boxShadow = "0 1px 2px rgba(0,0,0,0.02)";
+                row.style.transform = "translateY(0)";
+            };
 
             row.onclick = () => showDetailView(email);
             listContent.appendChild(row);
