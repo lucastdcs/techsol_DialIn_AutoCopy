@@ -24,12 +24,10 @@ export function initCommandCenter(actions) {
   if (!document.getElementById(styleId)) {
     const style = document.createElement("style");
     style.id = styleId;
-    style.innerHTML = `
+style.innerHTML = `
         @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@500&display=swap');
 
-        /* Animação Elástica Personalizada */
-        :root { --cw-spring: cubic-bezier(0.34, 1.56, 0.64, 1); }
-
+        /* Overlay do Sistema */
         .cw-focus-backdrop {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px);
@@ -38,146 +36,123 @@ export function initCommandCenter(actions) {
         }
         .cw-focus-backdrop.active { opacity: 1; pointer-events: auto; }
 
-        /* --- PÍLULA (CONTAINER) --- */
+        /* --- A PÍLULA (Container Principal) --- */
         .cw-pill {
             position: fixed; top: 30%; right: 24px;
-            display: flex; flex-direction: column; align-items: center;
+            display: flex; flex-direction: column; align-items: center; 
             
-            /* Largura Fixa e Padding Ajustado */
+            /* Largura Fixa e Padding Controlado */
             width: 56px; 
-            padding: 8px 0 16px 0; 
-            gap: 8px;
+            padding: 0; /* Padding zero, controlado internamente */
             
             background: ${COLORS.glassBg};
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-            border: 1px solid ${COLORS.glassBorder};
-            border-radius: 28px;
-            box-shadow: 0 12px 32px rgba(0,0,0,0.3);
-            overflow: hidden; /* Importante para cortar ao fechar */
+            border: 1px solid ${COLORS.glassBorder}; 
+            border-radius: 50px; /* Borda redonda sempre */
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4); 
             z-index: 2147483647;
-
-            /* Transições: Altura Elástica, Resto Suave */
-            transition: 
-                max-height 0.6s var(--cw-spring),
-                padding 0.4s ease,
-                background 0.3s ease,
-                opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
-                /* Note: top/left (drag) não estão aqui para serem instantâneos via JS */
             
-            max-height: 600px; /* Aberto */
+            overflow: hidden; /* Essencial para a animação vertical */
+
+            /* Animação Elástica Vertical (Cubic Bezier) */
+            /* Note que NÃO animamos width, left ou top aqui para não estragar o drag */
+            transition: 
+                max-height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                opacity 0.4s ease-out, 
+                transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+
+            /* Estado Aberto (Altura suficiente para tudo) */
+            max-height: 600px;
+            
             opacity: 0; transform: translateX(40px) scale(0.95);
         }
         .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
-        /* --- ESTADO COLAPSADO (BOLA) --- */
+        /* --- ESTADO COLAPSADO (Apenas o Header visível) --- */
         .cw-pill.collapsed {
-            max-height: 56px !important; /* Altura do botão */
-            padding: 0 !important;       /* Remove padding */
-            gap: 0 !important;
-            border-radius: 50% !important;
-            background: rgba(30, 30, 30, 1);
-            justify-content: center; 
+            max-height: 64px !important; /* Altura exata do Header + Margens */
+            background: rgba(61, 61, 61, 0.95); /* Levemente mais escuro */
         }
 
-        /* --- BOTÃO DA MARCA (NEXUS) --- */
-        .cw-brand-btn {
-            width: 44px; height: 44px; flex-shrink: 0;
-            border-radius: 50%; border: none; background: transparent;
+        /* --- HEADER DA MARCA (O Novo Grip) --- */
+        .cw-brand-header {
+            width: 100%;
+            height: 64px; /* Altura fixa para o topo */
             display: flex; align-items: center; justify-content: center;
-            cursor: pointer; position: relative; z-index: 20;
-            color: #fff;
-            transition: transform 0.6s var(--cw-spring);
+            cursor: grab; /* Cursor de mãozinha */
+            flex-shrink: 0;
+            z-index: 20;
+            
+            /* Separador Visual (Linha sutil abaixo) */
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 4px;
         }
         
-        /* Gradiente no Hover */
-        .cw-brand-btn::before {
-            content: ''; position: absolute; inset: 0; border-radius: 50%;
-            background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0));
-            opacity: 0; transition: opacity 0.3s ease; z-index: -1;
-        }
-        .cw-brand-btn:hover::before { opacity: 1; }
-        .cw-brand-btn:hover { transform: scale(1.1); }
-        .cw-brand-btn svg { width: 26px; height: 26px; filter: drop-shadow(0 0 4px rgba(255,255,255,0.3)); }
+        .cw-brand-header:active { cursor: grabbing; }
 
-        /* Posição Absoluta quando Fechado (Centralização Perfeita) */
-        .cw-pill.collapsed .cw-brand-btn {
-            position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%) rotate(-180deg);
-            margin: 0;
+        /* O Ícone da Marca */
+        .cw-brand-icon {
+            width: 28px; height: 28px;
+            color: #fff;
+            /* Gradiente/Brilho no ícone */
+            filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.4));
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        /* Esconde itens internos ao fechar */
-        .cw-pill.collapsed .cw-btn, 
-        .cw-pill.collapsed .cw-sep,
-        .cw-pill.collapsed .cw-grip,
-        .cw-pill.collapsed .cw-status-container {
+        /* Feedback de Hover no Header */
+        .cw-brand-header:hover .cw-brand-icon {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 10px rgba(138, 180, 248, 0.6)); /* Brilho azulado */
+        }
+
+        /* --- MÓDULOS (Container dos botões) --- */
+        .cw-modules-container {
+            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            padding-bottom: 16px;
+            width: 100%;
+            transition: opacity 0.2s ease;
+        }
+        
+        /* Quando fecha, os módulos somem rápido */
+        .cw-pill.collapsed .cw-modules-container {
             opacity: 0; pointer-events: none;
-            transition: opacity 0.1s ease;
         }
 
-        /* --- OUTROS ITENS (MANTIDOS IGUAIS) --- */
-        .cw-grip {
-            width: 100%; height: 12px; display: flex; align-items: center; justify-content: center; 
-            cursor: grab; margin-bottom: 2px; flex-shrink: 0; opacity: 0.3; transition: opacity 0.2s;
-        }
-        .cw-grip:hover { opacity: 1; }
-        .cw-grip-bar { width: 20px; height: 3px; background-color: ${COLORS.iconIdle}; border-radius: 4px; }
-
+        /* --- BOTÕES ORIGINAIS (Preservados) --- */
         .cw-btn {
-            width: 40px; height: 40px; border-radius: 50%; border: none; background: transparent;
-            display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative; 
-            color: ${COLORS.iconIdle}; transition: all 0.2s ease; flex-shrink: 0;
+            width: 40px; height: 40px; 
+            border-radius: 50%; border: none; background: transparent;
+            display: flex; align-items: center; justify-content: center; 
+            cursor: pointer; position: relative; color: ${COLORS.iconIdle};
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            flex-shrink: 0;
         }
+        /* ... (Mantenha o resto do CSS original dos botões, active, hover, badges etc) ... */
         .cw-btn:hover { background: ${COLORS.glassHighlight}; color: ${COLORS.iconActive}; transform: scale(1.1); }
-        .cw-btn svg { width: 22px; height: 22px; fill: currentColor; pointer-events: none; }
-
         .cw-btn.notes.active { color: ${COLORS.blue} !important; background: rgba(138, 180, 248, 0.15); }
         .cw-btn.email.active { color: ${COLORS.red} !important; background: rgba(242, 139, 130, 0.15); }
         .cw-btn.script.active { color: ${COLORS.purple} !important; background: rgba(197, 138, 249, 0.15); }
         .cw-btn.links.active { color: ${COLORS.green} !important; background: rgba(129, 201, 149, 0.15); }
         .cw-btn.broadcast.active { color: ${COLORS.orange} !important; background: rgba(249, 171, 0, 0.15); }
-
-        .cw-sep { width: 20px; height: 1px; background: rgba(255,255,255,0.2); margin: 4px 0; flex-shrink: 0; }
-
-        .cw-badge {
-            position: absolute; top: 8px; right: 8px; width: 8px; height: 8px;
-            background-color: #d93025; border-radius: 50%; border: 1px solid #fff; pointer-events: none;
-            z-index: 10; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
+        .cw-btn::before { content: ''; position: absolute; bottom: 2px; left: 50%; width: 4px; height: 4px; border-radius: 50%; background-color: currentColor; box-shadow: 0 0 6px currentColor; transform: translateX(-50%) scale(0); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none; }
+        .cw-btn.active::before { transform: translateX(-50%) scale(1); }
+        .cw-btn svg { width: 22px; height: 22px; fill: currentColor; pointer-events: none; }
+        
+        .cw-badge { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background-color: #d93025; border-radius: 50%; border: 1px solid #fff; pointer-events: none; box-shadow: 0 1px 2px rgba(0,0,0,0.2); z-index: 10; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
-
-        /* Tooltips Internos (Label Flutuante) */
-        .cw-dynamic-label {
-            position: absolute; top: 18px; right: 64px;
-            background: rgba(0,0,0,0.9); color: #fff; padding: 6px 12px;
-            border-radius: 6px; font-family: 'Google Sans', sans-serif; font-size: 12px; font-weight: 500;
-            pointer-events: none; opacity: 0; transform: translateX(10px);
-            transition: all 0.2s ease; white-space: nowrap; border: 1px solid rgba(255,255,255,0.1);
-        }
-        .cw-dynamic-label.visible { opacity: 1; transform: translateX(0); }
-
-        /* --- MODO ILHA DINÂMICA (ANIMAÇÃO) --- */
-        .cw-pill.processing-center {
-            top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;
-            width: 320px !important; height: 110px !important; border-radius: 32px !important; max-height: unset !important;
-            background: #202124 !important; padding: 0 !important;
-            box-shadow: 0 40px 80px rgba(0,0,0,0.5) !important;
-            display: flex !important; flex-direction: column !important; justify-content: center !important;
-        }
-        .cw-pill.processing-center > *:not(.cw-center-stage) { display: none !important; }
-        .cw-center-stage { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; opacity: 0; animation: fadeIn 0.4s ease forwards 0.1s; }
-        .cw-center-dots { display: flex; gap: 8px; }
-        .cw-center-dots span { width: 8px; height: 8px; border-radius: 50%; animation: googleBounce 1.4s infinite ease-in-out both; }
-        .cw-center-dots span:nth-child(1) { background-color: ${COLORS.blue}; animation-delay: -0.32s; }
-        .cw-center-dots span:nth-child(2) { background-color: ${COLORS.red}; animation-delay: -0.16s; }
-        .cw-center-dots span:nth-child(3) { background-color: ${COLORS.green}; }
-        .cw-center-text { font-size: 13px; color: #E8EAED; opacity: 0; transform: translateY(10px); animation: textSlideUp 0.5s forwards 0.2s; }
-        .cw-center-success { display: none; color: ${COLORS.green}; }
-        .cw-center-success svg { width: 40px; height: 40px; }
-        .cw-center-success.show { display: block; animation: popIn 0.4s; }
-        @keyframes fadeIn { to { opacity: 1; } }
-        @keyframes googleBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-        @keyframes textSlideUp { to { opacity: 1; transform: translateY(0); } }
+        
+        .cw-sep { width: 20px; height: 1px; background: rgba(255,255,255,0.2); margin: 4px 0; }
+        
+        /* Tooltips */
+        .cw-btn::after { content: attr(data-label); position: absolute; top: 50%; transform: translateY(-50%) scale(0.9); padding: 6px 12px; border-radius: 6px; background: #202124; color: #fff; font-family: 'Google Sans', sans-serif; font-size: 12px; font-weight: 500; opacity: 0; pointer-events: none; transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1); box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: nowrap; border: 1px solid rgba(255,255,255,0.15); }
+        .cw-pill.side-right .cw-btn::after { right: 60px; transform-origin: right center; }
+        .cw-pill.side-right .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
+        .cw-pill.side-left .cw-btn::after { left: 60px; transform-origin: left center; }
+        .cw-pill.side-left .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
+        
+        /* Animation Classes */
+        @keyframes successPop { 0% { box-shadow: 0 0 0 transparent; transform: scale(1); } 50% { box-shadow: 0 0 15px #81C995; transform: scale(1.05); border-color: #81C995; } 100% { box-shadow: 0 0 0 transparent; transform: scale(1); } }
+        .cw-pill.system-check { animation: successPop 0.6s ease-out; }
     `;
     document.head.appendChild(style);
   }
@@ -197,16 +172,9 @@ export function initCommandCenter(actions) {
   pill.className = "cw-pill side-right";
   
   pill.innerHTML = `
-    <div class="cw-dynamic-label" id="cw-main-label">Menu</div>
-
-    <div class="cw-grip" title="Arrastar">
-        <div class="cw-grip-bar"></div>
+<div class="cw-brand-header" id="cw-header-trigger" title="Segure para mover, Clique para fechar">
+        <div class="cw-brand-icon">${ICONS.nexus}</div>
     </div>
-
-    <button class="cw-brand-btn" id="cw-brand-toggle" data-hint="Minimizar">
-        ${ICONS.nexus}
-    </button>
-    
     <button class="cw-btn notes" id="cw-btn-notes" data-hint="Notas">${ICONS.notes}</button>
     <button class="cw-btn email" id="cw-btn-email" data-hint="Emails">${ICONS.email}</button>
     <button class="cw-btn script" id="cw-btn-script" data-hint="Script">${ICONS.script}</button>
@@ -260,50 +228,28 @@ export function initCommandCenter(actions) {
   }
 
   // --- LÓGICA DE TOGGLE E ARRASTO ---
-  const brandBtn = pill.querySelector("#cw-brand-toggle");
-  let isCollapsed = false;
+  // 5. FÍSICA DE ARRASTO E TOGGLE
   let isDragging = false;
   let startX, startY, initialLeft, initialTop;
   const DRAG_THRESHOLD = 3;
+  
+  // Controle de estado do colapso
+  let isCollapsed = false; 
 
-  // Toggle (Só se não estiver arrastando)
-  brandBtn.onclick = (e) => {
-      if (isDragging) return; 
-      
-      e.stopPropagation();
-      isCollapsed = !isCollapsed;
-      
-      if (isCollapsed) {
-          pill.classList.add("collapsed");
-          brandBtn.setAttribute("data-hint", "Expandir");
-          if(labelEl.classList.contains('visible')) showLabel("Expandir");
-      } else {
-          pill.classList.remove("collapsed");
-          brandBtn.setAttribute("data-hint", "Minimizar");
-          if(labelEl.classList.contains('visible')) showLabel("Minimizar");
-      }
-  };
-
-  // Drag (Mousedown) - Lógica de Proteção
   pill.onmousedown = (e) => {
-    const target = e.target;
-    const isBrand = target.closest("#cw-brand-toggle");
-    const isBtn = target.closest("button");
+    // Se clicar em um botão (módulos), NÃO arrasta (Comportamento original preservado)
+    if (e.target.closest("button")) return;
     
-    // REGRA DE OURO:
-    // 1. Botões internos -> Nunca arrastam.
-    // 2. Botão da Marca -> Só arrasta se estiver FECHADO.
-    if ((isBtn && !isBrand) || (isBrand && !isCollapsed)) return;
-
     e.preventDefault();
     startX = e.clientX; 
     startY = e.clientY;
+    
     const rect = pill.getBoundingClientRect();
     initialLeft = rect.left; 
     initialTop = rect.top;
     
+    // Assumimos que não é drag até que mova
     isDragging = false; 
-    pill.style.transition = "none"; // Remove transições para arrastar instantâneo
 
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
@@ -313,8 +259,10 @@ export function initCommandCenter(actions) {
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
     
+    // Só ativa o modo "Drag" se mover mais que 3px (preservando lógica original)
     if (!isDragging && Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD) {
       isDragging = true;
+      pill.style.transition = "none"; // Remove transição durante arrasto para ficar rápido
     }
     
     if (isDragging) {
@@ -328,31 +276,53 @@ export function initCommandCenter(actions) {
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
     
-    // Restaura transições para as propriedades animáveis
-    pill.style.transition = `
-        max-height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), 
-        padding 0.4s ease, 
-        background 0.3s ease, 
-        border-radius 0.4s ease,
-        opacity 0.4s ease, 
-        top 0.1s linear, left 0.1s linear`;
+    // Restaura a transição suave (incluindo max-height para o colapso)
+    pill.style.transition = "max-height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)";
 
     if (isDragging) {
-      setTimeout(() => { isDragging = false; }, 50); // Timeout para evitar click acidental
+      // --- LÓGICA DE SOLTAR (DROP) ---
+      isDragging = false;
       
-      // Snap Logic (Opcional - mantida)
+      // Lógica de "Snap" original preservada
       const screenW = window.innerWidth;
+      const screenH = window.innerHeight;
       const rect = pill.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       
+      let targetLeft;
       if (centerX < screenW / 2) {
+        targetLeft = 24;
         pill.classList.remove("side-right"); pill.classList.add("side-left");
       } else {
+        targetLeft = screenW - rect.width - 24;
         pill.classList.remove("side-left"); pill.classList.add("side-right");
       }
+      let targetTop = rect.top;
+      if (targetTop < 24) targetTop = 24;
+      if (targetTop > screenH - rect.height - 24) targetTop = screenH - rect.height - 24;
+
+      pill.style.left = `${targetLeft}px`;
+      pill.style.top = `${targetTop}px`;
+      
     } else {
-      isDragging = false;
+      // --- LÓGICA DE CLIQUE (TOGGLE) ---
+      // Se chegamos no MouseUp e isDragging é falso, foi um clique limpo!
+      
+      // Verifica se o clique foi no Header (Brand Icon) antes de fechar
+      // Isso impede que cliques acidentais na borda fechem
+      if (e.target.closest('.cw-brand-header')) {
+          toggleCollapse();
+      }
     }
+  }
+
+  function toggleCollapse() {
+      isCollapsed = !isCollapsed;
+      if (isCollapsed) {
+          pill.classList.add('collapsed');
+      } else {
+          pill.classList.remove('collapsed');
+      }
   }
 
   // 4. ANIMAÇÃO DE ENTRADA
