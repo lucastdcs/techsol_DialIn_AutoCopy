@@ -3,12 +3,15 @@ import { DataService } from './data-service.js';
 // src/modules/shared/command-center.js
 
 const COLORS = {
-  glassBg: "rgba(61, 61, 61, 0.85)", // Um pouco mais opaco para contraste
+  glassBg: "rgba(61, 61, 61, 0.85)", 
   glassBorder: "rgba(255, 255, 255, 0.12)",
   glassHighlight: "rgba(255, 255, 255, 0.1)",
-  iconIdle: "#c2c5c8ff",
-  iconActive: "#FFFFFF",
   
+  // Cores dos Ícones
+  iconIdle: "#c2c5c8",  // Cinza claro (Google Style)
+  iconActive: "#FFFFFF", // Branco puro no hover
+  
+  // Cores de Marca
   blue: "#8AB4F8",
   red: "#F28B82",
   purple: "#C58AF9",
@@ -29,184 +32,184 @@ export function initCommandCenter(actions) {
     style.innerHTML = `
         @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@500&display=swap');
 
-        /* --- VARIÁVEIS DE ANIMAÇÃO --- */
         :root {
-            /* A "Mágica": Curva elástica que vai e volta (Bouncy) */
-            --cw-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-            /* Curva suave para opacidade */
+            /* Vertical: Elástico e "Dopaminérgico" */
+            --cw-spring-y: cubic-bezier(0.34, 1.56, 0.64, 1);
+            
+            /* Horizontal: Suave e firme (Sem tremer para os lados) */
+            --cw-smooth-x: cubic-bezier(0.25, 1, 0.5, 1);
+            
             --cw-ease: cubic-bezier(0.4, 0.0, 0.2, 1);
         }
 
-        /* --- PÍLULA PRINCIPAL (CONTAINER) --- */
+        /* --- PÍLULA PRINCIPAL --- */
         .cw-pill {
             position: fixed; top: 30%; right: 24px;
             display: flex; flex-direction: column; align-items: center; 
-            gap: 12px; padding: 16px 8px;
+            padding: 12px 8px 16px 8px; /* Ajuste no padding para o grip */
+            gap: 12px;
             
-            /* Vidro Fosco de Alta Qualidade */
             background: ${COLORS.glassBg};
-            backdrop-filter: blur(16px) saturate(180%); -webkit-backdrop-filter: blur(16px) saturate(180%);
+            backdrop-filter: blur(16px) saturate(180%);
             border: 1px solid ${COLORS.glassBorder}; 
             border-radius: 50px;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.35); /* Sombra mais profunda */
+            box-shadow: 0 12px 40px rgba(0,0,0,0.35);
             z-index: 2147483647;
 
-            /* Transições Elásticas para Width/Height */
+            /* MÁGICA DA ANIMAÇÃO: 
+               Width usa smooth-x (sem bounce)
+               Height usa spring-y (bounce vertical) */
             transition: 
-                width 0.6s var(--cw-spring),
-                height 0.6s var(--cw-spring),
+                width 0.5s var(--cw-smooth-x),
+                height 0.6s var(--cw-spring-y),
                 padding 0.4s var(--cw-ease),
                 gap 0.4s var(--cw-ease),
                 background 0.3s ease,
-                top 0.1s linear, left 0.1s linear, /* Drag deve ser linear e rápido */
-                transform 0.4s var(--cw-spring);
+                top 0.1s linear, left 0.1s linear,
+                transform 0.4s var(--cw-spring-y);
 
-            /* Estado Inicial (Entrada) */
             opacity: 0; transform: translateX(40px) scale(0.8);
         }
         
         .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
-        /* --- ESTADO COLAPSADO (A BOLA) --- */
+        /* --- ESTADO COLAPSADO --- */
         .cw-pill.collapsed {
             width: 56px !important; 
             height: 56px !important;
             padding: 0 !important; 
             gap: 0 !important;
             border-radius: 50% !important;
-            background: rgba(32, 33, 36, 0.95); /* Quase sólido */
+            /* Fundo escuro sólido */
+            background: rgba(32, 33, 36, 0.95);
             box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-            cursor: pointer; /* A bola inteira é clicável */
+            cursor: pointer;
         }
+
+        /* Efeito de clique */
+        .cw-pill.click-effect { transform: scale(0.9) !important; }
+
+        /* --- GRIP (ALÇA) --- */
+        .cw-grip {
+            width: 100%; height: 12px; 
+            display: flex; align-items: center; justify-content: center; 
+            cursor: grab; margin-bottom: 2px;
+            opacity: 0.6; transition: opacity 0.2s;
+        }
+        .cw-grip:hover { opacity: 1; }
         
-        /* Efeito de clique tátil na pílula */
-        .cw-pill.click-effect {
-            transform: scale(0.9) !important;
+        .cw-grip-bar { 
+            width: 24px; height: 4px; 
+            background-color: rgba(255,255,255,0.3); 
+            border-radius: 4px; 
+            transition: all 0.3s;
         }
+        .cw-grip:hover .cw-grip-bar { background-color: #fff; transform: scaleX(1.2); }
 
         /* --- BOTÃO DA MARCA (NEXUS) --- */
         .cw-brand-btn {
-            width: 40px; height: 40px;
+            width: 44px; height: 44px; /* Levemente maior */
             border-radius: 50%; border: none; background: transparent;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; position: relative; z-index: 20;
-            color: #fff;
-            
-            /* Transição suave */
-            transition: all 0.5s var(--cw-spring);
+            color: #fff; /* Ícone sempre branco */
+            transition: all 0.4s var(--cw-smooth-x);
         }
         
-        .cw-brand-btn svg {
-            width: 24px; height: 24px;
-            filter: drop-shadow(0 0 5px rgba(255,255,255,0.3));
-        }
-
-        /* Correção Crítica: Posicionamento no modo colapsado */
-        .cw-pill.collapsed .cw-brand-btn {
-            position: absolute; /* Remove do fluxo flex para não bugar */
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%) rotate(360deg) scale(1.1);
-            margin: 0;
-        }
-
+        /* Hover "Previsionário": Mostra a cor de fundo do estado fechado */
         .cw-brand-btn:hover {
-            transform: scale(1.15);
-            background: rgba(255,255,255,0.08);
+            background: rgba(32, 33, 36, 0.8); /* Cor do collapsed */
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            transform: scale(1.05);
         }
 
-        /* --- ITENS INTERNOS (Botões, Linhas, Grips) --- */
-        
-        /* Esconde tudo suavemente ao colapsar */
-        .cw-pill.collapsed .cw-btn:not(.cw-brand-btn),
-        .cw-pill.collapsed .cw-sep,
-        .cw-pill.collapsed .cw-grip,
-        .cw-pill.collapsed .cw-status-container {
-            opacity: 0;
-            transform: scale(0.3);
-            pointer-events: none;
-            height: 0; margin: 0; /* Remove espaço físico */
-            width: 0; padding: 0;
-            transition: all 0.3s ease;
+        .cw-brand-btn svg {
+            width: 26px; height: 26px;
+            filter: drop-shadow(0 0 4px rgba(255,255,255,0.3));
         }
 
-        /* Botões Normais */
+        /* Centralização Absoluta quando Fechado */
+        .cw-pill.collapsed .cw-brand-btn {
+            position: absolute; 
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) rotate(360deg);
+            margin: 0;
+            background: transparent; /* Remove bg no collapsed */
+            pointer-events: none; /* Deixa o clique ir para a pill */
+        }
+
+        /* --- BOTÕES DE AÇÃO --- */
         .cw-btn {
             width: 40px; height: 40px; 
             border-radius: 50%; border: none; background: transparent;
             display: flex; align-items: center; justify-content: center; 
-            cursor: pointer; position: relative; color: ${COLORS.iconIdle};
-            transition: all 0.3s var(--cw-spring);
+            cursor: pointer; position: relative; 
+            
+            /* COR CORRIGIDA: Usa o cinza claro por padrão */
+            color: ${COLORS.iconIdle};
+            transition: all 0.3s var(--cw-spring-y);
         }
         
+        /* Garante que SVG use a cor do texto */
+        .cw-btn svg { 
+            width: 22px; height: 22px; 
+            fill: none; stroke: currentColor; stroke-width: 2; /* Linhas mais finas e elegantes */
+            pointer-events: none; 
+        }
+
+        /* Hover */
         .cw-btn:hover { 
             background: ${COLORS.glassHighlight}; 
             color: ${COLORS.iconActive}; 
             transform: scale(1.1); 
         }
 
-        /* Estados Ativos (Iluminação) */
-        .cw-btn.notes.active { color: ${COLORS.blue}; background: rgba(138, 180, 248, 0.15); box-shadow: 0 0 15px rgba(138, 180, 248, 0.2); }
-        .cw-btn.email.active { color: ${COLORS.red}; background: rgba(242, 139, 130, 0.15); box-shadow: 0 0 15px rgba(242, 139, 130, 0.2); }
-        .cw-btn.script.active { color: ${COLORS.purple}; background: rgba(197, 138, 249, 0.15); box-shadow: 0 0 15px rgba(197, 138, 249, 0.2); }
-        .cw-btn.links.active { color: ${COLORS.green}; background: rgba(129, 201, 149, 0.15); box-shadow: 0 0 15px rgba(129, 201, 149, 0.2); }
-        .cw-btn.broadcast.active { color: ${COLORS.orange}; background: rgba(249, 171, 0, 0.15); box-shadow: 0 0 15px rgba(249, 171, 0, 0.2); }
+        /* Estados Ativos */
+        .cw-btn.notes.active { color: ${COLORS.blue}; background: rgba(138, 180, 248, 0.15); box-shadow: 0 0 12px rgba(138, 180, 248, 0.3); }
+        .cw-btn.email.active { color: ${COLORS.red}; background: rgba(242, 139, 130, 0.15); box-shadow: 0 0 12px rgba(242, 139, 130, 0.3); }
+        .cw-btn.script.active { color: ${COLORS.purple}; background: rgba(197, 138, 249, 0.15); box-shadow: 0 0 12px rgba(197, 138, 249, 0.3); }
+        .cw-btn.links.active { color: ${COLORS.green}; background: rgba(129, 201, 149, 0.15); box-shadow: 0 0 12px rgba(129, 201, 149, 0.3); }
+        .cw-btn.broadcast.active { color: ${COLORS.orange}; background: rgba(249, 171, 0, 0.15); box-shadow: 0 0 12px rgba(249, 171, 0, 0.3); }
 
         /* Separador */
         .cw-sep {
-            width: 24px; height: 1px; background: rgba(255,255,255,0.15);
-            margin: 4px 0; transition: opacity 0.3s;
+            width: 20px; height: 1px; background: rgba(255,255,255,0.15);
+            margin: 2px 0; transition: opacity 0.2s;
         }
 
-        /* Grip de Arrasto */
-        .cw-grip {
-            width: 100%; height: 18px; display: flex; align-items: center; justify-content: center; 
-            cursor: grab; margin-bottom: 4px; opacity: 0.6;
-            transition: opacity 0.2s;
-        }
-        .cw-grip:hover { opacity: 1; }
-        .cw-grip-bar { 
-            width: 20px; height: 3px; background-color: #fff; border-radius: 4px; opacity: 0.3;
+        /* Esconder Itens ao Colapsar */
+        .cw-pill.collapsed .cw-btn,
+        .cw-pill.collapsed .cw-sep,
+        .cw-pill.collapsed .cw-grip,
+        .cw-pill.collapsed .cw-status-container {
+            opacity: 0; pointer-events: none;
+            height: 0; margin: 0; width: 0; padding: 0;
+            transform: scale(0.5);
+            transition: all 0.2s ease-out; /* Rápido para não vazar */
         }
 
-        /* Tooltips Estilo Apple */
+        /* Tooltips */
         .cw-btn::after, .cw-brand-btn::after { 
             content: attr(data-label); position: absolute; top: 50%; 
             transform: translateY(-50%) scale(0.8); opacity: 0;
-            padding: 6px 12px; border-radius: 8px; 
-            background: rgba(0,0,0,0.8); color: #fff; 
-            font-family: 'Google Sans', sans-serif; font-size: 12px; font-weight: 500; 
-            pointer-events: none; transition: all 0.2s var(--cw-spring); 
-            white-space: nowrap; backdrop-filter: blur(4px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1);
+            padding: 5px 10px; border-radius: 6px; 
+            background: rgba(0,0,0,0.85); color: #fff; 
+            font-family: 'Google Sans', sans-serif; font-size: 11px; font-weight: 500; 
+            pointer-events: none; transition: all 0.2s var(--cw-smooth-x); 
+            white-space: nowrap; border: 1px solid rgba(255,255,255,0.15);
         }
-        /* Lógica para Tooltips Esquerda/Direita */
-        .cw-pill.side-right .cw-btn::after, .cw-pill.side-right .cw-brand-btn::after { right: 55px; transform-origin: right center; }
-        .cw-pill.side-right *:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
-        
-        .cw-pill.side-left .cw-btn::after, .cw-pill.side-left .cw-brand-btn::after { left: 55px; transform-origin: left center; }
-        .cw-pill.side-left *:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
+        .cw-pill.side-right *:hover::after { opacity: 1; transform: translateY(-50%) scale(1); right: 55px; }
+        .cw-pill.side-left *:hover::after { opacity: 1; transform: translateY(-50%) scale(1); left: 55px; }
 
-        /* Badge de Notificação */
+        /* Badge */
         .cw-badge {
             position: absolute; top: 6px; right: 6px; width: 8px; height: 8px;
             background-color: #FA5252; border-radius: 50%; border: 1px solid #fff; pointer-events: none;
-            z-index: 10; animation: popIn 0.4s var(--cw-spring);
+            z-index: 10; animation: popIn 0.4s var(--cw-spring-y);
         }
-
-        /* Animações Keyframes */
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
-        
-        /* Overlay Foco */
-        .cw-focus-backdrop {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px);
-            z-index: 2147483646; opacity: 0; pointer-events: none;
-            transition: opacity 0.5s ease;
-        }
-        .cw-focus-backdrop.active { opacity: 1; pointer-events: auto; }
 
-        /* --- MODO ILHA DINÂMICA (Processing) --- */
+        /* --- MODO ILHA DINÂMICA (Center) --- */
         .cw-pill.processing-center {
             top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important;
             width: 320px !important; height: 110px !important; border-radius: 32px !important;
@@ -221,10 +224,10 @@ export function initCommandCenter(actions) {
         .cw-center-dots span:nth-child(1) { background-color: ${COLORS.blue}; animation-delay: -0.32s; }
         .cw-center-dots span:nth-child(2) { background-color: ${COLORS.red}; animation-delay: -0.16s; }
         .cw-center-dots span:nth-child(3) { background-color: ${COLORS.green}; }
-        .cw-center-text { font-size: 13px; color: #E8EAED; font-weight: 500; opacity: 0; transform: translateY(10px); animation: textSlideUp 0.5s var(--cw-spring) forwards 0.3s; }
+        .cw-center-text { font-size: 13px; color: #E8EAED; opacity: 0; transform: translateY(10px); animation: textSlideUp 0.5s var(--cw-spring-y) forwards 0.3s; }
         .cw-center-success { display: none; color: ${COLORS.green}; }
-        .cw-center-success svg { width: 42px; height: 42px; }
-        .cw-center-success.show { display: block; animation: popIn 0.5s var(--cw-spring); }
+        .cw-center-success svg { width: 42px; height: 42px; stroke: currentColor; }
+        .cw-center-success.show { display: block; animation: popIn 0.5s var(--cw-spring-y); }
         @keyframes fadeIn { to { opacity: 1; } }
         @keyframes googleBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         @keyframes textSlideUp { to { opacity: 1; transform: translateY(0); } }
@@ -233,27 +236,29 @@ export function initCommandCenter(actions) {
   }
 
   // 2. CONSTRUÇÃO DO DOM
+  // SVG Stroke corrigido para currentColor
   const ICONS = {
-    check: `<svg viewBox="0 0 24 24" fill="none" stroke="#81C995" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
+    check: `<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
     notes: `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`,
     email: `<svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>`,
     script: `<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`,
     links: `<svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>`,
     broadcast: `<svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`,
-    nexus: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"></path></svg>`
+    nexus: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"></path></svg>`
   };
 
   const pill = document.createElement("div");
   pill.className = "cw-pill side-right";
   
+  // ORDEM ATUALIZADA: Grip no topo, depois Marca, depois Módulos
   pill.innerHTML = `
-    <button class="cw-brand-btn" id="cw-brand-toggle" data-label="Minimizar">
-        ${ICONS.nexus}
-    </button>
-
     <div class="cw-grip" title="Arrastar">
         <div class="cw-grip-bar"></div>
     </div>
+
+    <button class="cw-brand-btn" id="cw-brand-toggle" data-label="Minimizar">
+        ${ICONS.nexus}
+    </button>
     
     <button class="cw-btn notes" id="cw-btn-notes" data-label="Case Notes">${ICONS.notes}</button>
     <button class="cw-btn email" id="cw-btn-email" data-label="Quick Email">${ICONS.email}</button>
@@ -304,10 +309,9 @@ export function initCommandCenter(actions) {
 
   // Toggle Button Click
   brandBtn.onclick = (e) => {
-      if (hasMoved) return; // Se arrastou, não clica
+      if (hasMoved) return; 
       e.stopPropagation();
       
-      // Efeito Tátil: Encolhe levemente antes de expandir/fechar
       pill.classList.add("click-effect");
       setTimeout(() => pill.classList.remove("click-effect"), 150);
 
@@ -316,17 +320,15 @@ export function initCommandCenter(actions) {
       if (isCollapsed) {
           pill.classList.add("collapsed");
           brandBtn.setAttribute("data-label", "Expandir");
-          brandBtn.style.color = COLORS.blue; 
+          // No modo fechado, o botão não precisa de cor ativa, pois ele vira a "bola"
       } else {
           pill.classList.remove("collapsed");
           brandBtn.setAttribute("data-label", "Minimizar");
-          brandBtn.style.color = "#FFFFFF";
       }
   };
 
   // Drag Logic Unificado
   pill.onmousedown = (e) => {
-      // Permite clicar nos botões internos quando expandido
       if (e.target.closest("button") && !e.target.closest("#cw-brand-toggle") && !isCollapsed) return;
 
       e.preventDefault();
@@ -338,7 +340,7 @@ export function initCommandCenter(actions) {
       hasMoved = false;
       isDragging = false;
 
-      // Remove transição durante arraste para resposta instantânea
+      // Desativa transições durante o arraste
       pill.style.transition = "none";
 
       document.addEventListener("mousemove", onMouseMove);
@@ -367,21 +369,22 @@ export function initCommandCenter(actions) {
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
 
-      // Restaura a transição "elástica" ao soltar
+      // Restaura transições. 
+      // width: usamos --cw-smooth-x para evitar balanço lateral.
+      // height: usamos --cw-spring-y para elasticidade vertical.
       pill.style.transition = `
-        width 0.6s var(--cw-spring),
-        height 0.6s var(--cw-spring),
+        width 0.5s var(--cw-smooth-x),
+        height 0.6s var(--cw-spring-y),
         padding 0.4s var(--cw-ease),
         gap 0.4s var(--cw-ease),
         background 0.3s ease,
-        top 0.5s var(--cw-spring), left 0.5s var(--cw-spring), 
-        transform 0.4s var(--cw-spring)
+        top 0.5s var(--cw-spring-y), left 0.5s var(--cw-spring-y), 
+        transform 0.4s var(--cw-spring-y)
       `;
 
       if (isDragging) {
           isDragging = false;
           
-          // Snap logic (Grudar nas bordas)
           const screenW = window.innerWidth;
           const screenH = window.innerHeight;
           const rect = pill.getBoundingClientRect();
@@ -390,7 +393,6 @@ export function initCommandCenter(actions) {
           const margin = 24;
           let targetLeft, targetTop;
 
-          // Horizontal Snap
           if (centerX < screenW / 2) {
               targetLeft = margin;
               pill.classList.remove("side-right"); pill.classList.add("side-left");
@@ -399,7 +401,6 @@ export function initCommandCenter(actions) {
               pill.classList.remove("side-left"); pill.classList.add("side-right");
           }
           
-          // Vertical Constraint
           targetTop = rect.top;
           if (targetTop < margin) targetTop = margin;
           if (targetTop > screenH - rect.height - margin) targetTop = screenH - rect.height - margin;
@@ -409,14 +410,13 @@ export function initCommandCenter(actions) {
       } 
   }
 
-  // Animação de Entrada
   (async function startAnimation() {
-    await esperar(2000); // Espera carregar página
+    await esperar(2000); 
     pill.classList.add("docked");
   })();
 }
 
-// Mantendo a função de animação centralizada igual
+// Processing Animation (Igual)
 export function triggerProcessingAnimation() {
     const pill = document.querySelector('.cw-pill');
     const overlay = document.querySelector('.cw-focus-backdrop');
