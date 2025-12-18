@@ -186,7 +186,7 @@ export function initCommandCenter(actions) {
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; position: relative; z-index: 20;
     color: #fff; /* Ícone Branco */
-    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease;
 }
 
 /* Gradiente Sutil no Botão */
@@ -204,11 +204,26 @@ export function initCommandCenter(actions) {
 
 /* 3. ESTADO COLAPSADO (A BOLA) */
 .cw-pill.collapsed {
-    max-height: 56px !important; /* Altura exata do botão */
-    padding: 6px 0 !important; /* Ajuste fino para centralizar */
+    width: 56px !important;
+    height: 56px !important; /* Força altura igual largura */
+    padding: 0 !important;   /* Zero padding */
     gap: 0 !important;
-    border-radius: 30px !important; 
-    background: rgba(30, 30, 30, 1); /* Fundo escuro quando fechado */
+    border-radius: 50% !important;
+    
+    /* Garante que nada estique o container */
+    justify-content: center; 
+    align-items: center;
+    background: rgba(30, 30, 30, 1);
+}
+
+/* ADICIONE OU ATUALIZE ESTA REGRA ESPECÍFICA */
+.cw-pill.collapsed .cw-brand-btn {
+    position: absolute; /* Remove do fluxo para não somar margens */
+    top: 50%; 
+    left: 50%;
+    /* Centraliza e aplica a rotação */
+    transform: translate(-50%, -50%) rotate(-180deg); 
+    margin: 0;
 }
 
 /* 4. ESCONDER ITENS INTERNOS */
@@ -410,17 +425,36 @@ brandBtn.onclick = (e) => {
   let isDragging = false;
   let startX, startY, initialLeft, initialTop;
   const DRAG_THRESHOLD = 3;
+pill.onmousedown = (e) => {
+    const target = e.target;
+    const isBrandBtn = target.closest("#cw-brand-toggle");
+    const isAnyButton = target.closest("button");
 
-  pill.onmousedown = (e) => {
-    if (e.target.closest("button")) return;
+    // REGRA DE BLOQUEIO:
+    // 1. Se clicou em qualquer botão que NÃO seja o da marca (ex: Notes, Email), bloqueia.
+    // 2. Se clicou no botão da marca e a pílula está ABERTA, bloqueia (para priorizar o clique de fechar).
+    if ((isAnyButton && !isBrandBtn) || (isBrandBtn && !isCollapsed)) {
+        return;
+    }
+
+    // Se chegou aqui, é o Grip, uma área vazia ou o Botão da Marca FECHADO -> Inicia Arrasto
     e.preventDefault();
-    startX = e.clientX; startY = e.clientY;
+    startX = e.clientX; 
+    startY = e.clientY;
     const rect = pill.getBoundingClientRect();
-    initialLeft = rect.left; initialTop = rect.top;
+    initialLeft = rect.left; 
+    initialTop = rect.top;
+    
+    // Reseta flags de estado
+    hasMoved = false; 
+    isDragging = false;
+    
+    // Remove transição para o arrasto ser instantâneo (sem lag)
+    pill.style.transition = "none";
+
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
   };
-
   function onMouseMove(e) {
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
