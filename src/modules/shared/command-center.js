@@ -27,15 +27,12 @@ export function initCommandCenter(actions) {
 style.innerHTML = `
         @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@500&display=swap');
 
-        /* --- FÍSICA DA ANIMAÇÃO (Apple Spring) --- */
+        /* --- FÍSICA DA ANIMAÇÃO --- */
         :root {
-            /* Abertura: Rápida no início, freio suave no final (Bounce sutil) */
-            --spring-open: cubic-bezier(0.175, 0.885, 0.32, 1.1); 
-            /* Fechamento: Rápido e preciso (Sem bounce) */
-            --spring-close: cubic-bezier(0.6, -0.28, 0.735, 0.045);
-            /* Padrão de Vidro Apple */
-            --glass-bg: rgba(30, 30, 30, 0.85);
-            --glass-border: rgba(255, 255, 255, 0.12);
+            /* Curva de mola mais "seca" e premium para a abertura */
+            --spring-open: cubic-bezier(0.25, 1, 0.5, 1);
+            /* Curva rápida para fechar */
+            --spring-close: cubic-bezier(0.65, 0.05, 0.36, 1);
         }
 
         .cw-focus-backdrop {
@@ -51,188 +48,205 @@ style.innerHTML = `
             position: fixed; top: 100px; right: 24px;
             display: flex; flex-direction: column; align-items: center; 
             
-            /* Largura Fixa e Padding Rítmico (8px grid) */
-            width: 56px; 
-            padding: 8px; /* Padding uniforme cria a moldura */
-            gap: 12px;    /* Espaço confortável entre ícones */
+            /* --- REVISÃO DE ESPAÇAMENTO --- */
+            width: 48px;  /* Mais estreita (era 56px) */
+            padding: 6px; /* Padding mais justo (era 8px) */
+            gap: 8px;     /* Gap mais compacto (era 12px) */
             
-            background: var(--glass-bg);
+            background: ${COLORS.glassBg};
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid var(--glass-border); 
+            border: 1px solid ${COLORS.glassBorder}; 
             
-            /* Borda Arredondada (Squircle visual) */
-            border-radius: 28px; 
+            /* Raio ajustado para a nova largura */
+            border-radius: 24px; 
             
-            /* Sombra "Elevada" do iOS */
+            /* Sombra mais técnica e definida */
             box-shadow: 
-                0 4px 8px rgba(0,0,0,0.1),
-                0 16px 40px rgba(0,0,0,0.3);
+                0 2px 4px rgba(0,0,0,0.1),
+                0 12px 28px rgba(0,0,0,0.25);
             
             z-index: 2147483647;
             overflow: hidden;
 
-            /* ANIMAÇÃO DE ALTURA (A Mágica) */
-            /* Usamos max-height para animar de "auto" para "fixo" */
             transition: 
-                max-height 0.6s cubic-bezier(0.25, 1, 0.5, 1), /* Curva ultra suave */
+                max-height 0.6s var(--spring-open),
                 background 0.3s ease,
                 opacity 0.4s ease,
-                transform 0.1s linear, top 0.1s linear, left 0.1s linear; /* Drag linear */
+                transform 0.1s linear, top 0.1s linear, left 0.1s linear;
             
-            max-height: 600px; /* Estado Aberto */
+            max-height: 600px;
             opacity: 0; transform: translateX(20px);
         }
         
         .cw-pill.docked { opacity: 1; transform: translateX(0); }
 
-        /* --- ESTADO COLAPSADO (Pílula Curta) --- */
+        /* --- ESTADO COLAPSADO --- */
         .cw-pill.collapsed {
-            /* Altura = (Padding Top 8px) + (Icon 40px) + (Padding Bottom 8px) = 56px */
-            max-height: 56px !important; 
-            background: rgba(20, 20, 20, 0.95); /* Mais escuro para foco */
-            border-color: rgba(255,255,255,0.2);
-            /* Nota: Não mudamos width nem border-radius, mantendo a estabilidade */
+            /* Altura = Padding Top(6) + Header(36) + Padding Bottom(6) + Ajuste de Borda = ~50px */
+            max-height: 50px !important; 
+            background: rgba(25, 25, 25, 0.98);
+            border-color: rgba(255,255,255,0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            transition: max-height 0.5s var(--spring-close);
         }
 
         /* --- HEADER DA MARCA (Grip) --- */
         .cw-brand-header {
-            width: 40px; height: 40px; /* Tamanho igual aos botões */
+            width: 36px; height: 36px; /* Menor para caber na pílula estreita */
             display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
             z-index: 20;
-            cursor: grab; /* Cursor correto */
+            cursor: grab;
             
-            /* Separador Visual Sutil (Apenas Margem) */
-            margin-bottom: 4px;
-            border-radius: 50%;
-            transition: background 0.3s ease;
+            border-radius: 12px; /* Squircle sutil */
+            transition: background 0.3s ease, transform 0.2s ease;
         }
         
         .cw-brand-header:active { cursor: grabbing; transform: scale(0.95); }
-        .cw-brand-header:hover { background: rgba(255,255,255,0.1); }
+        .cw-brand-header:hover { background: rgba(255,255,255,0.08); }
 
         /* Ícone da Marca */
         .cw-brand-icon {
-            width: 24px; height: 24px;
+            width: 22px; height: 22px;
             color: #fff;
-            /* Glow Suave */
-            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.4));
+            /* Brilho técnico mais focado */
+            filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
             transition: transform 0.5s var(--spring-open);
         }
 
         /* Rotação e Feedback ao Hover */
         .cw-brand-header:hover .cw-brand-icon {
-            transform: rotate(15deg) scale(1.1);
-            filter: drop-shadow(0 0 15px rgba(138, 180, 248, 0.6));
+            transform: rotate(45deg); /* Rotação mais mecânica */
         }
 
-        /* Quando colapsado, o ícone gira para indicar mudança de estado */
         .cw-pill.collapsed .cw-brand-icon {
-            transform: rotate(-180deg);
+            transform: rotate(0deg); /* Estado de repouso quando fechado */
+        }
+        .cw-pill.collapsed .cw-brand-header:hover .cw-brand-icon {
+             transform: rotate(45deg); /* Gira ao passar o mouse para abrir */
         }
 
-        /* --- CONTAINER DOS MÓDULOS (Conteúdo que some) --- */
+        /* --- CONTAINER DOS MÓDULOS --- */
         .cw-modules-container {
-            display: flex; flex-direction: column; align-items: center; gap: 12px;
+            display: flex; flex-direction: column; align-items: center; gap: 10px; /* Gap interno ligeiramente maior */
             width: 100%;
-            padding-bottom: 8px; /* Padding inferior extra para equilíbrio */
+            padding-bottom: 4px;
             
-            /* Animação de Opacidade e Posição */
             opacity: 1;
             transform: translateY(0);
-            transition: opacity 0.3s ease 0.2s, transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            transition: opacity 0.3s ease 0.15s, transform 0.5s var(--spring-open);
         }
         
-        /* Ao Fechar: Some RÁPIDO e sobe (Slide Up) */
         .cw-pill.collapsed .cw-modules-container {
             opacity: 0; 
             pointer-events: none;
-            transform: translateY(-30px); /* Efeito de gaveta */
-            transition: opacity 0.1s ease, transform 0.2s ease; /* Sem delay ao fechar */
+            transform: translateY(-20px) scale(0.95);
+            transition: opacity 0.15s ease, transform 0.2s var(--spring-close);
         }
 
         /* --- BOTÕES --- */
         .cw-btn {
-            width: 40px; height: 40px; flex-shrink: 0;
-            border-radius: 50%; border: none; background: transparent;
+            width: 36px; height: 36px; /* Botões menores para a pílula estreita */
+            flex-shrink: 0;
+            border-radius: 12px; /* Squircle em vez de círculo perfeito */
+            border: none; background: transparent;
             display: flex; align-items: center; justify-content: center; 
             cursor: pointer; position: relative; 
             color: ${COLORS.iconIdle};
             transition: all 0.2s ease;
         }
         
-        .cw-btn svg { width: 22px; height: 22px; fill: currentColor; pointer-events: none; }
-
-        .cw-btn:hover { 
-            background: rgba(255, 255, 255, 0.15); 
-            color: #fff;
-            transform: scale(1.05); /* Zoom sutil */
+        /* Ícones baseados em linha (Stroke) precisam de stroke-width */
+        .cw-btn svg { 
+            width: 20px; height: 20px; 
+            fill: none; 
+            stroke: currentColor; 
+            stroke-width: 2; 
+            stroke-linecap: round; stroke-linejoin: round;
+            pointer-events: none; 
         }
 
-        /* Cores Ativas (Glow Background) */
-        .cw-btn.active { color: #fff !important; }
-        .cw-btn.notes.active { background: ${COLORS.blue}33; box-shadow: 0 0 12px ${COLORS.blue}40; }
-        .cw-btn.email.active { background: ${COLORS.red}33; box-shadow: 0 0 12px ${COLORS.red}40; }
-        .cw-btn.script.active { background: ${COLORS.purple}33; box-shadow: 0 0 12px ${COLORS.purple}40; }
-        .cw-btn.links.active { background: ${COLORS.green}33; box-shadow: 0 0 12px ${COLORS.green}40; }
-        .cw-btn.broadcast.active { background: ${COLORS.orange}33; box-shadow: 0 0 12px ${COLORS.orange}40; }
+        .cw-btn:hover { 
+            background: rgba(255, 255, 255, 0.12); 
+            color: #fff;
+        }
+
+        /* Cores Ativas (Borda brilhante e fundo sutil) */
+        .cw-btn.active { color: #fff !important; background: rgba(255, 255, 255, 0.05); }
+        .cw-btn.notes.active { box-shadow: inset 0 0 0 1px ${COLORS.blue}; }
+        .cw-btn.email.active { box-shadow: inset 0 0 0 1px ${COLORS.red}; }
+        .cw-btn.script.active { box-shadow: inset 0 0 0 1px ${COLORS.purple}; }
+        .cw-btn.links.active { box-shadow: inset 0 0 0 1px ${COLORS.green}; }
+        .cw-btn.broadcast.active { box-shadow: inset 0 0 0 1px ${COLORS.orange}; }
 
         /* Separador */
         .cw-sep { 
-            width: 24px; height: 1px; 
+            width: 20px; height: 1px; 
             background: rgba(255,255,255,0.1); 
-            margin: 2px 0; flex-shrink: 0;
+            margin: 4px 0; flex-shrink: 0;
         }
 
         /* Badge */
         .cw-badge {
-            position: absolute; top: 0; right: 0; width: 10px; height: 10px;
+            position: absolute; top: -2px; right: -2px; width: 10px; height: 10px;
             background-color: #ff453a; border-radius: 50%;
-            border: 2px solid #2c2c2e; /* Borda escura para recorte */
+            border: 2px solid var(--glass-bg);
             pointer-events: none; z-index: 10;
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: popIn 0.4s var(--spring-open);
         }
         @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
 
-        /* Label Interno (Tooltip dentro da pill não cabe bem, mantemos lateral estilo Apple) */
+        /* Tooltips Laterais */
         .cw-tooltip {
-            position: absolute; right: 70px; top: 50%; transform: translateY(-50%) translateX(10px);
-            background: rgba(20, 20, 20, 0.9); backdrop-filter: blur(8px);
-            color: #fff; padding: 6px 12px; border-radius: 8px;
-            font-size: 13px; font-weight: 500; font-family: -apple-system, system-ui, sans-serif;
+            position: absolute; right: 58px; top: 50%; transform: translateY(-50%) translateX(10px);
+            background: rgba(25, 25, 25, 0.95); 
+            color: #fff; padding: 5px 10px; border-radius: 6px;
+            font-size: 12px; font-weight: 500; font-family: 'Google Sans', sans-serif;
             opacity: 0; pointer-events: none; transition: all 0.2s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1);
-            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1);
+            white-space: nowrap; letter-spacing: 0.3px;
         }
         .cw-btn:hover .cw-tooltip, .cw-brand-header:hover .cw-tooltip {
             opacity: 1; transform: translateY(-50%) translateX(0);
         }
         
-        /* Ajuste de lado */
-        .cw-pill.side-left .cw-tooltip { right: auto; left: 70px; transform: translateY(-50%) translateX(-10px); }
+        .cw-pill.side-left .cw-tooltip { right: auto; left: 58px; transform: translateY(-50%) translateX(-10px); }
         .cw-pill.side-left .cw-btn:hover .cw-tooltip { transform: translateY(-50%) translateX(0); }
 
-        /* Processing Center */
+        /* Processing Center (Mantido) */
         .cw-pill.processing-center {
-            /* Mantém a lógica de transformação total */
             width: 280px !important; height: auto !important; max-height: 80px !important;
             padding: 20px !important; border-radius: 40px !important;
             flex-direction: row !important; gap: 16px !important;
-            background: #000 !important;
+            background: #111 !important;
         }
-    `;    document.head.appendChild(style);
+    `;
+    document.head.appendChild(style);
   }
 
   // 2. CONSTRUÇÃO DO DOM
-  const ICONS = {
-    check: `<svg viewBox="0 0 24 24" fill="none" stroke="#81C995" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
-    notes: `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`,
-    email: `<svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>`,
-    script: `<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`,
-    links: `<svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>`,
-    broadcast: `<svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`,
-    nexus: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L14.5 9.5L22 12L14.5 14.5L12 22L9.5 14.5L2 12L9.5 9.5L12 2Z"/></svg>`
+const ICONS = {
+    // Marca: Um nó de conexão abstrato e forte
+    nexus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3m-2.83-7.17l2.12-2.12M4.93 19.07l2.12-2.12M19.07 19.07l-2.12-2.12M7.05 4.93L4.93 7.05"/></svg>`,
+    
+    // Notes: Documento com linhas, mais técnico
+    notes: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>`,
+    
+    // Email: Avião de papel, mais dinâmico que um envelope
+    email: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>`,
+    
+    // Script: Um pergaminho desenrolando (scroll)
+    script: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1m4 4v10a2 2 0 0 1-2 2h-2m2-12l-4-4m4 4h-4"/></svg>`,
+    
+    // Links: Elo de corrente angular e robusto
+    links: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`,
+    
+    // Broadcast: Megafone moderno emitindo sinal
+    broadcast: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 2L6 7H2v10h4l5 5V2z"/><line x1="22" y1="10" x2="22" y2="14"/><path d="M18 6a9 9 0 0 1 0 12"/></svg>`,
+    
+    // Check de sucesso (Mantido, mas em linha)
+    check: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`
   };
 
   const pill = document.createElement("div");
