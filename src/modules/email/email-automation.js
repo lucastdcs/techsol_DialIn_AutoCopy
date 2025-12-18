@@ -88,7 +88,7 @@ function createFloatingWarning(targetElement, message) {
         popup.style.transform = 'translateY(0)';
     });
     
-    // Auto-remove após 25s (aumentei um pouco para dar tempo de clicar no link)
+    // Auto-remove após 25s
     setTimeout(() => { if(document.body.contains(popup)) closeBtn.click(); }, 25000);
 }
 
@@ -262,8 +262,6 @@ export async function runEmailAutomation(cannedResponseText) {
     const emailPronto = await openAndClearEmail();
     if (!emailPronto) return;
 
-    // Nota: Em canned responses, geralmente não forçamos destinatários,
-    // mas o pageData precisa ser atualizado para await se for usado aqui.
     const pageData = await getPageData(); 
 
     await esperar(500);
@@ -271,6 +269,7 @@ export async function runEmailAutomation(cannedResponseText) {
     
     if (btnCanned) {
         simularCliqueReal(btnCanned);
+        // Espera um pouco para o input aparecer
         await esperar(1000);
         const searchInput = document.querySelector('material-auto-suggest-input input');
         
@@ -278,10 +277,30 @@ export async function runEmailAutomation(cannedResponseText) {
             simularCliqueReal(searchInput);
             document.execCommand('insertText', false, cannedResponseText);
             searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-            await esperar(3500);
+            
+            // --- NOVA LÓGICA DE ESPERA DINÂMICA (ATÉ 15s) ---
+            log("⏳ Buscando resultado da Canned Response...", 'info');
+            
+            let primeiraOpcao = null;
+            let tempoDecorrido = 0;
+            const TEMPO_MAXIMO = 15000; // 15 Segundos limite
+            const INTERVALO = 500; // Checa a cada meio segundo
 
-            const primeiraOpcao = document.querySelector('material-select-dropdown-item');
+            while (tempoDecorrido < TEMPO_MAXIMO) {
+                // Tenta encontrar o elemento da lista
+                primeiraOpcao = document.querySelector('material-select-dropdown-item');
+                
+                if (primeiraOpcao) {
+                    log(`✅ Resultado encontrado em ${tempoDecorrido}ms!`);
+                    break; // Sai do loop assim que achar
+                }
+
+                await esperar(INTERVALO);
+                tempoDecorrido += INTERVALO;
+            }
+
             if (primeiraOpcao) {
+                // Encontrou! Clica e prossegue
                 simularCliqueReal(primeiraOpcao);
                 await esperar(1500);
 
@@ -294,7 +313,9 @@ export async function runEmailAutomation(cannedResponseText) {
                 }
                 showToast("Canned Response aplicada!");
             } else {
-                showToast(`Template '${cannedResponseText}' não encontrado.`, { error: true });
+                // Estourou os 15s
+                log(`❌ Timeout: Resultado '${cannedResponseText}' não apareceu após 15s.`, 'error');
+                showToast(`Timeout: Template '${cannedResponseText}' não carregou.`, { error: true });
             }
         }
     } else {
