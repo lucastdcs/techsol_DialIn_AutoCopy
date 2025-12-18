@@ -88,7 +88,7 @@ function createFloatingWarning(targetElement, message) {
         popup.style.transform = 'translateY(0)';
     });
     
-    // Auto-remove após 25s
+    // Auto-remove após 25s (aumentei um pouco para dar tempo de clicar no link)
     setTimeout(() => { if(document.body.contains(popup)) closeBtn.click(); }, 25000);
 }
 
@@ -259,12 +259,59 @@ async function openAndClearEmail() {
 
 export async function runEmailAutomation(cannedResponseText) {
     if (!cannedResponseText) return;
+
+    // 1. Abre e Limpa o Email
     const emailPronto = await openAndClearEmail();
     if (!emailPronto) return;
 
+    // 2. Coleta os Dados da Página
     const pageData = await getPageData(); 
 
-    await esperar(500);
+    // ============================================================
+    // 🟢 NOVA LÓGICA DE DESTINATÁRIOS (Igual ao QuickEmail)
+    // ============================================================
+    log("📧 Processando destinatários para CR...", 'info');
+
+    // A. Expandir Cabeçalho (CC/BCC) se necessário
+    const expandBtn = document.querySelector('material-icon[aria-label="Show CC and BCC fields"]') || 
+                      document.querySelector('material-icon[debug-id="expand-button"][aria-pressed="false"]');
+    if (expandBtn) {
+        expandBtn.click();
+        await esperar(600);
+    }
+
+    // B. Preencher TO (Cliente) + Aviso
+    if (pageData.clientEmail && pageData.clientEmail !== "N/A" && pageData.clientEmail !== "N/A (Bloqueado)") {
+        const toInput = document.querySelector('input[aria-label="Enter To email address"]');
+        if (toInput) {
+            await fillField(toInput, pageData.clientEmail);
+            createFloatingWarning(toInput, "<strong>Verifique o e-mail:</strong> O CRM pode traduzir caracteres incorretamente.");
+        }
+    }
+
+    // C. Preencher BCC (Interno) + Aviso com Link
+    if (pageData.internalEmail) {
+        const bccInput = document.querySelector('input[aria-label="Enter Bcc email address"]');
+        if (bccInput) {
+            await fillField(bccInput, pageData.internalEmail);
+            
+            const linkUrl = "https://mail.google.com/mail/u/0?ui=2&ik=ed23fb3167&attid=0.1&permmsgid=msg-f:1843445102914241244&th=19953b8dda2302dc&view=fimg&fur=ip&permmsgid=msg-f:1843445102914241244&sz=s0-l75-ft&attbid=ANGjdJ9m7O33cM36sxBYohVD6Qsapyux4PNr8qmTBlZ8zkp_LR79suGZhnxFJtBoFDeyMFygsH_tvCts5fnX0WV4rdClw9YqqR7guLnaXU9UzmZRRMRXEoC7T_MPbwo&disp=emb&realattid=ii_mfmv7wjm1&zw";
+            const warningMsg = `
+                <strong>Atenção:</strong> Verifique se o e-mail do AM deve estar em cópia.
+                <div style="margin-top:4px;">
+                    <a href="${linkUrl}" target="_blank" style="color:#1a73e8;text-decoration:none;font-weight:500;display:inline-flex;align-items:center;">
+                        Consultar Regra <span style="font-size:14px;margin-left:2px;">↗</span>
+                    </a>
+                </div>
+            `;
+            createFloatingWarning(bccInput, warningMsg);
+        }
+    }
+    // ============================================================
+
+    await esperar(500); // Pequena pausa antes de interagir com o botão CR
+
+    // 3. Aplicação da Canned Response
     const btnCanned = document.querySelector('material-button[debug-id="canned_response_button"]');
     
     if (btnCanned) {
@@ -278,32 +325,26 @@ export async function runEmailAutomation(cannedResponseText) {
             document.execCommand('insertText', false, cannedResponseText);
             searchInput.dispatchEvent(new Event('input', { bubbles: true }));
             
-            // --- NOVA LÓGICA DE ESPERA DINÂMICA (ATÉ 15s) ---
             log("⏳ Buscando resultado da Canned Response...", 'info');
             
+            // 🟢 LÓGICA DE ESPERA DINÂMICA (Loop até 15s)
             let primeiraOpcao = null;
             let tempoDecorrido = 0;
-            const TEMPO_MAXIMO = 15000; // 15 Segundos limite
-            const INTERVALO = 500; // Checa a cada meio segundo
+            const TEMPO_MAXIMO = 15000;
+            const INTERVALO = 500;
 
             while (tempoDecorrido < TEMPO_MAXIMO) {
-                // Tenta encontrar o elemento da lista
                 primeiraOpcao = document.querySelector('material-select-dropdown-item');
-                
-                if (primeiraOpcao) {
-                    log(`✅ Resultado encontrado em ${tempoDecorrido}ms!`);
-                    break; // Sai do loop assim que achar
-                }
-
+                if (primeiraOpcao) break; 
                 await esperar(INTERVALO);
                 tempoDecorrido += INTERVALO;
             }
 
             if (primeiraOpcao) {
-                // Encontrou! Clica e prossegue
                 simularCliqueReal(primeiraOpcao);
                 await esperar(1500);
 
+                // Substituição de Variáveis no Corpo (Ex: Advertiser Name)
                 const editorVisivel = getVisibleEditor();
                 if (editorVisivel && pageData.advertiserName) {
                     const html = editorVisivel.innerHTML;
@@ -313,7 +354,6 @@ export async function runEmailAutomation(cannedResponseText) {
                 }
                 showToast("Canned Response aplicada!");
             } else {
-                // Estourou os 15s
                 log(`❌ Timeout: Resultado '${cannedResponseText}' não apareceu após 15s.`, 'error');
                 showToast(`Timeout: Template '${cannedResponseText}' não carregou.`, { error: true });
             }
