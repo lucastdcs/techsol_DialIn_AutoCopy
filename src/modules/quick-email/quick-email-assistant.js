@@ -87,7 +87,7 @@ export function initQuickEmailAssistant() {
         overflowX: "auto", scrollbarWidth: "none", 
         paddingBottom: "4px", // Espaço para o foco/sombra não cortar
         maskImage: "linear-gradient(to right, black 90%, transparent 100%)", // Fade no final
-        -webkitMaskImage: "linear-gradient(to right, black 90%, transparent 100%)"
+        webkitMaskImage: "linear-gradient(to right, black 90%, transparent 100%)"
     };
 
     // Chip Individual
