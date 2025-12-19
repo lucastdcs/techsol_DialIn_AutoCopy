@@ -84,6 +84,7 @@ export function initQuickEmailAssistant() {
     const styleTabs = {
         display: "flex", 
         flexWrap: "wrap", // Permite quebrar linha
+        justifyContent: "center",
         gap: "8px",       // Espaço consistente
         paddingBottom: "4px",
         // Removido overflowX e maskImage pois agora usamos wrap
