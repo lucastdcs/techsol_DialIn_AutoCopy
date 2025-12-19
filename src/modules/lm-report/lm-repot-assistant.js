@@ -14,14 +14,14 @@ const LINKS_DB = {
     label: "LM Forms",
     links: [
       {
-        name: "Relatório de Ocorrências",
+        name: "Relatório de Ocorrências e Pausas",
         url: "https://docs.google.com/forms/d/e/1FAIpQLSc6CamPehrREeVr7yCWMyqFETrFYYezNcLb_13W4yZDQkfY6Q/viewform",
-        desc: "Reportar problemas operacionais | Aviso de pausas",
+        desc: "Reportar problemas operacionais, quedas de sistema ou aviso de pausas emergenciais.",
       },
       {
         name: "Chamadas Excedidas (>50min)",
         url: "https://docs.google.com/forms/d/e/1FAIpQLSfE8EMHNJMTKYeA6XM2RZjZ9AQ4LhGk1Dwm_WLu3kcMdKMikA/viewform",
-        desc: "Registro de chamadas longas",
+        desc: "Registro obrigatório para chamadas longas.",
       },
       {
         name: "Relatório de Bugs",
@@ -29,9 +29,9 @@ const LINKS_DB = {
         desc: "Erros de sistema/ferramenta",
       },
       {
-        name: "Suporte LM",
+        name: "Suporte LM (BAU/Monitoria)",
         url: "https://script.google.com/a/macros/google.com/s/AKfycbxYMlFCMZvqgHMIImeS_u-lNZPiertXmem-5m9Fox3jvZaq0ZOQDoc5ma96ltSvWHY/exec",
-        desc: "Enviar casos para BAU/Solicitar Descarte/Abrir Monitoria para AMs",
+        desc: "Enviar casos para BAU, Solicitar Descarte ou Abrir Monitoria.",
       },
     ],
   },
@@ -56,37 +56,37 @@ const LINKS_DB = {
       {
         name: "Suporte Google Ads",
         url: "https://support.google.com/google-ads/",
-        desc: "Oficial",
+        desc: "Central de Ajuda Oficial",
       },
       {
         name: "Suporte GA4",
         url: "https://support.google.com/analytics/",
-        desc: "Oficial",
+        desc: "Central de Ajuda Oficial",
       },
       {
         name: "Suporte Merchant Center",
         url: "https://support.google.com/merchants/gethelp",
-        desc: "Oficial",
+        desc: "Central de Ajuda Oficial",
       },
       {
-        name: "Doc. CSP",
+        name: "Doc. CSP (Content Security Policy)",
         url: "https://developers.google.com/tag-platform/tag-manager/web/csp?hl=pt-br.",
-        desc: "Doc. oficial sobre CSP",
+        desc: "Documentação técnica para desenvolvedores.",
       },
       {
-        name: "Doc. Enhanced Conversion",
-        url: "https://support.google.com/google-ads/answer/9888656?hl=en",
-        desc: "Como funcionam as conversões otimizadas?",
+        name: "Conversões Otimizadas (EC)",
+        url: "https://support.google.com/google-ads/answer/9888656?hl=pt",
+        desc: "Guia de implementação e funcionamento.",
       },
       {
-        name: "Doc. CoMo",
+        name: "Consent Mode (CoMo)",
         url: "https://developers.google.com/tag-platform/security/concepts/consent-mode?hl=pt-br",
-        desc: "Doc. oficial sobre Consent Mode",
+        desc: "Documentação oficial de implementação.",
       },
       {
-        name: "Cursos SkillShop",
+        name: "SkillShop",
         url: "https://skillshop.withgoogle.com/intl/pt-BR_ALL/",
-        desc: "Cursos sobre as ferramentas do Google.",
+        desc: "Portal de cursos e certificações.",
       },
     ],
   },
@@ -96,24 +96,24 @@ const LINKS_DB = {
       {
         name: "Solicitar Gravação",
         url: "https://support.google.com/policies/contact/sar",
-        desc: "Form para solicitar gravação da chamada.",
+        desc: "Formulário para solicitar áudio da chamada.",
       },
       {
         name: "Escalação de Sellers",
         url: "https://forms.gle/HWMhML56eE4CPZCs5",
-        desc: "Form para escalação de Sellers, compartilhado pelo gpozzi@.",
+        desc: "Formulário de escalação compartilhado pelo gpozzi@.",
       },
       {
         name: "SOP Split & Transfer",
         url: "https://sites.google.com/corp/google.com/technicalsolutions/case-handling_1/out-of-scope?authuser=0#h.oq8p11yo96dw",
-        desc: "Doc. com instrução para Split de casos.",
+        desc: "Instruções oficiais para transferência de casos.",
       },
     ],
   },
 };
 
 export function initFeedbackAssistant() {
-  const CURRENT_VERSION = "v2.5.0 HD";
+  const CURRENT_VERSION = "v2.6.0 HD Fix";
 
   let activeTab = "lm";
   let searchTerm = "";
@@ -144,14 +144,14 @@ export function initFeedbackAssistant() {
     fontSize: "14px", color: COLORS.textPrimary,
     boxSizing: "border-box", outline: "none",
     transition: COLORS.transition,
-    boxShadow: "0 2px 5px rgba(0,0,0,0.03)", // Sombra sutil "Google"
+    boxShadow: "0 2px 5px rgba(0,0,0,0.03)", 
     backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="%239AA0A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>')`,
     backgroundRepeat: "no-repeat", backgroundPosition: "12px center",
   };
 
   // Container de Abas (Chips)
   const styleTabContainer = {
-    display: "flex", flexWrap: "wrap", justifyContent: "center", // Centralizado como no Email
+    display: "flex", flexWrap: "wrap", justifyContent: "center", 
     gap: "8px", 
     padding: "4px 0 12px 0",
   };
@@ -159,7 +159,7 @@ export function initFeedbackAssistant() {
   // Botão de Aba (Chip)
   const styleTabButton = {
     padding: "6px 14px",
-    borderRadius: "100px", // Pill shape
+    borderRadius: "100px", 
     border: `1px solid #DADCE0`,
     background: "#FFFFFF",
     color: COLORS.textSecondary,
@@ -167,7 +167,7 @@ export function initFeedbackAssistant() {
     cursor: "pointer", whiteSpace: "nowrap",
     transition: COLORS.transition,
     display: "inline-flex", alignItems: "center", justifyContent: "center",
-    marginBottom: "0" // Removido margin bottom individual, controlado pelo gap
+    marginBottom: "0"
   };
 
   const styleActiveTab = {
@@ -178,10 +178,14 @@ export function initFeedbackAssistant() {
     boxShadow: "0 1px 2px rgba(26, 115, 232, 0.15)"
   };
 
-  // Item da Lista (Card)
+  // --- ITEM DA LISTA (Ajustado para não vazar) ---
   const styleListItem = {
-    display: "flex", alignItems: "center",
-    padding: "12px 16px", // Mais respiro interno
+    display: "flex", 
+    alignItems: "center",
+    justifyContent: "space-between", // Garante distribuição
+    gap: "12px", // Espaço fixo e seguro entre os elementos
+    
+    padding: "12px 16px",
     marginBottom: "8px",
     borderRadius: "12px",
     background: COLORS.bgSurface,
@@ -189,18 +193,22 @@ export function initFeedbackAssistant() {
     boxShadow: COLORS.shadowCard,
     cursor: "pointer",
     transition: "transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s, border-color 0.2s",
-    opacity: "0", transform: "translateY(10px)", // Para animação de entrada
+    
+    // Layout seguro
+    overflow: "hidden", 
+    minWidth: "0", // Essencial para o flexbox não estourar com texto longo
+    
+    opacity: "0", transform: "translateY(10px)", 
   };
 
-  // Ícone do Card
+  // Ícone do Card (Fixo)
   const styleListIcon = {
-    width: "36px", height: "36px",
-    borderRadius: "10px", // Squircle
+    width: "36px", height: "36px", // Tamanho fixo
+    flexShrink: "0", // IMPEDE ENCOLHIMENTO
+    borderRadius: "10px",
     background: "#F1F3F4",
     color: COLORS.textSecondary,
     display: "flex", alignItems: "center", justifyContent: "center",
-    marginRight: "16px",
-    flexShrink: "0",
     transition: "background 0.2s, color 0.2s"
   };
 
@@ -211,9 +219,9 @@ export function initFeedbackAssistant() {
 
   Object.assign(popup.style, stylePopup, { 
       right: "100px", 
-      width: "440px", // Mais compacto
+      width: "440px", 
       height: "600px",
-      background: COLORS.bgApp // Fundo geral cinza claro
+      background: COLORS.bgApp 
   });
 
   const CATEGORY_ICONS = {
@@ -229,7 +237,7 @@ export function initFeedbackAssistant() {
   // 1. HEADER
   const header = createStandardHeader(
     popup, "Links Úteis", CURRENT_VERSION,
-    "Acesso rápido a formulários internos e documentação.",
+    "Acesso rápido a formulários e documentação.",
     animRefs, () => toggleVisibility()
   );
   popup.appendChild(header);
@@ -278,19 +286,6 @@ export function initFeedbackAssistant() {
   });
   popup.appendChild(contentArea);
 
-  // 4. FOOTER (Removido ou Simplificado para manter o padrão limpo)
-  // Se quiser manter, use estilo minimalista:
-  
-  const footer = document.createElement("div");
-  Object.assign(footer.style, {
-    padding: "12px 24px", borderTop: `1px solid ${COLORS.borderSubtle}`,
-    fontSize: "11px", color: COLORS.textSecondary, textAlign: "right",
-    background: COLORS.bgApp
-  });
-  footer.innerHTML = `created by lucaste@`;
-  popup.appendChild(footer);
-  
-
   document.body.appendChild(popup);
 
   function renderTabs() {
@@ -313,7 +308,6 @@ export function initFeedbackAssistant() {
       if (activeTab === key && searchTerm === "") {
         Object.assign(btn.style, styleActiveTab);
       } else {
-        // Hover state for tabs
         btn.onmouseenter = () => { btn.style.background = "#F1F3F4"; btn.style.borderColor = "#DADCE0"; };
         btn.onmouseleave = () => { btn.style.background = "#FFFFFF"; btn.style.borderColor = "#DADCE0"; };
       }
@@ -335,7 +329,7 @@ export function initFeedbackAssistant() {
     let linksToShow = [];
     const isSearching = searchTerm.trim() !== "";
 
-    // 1. Filtragem
+    // Filtragem
     if (isSearching) {
       Object.entries(LINKS_DB).forEach(([key, cat]) => {
         const filtered = cat.links.filter(
@@ -345,7 +339,6 @@ export function initFeedbackAssistant() {
         );
         filtered.forEach((item) => {
             item._catIcon = CATEGORY_ICONS[key];
-            item._categoryName = cat.label;
         });
         linksToShow = [...linksToShow, ...filtered];
       });
@@ -354,7 +347,7 @@ export function initFeedbackAssistant() {
       linksToShow.forEach(item => item._catIcon = CATEGORY_ICONS[activeTab]);
     }
 
-    // Empty State HD
+    // Empty State
     if (linksToShow.length === 0) {
       contentArea.innerHTML = `
         <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:#9AA0A6;">
@@ -364,20 +357,22 @@ export function initFeedbackAssistant() {
       return;
     }
 
-    // 2. Renderização
+    // Renderização da Lista
     linksToShow.forEach((link, index) => {
       const item = document.createElement("div");
       Object.assign(item.style, styleListItem);
 
-      // Ícone
+      // --- ÍCONE (COLUNA 1) ---
       const iconDiv = document.createElement("div");
       Object.assign(iconDiv.style, styleListIcon);
       iconDiv.innerHTML = link._catIcon || '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>';
       item.appendChild(iconDiv);
       
-      // Texto
+      // --- TEXTO (COLUNA 2 - FLEX GROW) ---
       const textDiv = document.createElement("div");
+      // Ajustes críticos para não vazar
       textDiv.style.flexGrow = "1";
+      textDiv.style.minWidth = "0"; // Permite que o flex child encolha abaixo do conteúdo
       textDiv.style.display = "flex";
       textDiv.style.flexDirection = "column";
       textDiv.style.gap = "2px";
@@ -388,18 +383,21 @@ export function initFeedbackAssistant() {
           return text.replace(regex, '<span style="color:#1a73e8; font-weight:700;">$1</span>');
       };
 
-      const nameHTML = `<div style="font-size:14px; font-weight:600; color:${COLORS.textPrimary};">${highlight(link.name)}</div>`;
+      // Título com Ellipsis
+      const nameHTML = `<div style="font-size:14px; font-weight:600; color:${COLORS.textPrimary}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${highlight(link.name)}</div>`;
+      // Descrição com Ellipsis
       const descHTML = `<div style="font-size:12px; color:${COLORS.textSecondary}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${highlight(link.desc)}</div>`;
       
       textDiv.innerHTML = nameHTML + descHTML;
       item.appendChild(textDiv);
 
-      // Ações (Arrow + Copy)
+      // --- AÇÕES (COLUNA 3 - FLEX SHRINK 0) ---
       const actionsDiv = document.createElement("div");
       actionsDiv.style.display = "flex";
       actionsDiv.style.alignItems = "center";
       actionsDiv.style.gap = "8px";
-      actionsDiv.style.opacity = "0.4"; // Sutil por padrão
+      actionsDiv.style.flexShrink = "0"; // Nunca encolhe
+      actionsDiv.style.opacity = "0.4"; 
       actionsDiv.style.transition = "opacity 0.2s";
 
       // Botão Copiar
@@ -434,12 +432,13 @@ export function initFeedbackAssistant() {
 
       actionsDiv.appendChild(copyBtn);
       
-      // Seta de Navegação
+      // Seta
       const arrow = document.createElement("div");
       arrow.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
       Object.assign(arrow.style, {
           display: "flex", alignItems: "center", justifyContent: "center",
-          color: "#DADCE0"
+          color: "#DADCE0",
+          width: "24px", height: "24px" // Tamanho fixo para garantir alinhamento
       });
       actionsDiv.appendChild(arrow);
 
@@ -452,9 +451,9 @@ export function initFeedbackAssistant() {
           item.style.transform = "translateY(-2px)";
           item.style.boxShadow = COLORS.shadowHover;
           actionsDiv.style.opacity = "1";
-          iconDiv.style.background = "#E8F0FE"; // Highlight icon bg
-          iconDiv.style.color = "#1967D2"; // Highlight icon color
-          arrow.style.color = "#1A73E8"; // Active Arrow
+          iconDiv.style.background = "#E8F0FE";
+          iconDiv.style.color = "#1967D2"; 
+          arrow.style.color = "#1A73E8"; 
       };
       item.onmouseleave = () => {
           item.style.transform = "translateY(0)";
@@ -472,7 +471,7 @@ export function initFeedbackAssistant() {
           setTimeout(() => {
               item.style.opacity = "1";
               item.style.transform = "translateY(0)";
-          }, index * 30); // Stagger effect
+          }, index * 30); 
       });
     });
   }
@@ -481,7 +480,7 @@ export function initFeedbackAssistant() {
     searchTerm = e.target.value;
     if (searchTerm !== "") {
       Array.from(tabsContainer.children).forEach((c) => {
-        Object.assign(c.style, styleTabButton); // Reseta estilo visual
+        Object.assign(c.style, styleTabButton); 
         c.style.opacity = "0.6";
       });
     } else {
