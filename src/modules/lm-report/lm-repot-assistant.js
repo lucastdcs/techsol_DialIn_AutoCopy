@@ -105,6 +105,11 @@ const LINKS_DB = {
         url: "https://support.google.com/policies/contact/sar",
         desc: "Form para solicitar gravação da chamada.",
       },
+      {
+        name: "Escalação de Sellers",
+        url: "https://forms.gle/HWMhML56eE4CPZCs5",
+        desc: "Form para escalação de Sellers, compartilhado pelo gpozzi@.",
+      },
     ],
   },
 };
