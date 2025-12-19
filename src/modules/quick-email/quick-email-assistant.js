@@ -8,8 +8,6 @@ import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from '../shared/animations.js';
 import { QUICK_EMAILS } from "./quick-email-data.js";
 import { triggerProcessingAnimation } from "../shared/command-center.js";
-
-// --- NOVAS IMPORTAÇÕES (Baseado no seu snippet) ---
 import { SUBSTATUS_SHORTCODES } from '../notes/notes-data.js';
 import { runQuickEmail, runEmailAutomation } from "../email/email-automation.js";
 
@@ -17,24 +15,38 @@ export function initQuickEmailAssistant() {
     const CURRENT_VERSION = "v4.2.0 CR-Hybrid"; 
 
     // --- ESTADO ---
-    // Adicionamos uma chave especial para as CRs
     const CR_CATEGORY_KEY = 'CANNED_RESPONSES';
     
     let activeCategory = Object.keys(QUICK_EMAILS)[0];
     let searchTerm = "";
-    let currentView = 'list'; // 'list' ou 'detail'
+    let currentView = 'list';
     let visible = false;
 
-    // --- 1. ESTILOS (Mantendo a base visual Apple/Google) ---
+    // --- 1. DESIGN SYSTEM & ESTILOS HD ---
+
+    const COLORS = {
+        bgApp: "#F8F9FA",
+        bgSurface: "#FFFFFF",
+        borderSubtle: "rgba(0, 0, 0, 0.08)",
+        borderFocus: "rgba(26, 115, 232, 0.4)",
+        textPrimary: "#202124",
+        textSecondary: "#5F6368",
+        primary: "#1A73E8",
+        primaryBg: "#E8F0FE",
+        shadowCard: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+        shadowHover: "0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04)",
+        transition: "all 0.2s cubic-bezier(0.2, 0.0, 0.2, 1)"
+    };
 
     const styleContainer = {
-        display: "flex", flexDirection: "column", height: "100%", position: "relative", overflow: "hidden",
-        background: "#FAFAFA"
+        display: "flex", flexDirection: "column", height: "100%", 
+        position: "relative", overflow: "hidden",
+        background: COLORS.bgApp
     };
 
     const styleNavView = {
         display: "flex", width: "200%", height: "100%", 
-        transition: "transform 0.5s cubic-bezier(0.19, 1, 0.22, 1)", // Apple Spring
+        transition: "transform 0.5s cubic-bezier(0.19, 1, 0.22, 1)", 
         transform: "translateX(0)", willChange: "transform"
     };
 
@@ -43,37 +55,82 @@ export function initQuickEmailAssistant() {
         overflow: "hidden", position: "relative"
     };
 
+    // Barra de Ferramentas
+    const styleToolbar = {
+        padding: "20px 24px 12px 24px",
+        flexShrink: "0", 
+        background: COLORS.bgApp, 
+        zIndex: "10",
+        display: "flex", flexDirection: "column", gap: "16px",
+        borderBottom: `1px solid ${COLORS.borderSubtle}`
+    };
+
+    // Input de Busca
     const styleSearchInput = {
-        width: "100%", padding: "12px 12px 12px 40px",
-        borderRadius: "12px", border: "1px solid transparent", background: "#F0F2F5",
-        fontSize: "14px", color: "#202124", boxSizing: "border-box", outline: "none",
-        transition: "all 0.2s ease",
-        backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="%235f6368" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>')`,
-        backgroundRepeat: "no-repeat", backgroundPosition: "12px center",
+        width: "100%", height: "44px",
+        padding: "0 16px 0 48px",
+        borderRadius: "12px", 
+        border: `1px solid transparent`, 
+        background: "#FFFFFF",
+        fontSize: "14px", fontWeight: "400", color: COLORS.textPrimary,
+        boxSizing: "border-box", outline: "none",
+        transition: COLORS.transition,
+        boxShadow: "0 2px 5px rgba(0,0,0,0.03)",
+        backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="%239AA0A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>')`,
+        backgroundRepeat: "no-repeat", backgroundPosition: "16px center",
     };
 
+    // Container de Abas (Chips) - CORRIGIDO: WRAP
     const styleTabs = {
-        display: "flex", gap: "8px", padding: "8px 16px 12px 16px", // Ajuste no padding
-        overflowX: "auto", scrollbarWidth: "none", 
-        borderBottom: "1px solid #f1f3f4"
+        display: "flex", 
+        flexWrap: "wrap", // Permite quebrar linha
+        gap: "8px",       // Espaço consistente
+        paddingBottom: "4px",
+        // Removido overflowX e maskImage pois agora usamos wrap
     };
 
+    // Chip Individual
     const styleTabBtn = {
-        padding: "6px 14px", borderRadius: "20px", border: "1px solid #dadce0",
-        background: "#fff", color: "#5f6368", fontSize: "12px", fontWeight: "500",
-        cursor: "pointer", transition: "all 0.2s ease", flexShrink: "0"
+        padding: "6px 14px", // Levemente mais compacto para caber melhor
+        borderRadius: "100px", 
+        border: `1px solid #DADCE0`,
+        background: "#FFFFFF", 
+        color: COLORS.textSecondary, 
+        fontSize: "13px", fontWeight: "500", letterSpacing: "0.3px",
+        cursor: "pointer", transition: COLORS.transition, 
+        flexShrink: "0", // Impede amassar
+        display: "flex", alignItems: "center", justifyContent: "center"
     };
 
+    // Chip Ativo
     const styleTabActive = {
-        background: "#E8F0FE", color: "#1967D2", borderColor: "#E8F0FE", fontWeight: "600"
+        background: COLORS.primaryBg, 
+        color: COLORS.primary, 
+        borderColor: "transparent", 
+        fontWeight: "600",
+        boxShadow: "0 1px 2px rgba(26, 115, 232, 0.15)"
     };
 
+    // Lista de Itens
+    const styleListContent = {
+        padding: "16px 24px 80px 24px", 
+        overflowY: "auto", 
+        flexGrow: "1",
+        display: "flex", flexDirection: "column", gap: "12px"
+    };
+
+    // Cartão da Lista (Row) - CORRIGIDO: ALTURA FIXA
     const styleRow = {
         display: "flex", alignItems: "center", justifyContent: "space-between",
-        padding: "14px 16px", marginBottom: "8px", borderRadius: "12px",
-        background: "#fff", border: "1px solid #dadce0",
-        cursor: "pointer", transition: "all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1)",
-        position: "relative", overflow: "hidden", boxShadow: "0 1px 2px rgba(0,0,0,0.02)"
+        padding: "0 16px", // Padding lateral apenas, altura define o vertical
+        height: "72px",    // Altura Fixa para todos os itens (Email ou CR)
+        minHeight: "72px", // Garante consistência
+        borderRadius: "16px", 
+        background: COLORS.bgSurface, 
+        border: `1px solid transparent`, 
+        boxShadow: COLORS.shadowCard,
+        cursor: "pointer", transition: "all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)",
+        position: "relative", overflow: "hidden"
     };
 
     // --- CRIAÇÃO DO POPUP ---
@@ -82,8 +139,10 @@ export function initQuickEmailAssistant() {
     popup.classList.add("cw-module-window");
 
     Object.assign(popup.style, stylePopup, {
-        right: "100px", width: "480px", height: "600px",
-        transition: "width 0.3s ease, height 0.3s ease" 
+        right: "100px", width: "440px", height: "640px",
+        borderRadius: "20px", 
+        boxShadow: "0 24px 64px rgba(0,0,0,0.2)", 
+        border: "1px solid rgba(255,255,255,0.4)"
     });
 
     const animRefs = { popup, googleLine: null, focusElement: null };
@@ -96,14 +155,15 @@ export function initQuickEmailAssistant() {
 
     // HEADER
     const header = createStandardHeader(
-        popup, "Assistente de Resposta", CURRENT_VERSION,
-        "Templates de Email e CRs Rápidas",
+        popup, "Quick Email", CURRENT_VERSION,
+        "Templates & Automações",
         animRefs, () => toggleVisibility()
     );
 
-    // CONTAINER
+    // LAYOUT PRINCIPAL
     const mainContainer = document.createElement("div");
     Object.assign(mainContainer.style, styleContainer);
+    
     const slider = document.createElement("div");
     Object.assign(slider.style, styleNavView);
 
@@ -112,28 +172,21 @@ export function initQuickEmailAssistant() {
     Object.assign(pageList.style, styleViewPage);
 
     const toolbar = document.createElement("div");
-    Object.assign(toolbar.style, {
-        padding: "20px 0 0 0", // Padding removido das laterais para as Tabs irem até a borda se quiser
-        flexShrink: "0", background: "#fff", zIndex: "10",
-        display: "flex", flexDirection: "column", gap: "10px"
-    });
+    Object.assign(toolbar.style, styleToolbar);
 
-    const searchContainer = document.createElement("div");
-    searchContainer.style.padding = "0 20px";
-    
     const searchInput = document.createElement("input");
-    searchInput.placeholder = "Buscar Email ou CR...";
+    searchInput.placeholder = "Pesquisar templates...";
     Object.assign(searchInput.style, styleSearchInput);
     
     searchInput.onfocus = () => { 
-        searchInput.style.background = "#fff"; 
-        searchInput.style.border = "1px solid #1a73e8";
-        searchInput.style.boxShadow = "0 0 0 4px rgba(26, 115, 232, 0.1)"; 
+        searchInput.style.borderColor = COLORS.primary;
+        searchInput.style.boxShadow = "0 0 0 4px rgba(26, 115, 232, 0.15)"; 
+        searchInput.style.background = "#fff";
     };
     searchInput.onblur = () => { 
-        searchInput.style.background = "#F0F2F5"; 
-        searchInput.style.border = "1px solid transparent";
-        searchInput.style.boxShadow = "none"; 
+        searchInput.style.borderColor = "transparent";
+        searchInput.style.boxShadow = "0 2px 5px rgba(0,0,0,0.03)"; 
+        searchInput.style.background = "#fff";
     };
     animRefs.focusElement = searchInput;
 
@@ -141,19 +194,21 @@ export function initQuickEmailAssistant() {
     Object.assign(tabsContainer.style, styleTabs);
 
     const listContent = document.createElement("div");
-    Object.assign(listContent.style, { padding: "16px 20px", overflowY: "auto", flexGrow: "1" });
+    Object.assign(listContent.style, styleListContent);
 
-    searchContainer.appendChild(searchInput);
-    toolbar.appendChild(searchContainer);
+    toolbar.appendChild(searchInput);
     toolbar.appendChild(tabsContainer);
     pageList.appendChild(toolbar);
     pageList.appendChild(listContent);
 
-    // --- PÁGINA 2: DETALHE (Apenas para Emails Normais) ---
+    // --- PÁGINA 2: DETALHE ---
     const pageDetail = document.createElement("div");
     Object.assign(pageDetail.style, styleViewPage);
+    
     const detailContent = document.createElement("div");
-    Object.assign(detailContent.style, { padding: "0", overflowY: "auto", flexGrow: "1", background: "#fff" });
+    Object.assign(detailContent.style, { 
+        padding: "0", overflowY: "auto", flexGrow: "1", background: "#fff" 
+    });
     pageDetail.appendChild(detailContent);
 
     slider.appendChild(pageList);
@@ -163,26 +218,24 @@ export function initQuickEmailAssistant() {
     popup.appendChild(mainContainer);
     document.body.appendChild(popup);
 
-    // --- LÓGICA DE EXECUÇÃO ---
+    // --- HANDLERS ---
 
-    // Unifica a execução (Email objeto ou CR string)
     async function handleExecution(data, type) {
         try {
-            if (visible) toggleVisibility(); // Fecha visualmente
-            const finishLoading = triggerProcessingAnimation(); // Inicia animação global
+            if (visible) toggleVisibility(); 
+            const finishLoading = triggerProcessingAnimation(); 
 
-            await new Promise(resolve => setTimeout(resolve, 800)); // Delay UX
+            await new Promise(resolve => setTimeout(resolve, 800)); 
 
             if (type === 'email') {
                 await runQuickEmail(data);
             } else if (type === 'cr') {
-                // 'data' aqui é o shortcode (ex: 'AS_Reschedule_1')
                 await runEmailAutomation(data);
             }
 
             finishLoading();
         } catch (error) {
-            console.error("❌ Erro na execução:", error);
+            console.error("❌ Erro:", error);
             const elOverlay = document.querySelector('.cw-focus-backdrop');
             if (elOverlay) elOverlay.classList.remove('active');
         }
@@ -192,29 +245,42 @@ export function initQuickEmailAssistant() {
         currentView = 'detail';
         slider.style.transform = "translateX(-50%)";
         
-        const iconBack = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`;
-        const iconSend = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
+        const iconBack = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>`;
+        const iconSend = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
 
         detailContent.innerHTML = `
-            <div style="position:sticky; top:0; background:rgba(255,255,255,0.95); backdrop-filter:blur(10px); border-bottom:1px solid #f1f3f4; padding:12px 20px; z-index:10; display:flex; align-items:center; gap:8px;">
-                <button id="csa-back-btn" style="background:none; border:none; cursor:pointer; display:flex; color:#5f6368; padding:4px; margin-left:-8px; border-radius:50%;">${iconBack}</button>
-                <div style="font-weight:600; color:#202124; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${email.name}</div>
+            <div style="position:sticky; top:0; background:rgba(255,255,255,0.9); backdrop-filter:blur(12px); border-bottom:1px solid #eee; padding:16px 24px; z-index:10; display:flex; align-items:center; gap:12px;">
+                <button id="csa-back-btn" style="background:none; border:none; cursor:pointer; display:flex; color:#5f6368; padding:8px; margin-left:-12px; border-radius:50%; transition:background 0.2s;">${iconBack}</button>
+                <div style="font-weight:600; font-size:16px; color:#202124; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${email.name}</div>
             </div>
-            <div style="padding:20px;">
-                <div style="font-size:11px; font-weight:700; color:#1a73e8; text-transform:uppercase; margin-bottom:6px;">Assunto</div>
-                <div style="font-size:13px; color:#202124; padding:12px; background:#F8F9FA; border-radius:8px; border:1px solid #eee; margin-bottom:20px;">${email.subject}</div>
-                <div style="font-size:11px; font-weight:700; color:#1a73e8; text-transform:uppercase; margin-bottom:6px;">Mensagem</div>
-                <div style="font-size:13px; color:#3c4043; line-height:1.5;">${email.body.replace(/\n/g, '<br>')}</div>
+            
+            <div style="padding:24px;">
+                <div style="margin-bottom:24px;">
+                    <div style="font-size:11px; font-weight:700; color:#5f6368; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Assunto</div>
+                    <div style="font-size:14px; font-weight:500; color:#202124; padding:16px; background:#F8F9FA; border-radius:12px; border:1px solid #eee; box-shadow:inset 0 1px 2px rgba(0,0,0,0.02);">${email.subject}</div>
+                </div>
+                
+                <div>
+                    <div style="font-size:11px; font-weight:700; color:#5f6368; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Mensagem</div>
+                    <div style="font-size:14px; color:#3c4043; line-height:1.6; padding:0 4px;">${email.body.replace(/\n/g, '<br>')}</div>
+                </div>
             </div>
-            <div style="position:sticky; bottom:0; padding:20px; background:linear-gradient(to top, #fff 80%, transparent);">
-                <button id="csa-insert-btn" style="width:100%; padding:12px; background:#1a73e8; color:fff; border:none; border-radius:8px; font-weight:600; cursor:pointer; display:flex; justify-content:center; align-items:center; gap:8px; color:white;">
-                    ${iconSend} Inserir Template
+            
+            <div style="position:sticky; bottom:0; padding:24px; background:linear-gradient(to top, #fff 90%, rgba(255,255,255,0)); pointer-events:none;">
+                <button id="csa-insert-btn" style="pointer-events:auto; width:100%; padding:14px; background:#1a73e8; color:white; border:none; border-radius:12px; font-size:14px; font-weight:600; cursor:pointer; display:flex; justify-content:center; align-items:center; gap:10px; box-shadow:0 4px 12px rgba(26,115,232,0.3); transition:transform 0.2s, box-shadow 0.2s;">
+                    ${iconSend} Usar Template
                 </button>
             </div>
         `;
         
-        detailContent.querySelector('#csa-back-btn').onclick = showListView;
+        const backBtn = detailContent.querySelector('#csa-back-btn');
+        backBtn.onmouseenter = () => backBtn.style.background = "#f1f3f4";
+        backBtn.onmouseleave = () => backBtn.style.background = "none";
+        backBtn.onclick = showListView;
+
         const btn = detailContent.querySelector('#csa-insert-btn');
+        btn.onmouseenter = () => { btn.style.transform = "translateY(-1px)"; btn.style.boxShadow = "0 6px 16px rgba(26,115,232,0.4)"; };
+        btn.onmouseleave = () => { btn.style.transform = "translateY(0)"; btn.style.boxShadow = "0 4px 12px rgba(26,115,232,0.3)"; };
         btn.onclick = () => {
             btn.style.transform = "scale(0.96)";
             handleExecution(email, 'email');
@@ -231,11 +297,16 @@ export function initQuickEmailAssistant() {
 
     function createChip(text, key, icon = null) {
         const chip = document.createElement("button");
-        chip.innerHTML = icon ? `<span style="margin-right:4px">${icon}</span>${text}` : text;
+        const iconHTML = icon ? `<span style="margin-right:6px; font-size:14px; opacity:0.9;">${icon}</span>` : "";
+        chip.innerHTML = `${iconHTML}${text}`;
+        
         Object.assign(chip.style, styleTabBtn);
         
         if (activeCategory === key && searchTerm === "") {
             Object.assign(chip.style, styleTabActive);
+        } else {
+            chip.onmouseenter = () => { chip.style.background = "#F1F3F4"; chip.style.borderColor = "#DADCE0"; };
+            chip.onmouseleave = () => { chip.style.background = "#FFFFFF"; chip.style.borderColor = "#DADCE0"; };
         }
         
         chip.onclick = () => { 
@@ -250,11 +321,7 @@ export function initQuickEmailAssistant() {
 
     function renderTabs() {
         tabsContainer.innerHTML = "";
-        
-        // 1. Aba Especial de CRs (Nova Ideia)
         tabsContainer.appendChild(createChip("Smart CRs", CR_CATEGORY_KEY, "⚡"));
-
-        // 2. Abas de Emails Normais (Do arquivo base)
         Object.keys(QUICK_EMAILS).forEach((catKey) => {
             tabsContainer.appendChild(createChip(QUICK_EMAILS[catKey].title, catKey));
         });
@@ -265,12 +332,8 @@ export function initQuickEmailAssistant() {
         let itemsToRender = [];
         const isSearch = searchTerm.trim() !== "";
 
-        // --- LÓGICA DE COLETA DE DADOS ---
         if (isSearch) {
-            // Busca Global: Varre Emails e CRs
             const term = searchTerm.toLowerCase();
-
-            // 1. Busca em Emails
             Object.values(QUICK_EMAILS).forEach(cat => {
                 cat.emails.forEach(email => {
                     if (email.name.toLowerCase().includes(term) || email.subject.toLowerCase().includes(term)) {
@@ -278,8 +341,6 @@ export function initQuickEmailAssistant() {
                     }
                 });
             });
-
-            // 2. Busca em CRs
             Object.entries(SUBSTATUS_SHORTCODES).forEach(([key, code]) => {
                 if (!code) return;
                 const cleanName = key.replace(/_/g, ' ');
@@ -287,84 +348,83 @@ export function initQuickEmailAssistant() {
                     itemsToRender.push({ type: 'cr', key: key, code: code });
                 }
             });
-
         } else {
-            // Navegação por Categoria
             if (activeCategory === CR_CATEGORY_KEY) {
-                // Renderiza CRs
                 Object.entries(SUBSTATUS_SHORTCODES).forEach(([key, code]) => {
                     if (!code) return;
                     itemsToRender.push({ type: 'cr', key: key, code: code });
                 });
             } else if (QUICK_EMAILS[activeCategory]) {
-                // Renderiza Emails
                 QUICK_EMAILS[activeCategory].emails.forEach(email => {
                     itemsToRender.push({ type: 'email', data: email });
                 });
             }
         }
 
-        // --- RENDERIZAÇÃO DOS ITEMS ---
         if (itemsToRender.length === 0) {
-            listContent.innerHTML = `<div style="text-align:center; padding:60px 20px; color:#9aa0a6;"><div style="font-size:24px;">🔍</div><div style="font-size:14px; margin-top:8px;">Nada encontrado.</div></div>`;
+            listContent.innerHTML = `
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px; color:#9AA0A6;">
+                    <div style="font-size:32px; margin-bottom:12px; opacity:0.5;">🔍</div>
+                    <div style="font-size:14px; font-weight:500;">Nenhum template encontrado</div>
+                    <div style="font-size:12px; margin-top:4px;">Tente outro termo de busca</div>
+                </div>`;
             return;
         }
 
-        const iconEmail = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1a73e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>`;
-        const iconBolt = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbc04" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`;
-        const iconArrow = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dadce0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
+        const iconEmail = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1967D2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>`;
+        const iconBolt = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#EA8600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>`;
+        const iconArrow = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#BDC1C6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>`;
 
         itemsToRender.forEach(item => {
             const row = document.createElement("div");
             Object.assign(row.style, styleRow);
 
             if (item.type === 'email') {
-                // Layout Template de Email
                 const email = item.data;
-                const shortDesc = email.subject.length > 40 ? email.subject.substring(0, 40) + "..." : email.subject;
+                const shortDesc = email.subject.length > 45 ? email.subject.substring(0, 45) + "..." : email.subject;
                 
                 row.innerHTML = `
-                    <div style="width:36px; height:36px; border-radius:8px; background:#E8F0FE; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-right:12px;">${iconEmail}</div>
-                    <div style="flex-grow:1; min-width:0;">
-                        <div style="font-size:14px; font-weight:600; color:#202124; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${email.name}</div>
-                        <div style="font-size:12px; color:#5f6368; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${shortDesc}</div>
+                    <div style="width:40px; height:40px; border-radius:10px; background:#E8F0FE; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-right:16px;">${iconEmail}</div>
+                    <div style="flex-grow:1; min-width:0; display:flex; flex-direction:column; gap:2px;">
+                        <div style="font-size:14px; font-weight:600; color:#202124; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${email.name}</div>
+                        <div style="font-size:12px; color:#5F6368; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${shortDesc}</div>
                     </div>
-                    <div style="margin-left:8px;">${iconArrow}</div>
+                    <div style="margin-left:12px; opacity:0.6;">${iconArrow}</div>
                 `;
-                // Ação: Vai para o detalhe
                 row.onclick = () => showDetailView(email);
-
             } else {
-                // Layout CR (Shortcode)
                 const cleanName = item.key.replace(/_/g, ' ').replace('AS ', 'AS - ').replace('NI ', 'NI - ');
                 
                 row.innerHTML = `
-                    <div style="width:36px; height:36px; border-radius:8px; background:#FEF7E0; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-right:12px;">${iconBolt}</div>
-                    <div style="flex-grow:1; min-width:0;">
-                        <div style="font-size:13px; font-weight:600; color:#202124; margin-bottom:2px;">${cleanName}</div>
-                        <div style="font-size:11px; color:#ea8600; font-family:monospace;">${item.code}</div>
+                    <div style="width:40px; height:40px; border-radius:10px; background:#FEF7E0; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-right:16px;">${iconBolt}</div>
+                    <div style="flex-grow:1; min-width:0; display:flex; flex-direction:column; gap:2px;">
+                        <div style="font-size:14px; font-weight:600; color:#202124; margin-bottom:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${cleanName}</div>
+                        <div style="font-size:11px; font-weight:500; color:#EA8600; font-family:'Roboto Mono', monospace; letter-spacing:-0.2px;">${item.code}</div>
                     </div>
-                    <div style="font-size:10px; font-weight:700; color:#dadce0; text-transform:uppercase;">APLICAR</div>
+                    <div style="font-size:10px; font-weight:700; color:#DADCE0; text-transform:uppercase; letter-spacing:0.5px; border:1px solid #F1F3F4; padding:4px 8px; border-radius:6px; margin-left:12px;">Inserir</div>
                 `;
-                // Ação: Executa direto (com animação)
                 row.onclick = () => {
-                    // Feedback visual
-                    row.style.background = "#fff8e1";
-                    setTimeout(() => row.style.background = "#fff", 200);
-                    handleExecution(item.code, 'cr');
+                    row.style.transform = "scale(0.98)";
+                    row.style.background = "#FEF7E0";
+                    setTimeout(() => { 
+                        row.style.transform = "scale(1)"; 
+                        row.style.background = "#fff"; 
+                        handleExecution(item.code, 'cr');
+                    }, 150);
                 };
             }
 
-            // Hover Efeitos Genéricos
+            // Row Animations
             row.onmouseenter = () => { 
-                row.style.borderColor = item.type === 'cr' ? "#fbbc04" : "#1a73e8"; 
-                row.style.transform = "translateY(-1px)";
-                row.style.boxShadow = "0 4px 8px rgba(0,0,0,0.05)";
+                row.style.transform = "translateY(-2px)";
+                row.style.boxShadow = COLORS.shadowHover;
+                if(item.type === 'cr') row.style.borderLeft = "3px solid #Fbbc04";
+                else row.style.borderLeft = "3px solid #1a73e8";
             };
             row.onmouseleave = () => { 
-                row.style.borderColor = "#dadce0"; 
                 row.style.transform = "translateY(0)";
-                row.style.boxShadow = "0 1px 2px rgba(0,0,0,0.02)";
+                row.style.boxShadow = COLORS.shadowCard;
+                row.style.borderLeft = "1px solid transparent";
             };
 
             listContent.appendChild(row);
@@ -374,15 +434,16 @@ export function initQuickEmailAssistant() {
     searchInput.addEventListener("input", (e) => {
         searchTerm = e.target.value;
         if (searchTerm !== "") {
-            // Reseta visual das abas quando busca
-            Array.from(tabsContainer.children).forEach(c => Object.assign(c.style, styleTabBtn));
+            Array.from(tabsContainer.children).forEach(c => {
+                Object.assign(c.style, styleTabBtn);
+                c.style.opacity = "0.6";
+            });
         } else {
             renderTabs();
         }
         renderList();
     });
 
-    // Init
     renderTabs();
     renderList();
 
