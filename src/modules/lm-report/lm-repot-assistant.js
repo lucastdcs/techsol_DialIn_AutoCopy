@@ -19,7 +19,16 @@ const LINKS_DB = {
       { name: "Plx DataSites", url: "https://data.corp.google.com/sites/7kpryuwxw9jw/agents_follow_ups_report/", desc: "Relatório de Follow-ups" },
       { name: "Escala & Aderência", url: "https://lookerstudio.google.com/c/u/0/reporting/f8966844-b70e-4070-9b7f-a29028401bf4/page/p_0tayxfleid", desc: "Dashboard WFM Team & LT" },
       { name: "Performance Individual", url: "https://dashboards.corp.google.com/_a981e311_424f_410b_925f_9b019ee186ce", desc: "Tech Solutions SAO (go/mymetricswebao)" },
-      { name: "Dúvidas Ferzocos", url: "https://docs.google.com/forms/d/e/1FAIpQLSe3NejVJ2dNjGnW9S-s5mF57mF88eDV7lcd-rqLyEzT244ZMw/viewform", desc: "Formulário de dúvidas" }
+          {
+        name: "Solicitar Gravação",
+        url: "https://support.google.com/policies/contact/sar",
+        desc: "Form para solicitar gravação da chamada.",
+      },
+      {
+        name: "Escalação de Sellers",
+        url: "https://forms.gle/HWMhML56eE4CPZCs5",
+        desc: "Form para escalação de Sellers, compartilhado pelo gpozzi@.",
+      },
     ]
   },
   ads: {
@@ -82,7 +91,26 @@ const LINKS_DB = {
        { name: "MC ICS Ghost", url: "https://mcn-ics.corp.google.com/mc/overview", desc: "Ghost para Merchant Center" },
        { name: "JSFiddle", url: "https://jsfiddle.net/", desc: "Playground Código" },
        { name: "RegExr", url: "https://regexr.com/", desc: "Testador de Regex" },
-       { name: "Gerador de Pessoas", url: "https://www.4devs.com.br/gerador_de_pessoas", desc: "Dados de teste (4Devs)" }
+       { name: "Gerador de Pessoas", url: "https://www.4devs.com.br/gerador_de_pessoas", desc: "Dados de teste (4Devs)" },
+      {       name: "Doc. CSP",
+        url: "https://developers.google.com/tag-platform/tag-manager/web/csp?hl=pt-br.",
+        desc: "Doc. oficial sobre CSP",
+      },
+      {
+        name: "Doc. Enhanced Conversion",
+        url: "https://support.google.com/google-ads/answer/9888656?hl=en",
+        desc: "Como funcionam as conversões otimizadas?",
+      },
+      {
+        name: "Doc. CoMo",
+        url: "https://developers.google.com/tag-platform/security/concepts/consent-mode?hl=pt-br",
+        desc: "Doc. oficial sobre Consent Mode",
+      },
+      {
+        name: "Cursos SkillShop",
+        url: "https://skillshop.withgoogle.com/intl/pt-BR_ALL/",
+        desc: "Cursos sobre as ferramentas do Google.",
+      },
     ],
   },
   hr: {
