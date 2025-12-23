@@ -3,7 +3,18 @@ import { showToast } from '../shared/utils.js';
 import { getPageData } from '../shared/page-data.js'; 
 import { getAgentName } from '../shared/page-data.js';
 
+// --- UTILITÁRIOS ---
 const esperar = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+function log(msg, type = 'info') {
+    const styles = {
+        info: 'background: #e8f0fe; color: #1a73e8; padding: 2px 5px; border-radius: 3px;',
+        warn: 'background: #fef7e0; color: #b06000; padding: 2px 5px; border-radius: 3px;',
+        error: 'background: #fce8e6; color: #c5221f; padding: 2px 5px; border-radius: 3px;',
+        success: 'background: #e6f4ea; color: #137333; padding: 2px 5px; border-radius: 3px;'
+    };
+    console.log(`%c[EMAIL-BOT] ${msg}`, styles[type] || styles.info);
+}
 
 function simularCliqueReal(elemento) {
     if (!elemento) return;
@@ -13,70 +24,138 @@ function simularCliqueReal(elemento) {
     );
 }
 
-function getFollowUpDate() {
-    const date = new Date();
-    date.setDate(date.getDate() + 3); // Soma 3 dias corridos
+// --- UTILITÁRIO: POPUP DE ALERTA (Google Style) ---
+function createFloatingWarning(targetElement, message) {
+    if (!targetElement) return;
 
-    const dayOfWeek = date.getDay(); // 0 = Domingo, 6 = Sábado
+    // Remove alerta anterior do mesmo elemento
+    const existingId = `cw-warning-${targetElement.id || Math.random().toString(36).substr(2, 9)}`;
+    const old = document.getElementById(existingId);
+    if (old) old.remove();
 
-    if (dayOfWeek === 6) { 
-        // Se cair no Sábado, joga para Segunda (+2 dias)
-        date.setDate(date.getDate() + 2);
-    } else if (dayOfWeek === 0) { 
-        // Se cair no Domingo, joga para Segunda (+1 dia)
-        date.setDate(date.getDate() + 1);
-    }
+    const rect = targetElement.getBoundingClientRect();
 
-    // Formata para DD/MM/AAAA (Padrão BR/PT)
-    return date.toLocaleDateString('pt-BR');
+    const popup = document.createElement('div');
+    popup.id = existingId;
+    
+    popup.style.cssText = `
+        position: fixed;
+        top: ${rect.bottom + 8}px;
+        left: ${rect.left}px;
+        min-width: 300px;
+        max-width: 400px;
+        background: #ffffff;
+        border-left: 4px solid #F9AB00;
+        border-radius: 4px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        padding: 12px 16px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 10px;
+        z-index: 999999;
+        font-family: 'Google Sans', Roboto, sans-serif;
+        font-size: 13px;
+        color: #202124;
+        opacity: 0;
+        transform: translateY(-5px);
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        pointer-events: auto;
+    `;
+
+    popup.innerHTML = `
+        <div style="display:flex; align-items:flex-start; gap:10px;">
+            <span style="color:#F9AB00; font-size:16px; margin-top:1px;">⚠️</span>
+            <span style="line-height:1.4;">${message}</span>
+        </div>
+        <div class="cw-close-btn" style="
+            cursor: pointer; color: #5f6368; font-weight: bold; font-size: 16px; 
+            padding: 0 4px; line-height: 1; opacity: 0.6; transition: opacity 0.2s;
+        ">×</div>
+    `;
+
+    const closeBtn = popup.querySelector('.cw-close-btn');
+    closeBtn.onclick = () => {
+        popup.style.opacity = '0';
+        popup.style.transform = 'translateY(-5px)';
+        setTimeout(() => popup.remove(), 300);
+    };
+
+    document.body.appendChild(popup);
+
+    requestAnimationFrame(() => {
+        popup.style.opacity = '1';
+        popup.style.transform = 'translateY(0)';
+    });
+    
+    // Auto-remove após 25s (aumentei um pouco para dar tempo de clicar no link)
+    setTimeout(() => { if(document.body.contains(popup)) closeBtn.click(); }, 25000);
+}
+
+// --- UTILITÁRIO: PREENCHER CAMPO DE EMAIL (CHIP) ---
+async function fillField(inputElement, value) {
+    if (!inputElement || !value) return;
+
+    inputElement.focus();
+    
+    // Limpeza
+    inputElement.value = '';
+    inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+    await esperar(50);
+
+    // Inserção
+    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
+    nativeInputValueSetter.call(inputElement, value);
+    
+    inputElement.dispatchEvent(new Event('input', { bubbles: true }));
+    inputElement.dispatchEvent(new Event('change', { bubbles: true }));
+    
+    await esperar(100);
+
+    // Enter para criar o Chip
+    inputElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true }));
+    inputElement.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', bubbles: true }));
 }
 
 function getVisibleEditor() {
-
     const todos = Array.from(document.querySelectorAll('[id="email-body-content-top-content"]'));
-    
-    return todos.find(el => {
+    const editor = todos.find(el => {
         const isVisible = el.offsetParent !== null;
         const isReadOnly = el.closest('case-message-view') !== null;
         const isEditable = el.closest('.editor') !== null || el.closest('write-card') !== null;
-        
         return isVisible && !isReadOnly && isEditable;
     });
+    if (editor) log("Editor visualmente detectado.", 'success');
+    return editor;
 }
 
+// --- CORE: ABRIR E LIMPAR ---
 async function openAndClearEmail() {
-    console.log("🚀 FASE 1: Abrindo janela de email...");
-
+    log("🚀 FASE 1: Tentando abrir a janela de email...");
     let emailAberto = false;
+    
     const todosIcones = Array.from(document.querySelectorAll('i.material-icons-extended'));
     const iconeEmail = todosIcones.find(el => el.innerText.trim() === 'email');
 
     if (iconeEmail && iconeEmail.offsetParent !== null) {
+        log("Botão de email direto encontrado.");
         const botaoAlvo = iconeEmail.closest('material-button') || iconeEmail.closest('material-fab') || iconeEmail;
-        if (botaoAlvo.style) {
-            botaoAlvo.style.display = 'block';
-            botaoAlvo.style.visibility = 'visible';
-        }
         simularCliqueReal(botaoAlvo);
         emailAberto = true;
     } else {
-
+        log("Botão direto não visível. Tentando Speed Dial (+)...", 'warn');
         const speedDial = document.querySelector('material-fab-speed-dial');
         if (speedDial) {
             const triggerBtn = speedDial.querySelector('.trigger');
             if (triggerBtn) {
-                triggerBtn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
                 simularCliqueReal(triggerBtn);
-                await esperar(1000);
-                
+                await esperar(800);
                 const iconesNovos = Array.from(document.querySelectorAll('i.material-icons-extended'));
                 const emailBtnNovo = iconesNovos.find(el => el.innerText.trim() === 'email');
                 if (emailBtnNovo) {
                     simularCliqueReal(emailBtnNovo);
                     emailAberto = true;
                 }
-            } else {
-                speedDial.click();
             }
         }
     }
@@ -86,44 +165,32 @@ async function openAndClearEmail() {
         return false;
     }
     
-    console.log("🚀 FASE 2: Verificando rascunhos (Polling de 3s)...");
-    
+    log("🚀 FASE 2: Verificando rascunhos...");
     let draftButton = null;
     let attempts = 0;
-    
-    while (attempts < 15) { 
-        await esperar(200);
-        
+    const MAX_ATTEMPTS = 20;
+
+    while (attempts < MAX_ATTEMPTS) {
+        await esperar(250);
         const candidates = document.querySelectorAll('material-button[debug-id="discard-prewrite-draft-button"]');
         draftButton = Array.from(candidates).find(el => el.offsetParent !== null);    
-
-        if (draftButton) break;
-        
-        const editorJaApareceu = getVisibleEditor();
-        if (editorJaApareceu) {
-            console.log("ℹ️ Editor apareceu limpo. Sem rascunhos.");
-            break; 
+        if (draftButton) {
+            log(`⚠️ Rascunho detectado!`, 'warn');
+            break;
         }
-
         attempts++;
     }
 
     if (draftButton) {
-        console.log("⚠️ RASCUNHO LOCALIZADO! Executando descarte...");
-        
-
+        log("🗑️ Descartando...");
         simularCliqueReal(draftButton);
-        const textInside = draftButton.querySelector('.buttonText');
-        if (textInside) simularCliqueReal(textInside);
         draftButton.click();
 
-        // 2. Espera o Modal de Confirmação
-        console.log("⏳ Aguardando Confirm...");
         let confirmBtn = null;
         let confirmAttempts = 0;
         
-        while (confirmAttempts < 20) { // Espera até 4s (modais são lentos)
-            await esperar(200);
+        while (confirmAttempts < 15) {
+            await esperar(300);
             const confirms = document.querySelectorAll('material-button[debug-id="confirm-button"]');
             confirmBtn = Array.from(confirms).find(el => el.offsetParent !== null);
             if (confirmBtn) break;
@@ -131,39 +198,27 @@ async function openAndClearEmail() {
         }
 
         if (confirmBtn) {
-            console.log("✅ Confirmando...");
             simularCliqueReal(confirmBtn);
-            const confirmContent = confirmBtn.querySelector('.content');
-            if (confirmContent) simularCliqueReal(confirmContent);
-            
-            showToast("Limpando rascunho...", { duration: 2000 });
-            
-            // O PULO DO GATO:
-            // Depois de confirmar, TEMOS que esperar o editor antigo morrer e o novo nascer.
-            console.log("⏳ Aguardando reload do editor pós-descarte...");
-            await esperar(3000); 
-        } else {
-            console.warn("❌ Confirm não apareceu.");
+            showToast("Limpando rascunho antigo...", { duration: 2000 });
+            await esperar(2500); 
         }
     }
 
-    
-    console.log("🚀 FASE 3: Buscando editor final para limpeza...");
-
+    log("🚀 FASE 3: Buscando editor final...");
     let tentativasEditor = 0;
-    let editorVisivel = getVisibleEditor(); 
+    let editorVisivel = null;
     
-    while (!editorVisivel && tentativasEditor < 20) {
-        await esperar(500);
+    while (tentativasEditor < 20) {
         editorVisivel = getVisibleEditor();
+        if (editorVisivel) break;
+        await esperar(250);
         tentativasEditor++;
     }
 
     if (!editorVisivel) {
-        showToast("Erro: Editor não carregou após a abertura.", { error: true });
+        showToast("Erro: Editor não carregou.", { error: true });
         return false;
     }
-
 
     const containerTopo = editorVisivel.closest('[id="email-body-content-top"]');
     const wrapperGeral = editorVisivel.closest('.email-body-content') || document.body;
@@ -174,6 +229,7 @@ async function openAndClearEmail() {
             const ancestral = editorPai.closest('[aria-hidden="true"]');
             if (ancestral) ancestral.removeAttribute('aria-hidden');
             editorPai.focus();
+            simularCliqueReal(editorPai);
         }
         
         await esperar(300);
@@ -193,114 +249,180 @@ async function openAndClearEmail() {
             sel.removeAllRanges();
             sel.addRange(range);
         }
-        
         return true; 
     }
     
     return false;
 }
 
+// --- FUNÇÕES DE APLICAÇÃO ---
+
 export async function runEmailAutomation(cannedResponseText) {
     if (!cannedResponseText) return;
-    showToast(`Preparando email...`, { duration: 3000 });
 
-    const pageData = getPageData();
+    // 1. Abre e Limpa o Email
     const emailPronto = await openAndClearEmail();
     if (!emailPronto) return;
 
+    // 2. Coleta os Dados da Página
+    const pageData = await getPageData(); 
 
-    await esperar(500);
+    // ============================================================
+    // 🟢 NOVA LÓGICA DE DESTINATÁRIOS (Igual ao QuickEmail)
+    // ============================================================
+    log("📧 Processando destinatários para CR...", 'info');
+
+    // A. Expandir Cabeçalho (CC/BCC) se necessário
+    const expandBtn = document.querySelector('material-icon[aria-label="Show CC and BCC fields"]') || 
+                      document.querySelector('material-icon[debug-id="expand-button"][aria-pressed="false"]');
+    if (expandBtn) {
+        expandBtn.click();
+        await esperar(600);
+    }
+
+    // B. Preencher TO (Cliente) + Aviso
+    if (pageData.clientEmail && pageData.clientEmail !== "N/A" && pageData.clientEmail !== "N/A (Bloqueado)") {
+        const toInput = document.querySelector('input[aria-label="Enter To email address"]');
+        if (toInput) {
+            await fillField(toInput, pageData.clientEmail);
+            createFloatingWarning(toInput, "<strong>Verifique o e-mail:</strong> O CRM pode traduzir caracteres incorretamente.");
+        }
+    }
+
+    // C. Preencher BCC (Interno) + Aviso com Link
+    if (pageData.internalEmail) {
+        const bccInput = document.querySelector('input[aria-label="Enter Bcc email address"]');
+        if (bccInput) {
+            await fillField(bccInput, pageData.internalEmail);
+            
+            const linkUrl = "https://mail.google.com/mail/u/0?ui=2&ik=ed23fb3167&attid=0.1&permmsgid=msg-f:1843445102914241244&th=19953b8dda2302dc&view=fimg&fur=ip&permmsgid=msg-f:1843445102914241244&sz=s0-l75-ft&attbid=ANGjdJ9m7O33cM36sxBYohVD6Qsapyux4PNr8qmTBlZ8zkp_LR79suGZhnxFJtBoFDeyMFygsH_tvCts5fnX0WV4rdClw9YqqR7guLnaXU9UzmZRRMRXEoC7T_MPbwo&disp=emb&realattid=ii_mfmv7wjm1&zw";
+            const warningMsg = `
+                <strong>Atenção:</strong> Verifique se o e-mail do AM deve estar em cópia.
+                <div style="margin-top:4px;">
+                    <a href="${linkUrl}" target="_blank" style="color:#1a73e8;text-decoration:none;font-weight:500;display:inline-flex;align-items:center;">
+                        Consultar Regra <span style="font-size:14px;margin-left:2px;">↗</span>
+                    </a>
+                </div>
+            `;
+            createFloatingWarning(bccInput, warningMsg);
+        }
+    }
+    // ============================================================
+
+    await esperar(500); // Pequena pausa antes de interagir com o botão CR
+
+    // 3. Aplicação da Canned Response
     const btnCanned = document.querySelector('material-button[debug-id="canned_response_button"]');
     
     if (btnCanned) {
-        btnCanned.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        await esperar(200); 
         simularCliqueReal(btnCanned);
-        
-        await esperar(1500); 
+        // Espera um pouco para o input aparecer
+        await esperar(1000);
         const searchInput = document.querySelector('material-auto-suggest-input input');
         
         if (searchInput) {
             simularCliqueReal(searchInput);
-            await esperar(200);
-            
             document.execCommand('insertText', false, cannedResponseText);
             searchInput.dispatchEvent(new Event('input', { bubbles: true }));
             
-            let opcaoAlvo = null;
-            let tentativas = 0;
-            while (tentativas < 20) { 
-                await esperar(500);
-                tentativas++;
-                const opcoes = Array.from(document.querySelectorAll('material-select-dropdown-item'));
-                if (opcoes.length > 0) {
-                     opcaoAlvo = opcoes.find(opt => 
-                        opt.innerText.toLowerCase().includes(cannedResponseText.toLowerCase())
-                    );
-                    if (!opcaoAlvo && opcoes.length === 1) opcaoAlvo = opcoes[0];
-                    if (opcaoAlvo) break;
-                }
+            log("⏳ Buscando resultado da Canned Response...", 'info');
+            
+            // 🟢 LÓGICA DE ESPERA DINÂMICA (Loop até 15s)
+            let primeiraOpcao = null;
+            let tempoDecorrido = 0;
+            const TEMPO_MAXIMO = 15000;
+            const INTERVALO = 500;
+
+            while (tempoDecorrido < TEMPO_MAXIMO) {
+                primeiraOpcao = document.querySelector('material-select-dropdown-item');
+                if (primeiraOpcao) break; 
+                await esperar(INTERVALO);
+                tempoDecorrido += INTERVALO;
             }
 
-            if (opcaoAlvo) {
-                simularCliqueReal(opcaoAlvo);
-                await esperar(2000); 
+            if (primeiraOpcao) {
+                simularCliqueReal(primeiraOpcao);
+                await esperar(1500);
 
-
-                function encontrarNoDeTexto(elemento, textoParaAchar) {
-                    if (elemento.nodeType === 3 && elemento.nodeValue.includes(textoParaAchar)) return elemento;
-                    if (!elemento.childNodes) return null;
-                    for (let child of elemento.childNodes) {
-                        const achou = encontrarNoDeTexto(child, textoParaAchar);
-                        if (achou) return achou;
-                    }
-                    return null;
-                }
-
-
+                // Substituição de Variáveis no Corpo (Ex: Advertiser Name)
                 const editorVisivel = getVisibleEditor();
-                const containerTopo = editorVisivel ? editorVisivel.closest('[id="email-body-content-top"]') : document.body;
-                
-                let noAlvo = encontrarNoDeTexto(containerTopo, '{%ADVERTISER_NAME%}');
-
-                if (noAlvo) {
-                    const rangeToken = document.createRange();
-                    const start = noAlvo.nodeValue.indexOf('{%ADVERTISER_NAME%}');
-                    rangeToken.setStart(noAlvo, start);
-                    rangeToken.setEnd(noAlvo, start + '{%ADVERTISER_NAME%}'.length);
-                    
-                    const sel = window.getSelection();
-                    sel.removeAllRanges();
-                    sel.addRange(rangeToken);
-                    
-                    document.execCommand('insertText', false, pageData.advertiserName);
-                    showToast("Email preenchido!");
-                } else {
-                    showToast("Email inserido (Nome não substituído).");
+                if (editorVisivel && pageData.advertiserName) {
+                    const html = editorVisivel.innerHTML;
+                    if (html.includes('{%ADVERTISER_NAME%}')) {
+                        editorVisivel.innerHTML = html.replace(/{%ADVERTISER_NAME%}/g, pageData.advertiserName);
+                    }
                 }
+                showToast("Canned Response aplicada!");
             } else {
-                showToast(`Template '${cannedResponseText}' não encontrado.`, { error: true });
+                log(`❌ Timeout: Resultado '${cannedResponseText}' não apareceu após 15s.`, 'error');
+                showToast(`Timeout: Template '${cannedResponseText}' não carregou.`, { error: true });
             }
         }
     } else {
-        showToast("Botão Canned Response não achado.", { error: true });
+        showToast("Botão Canned Response não encontrado.", { error: true });
     }
 }
 
-
 export async function runQuickEmail(template) {
-    console.log(`🚀 Iniciando automação (Quick): ${template.name}`);
-    showToast(`Preparando email...`, { duration: 3000 });
-
-    const pageData = getPageData(); 
-    const agentName = getAgentName();
+    log(`🚀 Iniciando Quick Email: ${template.name}`);
     
+    // 1. Abre e Limpa
     const emailPronto = await openAndClearEmail(); 
-    
     if (!emailPronto) return;
+
+    // 2. Coleta Dados (Agora com Email)
+    const pageData = await getPageData(); 
+    const agentName = getAgentName();
 
     await esperar(600); 
 
+    // ============================================================
+    // FASE 4: PREENCHIMENTO DE DESTINATÁRIOS (To/BCC)
+    // ============================================================
+    log("📧 Processando destinatários...");
+
+    // A. Expandir Cabeçalho (CC/BCC)
+    const expandBtn = document.querySelector('material-icon[aria-label="Show CC and BCC fields"]') || 
+                      document.querySelector('material-icon[debug-id="expand-button"][aria-pressed="false"]');
+    if (expandBtn) {
+        expandBtn.click();
+        await esperar(600);
+    }
+
+    // B. Preencher TO (Cliente)
+    if (pageData.clientEmail && pageData.clientEmail !== "N/A" && pageData.clientEmail !== "N/A (Bloqueado)") {
+        const toInput = document.querySelector('input[aria-label="Enter To email address"]');
+        if (toInput) {
+            await fillField(toInput, pageData.clientEmail);
+            createFloatingWarning(toInput, "<strong>Verifique o e-mail:</strong> O CRM pode traduzir caracteres incorretamente.");
+        }
+    }
+
+    // C. Preencher BCC (Interno) - COM LINK DE AJUDA
+    if (pageData.internalEmail) {
+        const bccInput = document.querySelector('input[aria-label="Enter Bcc email address"]');
+        if (bccInput) {
+            await fillField(bccInput, pageData.internalEmail);
+            
+            // Link de consulta
+            const linkUrl = "https://mail.google.com/mail/u/0?ui=2&ik=ed23fb3167&attid=0.1&permmsgid=msg-f:1843445102914241244&th=19953b8dda2302dc&view=fimg&fur=ip&permmsgid=msg-f:1843445102914241244&sz=s0-l75-ft&attbid=ANGjdJ9m7O33cM36sxBYohVD6Qsapyux4PNr8qmTBlZ8zkp_LR79suGZhnxFJtBoFDeyMFygsH_tvCts5fnX0WV4rdClw9YqqR7guLnaXU9UzmZRRMRXEoC7T_MPbwo&disp=emb&realattid=ii_mfmv7wjm1&zw";
+            
+            const warningMsg = `
+                <strong>Atenção:</strong> Verifique se o e-mail do AM deve estar em cópia.
+                <div style="margin-top:4px;">
+                    <a href="${linkUrl}" target="_blank" style="color:#1a73e8;text-decoration:none;font-weight:500;display:inline-flex;align-items:center;">
+                        Consultar Regra <span style="font-size:14px;margin-left:2px;">↗</span>
+                    </a>
+                </div>
+            `;
+            
+            createFloatingWarning(bccInput, warningMsg);
+        }
+    }
+
+    // ============================================================
+    // FASE 5: ASSUNTO E CORPO
+    // ============================================================
 
     const subjectInput = document.querySelector('input[aria-label="Subject"]');
     if (subjectInput && template.subject) {
@@ -308,11 +430,8 @@ export async function runQuickEmail(template) {
         const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
         nativeInputValueSetter.call(subjectInput, template.subject);
         subjectInput.dispatchEvent(new Event('input', { bubbles: true }));
-        
-
         await esperar(300); 
     }
-
 
     const editorVisivel = getVisibleEditor();
     
@@ -322,22 +441,14 @@ export async function runQuickEmail(template) {
          
          if (editorPai) {
              editorPai.focus();
-
-             editorPai.click(); 
-             editorPai.dispatchEvent(new Event('input', { bubbles: true }));
+             simularCliqueReal(editorPai);
          }
-
-
-        await esperar(400);
-
 
         const date = new Date();
         date.setDate(date.getDate() + 3); 
         const day = date.getDay();
-        
         if (day === 6) date.setDate(date.getDate() + 2);
         else if (day === 0) date.setDate(date.getDate() + 1);
-        
         const dataFormatada = date.toLocaleDateString('pt-BR');
         
         let finalBody = template.body;
@@ -347,7 +458,6 @@ export async function runQuickEmail(template) {
         finalBody = finalBody.replace(/\[Seu Nome\]/g, agentName); 
         finalBody = finalBody.replace(/\[MM\/DD\/YYYY\]/g, dataFormatada);
 
-
         document.execCommand('insertHTML', false, finalBody);
         
         if (editorPai) {
@@ -356,8 +466,7 @@ export async function runQuickEmail(template) {
         }
         
         showToast("Email preenchido com sucesso!", { duration: 2000 });
-
-        await esperar(800); 
+        log("✅ Processo finalizado com sucesso.", 'success');
 
     } else {
         showToast("Erro ao focar no editor.", { error: true });

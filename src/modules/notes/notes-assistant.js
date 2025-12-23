@@ -178,15 +178,22 @@ export function initCaseNotesAssistant() {
   // --- Popup ---
   const popup = document.createElement("div");
   popup.id = "autofill-popup";
+
+  // 1. [CRUCIAL] Adiciona a classe que conecta com o animations.js
+  popup.classList.add("cw-module-window"); 
+
   Object.assign(popup.style, stylePopup, {
     right: "100px", 
     width: "400px", 
-    opacity: "0",
-    pointerEvents: "none",
-    transition:
-      "width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease, transform 0.3s ease",
+    
+    // 2. [AJUSTE] Removemos opacity e pointerEvents daqui, 
+    // pois a classe .cw-module-window já define isso (opacity: 0).
+    
+    // 3. [AJUSTE] Removemos a transição de transform/opacity daqui.
+    // Deixamos apenas a de 'width' (para o resize), senão o inline
+    // bloqueia a animação "Genie" do arquivo animations.js.
+    transition: "width 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)",
   });
-  popup.style.transition += ", width 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)";
 
   const animRefs = { popup, googleLine: null };
 
@@ -295,6 +302,7 @@ export function initCaseNotesAssistant() {
       <option value="SO">SO - Solution Offered</option>
       <option value="IN">IN - Inactive</option>
       <option value="AS">AS - Assigned</option>
+      <option value="DC">DC - Discard</option>
   `;
 
   // 3. HEADER DO SUB-STATUS (Label + Link)
@@ -467,47 +475,86 @@ export function initCaseNotesAssistant() {
   popupContent.appendChild(stepSnippetsDiv);
 
   // --- STEP 2: TASKS (Integrado com Componente) ---
-  const step2Div = document.createElement("div");
-  step2Div.id = "step-2-tasks";
-  Object.assign(step2Div.style, styles.stepBlock, { display: "none" });
-  const optionalTaskBtn = document.createElement("button");
-  optionalTaskBtn.textContent = "+ Gostaria de selecionar uma task?";
-  Object.assign(optionalTaskBtn.style, styles.optionalBtn);
-  optionalTaskBtn.onmouseover = () => {
-    optionalTaskBtn.style.background = "#e8f0fe";
-  };
-  optionalTaskBtn.onmouseout = () => {
-    optionalTaskBtn.style.background = "white";
-  };
-  const step2Title = document.createElement("h3");
-  Object.assign(step2Title.style, styles.h3);
+  // const step2Div = document.createElement("div");
+  // step2Div.id = "step-2-tasks";
+  // Object.assign(step2Div.style, styles.stepBlock, { display: "none" });
+  // const optionalTaskBtn = document.createElement("button");
+  // optionalTaskBtn.textContent = "+ Gostaria de selecionar uma task?";
+  // Object.assign(optionalTaskBtn.style, styles.optionalBtn);
+  // optionalTaskBtn.onmouseover = () => {
+  //   optionalTaskBtn.style.background = "#e8f0fe";
+  // };
+  // optionalTaskBtn.onmouseout = () => {
+  //   optionalTaskBtn.style.background = "white";
+  // };
+  // const step2Title = document.createElement("h3");
+  // Object.assign(step2Title.style, styles.h3);
 
-  const taskCheckboxesContainer = document.createElement("div");
-  taskCheckboxesContainer.id = "task-checkboxes-container";
+  // const taskCheckboxesContainer = document.createElement("div");
+  // taskCheckboxesContainer.id = "task-checkboxes-container";
 
-  step2Div.appendChild(optionalTaskBtn);
-  step2Div.appendChild(taskCheckboxesContainer);
-  step2Div.appendChild(step2Title);
-  step2Div.appendChild(stepTasks.selectionElement); // <--- ELEMENTO DO COMPONENTE AQUI
-  popupContent.appendChild(step2Div);
+  // step2Div.appendChild(optionalTaskBtn);
+  // step2Div.appendChild(taskCheckboxesContainer);
+  // step2Div.appendChild(step2Title);
+  // step2Div.appendChild(stepTasks.selectionElement); // <--- ELEMENTO DO COMPONENTE AQUI
+  // popupContent.appendChild(step2Div);
 
   // --- STEP 3: FORMS ---
+  // --- STEP 3: FORMS E TASKS (Unificados) ---
   const step3Div = document.createElement("div");
   step3Div.id = "step-3-form";
   Object.assign(step3Div.style, styles.stepBlock, { display: "none" });
+
+  // 1. Título Geral
   const step3Title = document.createElement("h3");
   Object.assign(step3Title.style, styles.h3);
   step3Div.appendChild(step3Title);
+
+  // 2. Campos de Texto (Reason, Contexto, etc)
   const dynamicFormFieldsContainer = document.createElement("div");
   dynamicFormFieldsContainer.id = "dynamic-form-fields-container";
   step3Div.appendChild(dynamicFormFieldsContainer);
 
-  // Injeta Módulos
-  step3Div.appendChild(tagSupport.element); // Tag Support
-  step3Div.appendChild(stepTasks.screenshotsElement); // Screenshots do Componente
+  // -----------------------------------------------------------
+  // [MUDANÇA] Inserção da Lógica de Tasks AQUI (Meio do sanduíche)
+  // -----------------------------------------------------------
+  
+  // Botão "+ Selecionar Task"
+  const optionalTaskBtn = document.createElement("button");
+  optionalTaskBtn.textContent = "+ Gostaria de selecionar uma task?";
+  Object.assign(optionalTaskBtn.style, styles.optionalBtn);
+  
+  // Efeitos do botão
+  optionalTaskBtn.onmouseover = () => optionalTaskBtn.style.background = "#e8f0fe";
+  optionalTaskBtn.onmouseout = () => optionalTaskBtn.style.background = "white";
+  optionalTaskBtn.onclick = () => {
+    optionalTaskBtn.style.display = "none";
+    step2Title.style.display = "block";
+    stepTasks.selectionElement.style.display = "block"; 
+  };
+
+  // Título das Tasks (ex: "Selecione as Tasks")
+  const step2Title = document.createElement("h3");
+  Object.assign(step2Title.style, styles.h3, { marginTop: "20px" }); // Margem extra para separar dos inputs
+
+  // Container de Checkboxes (O componente visual)
+  const tasksContainer = stepTasks.selectionElement;
+  Object.assign(tasksContainer.style, { marginBottom: "20px" });
+
+  // Adiciona ao DOM na ordem desejada
+  step3Div.appendChild(optionalTaskBtn);
+  step3Div.appendChild(step2Title);
+  step3Div.appendChild(tasksContainer);
+  
+  // -----------------------------------------------------------
+
+  // 3. Tag Support (Pílulas de tags aplicadas)
+  step3Div.appendChild(tagSupport.element); 
+
+  // 4. Screenshots (Ficam por último, como solicitado)
+  step3Div.appendChild(stepTasks.screenshotsElement); 
 
   popupContent.appendChild(step3Div);
-
   // Email
   const emailAutomationDiv = document.createElement("div");
   emailAutomationDiv.id = "step-4-email";
@@ -917,6 +964,14 @@ subStatusSelect.onchange = () => {
         },
         { id: "quickfill-in-manual", text: "Outro (Manual)" },
       ];
+    } else if (selectedSubStatusKey.startsWith("DC_")) {
+        inputType = "radio";
+        scenarios = [
+            { 
+                id: "quickfill-dc-lm-no-access", 
+                text: "LM - Sem acessos (Reagendar em BAU)" 
+            }
+        ];
     }
 
     const filteredScenarios = scenarios.filter((s) => {
@@ -931,19 +986,19 @@ subStatusSelect.onchange = () => {
       }
     });
     if (filteredScenarios.length > 0) stepSnippetsDiv.style.display = "block";
-
-    if (templateData.requiresTasks) {
-      optionalTaskBtn.style.display = "none";
-      step2Title.style.display = "block";
-      stepTasks.selectionElement.style.display = "block";
-      step2Div.style.display = "block";
+if (templateData.requiresTasks) {
+      // Se a task é obrigatória (ex: SO_Implementation):
+      optionalTaskBtn.style.display = "none";       // Esconde botão opcional
+      step2Title.style.display = "block";           // Mostra título "Selecione as Tasks"
+      stepTasks.selectionElement.style.display = "block"; // Mostra checkboxes
     } else {
-      optionalTaskBtn.style.display = "block";
-      step2Title.style.display = "none";
-      stepTasks.selectionElement.style.display = "none";
-      step2Div.style.display = "block";
+      // Se a task é opcional (ex: NI_Awaiting):
+      optionalTaskBtn.style.display = "block";      // Mostra botão "+ Task"
+      step2Title.style.display = "none";            // Esconde título
+      stepTasks.selectionElement.style.display = "none"; // Esconde checkboxes
     }
 
+    // Gera os campos de formulário (Mantido igual)
     dynamicFormFieldsContainer.innerHTML = "";
     const placeholders = templateData.template.match(/{([A-Z0-9_]+)}/g) || [];
     const uniquePlaceholders = [...new Set(placeholders)];
@@ -972,60 +1027,52 @@ subStatusSelect.onchange = () => {
       
       Object.assign(label.style, styles.label);
 
-      // ============================================================
-      // [PREMIUM] BOTÃO MAGIC SEARCH (Estilo Apple/Google Hybrid)
+// ============================================================
+      // BOTÃO GOOGLE MATERIAL 3 (Pílula Tonal)
       // ============================================================
       if (fieldName === "SPEAKEASY_ID") {
-          const btnSearch = document.createElement('button'); // Mudamos de span para button para melhor semântica
+          const btnSearch = document.createElement('button');
           
-          // Ícone SVG "Magic Sparkles"
-          const magicIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>`;
-          
-          btnSearch.innerHTML = `${magicIcon}Auto Busca`;
+          // Texto simples e ícone limpo
+          btnSearch.innerHTML = `<span style="font-size:12px; margin-right:4px;">✨</span>Auto Busca`;
           
           btnSearch.style.cssText = `
-              font-family: 'Google Sans', sans-serif;
+              font-family: 'Google Sans', Roboto, sans-serif;
               font-size: 11px;
-              font-weight: 600;
-              color: #1a73e8;
-              background: linear-gradient(180deg, #ffffff 0%, #f1f3f4 100%);
-              border: 1px solid rgba(218, 220, 224, 0.8);
-              border-radius: 20px; /* Pílula completa */
-              padding: 4px 12px;
+              font-weight: 500;
+              color: #0b57d0; /* Azul Google Material 3 */
+              background-color: #d3e3fd; /* Fundo Azul Claro Tonal */
+              border: none;
+              border-radius: 100px; /* Fully rounded pill */
+              padding: 5px 12px;
               margin-left: 10px;
               cursor: pointer;
               display: inline-flex;
               align-items: center;
-              box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-              transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+              transition: all 0.2s ease;
               outline: none;
               vertical-align: middle;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
+              letter-spacing: 0.3px;
           `;
           
-          btnSearch.title = "Localizar Speakeasy ID automaticamente";
+          btnSearch.title = "Localizar Speakeasy ID no histórico";
 
-          // Efeitos de Interação
+          // Hover States (Material Design Elevation)
           btnSearch.onmouseover = () => {
-              btnSearch.style.boxShadow = "0 2px 4px rgba(26, 115, 232, 0.15)";
-              btnSearch.style.borderColor = "#1a73e8";
-              btnSearch.style.background = "#fff";
-              btnSearch.style.transform = "translateY(-1px)";
+              btnSearch.style.backgroundColor = "#c2e7ff";
+              btnSearch.style.boxShadow = "0 1px 2px rgba(0,0,0,0.1)";
           };
           
           btnSearch.onmouseout = () => {
-              btnSearch.style.boxShadow = "0 1px 2px rgba(0,0,0,0.05)";
-              btnSearch.style.borderColor = "rgba(218, 220, 224, 0.8)";
-              btnSearch.style.background = "linear-gradient(180deg, #ffffff 0%, #f1f3f4 100%)";
-              btnSearch.style.transform = "translateY(0)";
+              btnSearch.style.backgroundColor = "#d3e3fd";
+              btnSearch.style.boxShadow = "none";
           };
 
           btnSearch.onmousedown = () => {
-              btnSearch.style.transform = "translateY(1px)";
-              btnSearch.style.boxShadow = "none";
-              btnSearch.style.background = "#e8f0fe";
+              btnSearch.style.backgroundColor = "#a8c7fa"; // Ripple effect simulator
+              btnSearch.style.transform = "scale(0.96)";
           };
+          btnSearch.onmouseup = () => btnSearch.style.transform = "scale(1)";
 
           btnSearch.onclick = (e) => {
               e.preventDefault(); 
@@ -1341,15 +1388,15 @@ function generateOutputHtml() {
   };
 }
 
-  function resetSteps(startFrom = 1.5) {
+function resetSteps(startFrom = 1.5) {
     if (startFrom <= 1.5) {
       stepSnippetsDiv.style.display = "none";
       snippetContainer.innerHTML = "";
     }
+    // O antigo passo 2 foi absorvido pelo 3, então limpamos as tasks aqui
     if (startFrom <= 2) {
-      step2Div.style.display = "none";
-      stepTasks.reset(); 
-      optionalTaskBtn.style.display = "none";
+        stepTasks.reset(); 
+        optionalTaskBtn.style.display = "none";
     }
     if (startFrom <= 3) {
       step3Div.style.display = "none";
@@ -1359,7 +1406,6 @@ function generateOutputHtml() {
       emailAutomationDiv.style.display = "none";
     }
   }
-
 function toggleVisibility() {
     visible = !visible;
     

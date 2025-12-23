@@ -43,6 +43,26 @@ export const QUICK_EMAILS = {
                     <p>Atenciosamente,</p>
                     <p><strong>[Seu Nome]</strong><br>Time de Soluções Técnicas Cognizant, em nome do Google.</p>
                 `
+            },
+            {
+                id: 'max_reschedules',
+                name: 'Limite de Reagendamentos Excedido',
+                subject: 'Status do Agendamento - Time de Soluções Técnicas do Google',
+                body: `
+                    <p>Olá, <strong>[Nome do Cliente]</strong>,</p>
+                    <br>
+                    <p>Espero que este e-mail o encontre bem.</p>
+                    <p>Escrevo em nome do time do Google Ads para informar sobre o seu pedido de reagendamento para a implementação das tags.</p>
+                    <br>
+                    <p>Infelizmente, <strong>não podemos mais reagendar este caso específico</strong>, pois excedemos o limite máximo de agendamentos permitido.</p>
+                    <br>
+                    <p>Se você deseja prosseguir com a implementação das tags, será necessário abrir um <strong>novo caso</strong> diretamente com a <a href="https://support.google.com/google-ads">Ajuda do Google Ads</a>. Isso garantirá que você receba o acompanhamento e o suporte necessário para dar continuidade à sua solicitação.</p>
+                    <br>
+                    <p>Agradecemos o seu envolvimento neste processo e a oportunidade de ajudar. Esperamos continuar a nossa colaboração.</p>
+                    <br>
+                    <p>Atenciosamente,</p>
+                    <p><strong>[Seu Nome]</strong><br>Time de Soluções Técnicas Cognizant, em nome do Google</p>
+                `
             }
         ]
     },
@@ -89,6 +109,25 @@ export const QUICK_EMAILS = {
                     <br>
                     <p>Fico à disposição.</p>
                     <p><strong>[Seu Nome]</strong><br>Time de Soluções Técnicas Cognizant, em nome do Google</p>
+                `
+            },
+            {
+                id: '2_6_completed_reschedule',
+                name: 'Ações Concluídas (Solicitar Reagendamento)',
+                subject: 'Continuidade da Implementação - Soluções Técnicas do Google',
+                body: `
+                    <p>Olá, tudo bem?</p>
+                    <br>
+                    <p>Maravilha! Muito bom saber que conseguiu concluir as ações pendentes. Sendo assim, agora podemos continuar com a implementação das configurações em sua conta.</p>
+                    <br>
+                    <p>Para isso, peço, por favor, que me envie algumas datas e horários em que está disponível a partir do dia <strong>[Disponibilidade em BAU]</strong>.</p>
+                    <p>Assim que me enviar essa informação, irei criar um reagendamento para que um de nossos agentes continue te ajudando.</p>
+                    <br>
+                    <p>Também informo que se não houver resposta a este email, realizarei um acompanhamento neste caso durante 6 dias, onde entrarei em contato a cada 3 dias para tentarmos reagendar seu caso o mais breve possível.</p>
+                    <p>Reforço que minha agenda é dinâmica, sendo assim, a qualquer momento um atendimento pode ser marcado para os dias disponíveis. Logo, quanto mais rápido conseguir me responder, mais garantido será o agendamento de data e horário.</p>
+                    <br>
+                    <p>Atenciosamente,</p>
+                    <p><strong>[Seu Nome]</strong><br>Time de Soluções Técnicas Cognizant, em nome do Google.</p>
                 `
             }
         ]

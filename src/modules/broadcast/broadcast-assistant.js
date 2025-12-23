@@ -99,12 +99,23 @@ export function initBroadcastAssistant() {
   }
 
   // --- UI SETUP ---
-  const popup = document.createElement("div");
+const popup = document.createElement("div");
   popup.id = "broadcast-popup";
+
+  // 1. Conecta ao animations.js
+  popup.classList.add("cw-module-window");
+
   Object.assign(popup.style, stylePopup, {
-    right: "auto", left: "50%", width: "450px", height: "650px", 
-    display: "flex", flexDirection: "column", opacity: "0", pointerEvents: "none",
+    right: "auto", 
+    left: "50%", 
+    width: "450px", 
+    height: "650px", 
+    display: "flex", 
+    flexDirection: "column",
+    // Removemos opacity/pointerEvents/transition daqui
+    transform: "translateX(-50%) scale(0.05)", // Estado inicial para centralizar
   });
+  
   const animRefs = { popup, googleLine: null };
 
   function toggleVisibility() {

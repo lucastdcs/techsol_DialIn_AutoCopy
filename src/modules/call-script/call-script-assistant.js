@@ -132,8 +132,11 @@ export function initCallScriptAssistant() {
   let csaVisible = false;
 
 
-  const csaPopup = document.createElement("div");
+const csaPopup = document.createElement("div");
   csaPopup.id = "call-script-popup";
+
+  // 1. Conecta ao animations.js
+  csaPopup.classList.add("cw-module-window");
 
   Object.assign(csaPopup.style, stylePopup, {
     right: "auto",
@@ -142,8 +145,8 @@ export function initCallScriptAssistant() {
     height: "650px",
     display: "flex",
     flexDirection: "column",
-    opacity: "0",
-    pointerEvents: "none"
+    // Removemos opacity/pointerEvents daqui
+    transform: "translateX(-50%) scale(0.05)", // Estado inicial
   });
 
   const animRefs = { popup: csaPopup, googleLine: null };
