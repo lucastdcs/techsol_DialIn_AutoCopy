@@ -142,15 +142,50 @@ export async function fetchAndInsertSpeakeasyId(targetInputId) {
             await esperar(500);
         }
 
+        const headers = Array.from(document.querySelectorAll('.message-header'));
         
-        const seletor = '.preview, .speakeasy-agent-activity, .message-body';
+        for (let i = headers.length - 1; i >= 0; i--) {
+            const header = headers[i];
+            
+
+            const icon = header.querySelector('i.material-icons-extended');
+            const isPhoneIcon = icon && icon.innerText.trim() === 'phone_in_talk';
+            
+
+            const textContent = header.innerText || "";
+            const isCallText = textContent.includes("Agent joined") || 
+                               textContent.includes("outbound-call") ||
+                               textContent.includes("Speakeasy"); // Vai que aparece no título
+
+            if (isPhoneIcon || isCallText) {
+
+                const isExpanded = header.getAttribute('aria-expanded') === 'true';
+                
+                if (!isExpanded) {
+                    console.log("📂 Expandindo mensagem de chamada...", header);
+                    if(inputWidget) inputWidget.placeholder = "Lendo mensagem...";
+                    
+                    simularClique(header);
+                    
+                    await esperar(1000); 
+                }
+
+                break; 
+            }
+        }
+
+
+        const seletor = '.preview, .speakeasy-agent-activity, .message-body, .content-container';
         const elementos = Array.from(document.querySelectorAll(seletor));
+   
         const regexID = /Speakeasy.*?(P\d{15,25})/i;
 
         let idEncontrado = null;
 
+        // Varre novamente os conteúdos (agora visíveis)
         for (let i = elementos.length - 1; i >= 0; i--) {
             const el = elementos[i];
+
             if (el.offsetParent === null) continue; 
 
             const match = (el.innerText || "").match(regexID);
