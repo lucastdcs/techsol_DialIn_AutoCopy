@@ -11,9 +11,6 @@ function simularClique(el) {
     );
 }
 
-// ============================================================
-// 1. ESTILOS CSS (Injetados dinamicamente)
-// ============================================================
 const styleId = 'cw-automation-styles';
 if (!document.getElementById(styleId)) {
     const style = document.createElement('style');
@@ -63,9 +60,7 @@ if (!document.getElementById(styleId)) {
     document.head.appendChild(style);
 }
 
-// ============================================================
-// 2. CONTROLE DO OVERLAY (Fundo Fosco)
-// ============================================================
+
 function toggleLoadingOverlay(show) {
     let overlay = document.getElementById('cw-loading-overlay');
     
@@ -109,9 +104,7 @@ export async function fetchAndInsertSpeakeasyId(targetInputId) {
     }
 
     try {
-        // ============================================================
-        // FASE 1: NAVEGAÇÃO
-        // ============================================================
+
         
         // Garante aba Case Log (Navigation)
         const btnCaseLog = document.querySelector('material-button[debug-id="dock-item-case-log"]');
@@ -149,9 +142,6 @@ export async function fetchAndInsertSpeakeasyId(targetInputId) {
             await esperar(500);
         }
 
-        // ============================================================
-        // FASE 2: EXTRAÇÃO (Bottom-Up)
-        // ============================================================
         
         const seletor = '.preview, .speakeasy-agent-activity, .message-body';
         const elementos = Array.from(document.querySelectorAll(seletor));
@@ -170,9 +160,6 @@ export async function fetchAndInsertSpeakeasyId(targetInputId) {
             }
         }
 
-        // ============================================================
-        // FASE 3: INSERÇÃO
-        // ============================================================
 
         if (inputWidget) {
             if (idEncontrado) {
@@ -208,7 +195,6 @@ export async function fetchAndInsertSpeakeasyId(targetInputId) {
         console.error("Erro na automação:", error);
         showToast("Erro ao processar.", { error: true });
     } finally {
-        // 2. DESATIVA EFEITOS
         if (inputWidget) {
             inputWidget.classList.remove('cw-scanning-active');
             if (!inputWidget.value) inputWidget.placeholder = originalPlaceholder;
