@@ -77,7 +77,7 @@ export function initBroadcastAssistant() {
             position: "relative", flexShrink: "0",
             boxShadow: "0 2px 8px rgba(147, 51, 234, 0.08)"
         },
-        bauHeader: { display: "flex", alignItems: "center", justifyContent: "space-between" },
+        bauHeader: { display: "flex", alignItems: "center", justifyContent: "space-between", gap:"2px" },
         bauLabel: { fontSize: "11px", fontWeight: "800", color: "#7E22CE", textTransform: "uppercase", letterSpacing: "0.8px" },
         liveIndicator: { display: "flex", alignItems: "center", gap: "8px" },
         pulseDot: { width: "8px", height: "8px", borderRadius: "50%", background: "#9333EA", boxShadow: "0 0 0 0 rgba(147, 51, 234, 0.7)", animation: "cw-pulse 2s infinite" }
@@ -275,7 +275,7 @@ export function initBroadcastAssistant() {
                 contentHTML = `
                   <div style="display:flex; align-items:center; justify-content:space-between;">
                       <div style="display:flex; flex-direction:column;">
-                         <span style="font-size:12px; opacity:0.8; color:#581C87;">Próxima abertura:</span>
+                         <span style="font-size:12px; opacity:0.8; color:#581C87;">A partir de:</span>
                          <span style="font-size:18px; font-weight:700; color:#581C87; letter-spacing:-0.5px;">${uniqueDates.join(" & ")}</span>
                       </div>
                       <button id="cw-bau-toggle-btn" style="background:rgba(255,255,255,0.6); border:1px solid rgba(139, 92, 246, 0.4); border-radius:8px; padding:6px 12px; cursor:pointer; color:#6D28D9; font-size:12px; font-weight:600; transition:all 0.2s;">
