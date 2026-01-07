@@ -14,14 +14,12 @@ import { BROADCAST_MESSAGES, setBroadcastMessages } from "./broadcast-data.js";
 import { DataService } from "../shared/data-service.js";
 
 export function initBroadcastAssistant() {
-  const CURRENT_VERSION = "v2.6 (Status Widget)";
+  const CURRENT_VERSION = "v2.7 (Smart BAU)";
   let visible = false;
   let pollInterval = null;
 
-  // --- 1. CONFIGURAÇÕES ---
-  const POLL_TIME_MS = 60 * 1000; // 1 minuto
+  const POLL_TIME_MS = 60 * 1000; 
 
-  // --- 2. FORMATADOR DE DATA ---
   function formatFriendlyDate(dateInput) {
       if (!dateInput) return "";
       try {
@@ -34,9 +32,7 @@ export function initBroadcastAssistant() {
       } catch (e) { return String(dateInput); }
   }
 
-  // --- 3. ESTILOS & TEMAS ---
-
-  // Injeção de CSS para animação de pulso (Status Vivo)
+  // --- ESTILOS ---
   if (!document.getElementById('cw-pulse-anim')) {
       const s = document.createElement("style");
       s.id = 'cw-pulse-anim';
@@ -58,64 +54,33 @@ export function initBroadcastAssistant() {
 
   const styles = {
       feedContainer: { padding: "24px", overflowY: "auto", flexGrow: "1", background: "#FAFAFA", display: "flex", flexDirection: "column", gap: "20px" },
-      
-      // Cards Gerais
-      card: { 
-          background: "#FFFFFF", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.06)", 
-          boxShadow: "0 4px 12px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02)", 
-          overflow: "hidden", transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)", 
-          position: "relative", width: "100%", boxSizing: "border-box", flexShrink: "0" 
-      },
+      card: { background: "#FFFFFF", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.06)", boxShadow: "0 4px 12px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02)", overflow: "hidden", transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)", position: "relative", width: "100%", boxSizing: "border-box", flexShrink: "0" },
       cardHistory: { background: "#FFFFFF", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.04)", boxShadow: "none", opacity: "0.8", filter: "grayscale(0.3)", marginBottom: "16px", flexShrink: "0" },
       cardHeader: { padding: "12px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(0,0,0,0.04)", fontSize: "12px", fontWeight: "600", letterSpacing: "0.5px", textTransform: "uppercase" },
       msgTitle: { padding: "20px 20px 8px 20px", fontSize: "16px", fontWeight: "700", color: "#202124", letterSpacing: "-0.01em", lineHeight: "1.4" },
       metaContainer: { padding: "0 20px 12px 20px", display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "#5f6368" },
       cardBody: { padding: "0 20px 24px 20px", fontSize: "14px", color: "#3c4043", lineHeight: "1.6", whiteSpace: "pre-wrap", fontFamily: "'Google Sans', Roboto, sans-serif", wordBreak: "break-word", overflowWrap: "break-word" },
-      
-      // Botões
       dismissBtn: { width: "28px", height: "28px", borderRadius: "50%", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", color: "#5f6368", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease", marginLeft: "12px" },
       markAllBtn: { fontSize: "12px", color: "#1a73e8", cursor: "pointer", fontWeight: "600", background: "transparent", border: "none", padding: "8px", transition: "opacity 0.2s" },
-      
-      // Estados
       emptyState: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 0", color: "#bdc1c6", gap: "16px", textAlign: "center" },
       historyDivider: { display: "flex", alignItems: "center", justifyContent: "center", margin: "10px 0 20px 0", cursor: "pointer", color: "#1a73e8", fontSize: "13px", fontWeight: "500", gap: "8px", padding: "10px", borderRadius: "8px", transition: "background 0.2s" },
       historyContainer: { display: "none", flexDirection: "column", gap: "16px", paddingTop: "10px", borderTop: "1px dashed rgba(0,0,0,0.1)" },
-
-      // --- NOVO: WIDGET DE STATUS BAU ---
+      
+      // --- WIDGET BAU (Otimizado) ---
       bauContainer: {
-          margin: "16px 24px 0 24px", // Fica fora do padding do feed
+          margin: "16px 24px 0 24px",
           padding: "16px",
-          background: "#F3E8FD", // Roxo bem suave (Material You)
+          background: "#F3E8FD", 
           border: "1px solid #D8B4FE",
           borderRadius: "16px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px",
-          position: "relative",
-          flexShrink: "0", // Não deixa encolher
+          display: "flex", flexDirection: "column", gap: "10px",
+          position: "relative", flexShrink: "0",
           boxShadow: "0 2px 8px rgba(147, 51, 234, 0.08)"
       },
-      bauHeader: {
-          display: "flex", alignItems: "center", justifyContent: "space-between",
-      },
-      bauLabel: {
-          fontSize: "11px", fontWeight: "800", color: "#7E22CE",
-          textTransform: "uppercase", letterSpacing: "0.8px"
-      },
-      bauBody: {
-          fontSize: "13px", color: "#581C87", lineHeight: "1.5",
-          whiteSpace: "pre-wrap", fontFamily: "'Google Sans', Roboto, sans-serif",
-          fontWeight: "500"
-      },
-      liveIndicator: {
-          display: "flex", alignItems: "center", gap: "8px"
-      },
-      pulseDot: {
-          width: "8px", height: "8px", borderRadius: "50%",
-          background: "#9333EA",
-          boxShadow: "0 0 0 0 rgba(147, 51, 234, 0.7)",
-          animation: "cw-pulse 2s infinite"
-      }
+      bauHeader: { display: "flex", alignItems: "center", justifyContent: "space-between" },
+      bauLabel: { fontSize: "11px", fontWeight: "800", color: "#7E22CE", textTransform: "uppercase", letterSpacing: "0.8px" },
+      liveIndicator: { display: "flex", alignItems: "center", gap: "8px" },
+      pulseDot: { width: "8px", height: "8px", borderRadius: "50%", background: "#9333EA", boxShadow: "0 0 0 0 rgba(147, 51, 234, 0.7)", animation: "cw-pulse 2s infinite" }
   };
 
   const styleScrollId = "cw-scrollbar-style";
@@ -126,29 +91,23 @@ export function initBroadcastAssistant() {
       document.head.appendChild(s);
   }
 
-  // --- PARSER CENTRALIZADO ---
   function parseMessageText(rawText) {
       if (!rawText || typeof rawText !== 'string') return ""; 
-
       let html = rawText;
-
       const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/g;
       html = html.replace(urlRegex, (url) => {
           let href = url;
           if (!href.startsWith('http')) href = 'http://' + href;
           return `<a href="${href}" target="_blank" style="color:#1967d2; text-decoration:underline;">${url}</a>`;
       });
-
       html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
       html = html.replace(/_(.*?)_/g, '<i>$1</i>');
       html = html.replace(/\n/g, '<br>');
       html = parseEmojiCodes(html);
       html = html.replace(/@todos|@all/gi, '<span style="background:#e8f0fe; color:#1967d2; padding:1px 5px; border-radius:4px; font-weight:600; font-size:12px;">@todos</span>');
-
       return html;
   }
 
-  // Helper para converter objeto de estilo JS para string CSS (para innerHTML)
   function objectToCss(obj) {
       return Object.entries(obj).map(([k, v]) => `${k.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}:${v}`).join(';');
   }
@@ -157,15 +116,9 @@ export function initBroadcastAssistant() {
   const popup = document.createElement("div");
   popup.id = "broadcast-popup";
   popup.classList.add("cw-module-window");
-
   Object.assign(popup.style, stylePopup, {
-    right: "auto", 
-    left: "50%", 
-    width: "450px", 
-    height: "650px", 
-    display: "flex", 
-    flexDirection: "column",
-    transform: "translateX(-50%) scale(0.05)", 
+    right: "auto", left: "50%", width: "450px", height: "650px", 
+    display: "flex", flexDirection: "column", transform: "translateX(-50%) scale(0.05)", 
   });
   
   const animRefs = { popup, googleLine: null };
@@ -202,14 +155,10 @@ export function initBroadcastAssistant() {
   }
 
   popup.appendChild(header);
-
-  // Aqui é onde o widget BAU será inserido dinamicamente (entre header e feed)
-
   const feed = document.createElement("div");
   feed.className = "cw-nice-scroll";
   Object.assign(feed.style, styles.feedContainer);
   popup.appendChild(feed);
-
 
   async function checkForUpdates() {
       let statusEl = document.getElementById('cw-update-status');
@@ -229,7 +178,6 @@ export function initBroadcastAssistant() {
 
       try {
           const data = await DataService.fetchData();
-          
           if (data && data.broadcast) {
               if (visible && statusEl) {
                   const temNovidade = data.broadcast.some(m => !currentIds.includes(m.id));
@@ -242,17 +190,14 @@ export function initBroadcastAssistant() {
                   }
                   setTimeout(() => { if(statusEl) statusEl.style.display = 'none'; }, 1000);
               }
-
               if (currentIds.length > 0) { 
                   const newMessages = data.broadcast.filter(m => !currentIds.includes(m.id));
                   const unreadNew = newMessages.filter(m => !readIds.includes(m.id));
-                  
                   if (unreadNew.length > 0) {
                       console.log("🔔 Novo aviso detectado!");
                       SoundManager.playNotification(); 
                   }
               }
-
               setBroadcastMessages(data.broadcast);
               updateBadge();
               if (visible) renderFeed(); 
@@ -269,10 +214,8 @@ export function initBroadcastAssistant() {
   function updateBadge() {
       const btn = document.getElementById("cw-btn-broadcast");
       if (!btn) return;
-
       const readMessages = JSON.parse(localStorage.getItem("cw_read_broadcasts") || "[]");
       const hasUnread = BROADCAST_MESSAGES.some(m => !readMessages.includes(m.id));
-
       if (hasUnread) {
           btn.classList.add("has-new");
           if (!btn.querySelector('.cw-badge')) {
@@ -292,67 +235,94 @@ export function initBroadcastAssistant() {
       }
   }
 
-  // --- RENDERIZADOR PRINCIPAL ---
+  // --- RENDERIZADOR ---
   function renderFeed() {
       feed.innerHTML = "";
-      
-      // Remove widget BAU antigo para re-renderizar
       const oldBau = popup.querySelector('#cw-bau-widget');
       if (oldBau) oldBau.remove();
 
       const readMessages = JSON.parse(localStorage.getItem("cw_read_broadcasts") || "[]");
-      
-      // Clona e ordena: Mais recentes primeiro
       let allMessages = [...BROADCAST_MESSAGES].sort((a, b) => {
           const dateA = new Date(a.date).getTime() || 0;
           const dateB = new Date(b.date).getTime() || 0;
           return dateB - dateA;
       });
 
-      // --- LOGICA DO WIDGET BAU ---
-      // Encontra a mensagem mais recente que tenha "Disponibilidade BAU" no título
-      // Case insensitive para segurança
+      // --- FILTRO DE DISPONIBILIDADE ---
       const bauIndex = allMessages.findIndex(m => m.title && m.title.toLowerCase().includes("disponibilidade bau"));
       let bauMessage = null;
 
       if (bauIndex !== -1) {
           bauMessage = allMessages[bauIndex];
-          // Remove da lista principal para não aparecer duplicado
           allMessages.splice(bauIndex, 1);
       }
 
-      // Se achou, cria o widget no topo
+      // Renderiza Widget BAU
       if (bauMessage) {
           const bauWidget = document.createElement("div");
           bauWidget.id = "cw-bau-widget";
           Object.assign(bauWidget.style, styles.bauContainer);
 
+          // EXTRAÇÃO DE DATA (SMART)
+          const dateMatches = bauMessage.text.match(/\d{1,2}\/\d{1,2}/g);
+          const uniqueDates = dateMatches ? [...new Set(dateMatches)] : [];
+          
+          let contentHTML = "";
+          
+          if (uniqueDates.length > 0) {
+              // MODO COMPACTO
+              contentHTML = `
+                  <div style="display:flex; align-items:center; justify-content:space-between;">
+                      <div style="display:flex; flex-direction:column;">
+                         <span style="font-size:12px; opacity:0.8; color:#581C87;">Próxima abertura:</span>
+                         <span style="font-size:18px; font-weight:700; color:#581C87; letter-spacing:-0.5px;">${uniqueDates.join(" & ")}</span>
+                      </div>
+                      <button id="cw-bau-toggle-btn" style="background:rgba(255,255,255,0.6); border:1px solid rgba(139, 92, 246, 0.4); border-radius:8px; padding:6px 12px; cursor:pointer; color:#6D28D9; font-size:12px; font-weight:600; transition:all 0.2s;">
+                          Ver Detalhes
+                      </button>
+                  </div>
+                  <div id="cw-bau-full" style="display:none; margin-top:12px; padding-top:12px; border-top:1px dashed rgba(139, 92, 246, 0.3); font-size:13px; line-height:1.5; color:#581C87;">
+                      ${parseMessageText(bauMessage.text)}
+                  </div>
+              `;
+          } else {
+              // FALLBACK (Sem data detectável)
+              contentHTML = `<div style="font-size:13px; color:#581C87; line-height:1.5; white-space:pre-wrap;">${parseMessageText(bauMessage.text)}</div>`;
+          }
+
           bauWidget.innerHTML = `
-              <div style="${objectToCss(styles.bauHeader)}">
+              <div style="${objectToCss(styles.bauHeader)} margin-bottom:8px;">
                   <div style="${objectToCss(styles.liveIndicator)}">
                       <div style="${objectToCss(styles.pulseDot)}"></div>
                       <span style="${objectToCss(styles.bauLabel)}">Disponibilidade BAU</span>
                   </div>
-                  <div style="font-size:10px; opacity:0.6; font-weight:500;">${formatFriendlyDate(bauMessage.date)}</div>
+                  <div style="font-size:10px; opacity:0.6; font-weight:500; color:#7E22CE;">${formatFriendlyDate(bauMessage.date)}</div>
               </div>
-              <div style="${objectToCss(styles.bauBody)}">
-                  ${parseMessageText(bauMessage.text)}
-              </div>
+              ${contentHTML}
           `;
 
-          // INSERE APÓS O HEADER (Antes do Feed)
           header.after(bauWidget);
-      }
-      // ----------------------------
 
-      // Ordena o restante por Lido/Não Lido
+          // Listener do Toggle
+          const toggleBtn = bauWidget.querySelector('#cw-bau-toggle-btn');
+          const fullText = bauWidget.querySelector('#cw-bau-full');
+          if (toggleBtn && fullText) {
+              toggleBtn.onclick = () => {
+                  const isHidden = fullText.style.display === "none";
+                  fullText.style.display = isHidden ? "block" : "none";
+                  toggleBtn.textContent = isHidden ? "Ocultar" : "Ver Detalhes";
+                  toggleBtn.style.background = isHidden ? "#fff" : "rgba(255,255,255,0.6)";
+              };
+          }
+      }
+
+      // Resto do Feed
       const sortedMessages = allMessages.sort((a, b) => {
           const aRead = readMessages.includes(a.id);
           const bRead = readMessages.includes(b.id);
           return aRead === bRead ? 0 : aRead ? 1 : -1;
       });
 
-      // Empty State
       if (sortedMessages.length === 0 && !bauMessage) {
            const empty = document.createElement("div");
            Object.assign(empty.style, styles.emptyState);
@@ -457,7 +427,6 @@ export function initBroadcastAssistant() {
     return card;
   }
 
-  // Inicialização (Cache -> Check)
   const cachedData = DataService.getCachedBroadcasts();
   if (cachedData.length > 0) {
       setBroadcastMessages(cachedData);
@@ -466,7 +435,6 @@ export function initBroadcastAssistant() {
   checkForUpdates();
   if (!pollInterval) pollInterval = setInterval(checkForUpdates, POLL_TIME_MS);
 
-  // Resize Handle
   const resizeHandle = document.createElement("div");
   Object.assign(resizeHandle.style, styleResizeHandle);
   resizeHandle.className = "no-drag";
