@@ -14,7 +14,7 @@ import { BROADCAST_MESSAGES, setBroadcastMessages } from "./broadcast-data.js";
 import { DataService } from "../shared/data-service.js";
 
 export function initBroadcastAssistant() {
-  const CURRENT_VERSION = "v2.5 (Emoji Fix)";
+  const CURRENT_VERSION = "v2.6 (Status Widget)";
   let visible = false;
   let pollInterval = null;
 
@@ -34,6 +34,22 @@ export function initBroadcastAssistant() {
       } catch (e) { return String(dateInput); }
   }
 
+  // --- 3. ESTILOS & TEMAS ---
+
+  // Injeção de CSS para animação de pulso (Status Vivo)
+  if (!document.getElementById('cw-pulse-anim')) {
+      const s = document.createElement("style");
+      s.id = 'cw-pulse-anim';
+      s.innerHTML = `
+        @keyframes cw-pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(147, 51, 234, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(147, 51, 234, 0); }
+        }
+      `;
+      document.head.appendChild(s);
+  }
+
   const TYPE_THEMES = {
       critical: { bg: "#FEF2F2", border: "#FECACA", text: "#991B1B", icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>` },
       info: { bg: "#EFF6FF", border: "#BFDBFE", text: "#1E40AF", icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>` },
@@ -42,6 +58,8 @@ export function initBroadcastAssistant() {
 
   const styles = {
       feedContainer: { padding: "24px", overflowY: "auto", flexGrow: "1", background: "#FAFAFA", display: "flex", flexDirection: "column", gap: "20px" },
+      
+      // Cards Gerais
       card: { 
           background: "#FFFFFF", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.06)", 
           boxShadow: "0 4px 12px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02)", 
@@ -53,12 +71,51 @@ export function initBroadcastAssistant() {
       msgTitle: { padding: "20px 20px 8px 20px", fontSize: "16px", fontWeight: "700", color: "#202124", letterSpacing: "-0.01em", lineHeight: "1.4" },
       metaContainer: { padding: "0 20px 12px 20px", display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "#5f6368" },
       cardBody: { padding: "0 20px 24px 20px", fontSize: "14px", color: "#3c4043", lineHeight: "1.6", whiteSpace: "pre-wrap", fontFamily: "'Google Sans', Roboto, sans-serif", wordBreak: "break-word", overflowWrap: "break-word" },
-      emojiImg: "height: 20px; vertical-align: text-bottom; margin: 0 2px;",
+      
+      // Botões
       dismissBtn: { width: "28px", height: "28px", borderRadius: "50%", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", color: "#5f6368", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease", marginLeft: "12px" },
       markAllBtn: { fontSize: "12px", color: "#1a73e8", cursor: "pointer", fontWeight: "600", background: "transparent", border: "none", padding: "8px", transition: "opacity 0.2s" },
+      
+      // Estados
       emptyState: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 0", color: "#bdc1c6", gap: "16px", textAlign: "center" },
       historyDivider: { display: "flex", alignItems: "center", justifyContent: "center", margin: "10px 0 20px 0", cursor: "pointer", color: "#1a73e8", fontSize: "13px", fontWeight: "500", gap: "8px", padding: "10px", borderRadius: "8px", transition: "background 0.2s" },
-      historyContainer: { display: "none", flexDirection: "column", gap: "16px", paddingTop: "10px", borderTop: "1px dashed rgba(0,0,0,0.1)" }
+      historyContainer: { display: "none", flexDirection: "column", gap: "16px", paddingTop: "10px", borderTop: "1px dashed rgba(0,0,0,0.1)" },
+
+      // --- NOVO: WIDGET DE STATUS BAU ---
+      bauContainer: {
+          margin: "16px 24px 0 24px", // Fica fora do padding do feed
+          padding: "16px",
+          background: "#F3E8FD", // Roxo bem suave (Material You)
+          border: "1px solid #D8B4FE",
+          borderRadius: "16px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px",
+          position: "relative",
+          flexShrink: "0", // Não deixa encolher
+          boxShadow: "0 2px 8px rgba(147, 51, 234, 0.08)"
+      },
+      bauHeader: {
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+      },
+      bauLabel: {
+          fontSize: "11px", fontWeight: "800", color: "#7E22CE",
+          textTransform: "uppercase", letterSpacing: "0.8px"
+      },
+      bauBody: {
+          fontSize: "13px", color: "#581C87", lineHeight: "1.5",
+          whiteSpace: "pre-wrap", fontFamily: "'Google Sans', Roboto, sans-serif",
+          fontWeight: "500"
+      },
+      liveIndicator: {
+          display: "flex", alignItems: "center", gap: "8px"
+      },
+      pulseDot: {
+          width: "8px", height: "8px", borderRadius: "50%",
+          background: "#9333EA",
+          boxShadow: "0 0 0 0 rgba(147, 51, 234, 0.7)",
+          animation: "cw-pulse 2s infinite"
+      }
   };
 
   const styleScrollId = "cw-scrollbar-style";
@@ -75,7 +132,6 @@ export function initBroadcastAssistant() {
 
       let html = rawText;
 
-
       const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/g;
       html = html.replace(urlRegex, (url) => {
           let href = url;
@@ -83,26 +139,23 @@ export function initBroadcastAssistant() {
           return `<a href="${href}" target="_blank" style="color:#1967d2; text-decoration:underline;">${url}</a>`;
       });
 
-
       html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
       html = html.replace(/_(.*?)_/g, '<i>$1</i>');
-      
-
       html = html.replace(/\n/g, '<br>');
-
       html = parseEmojiCodes(html);
-
-      // 5. Menções Especiais
       html = html.replace(/@todos|@all/gi, '<span style="background:#e8f0fe; color:#1967d2; padding:1px 5px; border-radius:4px; font-weight:600; font-size:12px;">@todos</span>');
 
       return html;
   }
 
-  // --- UI SETUP ---
-const popup = document.createElement("div");
-  popup.id = "broadcast-popup";
+  // Helper para converter objeto de estilo JS para string CSS (para innerHTML)
+  function objectToCss(obj) {
+      return Object.entries(obj).map(([k, v]) => `${k.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}:${v}`).join(';');
+  }
 
-  // 1. Conecta ao animations.js
+  // --- UI SETUP ---
+  const popup = document.createElement("div");
+  popup.id = "broadcast-popup";
   popup.classList.add("cw-module-window");
 
   Object.assign(popup.style, stylePopup, {
@@ -112,8 +165,7 @@ const popup = document.createElement("div");
     height: "650px", 
     display: "flex", 
     flexDirection: "column",
-    // Removemos opacity/pointerEvents/transition daqui
-    transform: "translateX(-50%) scale(0.05)", // Estado inicial para centralizar
+    transform: "translateX(-50%) scale(0.05)", 
   });
   
   const animRefs = { popup, googleLine: null };
@@ -151,6 +203,8 @@ const popup = document.createElement("div");
 
   popup.appendChild(header);
 
+  // Aqui é onde o widget BAU será inserido dinamicamente (entre header e feed)
+
   const feed = document.createElement("div");
   feed.className = "cw-nice-scroll";
   Object.assign(feed.style, styles.feedContainer);
@@ -180,13 +234,13 @@ const popup = document.createElement("div");
               if (visible && statusEl) {
                   const temNovidade = data.broadcast.some(m => !currentIds.includes(m.id));
                   if (temNovidade) {
-                      statusEl.innerHTML = '✅ Novos avisos sincronizados!';
+                      statusEl.innerHTML = '✅ Sincronizado.';
                       statusEl.style.backgroundColor = '#e6f4ea';
                       statusEl.style.color = '#137333';
                   } else {
                       statusEl.innerHTML = '🔹 Tudo atualizado.';
                   }
-                  setTimeout(() => { if(statusEl) statusEl.style.display = 'none'; }, 1500);
+                  setTimeout(() => { if(statusEl) statusEl.style.display = 'none'; }, 1000);
               }
 
               if (currentIds.length > 0) { 
@@ -194,7 +248,7 @@ const popup = document.createElement("div");
                   const unreadNew = newMessages.filter(m => !readIds.includes(m.id));
                   
                   if (unreadNew.length > 0) {
-                      console.log("🔔 Novo aviso detectado! Tocando som.");
+                      console.log("🔔 Novo aviso detectado!");
                       SoundManager.playNotification(); 
                   }
               }
@@ -238,29 +292,68 @@ const popup = document.createElement("div");
       }
   }
 
-  const cachedData = DataService.getCachedBroadcasts();
-  if (cachedData.length > 0) {
-      setBroadcastMessages(cachedData);
-      renderFeed();
-  }
-
-  checkForUpdates();
-
-  if (!pollInterval) {
-      pollInterval = setInterval(checkForUpdates, POLL_TIME_MS);
-  }
-
+  // --- RENDERIZADOR PRINCIPAL ---
   function renderFeed() {
       feed.innerHTML = "";
+      
+      // Remove widget BAU antigo para re-renderizar
+      const oldBau = popup.querySelector('#cw-bau-widget');
+      if (oldBau) oldBau.remove();
+
       const readMessages = JSON.parse(localStorage.getItem("cw_read_broadcasts") || "[]");
       
-      const sortedMessages = [...BROADCAST_MESSAGES].sort((a, b) => {
+      // Clona e ordena: Mais recentes primeiro
+      let allMessages = [...BROADCAST_MESSAGES].sort((a, b) => {
+          const dateA = new Date(a.date).getTime() || 0;
+          const dateB = new Date(b.date).getTime() || 0;
+          return dateB - dateA;
+      });
+
+      // --- LOGICA DO WIDGET BAU ---
+      // Encontra a mensagem mais recente que tenha "Disponibilidade BAU" no título
+      // Case insensitive para segurança
+      const bauIndex = allMessages.findIndex(m => m.title && m.title.toLowerCase().includes("disponibilidade bau"));
+      let bauMessage = null;
+
+      if (bauIndex !== -1) {
+          bauMessage = allMessages[bauIndex];
+          // Remove da lista principal para não aparecer duplicado
+          allMessages.splice(bauIndex, 1);
+      }
+
+      // Se achou, cria o widget no topo
+      if (bauMessage) {
+          const bauWidget = document.createElement("div");
+          bauWidget.id = "cw-bau-widget";
+          Object.assign(bauWidget.style, styles.bauContainer);
+
+          bauWidget.innerHTML = `
+              <div style="${objectToCss(styles.bauHeader)}">
+                  <div style="${objectToCss(styles.liveIndicator)}">
+                      <div style="${objectToCss(styles.pulseDot)}"></div>
+                      <span style="${objectToCss(styles.bauLabel)}">Disponibilidade BAU</span>
+                  </div>
+                  <div style="font-size:10px; opacity:0.6; font-weight:500;">${formatFriendlyDate(bauMessage.date)}</div>
+              </div>
+              <div style="${objectToCss(styles.bauBody)}">
+                  ${parseMessageText(bauMessage.text)}
+              </div>
+          `;
+
+          // INSERE APÓS O HEADER (Antes do Feed)
+          header.after(bauWidget);
+      }
+      // ----------------------------
+
+      // Ordena o restante por Lido/Não Lido
+      const sortedMessages = allMessages.sort((a, b) => {
           const aRead = readMessages.includes(a.id);
           const bRead = readMessages.includes(b.id);
           return aRead === bRead ? 0 : aRead ? 1 : -1;
       });
 
-      if (sortedMessages.every(m => readMessages.includes(m.id))) {
+      // Empty State
+      if (sortedMessages.length === 0 && !bauMessage) {
            const empty = document.createElement("div");
            Object.assign(empty.style, styles.emptyState);
            empty.innerHTML = `
@@ -364,7 +457,16 @@ const popup = document.createElement("div");
     return card;
   }
 
-  renderFeed();
+  // Inicialização (Cache -> Check)
+  const cachedData = DataService.getCachedBroadcasts();
+  if (cachedData.length > 0) {
+      setBroadcastMessages(cachedData);
+      renderFeed();
+  }
+  checkForUpdates();
+  if (!pollInterval) pollInterval = setInterval(checkForUpdates, POLL_TIME_MS);
+
+  // Resize Handle
   const resizeHandle = document.createElement("div");
   Object.assign(resizeHandle.style, styleResizeHandle);
   resizeHandle.className = "no-drag";
