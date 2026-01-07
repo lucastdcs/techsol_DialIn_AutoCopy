@@ -303,9 +303,9 @@ export function initBroadcastAssistant() {
           let contentHTML = "";
           
           if (extractedSlots.length > 0) {
-              // GERA OS CHIPS
+              // GERA OS CHIPS (Adicionei margin-bottom: 0 para não empurrar nada)
               let slotsHTML = extractedSlots.map(slot => `
-                  <div style="${objectToCss(styles.bauSlotRow)}">
+                  <div style="${objectToCss(styles.bauSlotRow)}; margin-bottom: 0; flex: 1; min-width: 100px; justify-content: center;">
                       <span style="${objectToCss(styles.bauFlag)}">${slot.flag}</span>
                       <span style="${objectToCss(styles.bauDate)}">${slot.date}</span>
                   </div>
@@ -314,11 +314,14 @@ export function initBroadcastAssistant() {
               contentHTML = `
                   <div style="display:flex; align-items:flex-start; justify-content:space-between; width:100%;">
                       <div style="display:flex; flex-direction:column; width:100%;">
-                         <span style="font-size:12px; opacity:0.8; color:#581C87; margin-bottom:4px;">Próxima abertura:</span>
-                         ${slotsHTML}
+                         <span style="font-size:12px; opacity:0.8; color:#581C87; margin-bottom:6px;">Próxima abertura:</span>
+                         
+                         <div style="display:flex; flex-direction:row; gap:8px; width: 100%;">
+                            ${slotsHTML}
+                         </div>
+
                       </div>
-                      <button id="cw-bau-toggle-btn" style="background:rgba(255,255,255,0.6); border:1px solid rgba(139, 92, 246, 0.4); border-radius:8px; padding:6px 12px; cursor:pointer; color:#6D28D9; font-size:12px; font-weight:600; transition:all 0.2s; white-space:nowrap; margin-left:8px; height:32px;">
-                          Detalhes
+                      <button id="cw-bau-toggle-btn" style="background:rgba(255,255,255,0.6); border:1px solid rgba(139, 92, 246, 0.4); border-radius:8px; padding:6px 12px; cursor:pointer; color:#6D28D9; font-size:12px; font-weight:600; transition:all 0.2s; white-space:nowrap; margin-left:8px; height:38px;"> Detalhes
                       </button>
                   </div>
                   <div id="cw-bau-full" style="display:none; margin-top:12px; padding-top:12px; border-top:1px dashed rgba(139, 92, 246, 0.3); font-size:13px; line-height:1.5; color:#581C87;">
