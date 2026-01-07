@@ -1262,16 +1262,19 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
 `),V=/\d{1,2}\/\d{1,2}/;if(P.forEach(N=>{let D=N.match(V);if(D){let J=D[0],_="\u{1F4C5}";/🇧🇷|🇵🇹|PT|BR/i.test(N)?_="\u{1F1E7}\u{1F1F7}":/🇪🇸|🇲🇽|ES|LATAM/i.test(N)&&(_="\u{1F1EA}\u{1F1F8}"),q.some(ue=>ue.flag===_&&ue.date===J)||q.push({flag:_,date:J})}}),q.length===0){let N=C.text.match(/\d{1,2}\/\d{1,2}/g);N&&[...new Set(N)].forEach(D=>q.push({flag:"\u{1F4C5}",date:D}))}let R="";q.length>0?R=`
                   <div style="display:flex; align-items:flex-start; justify-content:space-between; width:100%;">
                       <div style="display:flex; flex-direction:column; width:100%;">
-                         <span style="font-size:12px; opacity:0.8; color:#581C87; margin-bottom:4px;">Pr\xF3xima abertura:</span>
-                         ${q.map(D=>`
-                  <div style="${f(n.bauSlotRow)}">
+                         <span style="font-size:12px; opacity:0.8; color:#581C87; margin-bottom:6px;">Pr\xF3xima abertura:</span>
+                         
+                         <div style="display:flex; flex-direction:row; gap:8px; width: 100%;">
+                            ${q.map(D=>`
+                  <div style="${f(n.bauSlotRow)}; margin-bottom: 0; flex: 1; min-width: 100px; justify-content: center;">
                       <span style="${f(n.bauFlag)}">${D.flag}</span>
                       <span style="${f(n.bauDate)}">${D.date}</span>
                   </div>
               `).join("")}
+                         </div>
+
                       </div>
-                      <button id="cw-bau-toggle-btn" style="background:rgba(255,255,255,0.6); border:1px solid rgba(139, 92, 246, 0.4); border-radius:8px; padding:6px 12px; cursor:pointer; color:#6D28D9; font-size:12px; font-weight:600; transition:all 0.2s; white-space:nowrap; margin-left:8px; height:32px;">
-                          Detalhes
+                      <button id="cw-bau-toggle-btn" style="background:rgba(255,255,255,0.6); border:1px solid rgba(139, 92, 246, 0.4); border-radius:8px; padding:6px 12px; cursor:pointer; color:#6D28D9; font-size:12px; font-weight:600; transition:all 0.2s; white-space:nowrap; margin-left:8px; height:38px;"> Detalhes
                       </button>
                   </div>
                   <div id="cw-bau-full" style="display:none; margin-top:12px; padding-top:12px; border-top:1px dashed rgba(139, 92, 246, 0.3); font-size:13px; line-height:1.5; color:#581C87;">
