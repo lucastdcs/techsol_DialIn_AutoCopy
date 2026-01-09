@@ -335,10 +335,10 @@ export function initBroadcastAssistant() {
           }
 
           bauWidget.innerHTML = `
-              <div style="${objectToCss(styles.bauHeader)} margin-bottom:8px;">
+              <div style="${objectToCss(styles.bauHeader)}; margin-bottom:8px;">
                   <div style="${objectToCss(styles.liveIndicator)}">
                       <div style="${objectToCss(styles.pulseDot)}"></div>
-                      <span style="${objectToCss(styles.bauLabel)}, margin-right:2px">Disponibilidade BAU</span>
+                      <span style="${objectToCss(styles.bauLabel)}; margin-right:2px">Disponibilidade BAU</span>
                   </div>
                   <div style="font-size:10px; opacity:0.6; font-weight:500; color:#7E22CE;">${formatFriendlyDate(bauMessage.date)}</div>
               </div>
