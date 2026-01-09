@@ -1262,7 +1262,7 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
 `),V=/\d{1,2}\/\d{1,2}/;if(P.forEach(N=>{let D=N.match(V);if(D){let J=D[0],_="\u{1F4C5}";/🇧🇷|🇵🇹|PT|BR/i.test(N)?_="\u{1F1E7}\u{1F1F7}":/🇪🇸|🇲🇽|ES|LATAM/i.test(N)&&(_="\u{1F1EA}\u{1F1F8}"),q.some(ue=>ue.flag===_&&ue.date===J)||q.push({flag:_,date:J})}}),q.length===0){let N=C.text.match(/\d{1,2}\/\d{1,2}/g);N&&[...new Set(N)].forEach(D=>q.push({flag:"\u{1F4C5}",date:D}))}let R="";q.length>0?R=`
                   <div style="display:flex; align-items:flex-start; justify-content:space-between; width:100%;">
                       <div style="display:flex; flex-direction:column; width:100%;">
-                         <span style="font-size:12px; opacity:0.8; color:#581C87; margin-bottom:6px;">Pr\xF3xima abertura:</span>
+                         <span style="font-size:12px; opacity:0.8; color:#581C87; margin-bottom:6px;">Slots dispon\xEDveis:</span>
                          
                          <div style="display:flex; flex-direction:row; gap:8px; width: 100%;">
                             ${q.map(D=>`
@@ -1274,7 +1274,8 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
                          </div>
 
                       </div>
-                      <button id="cw-bau-toggle-btn" style="background:rgba(255,255,255,0.6); border:1px solid rgba(139, 92, 246, 0.4); border-radius:8px; padding:6px 12px; cursor:pointer; color:#6D28D9; font-size:12px; font-weight:600; transition:all 0.2s; white-space:nowrap; margin-left:8px; height:38px;"> Detalhes
+                      <button id="cw-bau-toggle-btn" style="background:rgba(255,255,255,0.6); border:1px solid rgba(139, 92, 246, 0.4); border-radius:8px; padding:6px 12px; cursor:pointer; color:#6D28D9; font-size:12px; font-weight:600; transition:all 0.2s; white-space:nowrap; margin-left:8px; height:38px;">
+                       Detalhes
                       </button>
                   </div>
                   <div id="cw-bau-full" style="display:none; margin-top:12px; padding-top:12px; border-top:1px dashed rgba(139, 92, 246, 0.3); font-size:13px; line-height:1.5; color:#581C87;">
@@ -1284,7 +1285,7 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
               <div style="${y(a.bauHeader)} margin-bottom:8px;">
                   <div style="${y(a.liveIndicator)}">
                       <div style="${y(a.pulseDot)}"></div>
-                      <span style="${y(a.bauLabel)}">Disponibilidade BAU</span>
+                      <span style="${y(a.bauLabel)}, margin-right:2px">Disponibilidade BAU</span>
                   </div>
                   <div style="font-size:10px; opacity:0.6; font-weight:500; color:#7E22CE;">${s(C.date)}</div>
               </div>
