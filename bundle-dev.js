@@ -1282,10 +1282,10 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
                       ${m(C.text)}
                   </div>
               `:R=`<div style="font-size:13px; color:#581C87; line-height:1.5; white-space:pre-wrap;">${m(C.text)}</div>`,T.innerHTML=`
-              <div style="${y(a.bauHeader)} margin-bottom:8px;">
+              <div style="${y(a.bauHeader)}; margin-bottom:8px;">
                   <div style="${y(a.liveIndicator)}">
                       <div style="${y(a.pulseDot)}"></div>
-                      <span style="${y(a.bauLabel)}, margin-right:2px">Disponibilidade BAU</span>
+                      <span style="${y(a.bauLabel)}; margin-right:2px">Disponibilidade BAU</span>
                   </div>
                   <div style="font-size:10px; opacity:0.6; font-weight:500; color:#7E22CE;">${s(C.date)}</div>
               </div>
