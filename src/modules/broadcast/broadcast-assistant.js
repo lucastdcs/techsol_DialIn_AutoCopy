@@ -5,16 +5,24 @@ import {
   styleResizeHandle,
   makeResizable,
   showToast,
-  parseEmojiCodes 
+  parseEmojiCodes,
+  styleInput,     // Reutilizando estilos globais
+  styleSelect,    // Reutilizando estilos globais
+  typeBtnStyle    // Reutilizando estilos globais
 } from "../shared/utils.js";
 import { SoundManager } from "../shared/sound-manager.js";
 import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from "../shared/animations.js";
 import { BROADCAST_MESSAGES, setBroadcastMessages } from "./broadcast-data.js"; 
 import { DataService } from "../shared/data-service.js";
+import { captureInternalEmail } from "../shared/page-data.js"; // Para capturar seu LDAP
+
+// --- CONFIGURAÇÃO DE ADMIN ---
+// Coloque aqui o seu LDAP (sem @google.com) para testar
+const ADMINS = ["lucaste"]; 
 
 export function initBroadcastAssistant() {
-  const CURRENT_VERSION = "v2.8 (Dual Lang BAU)";
+  const CURRENT_VERSION = "v3.0 (Admin Mode)";
   let visible = false;
   let pollInterval = null;
 
@@ -42,6 +50,7 @@ export function initBroadcastAssistant() {
             70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(147, 51, 234, 0); }
             100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(147, 51, 234, 0); }
         }
+        @keyframes cwSlideDown { from { opacity:0; transform: translateY(-10px); } to { opacity:1; transform: translateY(0); } }
       `;
       document.head.appendChild(s);
   }
@@ -77,21 +86,28 @@ export function initBroadcastAssistant() {
           position: "relative", flexShrink: "0",
           boxShadow: "0 2px 8px rgba(147, 51, 234, 0.08)"
       },
-      bauHeader: { display: "flex", alignItems: "center", justifyContent: "space-between" },
+      bauHeader: { display: "flex", alignItems: "center", justifyContent: "space-between", gap:"2px" },
       bauLabel: { fontSize: "11px", fontWeight: "800", color: "#7E22CE", textTransform: "uppercase", letterSpacing: "0.8px" },
       liveIndicator: { display: "flex", alignItems: "center", gap: "8px" },
       pulseDot: { width: "8px", height: "8px", borderRadius: "50%", background: "#9333EA", boxShadow: "0 0 0 0 rgba(147, 51, 234, 0.7)", animation: "cw-pulse 2s infinite" },
-      
-      // Novo: Linha de Slot com Bandeira
-      bauSlotRow: {
-          display: "flex", alignItems: "center", gap: "10px", 
-          padding: "8px 12px", background: "rgba(255,255,255,0.5)", 
-          borderRadius: "8px", marginBottom: "4px"
-      },
+      bauSlotRow: { display: "flex", alignItems: "center", gap: "10px", padding: "8px 12px", background: "rgba(255,255,255,0.5)", borderRadius: "8px", marginBottom: "4px" },
       bauFlag: { fontSize: "18px", lineHeight: "1" },
-      bauDate: { fontSize: "16px", fontWeight: "700", color: "#581C87", letterSpacing: "-0.5px" }
+      bauDate: { fontSize: "16px", fontWeight: "700", color: "#581C87", letterSpacing: "-0.5px" },
+
+      // --- ADMIN PANEL ---
+      adminPanel: {
+          padding: "20px 24px",
+          background: "#fff",
+          borderBottom: "1px solid #eee",
+          display: "none", // Começa oculto
+          flexDirection: "column",
+          gap: "16px",
+          animation: "cwSlideDown 0.3s cubic-bezier(0.2, 0.0, 0.2, 1)"
+      },
+      adminLabel: { fontSize: "12px", fontWeight: "700", color: "#5f6368", textTransform: "uppercase", marginBottom: "4px", display: "block" }
   };
 
+  // --- PARSER E UTILS ---
   const styleScrollId = "cw-scrollbar-style";
   if (!document.getElementById(styleScrollId)) {
       const s = document.createElement("style");
@@ -113,7 +129,6 @@ export function initBroadcastAssistant() {
       html = html.replace(/_(.*?)_/g, '<i>$1</i>');
       html = html.replace(/\n/g, '<br>');
       html = parseEmojiCodes(html);
-      html = html.replace(/@todos|@all/gi, '<span style="background:#e8f0fe; color:#1967d2; padding:1px 5px; border-radius:4px; font-weight:600; font-size:12px;">@todos</span>');
       return html;
   }
 
@@ -148,10 +163,34 @@ export function initBroadcastAssistant() {
     animRefs, () => toggleVisibility()
   );
   
+  // --- INJEÇÃO DO BOTÃO ADMIN (Se for lucaste) ---
   const actionContainer = header.querySelector('.cw-header-actions') || header.lastElementChild;
+  
+  const internalEmail = captureInternalEmail(); 
+  const currentUser = internalEmail ? internalEmail.split('@')[0] : null;
+  const isAdmin = currentUser && ADMINS.includes(currentUser.toLowerCase());
+
   if(actionContainer) {
+      if (isAdmin) {
+          const addBtn = document.createElement("div");
+          addBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+          Object.assign(addBtn.style, {
+              width: "32px", height: "32px", borderRadius: "50%", 
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer", color: "#1a73e8", background: "rgba(26, 115, 232, 0.1)",
+              marginRight: "8px", transition: "all 0.2s"
+          });
+          addBtn.title = "Novo Aviso (Admin)";
+          addBtn.onclick = (e) => {
+              e.stopPropagation();
+              toggleAdminPanel();
+          };
+          // Insere antes do botão de ajuda/fechar, ou no início do container
+          actionContainer.insertBefore(addBtn, actionContainer.firstChild);
+      }
+
       const markAll = document.createElement("button");
-      markAll.textContent = "Limpar tudo";
+      markAll.textContent = "Limpar";
       Object.assign(markAll.style, styles.markAllBtn);
       markAll.onclick = (e) => {
           e.stopPropagation();
@@ -165,6 +204,103 @@ export function initBroadcastAssistant() {
   }
 
   popup.appendChild(header);
+
+  // --- PAINEL ADMIN ---
+  let adminPanel = null;
+  
+  if (isAdmin) {
+      adminPanel = document.createElement("div");
+      Object.assign(adminPanel.style, styles.adminPanel);
+      
+      adminPanel.innerHTML = `
+        <div>
+            <label style="${objectToCss(styles.adminLabel)}">Tipo do Aviso</label>
+            <div style="display:flex; gap:10px;">
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;padding:8px 12px;background:#f8f9fa;border-radius:8px;border:1px solid #dadce0;">
+                    <input type="radio" name="cw-bc-type" value="info" checked> ℹ️ Info
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;padding:8px 12px;background:#FEF2F2;border-radius:8px;border:1px solid #FECACA;">
+                    <input type="radio" name="cw-bc-type" value="critical"> 🚨 Alerta
+                </label>
+                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;padding:8px 12px;background:#F0FDF4;border-radius:8px;border:1px solid #BBF7D0;">
+                    <input type="radio" name="cw-bc-type" value="success"> ✅ Sucesso
+                </label>
+            </div>
+        </div>
+
+        <div>
+             <label style="${objectToCss(styles.adminLabel)}">Título</label>
+             <input id="cw-bc-title" placeholder="Ex: Disponibilidade BAU" style="width:100%; padding:10px; border:1px solid #dadce0; border-radius:8px; font-size:14px; outline:none;">
+        </div>
+
+        <div>
+             <label style="${objectToCss(styles.adminLabel)}">Mensagem</label>
+             <textarea id="cw-bc-text" placeholder="Digite a mensagem... Suporta HTML básico." style="width:100%; height:80px; padding:10px; border:1px solid #dadce0; border-radius:8px; font-size:14px; outline:none; resize:vertical; font-family:Roboto;"></textarea>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; padding-top:8px;">
+            <button id="cw-bc-cancel" style="padding:8px 16px; background:white; border:1px solid #dadce0; color:#5f6368; border-radius:20px; cursor:pointer; font-weight:500;">Cancelar</button>
+            <button id="cw-bc-send" style="padding:8px 24px; background:#1a73e8; color:white; border:none; border-radius:20px; cursor:pointer; font-weight:600; box-shadow:0 2px 5px rgba(26,115,232,0.3);">Publicar</button>
+        </div>
+      `;
+      
+      const btnCancel = adminPanel.querySelector('#cw-bc-cancel');
+      const btnSend = adminPanel.querySelector('#cw-bc-send');
+      const inputTitle = adminPanel.querySelector('#cw-bc-title');
+      const inputText = adminPanel.querySelector('#cw-bc-text');
+      
+      btnCancel.onclick = () => { adminPanel.style.display = 'none'; };
+      
+      btnSend.onclick = async () => {
+          const type = adminPanel.querySelector('input[name="cw-bc-type"]:checked').value;
+          
+          if(!inputTitle.value.trim() || !inputText.value.trim()) {
+              showToast("Preencha todos os campos!", { error: true });
+              return;
+          }
+
+          // Estado de Loading
+          btnSend.textContent = "Enviando...";
+          btnSend.style.opacity = "0.7";
+          btnSend.style.cursor = "wait";
+
+          const success = await DataService.sendBroadcast({
+              title: inputTitle.value,
+              text: inputText.value,
+              type: type,
+              author: currentUser
+          });
+
+          if (success || true) { // Assumindo sucesso pois é no-cors
+              showToast("Aviso enviado com sucesso!");
+              SoundManager.playSuccess();
+              inputTitle.value = "";
+              inputText.value = "";
+              adminPanel.style.display = 'none';
+              
+              // Tenta atualizar o feed após alguns segundos
+              setTimeout(() => checkForUpdates(), 2000);
+          } else {
+              showToast("Erro ao enviar.", { error: true });
+          }
+          
+          // Reset botão
+          btnSend.textContent = "Publicar";
+          btnSend.style.opacity = "1";
+          btnSend.style.cursor = "pointer";
+      };
+
+      popup.appendChild(adminPanel);
+  }
+
+  function toggleAdminPanel() {
+      if (!adminPanel) return;
+      adminPanel.style.display = adminPanel.style.display === "none" ? "flex" : "none";
+      if(adminPanel.style.display === "flex") {
+          adminPanel.querySelector('input')?.focus();
+      }
+  }
+
   const feed = document.createElement("div");
   feed.className = "cw-nice-scroll";
   Object.assign(feed.style, styles.feedContainer);
@@ -179,7 +315,7 @@ export function initBroadcastAssistant() {
               statusEl.style.cssText = "padding: 6px; text-align: center; font-size: 11px; color: #5f6368; background: #f8f9fa; border-bottom: 1px solid #e0e0e0;";
               feed.parentNode.insertBefore(statusEl, feed); 
           }
-          statusEl.innerHTML = '⏳ Verificando atualizações...';
+          statusEl.innerHTML = '⏳ Sincronizando...';
           statusEl.style.display = 'block';
       }
 
@@ -192,11 +328,11 @@ export function initBroadcastAssistant() {
               if (visible && statusEl) {
                   const temNovidade = data.broadcast.some(m => !currentIds.includes(m.id));
                   if (temNovidade) {
-                      statusEl.innerHTML = '✅ Sincronizado.';
+                      statusEl.innerHTML = '✅ Atualizado.';
                       statusEl.style.backgroundColor = '#e6f4ea';
                       statusEl.style.color = '#137333';
                   } else {
-                      statusEl.innerHTML = '🔹 Tudo atualizado.';
+                      statusEl.innerHTML = '🔹 Tudo em dia.';
                   }
                   setTimeout(() => { if(statusEl) statusEl.style.display = 'none'; }, 1000);
               }
@@ -273,7 +409,7 @@ export function initBroadcastAssistant() {
           bauWidget.id = "cw-bau-widget";
           Object.assign(bauWidget.style, styles.bauContainer);
 
-          // LÓGICA DE DETECÇÃO DE IDIOMA E DATA (Smart Parsing)
+          // EXTRAÇÃO DE DATA (SMART)
           const extractedSlots = [];
           const lines = bauMessage.text.split('\n');
           const dateRegex = /\d{1,2}\/\d{1,2}/;
@@ -286,13 +422,13 @@ export function initBroadcastAssistant() {
                  if (/🇧🇷|🇵🇹|PT|BR/i.test(line)) flag = "🇧🇷";
                  else if (/🇪🇸|🇲🇽|ES|LATAM/i.test(line)) flag = "🇪🇸";
                  
-                 // Evita duplicatas se a pessoa repetiu
+                 // Evita duplicatas
                  const exists = extractedSlots.some(s => s.flag === flag && s.date === date);
                  if (!exists) extractedSlots.push({ flag, date });
              }
           });
 
-          // Se não achou nada por linha, tenta o método bruto antigo
+          // Fallback se não achar nada
           if (extractedSlots.length === 0) {
              const anyDates = bauMessage.text.match(/\d{1,2}\/\d{1,2}/g);
              if (anyDates) {
@@ -303,7 +439,7 @@ export function initBroadcastAssistant() {
           let contentHTML = "";
           
           if (extractedSlots.length > 0) {
-              // GERA OS CHIPS (Adicionei margin-bottom: 0 para não empurrar nada)
+              // GERA OS CHIPS LADO A LADO
               let slotsHTML = extractedSlots.map(slot => `
                   <div style="${objectToCss(styles.bauSlotRow)}; margin-bottom: 0; flex: 1; min-width: 100px; justify-content: center;">
                       <span style="${objectToCss(styles.bauFlag)}">${slot.flag}</span>
@@ -314,15 +450,15 @@ export function initBroadcastAssistant() {
               contentHTML = `
                   <div style="display:flex; align-items:flex-start; justify-content:space-between; width:100%;">
                       <div style="display:flex; flex-direction:column; width:100%;">
-                         <span style="font-size:12px; opacity:0.8; color:#581C87; margin-bottom:6px;">Slots disponíveis:</span>
+                         <span style="font-size:12px; opacity:0.8; color:#581C87; margin-bottom:6px;">Próxima abertura:</span>
                          
                          <div style="display:flex; flex-direction:row; gap:8px; width: 100%;">
                             ${slotsHTML}
                          </div>
 
                       </div>
-                      <button id="cw-bau-toggle-btn" style="background:rgba(255,255,255,0.6); border:1px solid rgba(139, 92, 246, 0.4); border-radius:8px; padding:6px 12px; cursor:pointer; color:#6D28D9; align-self: flex-end; font-size:12px; font-weight:600; transition:all 0.2s; white-space:nowrap; margin-left:8px; height:36px;">
-                       Detalhes
+                      <button id="cw-bau-toggle-btn" style="background:rgba(255,255,255,0.6); border:1px solid rgba(139, 92, 246, 0.4); border-radius:8px; padding:6px 12px; cursor:pointer; color:#6D28D9; font-size:12px; font-weight:600; transition:all 0.2s; white-space:nowrap; margin-left:8px; height:38px; margin-top:20px;">
+                          Detalhes
                       </button>
                   </div>
                   <div id="cw-bau-full" style="display:none; margin-top:12px; padding-top:12px; border-top:1px dashed rgba(139, 92, 246, 0.3); font-size:13px; line-height:1.5; color:#581C87;">

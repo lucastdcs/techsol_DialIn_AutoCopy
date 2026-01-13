@@ -1,7 +1,7 @@
 // src/modules/shared/data-service.js
 
 // SUA URL (Mantida)
-const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbwxxY5EhL3U1ZIEvs_y28FFeIFr7rMfSzNIljclqPd9Mk58-gx7pBRfZ8pQmXt2P1IMjw/exec";
+const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbwSI2JVCrK6u-zSyNgjttZTt_Watc0Akmi4nVOaa9krm0QSYLNIjoik6lrPmhu5tPlAPw/exec";
 // src/modules/shared/data-service.js
 
 
@@ -103,5 +103,31 @@ export const DataService = {
             headers: { "Content-Type": "text/plain;charset=utf-8" },
             body: JSON.stringify(payload)
         }).catch(e => console.log("Log fail", e));
-    }
+    },
+
+    // 3. ENVIAR NOVO BROADCAST (Admin)
+    sendBroadcast: async (payload) => {
+        // payload = { title, type, text, author }
+        const fullPayload = {
+            op: "new_broadcast", // Operação para o switch do Apps Script
+            ...payload,
+            date: new Date().toISOString(),
+            id: Date.now().toString() // ID único simples
+        };
+
+        try {
+            // Usamos 'no-cors' pois o Google Script não retorna headers CORS em POST
+            // Isso significa que não saberemos se deu erro 500, assumimos sucesso se a rede não falhar.
+            await fetch(API_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(fullPayload)
+            });
+            return true;
+        } catch (e) {
+            console.error("Erro ao enviar broadcast:", e);
+            return false;
+        }
+    },
 };
