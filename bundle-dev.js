@@ -1274,7 +1274,7 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
                          </div>
 
                       </div>
-                      <button id="cw-bau-toggle-btn" style="background:rgba(255,255,255,0.6); border:1px solid rgba(139, 92, 246, 0.4); border-radius:8px; padding:6px 12px; cursor:pointer; color:#6D28D9; font-size:12px; font-weight:600; transition:all 0.2s; white-space:nowrap; margin-left:8px; height:38px;">
+                      <button id="cw-bau-toggle-btn" style="background:rgba(255,255,255,0.6); border:1px solid rgba(139, 92, 246, 0.4); border-radius:8px; padding:6px 12px; cursor:pointer; color:#6D28D9; align-self: flex-end; font-size:12px; font-weight:600; transition:all 0.2s; white-space:nowrap; margin-left:8px; height:36px;">
                        Detalhes
                       </button>
                   </div>
