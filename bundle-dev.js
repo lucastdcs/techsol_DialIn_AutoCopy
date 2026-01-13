@@ -620,6 +620,7 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
     font-weight: 600;
     transition: all 0.3s ease;
     user-select: none;
+    margin-bottom: 8px;
 }
 .cw-abort-btn:hover {
     color: #F28B82; /* Vermelho claro */
