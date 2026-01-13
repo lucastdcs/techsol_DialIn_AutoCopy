@@ -166,9 +166,11 @@ export function initBroadcastAssistant() {
   // --- INJEÇÃO DO BOTÃO ADMIN (Se for lucaste) ---
   const actionContainer = header.querySelector('.cw-header-actions') || header.lastElementChild;
   
-  const internalEmail = captureInternalEmail(); 
-  const currentUser = internalEmail ? internalEmail.split('@')[0] : null;
-  const isAdmin = currentUser && ADMINS.includes(currentUser.toLowerCase());
+// LÓGICA DE ADMIN (Dentro do initBroadcastAssistant)
+const internalEmail = captureInternalEmail(); 
+const currentUser = internalEmail ? internalEmail.split('@')[0] : null;
+// Comparação com a lista de admins (ex: ['lucaste', 'gpozzi'])
+const isAdmin = currentUser && ADMINS.includes(currentUser.toLowerCase());
 
   if(actionContainer) {
       if (isAdmin) {
