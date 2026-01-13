@@ -174,6 +174,7 @@ export function initCommandCenter(actions) {
 .cw-center-stage {
     display: flex; flex-direction: column; align-items: center; gap: 14px;
     width: 100%; opacity: 0; animation: fadeIn 0.4s ease forwards 0.1s;
+    position: relative; /* Para posicionar o botão de abortar */
 }
 
 /* 5. AS BOLINHAS DO GOOGLE (Réplica exata da sua original) */
@@ -207,6 +208,24 @@ export function initCommandCenter(actions) {
 .cw-center-success { display: none; color: ${COLORS.green}; }
 .cw-center-success svg { width: 40px; height: 40px; }
 .cw-center-success.show { display: block; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+
+/* 8. Botão de Abortar (Novo) */
+.cw-abort-btn {
+    position: absolute;
+    bottom: -32px; /* Fora do fluxo visual principal */
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+.cw-abort-btn:hover {
+    color: #F28B82; /* Vermelho claro */
+    opacity: 1;
+}
 
 @keyframes fadeIn { to { opacity: 1; } }
 @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
@@ -395,6 +414,24 @@ export function triggerProcessingAnimation() {
         </div>
     `;
 
+    // NOVO: BOTÃO DE ABORTAR
+    const abortBtn = document.createElement('div');
+    abortBtn.className = 'cw-abort-btn';
+    abortBtn.textContent = 'Cancelar';
+    
+    // Lógica de "Emergency Eject"
+    abortBtn.onclick = (e) => {
+        e.stopPropagation();
+        console.warn("⚠️ Processo abortado pelo usuário.");
+        
+        // Desmonta tudo instantaneamente
+        stage.remove();
+        pill.classList.remove('processing-center');
+        pill.classList.remove('success');
+        if(overlay) overlay.classList.remove('active');
+    };
+
+    stage.appendChild(abortBtn); // Adiciona ao palco
     pill.appendChild(stage);
 
     // 2. ATIVAR MODO CENTRO
@@ -404,6 +441,9 @@ export function triggerProcessingAnimation() {
 
     // 3. RETORNAR FUNÇÃO DE FIM
     return function finish() {
+        // Se o estágio não existe mais (foi abortado), não faz nada
+        if (!pill.contains(stage)) return;
+
         const elapsed = Date.now() - startTime;
         const remaining = Math.max(0, 2000 - elapsed); // Mínimo 2s
 
@@ -412,9 +452,11 @@ export function triggerProcessingAnimation() {
             const dots = stage.querySelector('.cw-center-dots');
             const text = stage.querySelector('.cw-center-text');
             const success = stage.querySelector('.cw-center-success');
+            const abort = stage.querySelector('.cw-abort-btn'); // Esconde o abortar no sucesso
 
             if(dots) dots.style.display = 'none';
             if(text) text.style.display = 'none';
+            if(abort) abort.style.display = 'none';
             if(success) success.classList.add('show');
             
             // Adiciona borda verde na pílula
