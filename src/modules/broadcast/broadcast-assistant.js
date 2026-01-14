@@ -18,8 +18,12 @@ import { getAgentEmail } from "../shared/page-data.js";
 const ADMINS = ["lucaste"]; // Seu LDAP
 const POLL_TIME_MS = 60 * 1000; 
 
+// Inicializa estado global para evitar undefined na renderização inicial
+window._cwIsAdmin = false;
+window._cwCurrentUser = null;
+
 export function initBroadcastAssistant() {
-  const CURRENT_VERSION = "v4.5 (HD UI)";
+  const CURRENT_VERSION = "v4.6 (Stable UI)";
   let visible = false;
   let pollInterval = null;
   let currentEditingId = null;
@@ -37,25 +41,20 @@ export function initBroadcastAssistant() {
       } catch (e) { return String(dateInput); }
   }
 
-  // --- ESTILOS CSS INJETADOS ---
+  // --- ESTILOS CSS INJETADOS (HD DEFINITION) ---
   if (!document.getElementById('cw-broadcast-hd-css')) {
       const s = document.createElement("style");
       s.id = 'cw-broadcast-hd-css';
       s.innerHTML = `
-        /* Animações */
         @keyframes cw-pulse {
             0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.7); }
             70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(147, 51, 234, 0); }
             100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(147, 51, 234, 0); }
         }
-        @keyframes cwSlideUp { 
-            from { transform: translateY(100%); opacity: 0; } 
-            to { transform: translateY(0); opacity: 1; } 
-        }
         
-        /* Botões Táteis */
+        /* Botões Táteis e Interativos */
         .cw-btn-interactive {
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: transform 0.1s ease, background 0.2s ease;
             cursor: pointer; user-select: none;
         }
         .cw-btn-interactive:active { transform: scale(0.96); }
@@ -65,102 +64,84 @@ export function initBroadcastAssistant() {
             position: absolute; inset: 0; 
             background: rgba(255, 255, 255, 0.98); 
             z-index: 200; display: flex; flex-direction: column;
-            padding: 0; box-sizing: border-box;
             transform: translateY(100%); 
             transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
         }
         .cw-editor-overlay.active { transform: translateY(0); }
 
-        /* Inputs Bonitos */
+        /* Inputs HD */
         .cw-hd-input {
             width: 100%; padding: 12px 14px;
-            border: 1px solid #E0E0E0; border-radius: 12px;
+            border: 1px solid #DADCE0; border-radius: 12px;
             font-size: 14px; color: #202124; background: #FFF;
             transition: border 0.2s, box-shadow 0.2s;
             box-sizing: border-box; outline: none; font-family: 'Google Sans', Roboto, sans-serif;
         }
-        .cw-hd-input:focus { border-color: #1a73e8; box-shadow: 0 0 0 2px rgba(26,115,232,0.1); }
+        .cw-hd-input:focus { border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,0.1); }
         .cw-hd-input::placeholder { color: #9AA0A6; }
 
         /* Radio Group Custom */
-        .cw-radio-group { display: flex; gap: 8px; }
+        .cw-radio-group { display: flex; gap: 12px; }
         .cw-radio-option {
-            flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
-            padding: 10px; border-radius: 10px; border: 1px solid transparent;
-            font-size: 13px; font-weight: 500; cursor: pointer;
-            transition: all 0.2s; position: relative;
+            flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 12px; border-radius: 12px; border: 1px solid #E0E0E0;
+            font-size: 13px; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; position: relative; color: #5F6368;
         }
+        .cw-radio-option:hover { background: #F8F9FA; }
         .cw-radio-option input { position: absolute; opacity: 0; }
+        
         /* Estados do Radio */
-        .cw-radio-option.info { background: #F1F3F4; color: #5F6368; }
         .cw-radio-option.info.checked { background: #E8F0FE; color: #1967D2; border-color: #1967D2; }
+        .cw-radio-option.critical.checked { background: #FEE2E2; color: #B91C1C; border-color: #EF4444; }
+        .cw-radio-option.success.checked { background: #DCFCE7; color: #15803D; border-color: #22C55E; }
         
-        .cw-radio-option.critical { background: #FEF2F2; color: #B91C1C; }
-        .cw-radio-option.critical.checked { background: #FEE2E2; border-color: #EF4444; }
-        
-        .cw-radio-option.success { background: #F0FDF4; color: #15803D; }
-        .cw-radio-option.success.checked { background: #DCFCE7; border-color: #22C55E; }
+        /* Botões CRUD no Card */
+        .cw-card-actions {
+            display: flex; justify-content: flex-end; gap: 12px;
+            padding: 12px 20px; background: #F8F9FA;
+            border-top: 1px solid #F1F3F4;
+        }
+        .cw-action-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 6px 12px; border-radius: 8px;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+            border: 1px solid transparent; background: transparent;
+            transition: all 0.2s;
+        }
+        .cw-action-btn.edit { color: #1967D2; }
+        .cw-action-btn.edit:hover { background: #E8F0FE; }
+        .cw-action-btn.delete { color: #D93025; }
+        .cw-action-btn.delete:hover { background: #FCE8E6; }
 
       `;
       document.head.appendChild(s);
   }
 
-  // --- OBJETOS DE ESTILO JS (Para inline) ---
+  // --- ESTILOS JS ---
   const styles = {
-      feedContainer: { 
-          padding: "20px 24px 80px 24px", // Padding bottom extra para scroll
-          overflowY: "auto", flexGrow: "1", background: "#F8F9FA", 
-          display: "flex", flexDirection: "column", gap: "16px" 
-      },
+      feedContainer: { padding: "20px 24px 80px 24px", overflowY: "auto", flexGrow: "1", background: "#F8F9FA", display: "flex", flexDirection: "column", gap: "20px" },
       
-      // CARD HD
-      card: { 
-          background: "#FFFFFF", borderRadius: "16px", 
-          border: "1px solid rgba(0,0,0,0.08)", 
-          boxShadow: "0 2px 6px rgba(60,64,67,0.05), 0 1px 2px rgba(60,64,67,0.05)", 
-          overflow: "hidden", transition: "all 0.3s ease", 
-          position: "relative", width: "100%", boxSizing: "border-box", flexShrink: "0" 
-      },
-      
-      // HEADER DO CARD
-      cardHeader: { 
-          padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", 
-          borderBottom: "1px solid rgba(0,0,0,0.04)" 
-      },
-      typeTag: {
-          display: "flex", alignItems: "center", gap: "6px",
-          fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.6px",
-          padding: "4px 8px", borderRadius: "6px"
-      },
+      // CARD
+      card: { background: "#FFFFFF", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 2px 6px rgba(60,64,67,0.05), 0 1px 2px rgba(60,64,67,0.05)", overflow: "hidden", transition: "all 0.3s ease", position: "relative", width: "100%", boxSizing: "border-box", flexShrink: "0" },
+      cardHeader: { padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(0,0,0,0.04)" },
+      typeTag: { display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.6px", padding: "4px 8px", borderRadius: "6px" },
       dateTag: { fontSize: "11px", color: "#5f6368", fontWeight: "500" },
-
-      // CONTEÚDO DO CARD
       cardContent: { padding: "16px 20px 20px 20px" },
       msgTitle: { fontSize: "16px", fontWeight: "700", color: "#202124", marginBottom: "8px", lineHeight: "1.4" },
       msgBody: { fontSize: "14px", color: "#3c4043", lineHeight: "1.6", whiteSpace: "pre-wrap", wordBreak: "break-word" },
       msgMeta: { fontSize: "11px", color: "#9aa0a6", marginTop: "12px", display: "flex", alignItems: "center", gap: "6px" },
-
-      // FOOTER DO ADMIN (CRUD)
-      adminFooter: {
-          padding: "10px 16px", background: "#F8F9FA", borderTop: "1px solid #F1F3F4",
-          display: "flex", justifyContent: "flex-end", gap: "12px"
-      },
-      actionBtn: {
-          border: "none", background: "transparent", cursor: "pointer",
-          display: "flex", alignItems: "center", gap: "6px",
-          fontSize: "12px", fontWeight: "600", padding: "6px 12px", borderRadius: "8px",
-          transition: "background 0.2s"
-      },
-
-      // WIDGET BAU
-      bauContainer: { 
-          margin: "16px 24px 0 24px", padding: "16px", 
-          background: "#F3E8FD", border: "1px solid #D8B4FE", borderRadius: "16px", 
-          display: "flex", flexDirection: "column", gap: "12px", 
-          boxShadow: "0 4px 12px rgba(147, 51, 234, 0.1)" 
-      },
       
-      // ESTADOS VAZIOS E HISTÓRICO
+      // Dismiss Button
+      dismissBtn: { width: "28px", height: "28px", borderRadius: "50%", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", color: "#5f6368", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease", marginLeft: "12px" },
+
+      // BAU Widget
+      bauContainer: { margin: "16px 24px 0 24px", padding: "16px", background: "#F3E8FD", border: "1px solid #D8B4FE", borderRadius: "16px", display: "flex", flexDirection: "column", gap: "12px", boxShadow: "0 4px 12px rgba(147, 51, 234, 0.1)" },
+      bauSlotRow: { display: "flex", alignItems: "center", gap: "10px", padding: "8px 12px", background: "rgba(255,255,255,0.5)", borderRadius: "8px", marginBottom: "4px" },
+      bauFlag: { fontSize: "18px", lineHeight: "1" },
+      bauDate: { fontSize: "16px", fontWeight: "700", color: "#581C87", letterSpacing: "-0.5px" },
+      
       emptyState: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "60px 0", color: "#BDC1C6", gap: "16px", textAlign: "center" },
       historyDivider: { display: "flex", alignItems: "center", justifyContent: "center", margin: "20px 0", cursor: "pointer", color: "#1a73e8", fontSize: "13px", fontWeight: "500", gap: "8px", padding: "8px 16px", borderRadius: "20px", background: "#E8F0FE" },
       historyContainer: { display: "none", flexDirection: "column", gap: "16px", opacity: "0.8" }
@@ -192,7 +173,6 @@ export function initBroadcastAssistant() {
   const popup = document.createElement("div");
   popup.id = "broadcast-popup";
   popup.classList.add("cw-module-window");
-  // Ajuste fino do tamanho e posição
   Object.assign(popup.style, stylePopup, {
     right: "auto", left: "50%", width: "420px", height: "680px", 
     display: "flex", flexDirection: "column", transform: "translateX(-50%) scale(0.05)", 
@@ -216,15 +196,18 @@ export function initBroadcastAssistant() {
     animRefs, () => toggleVisibility()
   );
   
-  // --- INJEÇÃO DO BOTÃO ADMIN (FAB no Header) ---
   const actionContainer = header.querySelector('.cw-header-actions') || header.lastElementChild;
   let editorOverlay = null; 
 
   function tryInjectAdminButton() {
-      const email = getAgentEmail();
+      // Segurança: Tenta obter email, se falhar ou undefined, retorna null
+      let email = null;
+      try { email = getAgentEmail(); } catch(e) { console.warn("TechSol: Auth Pending"); }
+
       if (email) {
           const currentUser = email.split('@')[0].toLowerCase();
           const isAdmin = ADMINS.includes(currentUser);
+          
           window._cwIsAdmin = isAdmin; 
           window._cwCurrentUser = currentUser;
 
@@ -244,17 +227,20 @@ export function initBroadcastAssistant() {
               actionContainer.insertBefore(addBtn, actionContainer.firstChild);
               
               if(!editorOverlay) createEditorOverlay();
+              
+              // Força re-render para mostrar botões de admin nos cards existentes
+              renderFeed();
           }
       } else {
           if (!window._cwAdminRetries) window._cwAdminRetries = 0;
-          if (window._cwAdminRetries < 3) {
+          if (window._cwAdminRetries < 5) {
               window._cwAdminRetries++;
               setTimeout(tryInjectAdminButton, 2000);
           }
       }
   }
 
-  // Botão Limpar (Para todos)
+  // Botão Limpar
   if(actionContainer) {
       const markAll = document.createElement("button");
       markAll.textContent = "Limpar";
@@ -273,7 +259,7 @@ export function initBroadcastAssistant() {
 
   popup.appendChild(header);
 
-  // --- EDITOR OVERLAY (UX Aprimorada) ---
+  // --- EDITOR OVERLAY ---
   function createEditorOverlay() {
       editorOverlay = document.createElement("div");
       editorOverlay.className = "cw-editor-overlay";
@@ -285,8 +271,8 @@ export function initBroadcastAssistant() {
                 <button id="cw-bc-close-x" class="cw-btn-interactive" style="background:none; border:none; color:#5f6368; padding:8px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
             </div>
             
-            <div style="margin-bottom:20px;">
-                <label style="font-size:12px; font-weight:700; color:#5f6368; margin-bottom:8px; display:block;">TIPO DO COMUNICADO</label>
+            <div style="margin-bottom:24px;">
+                <label style="font-size:11px; font-weight:700; color:#5f6368; margin-bottom:10px; display:block; text-transform:uppercase;">Nível de Urgência</label>
                 <div class="cw-radio-group">
                     <div class="cw-radio-option info" onclick="this.querySelector('input').click()">
                         <input type="radio" name="cw-bc-type" value="info" checked> ℹ️ Info
@@ -300,32 +286,33 @@ export function initBroadcastAssistant() {
                 </div>
             </div>
 
-            <div style="margin-bottom:20px;">
-                 <label style="font-size:12px; font-weight:700; color:#5f6368; margin-bottom:8px; display:block;">TÍTULO</label>
-                 <input id="cw-bc-title" class="cw-hd-input" placeholder="Resumo do assunto">
+            <div style="margin-bottom:24px;">
+                 <label style="font-size:11px; font-weight:700; color:#5f6368; margin-bottom:8px; display:block; text-transform:uppercase;">Título</label>
+                 <input id="cw-bc-title" class="cw-hd-input" placeholder="Resumo do assunto (Ex: Disponibilidade BAU)">
             </div>
 
-            <div style="margin-bottom:20px;">
-                 <label style="font-size:12px; font-weight:700; color:#5f6368; margin-bottom:8px; display:block;">MENSAGEM</label>
-                 <textarea id="cw-bc-text" class="cw-hd-input" placeholder="Escreva os detalhes aqui..." style="height:160px; resize:none; line-height:1.6;"></textarea>
+            <div style="margin-bottom:24px;">
+                 <label style="font-size:11px; font-weight:700; color:#5f6368; margin-bottom:8px; display:block; text-transform:uppercase;">Mensagem</label>
+                 <textarea id="cw-bc-text" class="cw-hd-input" placeholder="Escreva os detalhes aqui... Suporta HTML e Emojis :)" style="height:180px; resize:none; line-height:1.6;"></textarea>
             </div>
         </div>
 
         <div style="padding: 16px 24px; border-top: 1px solid #F1F3F4; background: #fff; display: flex; justify-content: flex-end; gap: 12px;">
-            <button id="cw-bc-cancel" class="cw-btn-interactive" style="padding:10px 20px; background:white; border:1px solid #dadce0; color:#5f6368; border-radius:24px; font-weight:600; font-size:13px;">Cancelar</button>
-            <button id="cw-bc-send" class="cw-btn-interactive" style="padding:10px 24px; background:#1a73e8; color:white; border:none; border-radius:24px; font-weight:600; box-shadow:0 4px 12px rgba(26,115,232,0.3); font-size:13px;">Publicar</button>
+            <button id="cw-bc-cancel" class="cw-btn-interactive" style="padding:10px 24px; background:white; border:1px solid #E0E0E0; color:#5f6368; border-radius:24px; font-weight:600; font-size:13px;">Cancelar</button>
+            <button id="cw-bc-send" class="cw-btn-interactive" style="padding:10px 32px; background:#1a73e8; color:white; border:none; border-radius:24px; font-weight:600; box-shadow:0 4px 12px rgba(26,115,232,0.3); font-size:13px;">Publicar</button>
         </div>
       `;
 
-      // Logica de Seleção Visual dos Radios
       editorOverlay.querySelectorAll('input[name="cw-bc-type"]').forEach(radio => {
           radio.addEventListener('change', () => {
               editorOverlay.querySelectorAll('.cw-radio-option').forEach(opt => opt.classList.remove('checked'));
               radio.parentElement.classList.add('checked');
           });
       });
-      // Ativa o padrão
-      setTimeout(() => editorOverlay.querySelector('.cw-radio-option.info').classList.add('checked'), 100);
+      setTimeout(() => { 
+          const def = editorOverlay.querySelector('.cw-radio-option.info');
+          if(def) def.classList.add('checked');
+      }, 100);
 
       const btnCancel = editorOverlay.querySelector('#cw-bc-cancel');
       const btnCloseX = editorOverlay.querySelector('#cw-bc-close-x');
@@ -349,21 +336,21 @@ export function initBroadcastAssistant() {
       if (editData) {
           currentEditingId = editData.id;
           titleLabel.textContent = "Editar Aviso";
-          inputTitle.value = editData.title;
-          inputText.value = editData.text;
+          inputTitle.value = editData.title || "";
+          inputText.value = editData.text || "";
           btnSend.textContent = "Salvar Alterações";
           
-          const radio = editorOverlay.querySelector(`input[name="cw-bc-type"][value="${editData.type}"]`);
-          if(radio) {
-              radio.click(); // Dispara a logica visual
-          }
+          const type = editData.type || 'info';
+          const radio = editorOverlay.querySelector(`input[name="cw-bc-type"][value="${type}"]`);
+          if(radio) radio.click();
       } else {
           currentEditingId = null;
           titleLabel.textContent = "Novo Aviso";
           inputTitle.value = "";
           inputText.value = "";
           btnSend.textContent = "Publicar";
-          editorOverlay.querySelector(`input[name="cw-bc-type"][value="info"]`).click();
+          const infoRadio = editorOverlay.querySelector(`input[name="cw-bc-type"][value="info"]`);
+          if(infoRadio) infoRadio.click();
       }
 
       editorOverlay.classList.add('active');
@@ -379,7 +366,8 @@ export function initBroadcastAssistant() {
       const btnSend = editorOverlay.querySelector('#cw-bc-send');
       const inputTitle = editorOverlay.querySelector('#cw-bc-title');
       const inputText = editorOverlay.querySelector('#cw-bc-text');
-      const type = editorOverlay.querySelector('input[name="cw-bc-type"]:checked').value;
+      const typeInput = editorOverlay.querySelector('input[name="cw-bc-type"]:checked');
+      const type = typeInput ? typeInput.value : 'info';
 
       if(!inputTitle.value.trim() || !inputText.value.trim()) {
           showToast("Preencha todos os campos!", { error: true });
@@ -407,12 +395,12 @@ export function initBroadcastAssistant() {
       }
 
       if (success) {
-          showToast(currentEditingId ? "Atualizado com sucesso!" : "Publicado com sucesso!");
+          showToast(currentEditingId ? "Atualizado!" : "Publicado!");
           SoundManager.playSuccess();
           closeEditor();
           setTimeout(() => checkForUpdates(), 1500);
       } else {
-          showToast("Erro ao salvar.", { error: true });
+          showToast("Erro ao salvar. Verifique a conexão.", { error: true });
           btnSend.textContent = currentEditingId ? "Salvar Alterações" : "Publicar";
           btnSend.style.opacity = "1";
       }
@@ -491,7 +479,6 @@ export function initBroadcastAssistant() {
       }
   }
 
-  // --- RENDERIZADOR PRINCIPAL ---
   function renderFeed() {
       feed.innerHTML = "";
       const oldBau = popup.querySelector('#cw-bau-widget');
@@ -504,20 +491,19 @@ export function initBroadcastAssistant() {
           return dateB - dateA;
       });
 
-      // 1. WIDGET BAU
+      // 1. BAU WIDGET
       const bauIndex = allMessages.findIndex(m => m.title && m.title.toLowerCase().includes("disponibilidade bau"));
       
       if (bauIndex !== -1) {
           const bauMessage = allMessages[bauIndex];
-          allMessages.splice(bauIndex, 1); // Remove da lista
+          allMessages.splice(bauIndex, 1);
 
           const bauWidget = document.createElement("div");
           bauWidget.id = "cw-bau-widget";
           Object.assign(bauWidget.style, styles.bauContainer);
 
-          // Parsing Smart
           const extractedSlots = [];
-          const lines = bauMessage.text.split('\n');
+          const lines = (bauMessage.text || "").split('\n');
           const dateRegex = /\d{1,2}\/\d{1,2}/;
           
           lines.forEach(line => {
@@ -533,7 +519,7 @@ export function initBroadcastAssistant() {
           });
 
           if (extractedSlots.length === 0) {
-             const anyDates = bauMessage.text.match(/\d{1,2}\/\d{1,2}/g);
+             const anyDates = (bauMessage.text || "").match(/\d{1,2}\/\d{1,2}/g);
              if (anyDates) [...new Set(anyDates)].forEach(d => extractedSlots.push({ flag: "📅", date: d }));
           }
 
@@ -558,7 +544,7 @@ export function initBroadcastAssistant() {
               contentHTML = `<div style="font-size:13px; color:#581C87; line-height:1.5;">${parseMessageText(bauMessage.text)}</div>`;
           }
 
-          // Botão Editar no BAU (Float Top Right)
+          // Botão Editar BAU
           let adminActionsHTML = "";
           if (window._cwIsAdmin) {
               adminActionsHTML = `<button class="cw-bau-edit cw-btn-interactive" style="position:absolute; top:8px; right:8px; border:none; background:rgba(255,255,255,0.5); border-radius:6px; padding:6px; color:#6D28D9;">✏️</button>`;
@@ -593,7 +579,7 @@ export function initBroadcastAssistant() {
           }
       }
 
-      // 2. LISTA DE MENSAGENS
+      // 2. LISTA
       const sortedMessages = allMessages.sort((a, b) => {
           const aRead = readMessages.includes(a.id);
           const bRead = readMessages.includes(b.id);
@@ -645,18 +631,19 @@ export function initBroadcastAssistant() {
     const cardHead = document.createElement("div");
     Object.assign(cardHead.style, styles.cardHeader);
     
-    // Tag de Tipo
+    // Tag
     const typeLabel = document.createElement("div");
     Object.assign(typeLabel.style, styles.typeTag, { color: theme.color, background: theme.bg });
     typeLabel.innerHTML = `${theme.icon} <span>${msg.type}</span>`;
     
+    // Date
     const dateLabel = document.createElement("span");
     Object.assign(dateLabel.style, styles.dateTag);
     dateLabel.textContent = formatFriendlyDate(msg.date);
 
     cardHead.appendChild(typeLabel);
     
-    // Botão de Dismiss (Leitura)
+    // Dismiss
     if (!isHistory) {
         const dismissBtn = document.createElement("button");
         dismissBtn.className = "cw-btn-interactive";
@@ -682,7 +669,7 @@ export function initBroadcastAssistant() {
         cardHead.appendChild(dateLabel);
     }
     
-    // Body
+    // Content
     const bodyContainer = document.createElement("div");
     Object.assign(bodyContainer.style, styles.cardContent);
     
@@ -696,7 +683,7 @@ export function initBroadcastAssistant() {
     
     const meta = document.createElement("div");
     Object.assign(meta.style, styles.msgMeta);
-    meta.innerHTML = `Publicado por <b>${msg.author}</b>`;
+    meta.innerHTML = `Publicado por <b>${msg.author || 'Sistema'}</b>`;
     if(!isHistory) meta.innerHTML += ` • ${formatFriendlyDate(msg.date)}`;
 
     bodyContainer.appendChild(title);
@@ -706,32 +693,29 @@ export function initBroadcastAssistant() {
     card.appendChild(cardHead);
     card.appendChild(bodyContainer);
 
-    // --- FOOTER ADMIN (Separado e Limpo) ---
+    // --- CRUD FOOTER (Admin) ---
     if (window._cwIsAdmin) {
-        const adminFooter = document.createElement("div");
-        Object.assign(adminFooter.style, styles.adminFooter);
+        const cardActions = document.createElement("div");
+        cardActions.className = "cw-card-actions";
         
         const btnEdit = document.createElement("button");
-        btnEdit.className = "cw-btn-interactive";
-        Object.assign(btnEdit.style, styles.actionBtn, { color: "#1967D2", background: "#E8F0FE" });
+        btnEdit.className = "cw-action-btn edit";
         btnEdit.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Editar`;
         btnEdit.onclick = () => openEditor(msg);
 
         const btnDel = document.createElement("button");
-        btnDel.className = "cw-btn-interactive";
-        Object.assign(btnDel.style, styles.actionBtn, { color: "#D93025", background: "#FCE8E6" });
+        btnDel.className = "cw-action-btn delete";
         btnDel.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg> Excluir`;
         btnDel.onclick = () => handleDelete(msg.id);
 
-        adminFooter.appendChild(btnEdit);
-        adminFooter.appendChild(btnDel);
-        card.appendChild(adminFooter);
+        cardActions.appendChild(btnEdit);
+        cardActions.appendChild(btnDel);
+        card.appendChild(cardActions);
     }
 
     return card;
   }
 
-  // --- STARTUP ---
   const cachedData = DataService.getCachedBroadcasts();
   if (cachedData.length > 0) {
       setBroadcastMessages(cachedData);
