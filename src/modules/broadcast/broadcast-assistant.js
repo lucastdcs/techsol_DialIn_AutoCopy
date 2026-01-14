@@ -18,12 +18,12 @@ import { getAgentEmail } from "../shared/page-data.js";
 const ADMINS = ["lucaste"]; // Seu LDAP
 const POLL_TIME_MS = 60 * 1000; 
 
-// Inicializa estado global para evitar undefined na renderização inicial
+// Inicializa estado global
 window._cwIsAdmin = false;
 window._cwCurrentUser = null;
 
 export function initBroadcastAssistant() {
-  const CURRENT_VERSION = "v4.6 (Stable UI)";
+  const CURRENT_VERSION = "v4.7 (Crash Fix)";
   let visible = false;
   let pollInterval = null;
   let currentEditingId = null;
@@ -41,7 +41,7 @@ export function initBroadcastAssistant() {
       } catch (e) { return String(dateInput); }
   }
 
-  // --- ESTILOS CSS INJETADOS (HD DEFINITION) ---
+  // --- ESTILOS CSS INJETADOS ---
   if (!document.getElementById('cw-broadcast-hd-css')) {
       const s = document.createElement("style");
       s.id = 'cw-broadcast-hd-css';
@@ -52,14 +52,12 @@ export function initBroadcastAssistant() {
             100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(147, 51, 234, 0); }
         }
         
-        /* Botões Táteis e Interativos */
         .cw-btn-interactive {
             transition: transform 0.1s ease, background 0.2s ease;
             cursor: pointer; user-select: none;
         }
         .cw-btn-interactive:active { transform: scale(0.96); }
 
-        /* Overlay do Editor */
         .cw-editor-overlay {
             position: absolute; inset: 0; 
             background: rgba(255, 255, 255, 0.98); 
@@ -70,7 +68,6 @@ export function initBroadcastAssistant() {
         }
         .cw-editor-overlay.active { transform: translateY(0); }
 
-        /* Inputs HD */
         .cw-hd-input {
             width: 100%; padding: 12px 14px;
             border: 1px solid #DADCE0; border-radius: 12px;
@@ -81,7 +78,6 @@ export function initBroadcastAssistant() {
         .cw-hd-input:focus { border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,0.1); }
         .cw-hd-input::placeholder { color: #9AA0A6; }
 
-        /* Radio Group Custom */
         .cw-radio-group { display: flex; gap: 12px; }
         .cw-radio-option {
             flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -92,12 +88,10 @@ export function initBroadcastAssistant() {
         .cw-radio-option:hover { background: #F8F9FA; }
         .cw-radio-option input { position: absolute; opacity: 0; }
         
-        /* Estados do Radio */
         .cw-radio-option.info.checked { background: #E8F0FE; color: #1967D2; border-color: #1967D2; }
         .cw-radio-option.critical.checked { background: #FEE2E2; color: #B91C1C; border-color: #EF4444; }
         .cw-radio-option.success.checked { background: #DCFCE7; color: #15803D; border-color: #22C55E; }
         
-        /* Botões CRUD no Card */
         .cw-card-actions {
             display: flex; justify-content: flex-end; gap: 12px;
             padding: 12px 20px; background: #F8F9FA;
@@ -114,12 +108,11 @@ export function initBroadcastAssistant() {
         .cw-action-btn.edit:hover { background: #E8F0FE; }
         .cw-action-btn.delete { color: #D93025; }
         .cw-action-btn.delete:hover { background: #FCE8E6; }
-
       `;
       document.head.appendChild(s);
   }
 
-  // --- ESTILOS JS ---
+  // --- ESTILOS JS (Objetos Completos) ---
   const styles = {
       feedContainer: { padding: "20px 24px 80px 24px", overflowY: "auto", flexGrow: "1", background: "#F8F9FA", display: "flex", flexDirection: "column", gap: "20px" },
       
@@ -138,6 +131,12 @@ export function initBroadcastAssistant() {
 
       // BAU Widget
       bauContainer: { margin: "16px 24px 0 24px", padding: "16px", background: "#F3E8FD", border: "1px solid #D8B4FE", borderRadius: "16px", display: "flex", flexDirection: "column", gap: "12px", boxShadow: "0 4px 12px rgba(147, 51, 234, 0.1)" },
+      bauHeader: { display: "flex", alignItems: "center", justifyContent: "space-between", gap:"2px" },
+      bauLabel: { fontSize: "11px", fontWeight: "800", color: "#7E22CE", textTransform: "uppercase", letterSpacing: "0.8px" },
+      liveIndicator: { display: "flex", alignItems: "center", gap: "8px" },
+      pulseDot: { width: "8px", height: "8px", borderRadius: "50%", background: "#9333EA", boxShadow: "0 0 0 0 rgba(147, 51, 234, 0.7)", animation: "cw-pulse 2s infinite" },
+      
+      // NOVOS ESTILOS QUE ESTAVAM FALTANDO
       bauSlotRow: { display: "flex", alignItems: "center", gap: "10px", padding: "8px 12px", background: "rgba(255,255,255,0.5)", borderRadius: "8px", marginBottom: "4px" },
       bauFlag: { fontSize: "18px", lineHeight: "1" },
       bauDate: { fontSize: "16px", fontWeight: "700", color: "#581C87", letterSpacing: "-0.5px" },
@@ -153,7 +152,14 @@ export function initBroadcastAssistant() {
       success: { color: "#166534", bg: "#F0FDF4", icon: `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>` }
   };
 
-  // --- PARSERS ---
+  // --- PARSERS & UTILS ---
+  
+  // FIX: Função blindada contra null/undefined
+  function objectToCss(obj) {
+      if (!obj) return ""; 
+      return Object.entries(obj).map(([k, v]) => `${k.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}:${v}`).join(';');
+  }
+
   function parseMessageText(rawText) {
       if (!rawText || typeof rawText !== 'string') return ""; 
       let html = rawText;
@@ -163,10 +169,6 @@ export function initBroadcastAssistant() {
       html = html.replace(/\n/g, '<br>');
       html = parseEmojiCodes(html);
       return html;
-  }
-
-  function objectToCss(obj) {
-      return Object.entries(obj).map(([k, v]) => `${k.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}:${v}`).join(';');
   }
 
   // --- UI SETUP ---
@@ -196,11 +198,12 @@ export function initBroadcastAssistant() {
     animRefs, () => toggleVisibility()
   );
   
+  // --- INJEÇÃO DO BOTÃO ADMIN (FAB no Header) ---
   const actionContainer = header.querySelector('.cw-header-actions') || header.lastElementChild;
   let editorOverlay = null; 
 
   function tryInjectAdminButton() {
-      // Segurança: Tenta obter email, se falhar ou undefined, retorna null
+      // Segurança: Tenta obter email
       let email = null;
       try { email = getAgentEmail(); } catch(e) { console.warn("TechSol: Auth Pending"); }
 
@@ -227,8 +230,6 @@ export function initBroadcastAssistant() {
               actionContainer.insertBefore(addBtn, actionContainer.firstChild);
               
               if(!editorOverlay) createEditorOverlay();
-              
-              // Força re-render para mostrar botões de admin nos cards existentes
               renderFeed();
           }
       } else {
@@ -271,8 +272,8 @@ export function initBroadcastAssistant() {
                 <button id="cw-bc-close-x" class="cw-btn-interactive" style="background:none; border:none; color:#5f6368; padding:8px;"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
             </div>
             
-            <div style="margin-bottom:24px;">
-                <label style="font-size:11px; font-weight:700; color:#5f6368; margin-bottom:10px; display:block; text-transform:uppercase;">Nível de Urgência</label>
+            <div style="margin-bottom:20px;">
+                <label style="font-size:12px; font-weight:700; color:#5f6368; margin-bottom:8px; display:block;">TIPO DO COMUNICADO</label>
                 <div class="cw-radio-group">
                     <div class="cw-radio-option info" onclick="this.querySelector('input').click()">
                         <input type="radio" name="cw-bc-type" value="info" checked> ℹ️ Info
@@ -286,20 +287,20 @@ export function initBroadcastAssistant() {
                 </div>
             </div>
 
-            <div style="margin-bottom:24px;">
-                 <label style="font-size:11px; font-weight:700; color:#5f6368; margin-bottom:8px; display:block; text-transform:uppercase;">Título</label>
-                 <input id="cw-bc-title" class="cw-hd-input" placeholder="Resumo do assunto (Ex: Disponibilidade BAU)">
+            <div style="margin-bottom:20px;">
+                 <label style="font-size:12px; font-weight:700; color:#5f6368; margin-bottom:8px; display:block;">TÍTULO</label>
+                 <input id="cw-bc-title" class="cw-hd-input" placeholder="Resumo do assunto">
             </div>
 
-            <div style="margin-bottom:24px;">
-                 <label style="font-size:11px; font-weight:700; color:#5f6368; margin-bottom:8px; display:block; text-transform:uppercase;">Mensagem</label>
-                 <textarea id="cw-bc-text" class="cw-hd-input" placeholder="Escreva os detalhes aqui... Suporta HTML e Emojis :)" style="height:180px; resize:none; line-height:1.6;"></textarea>
+            <div style="margin-bottom:20px;">
+                 <label style="font-size:12px; font-weight:700; color:#5f6368; margin-bottom:8px; display:block;">MENSAGEM</label>
+                 <textarea id="cw-bc-text" class="cw-hd-input" placeholder="Escreva os detalhes aqui... Suporta HTML e Emojis :)" style="height:160px; resize:none; line-height:1.6;"></textarea>
             </div>
         </div>
 
         <div style="padding: 16px 24px; border-top: 1px solid #F1F3F4; background: #fff; display: flex; justify-content: flex-end; gap: 12px;">
-            <button id="cw-bc-cancel" class="cw-btn-interactive" style="padding:10px 24px; background:white; border:1px solid #E0E0E0; color:#5f6368; border-radius:24px; font-weight:600; font-size:13px;">Cancelar</button>
-            <button id="cw-bc-send" class="cw-btn-interactive" style="padding:10px 32px; background:#1a73e8; color:white; border:none; border-radius:24px; font-weight:600; box-shadow:0 4px 12px rgba(26,115,232,0.3); font-size:13px;">Publicar</button>
+            <button id="cw-bc-cancel" class="cw-btn-interactive" style="padding:10px 20px; background:white; border:1px solid #dadce0; color:#5f6368; border-radius:24px; font-weight:600; font-size:13px;">Cancelar</button>
+            <button id="cw-bc-send" class="cw-btn-interactive" style="padding:10px 24px; background:#1a73e8; color:white; border:none; border-radius:24px; font-weight:600; box-shadow:0 4px 12px rgba(26,115,232,0.3); font-size:13px;">Publicar</button>
         </div>
       `;
 
@@ -366,8 +367,7 @@ export function initBroadcastAssistant() {
       const btnSend = editorOverlay.querySelector('#cw-bc-send');
       const inputTitle = editorOverlay.querySelector('#cw-bc-title');
       const inputText = editorOverlay.querySelector('#cw-bc-text');
-      const typeInput = editorOverlay.querySelector('input[name="cw-bc-type"]:checked');
-      const type = typeInput ? typeInput.value : 'info';
+      const type = editorOverlay.querySelector('input[name="cw-bc-type"]:checked').value;
 
       if(!inputTitle.value.trim() || !inputText.value.trim()) {
           showToast("Preencha todos os campos!", { error: true });
@@ -479,6 +479,7 @@ export function initBroadcastAssistant() {
       }
   }
 
+  // --- RENDERIZADOR ---
   function renderFeed() {
       feed.innerHTML = "";
       const oldBau = popup.querySelector('#cw-bau-widget');
@@ -491,7 +492,7 @@ export function initBroadcastAssistant() {
           return dateB - dateA;
       });
 
-      // 1. BAU WIDGET
+      // 1. WIDGET BAU
       const bauIndex = allMessages.findIndex(m => m.title && m.title.toLowerCase().includes("disponibilidade bau"));
       
       if (bauIndex !== -1) {
@@ -544,7 +545,6 @@ export function initBroadcastAssistant() {
               contentHTML = `<div style="font-size:13px; color:#581C87; line-height:1.5;">${parseMessageText(bauMessage.text)}</div>`;
           }
 
-          // Botão Editar BAU
           let adminActionsHTML = "";
           if (window._cwIsAdmin) {
               adminActionsHTML = `<button class="cw-bau-edit cw-btn-interactive" style="position:absolute; top:8px; right:8px; border:none; background:rgba(255,255,255,0.5); border-radius:6px; padding:6px; color:#6D28D9;">✏️</button>`;
@@ -627,23 +627,19 @@ export function initBroadcastAssistant() {
     Object.assign(card.style, isHistory ? styles.cardHistory : styles.card);
     const theme = TYPE_CONFIG[msg.type] || TYPE_CONFIG.info;
 
-    // Header
     const cardHead = document.createElement("div");
     Object.assign(cardHead.style, styles.cardHeader);
     
-    // Tag
     const typeLabel = document.createElement("div");
     Object.assign(typeLabel.style, styles.typeTag, { color: theme.color, background: theme.bg });
     typeLabel.innerHTML = `${theme.icon} <span>${msg.type}</span>`;
     
-    // Date
     const dateLabel = document.createElement("span");
     Object.assign(dateLabel.style, styles.dateTag);
     dateLabel.textContent = formatFriendlyDate(msg.date);
 
     cardHead.appendChild(typeLabel);
     
-    // Dismiss
     if (!isHistory) {
         const dismissBtn = document.createElement("button");
         dismissBtn.className = "cw-btn-interactive";
@@ -669,7 +665,6 @@ export function initBroadcastAssistant() {
         cardHead.appendChild(dateLabel);
     }
     
-    // Content
     const bodyContainer = document.createElement("div");
     Object.assign(bodyContainer.style, styles.cardContent);
     
