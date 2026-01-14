@@ -6,23 +6,22 @@ import {
   makeResizable,
   showToast,
   parseEmojiCodes,
-  styleInput,     // Reutilizando estilos globais
-  styleSelect,    // Reutilizando estilos globais
-  typeBtnStyle    // Reutilizando estilos globais
+  styleInput,
+  styleSelect,
+  typeBtnStyle 
 } from "../shared/utils.js";
 import { SoundManager } from "../shared/sound-manager.js";
 import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from "../shared/animations.js";
 import { BROADCAST_MESSAGES, setBroadcastMessages } from "./broadcast-data.js"; 
 import { DataService } from "../shared/data-service.js";
-import { captureInternalEmail } from "../shared/page-data.js"; // Para capturar seu LDAP
+import { captureInternalEmail } from "../shared/page-data.js"; 
 
 // --- CONFIGURAÇÃO DE ADMIN ---
-// Coloque aqui o seu LDAP (sem @google.com) para testar
 const ADMINS = ["lucaste"]; 
 
 export function initBroadcastAssistant() {
-  const CURRENT_VERSION = "v3.0 (Admin Mode)";
+  const CURRENT_VERSION = "v3.1 (Admin Debug)";
   let visible = false;
   let pollInterval = null;
 
@@ -163,14 +162,19 @@ export function initBroadcastAssistant() {
     animRefs, () => toggleVisibility()
   );
   
-  // --- INJEÇÃO DO BOTÃO ADMIN (Se for lucaste) ---
+  // --- INJEÇÃO DO BOTÃO ADMIN (DEBUGGING) ---
   const actionContainer = header.querySelector('.cw-header-actions') || header.lastElementChild;
   
-// LÓGICA DE ADMIN (Dentro do initBroadcastAssistant)
-const internalEmail = captureInternalEmail(); 
-const currentUser = internalEmail ? internalEmail.split('@')[0] : null;
-// Comparação com a lista de admins (ex: ['lucaste', 'gpozzi'])
-const isAdmin = currentUser && ADMINS.includes(currentUser.toLowerCase());
+  // LOGS PARA DEBUG NO CONSOLE
+  console.log(">>> [DEBUG ADMIN] Iniciando verificação...");
+  const internalEmail = captureInternalEmail(); 
+  console.log(">>> [DEBUG ADMIN] Email capturado:", internalEmail);
+  const currentUser = internalEmail ? internalEmail.split('@')[0] : null;
+  console.log(">>> [DEBUG ADMIN] Usuário extraído:", currentUser);
+  console.log(">>> [DEBUG ADMIN] Lista de Admins:", ADMINS);
+  
+  const isAdmin = currentUser && ADMINS.includes(currentUser.toLowerCase());
+  console.log(">>> [DEBUG ADMIN] É admin?", isAdmin);
 
   if(actionContainer) {
       if (isAdmin) {
