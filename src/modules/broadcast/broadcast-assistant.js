@@ -23,7 +23,7 @@ window._cwIsAdmin = false;
 window._cwCurrentUser = null;
 
 export function initBroadcastAssistant() {
-  const CURRENT_VERSION = "v4.8 (UI Polished)";
+  const CURRENT_VERSION = "v4.9 (High Contrast UI)";
   let visible = false;
   let pollInterval = null;
   let currentEditingId = null;
@@ -58,6 +58,7 @@ export function initBroadcastAssistant() {
         }
         .cw-btn-interactive:active { transform: scale(0.96); }
 
+        /* Overlay do Editor */
         .cw-editor-overlay {
             position: absolute; inset: 0; 
             background: rgba(255, 255, 255, 0.98); 
@@ -68,6 +69,7 @@ export function initBroadcastAssistant() {
         }
         .cw-editor-overlay.active { transform: translateY(0); }
 
+        /* Inputs HD */
         .cw-hd-input {
             width: 100%; padding: 12px 14px;
             border: 1px solid #DADCE0; border-radius: 12px;
@@ -116,8 +118,16 @@ export function initBroadcastAssistant() {
   const styles = {
       feedContainer: { padding: "20px 24px 80px 24px", overflowY: "auto", flexGrow: "1", background: "#F8F9FA", display: "flex", flexDirection: "column", gap: "20px" },
       
-      card: { background: "#FFFFFF", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 2px 6px rgba(60,64,67,0.05), 0 1px 2px rgba(60,64,67,0.05)", overflow: "hidden", transition: "all 0.3s ease", position: "relative", width: "100%", boxSizing: "border-box", flexShrink: "0" },
-      cardHeader: { padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(0,0,0,0.04)" },
+      // CARD (Fundo Branco Puro + Contraste)
+      card: { 
+          background: "#FFFFFF", // Fundo Branco
+          borderRadius: "16px", 
+          border: "1px solid rgba(0,0,0,0.12)", // Borda um pouco mais visível
+          boxShadow: "0 4px 12px rgba(60,64,67,0.08)", // Sombra para destacar do fundo cinza
+          overflow: "hidden", transition: "all 0.3s ease", position: "relative", width: "100%", boxSizing: "border-box", flexShrink: "0" 
+      },
+      
+      cardHeader: { padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #F1F3F4" },
       typeTag: { display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.6px", padding: "4px 8px", borderRadius: "6px" },
       dateTag: { fontSize: "11px", color: "#5f6368", fontWeight: "500" },
       cardContent: { padding: "16px 20px 20px 20px" },
@@ -168,10 +178,11 @@ export function initBroadcastAssistant() {
   const popup = document.createElement("div");
   popup.id = "broadcast-popup";
   popup.classList.add("cw-module-window");
+  // Fundo do módulo: #FAFAFA
   Object.assign(popup.style, stylePopup, {
     right: "auto", left: "50%", width: "420px", height: "680px", 
     display: "flex", flexDirection: "column", transform: "translateX(-50%) scale(0.05)", 
-    backgroundColor: '#fafafa', overflow: "hidden"
+    backgroundColor: '#FAFAFA', overflow: "hidden"
   });
   
   const animRefs = { popup, googleLine: null };
@@ -191,7 +202,6 @@ export function initBroadcastAssistant() {
     animRefs, () => toggleVisibility()
   );
   
-  // --- INJEÇÃO DO BOTÃO ADMIN (FAB no Header) ---
   const actionContainer = header.querySelector('.cw-header-actions') || header.lastElementChild;
   let editorOverlay = null; 
 
@@ -222,8 +232,7 @@ export function initBroadcastAssistant() {
               actionContainer.insertBefore(addBtn, actionContainer.firstChild);
               
               if(!editorOverlay) createEditorOverlay();
-              
-              renderFeed(); // Re-renderiza para mostrar botões de admin nos cards
+              renderFeed();
           }
       } else {
           if (!window._cwAdminRetries) window._cwAdminRetries = 0;
@@ -252,6 +261,14 @@ export function initBroadcastAssistant() {
   }
 
   popup.appendChild(header);
+
+  // --- ELEMENTO DE STATUS (FIXO NO TOPO) ---
+  // Criamos aqui para garantir a ordem: Header -> Status -> BAU -> Feed
+  const statusEl = document.createElement('div');
+  statusEl.id = 'cw-update-status';
+  // Fundo #FAFAFA para mesclar com o módulo
+  statusEl.style.cssText = "padding: 8px; text-align: center; font-size: 11px; color: #5f6368; background: #FAFAFA; border-bottom: 1px solid transparent; font-weight:500; display:none;";
+  popup.appendChild(statusEl);
 
   // --- EDITOR OVERLAY ---
   function createEditorOverlay() {
@@ -422,14 +439,8 @@ export function initBroadcastAssistant() {
   popup.appendChild(feed);
 
   async function checkForUpdates() {
-      let statusEl = document.getElementById('cw-update-status');
       if (visible) {
-          if (!statusEl) {
-              statusEl = document.createElement('div');
-              statusEl.id = 'cw-update-status';
-              statusEl.style.cssText = "padding: 8px; text-align: center; font-size: 11px; color: #5f6368; background: #FFF; border-bottom: 1px solid #f1f3f4; font-weight:500;";
-              feed.parentNode.insertBefore(statusEl, feed); 
-          }
+          statusEl.style.display = 'block';
           statusEl.innerHTML = '🔄 Sincronizando...';
       }
 
@@ -440,12 +451,12 @@ export function initBroadcastAssistant() {
               updateBadge();
               if (visible) {
                   renderFeed(); 
-                  if(statusEl) statusEl.innerHTML = `<span style="color:#137333">✓ Atualizado</span>`;
-                  setTimeout(() => { if(statusEl) statusEl.remove(); }, 1500);
+                  statusEl.innerHTML = `<span style="color:#137333">✓ Atualizado</span>`;
+                  setTimeout(() => { statusEl.style.display = 'none'; }, 1500);
               }
           }
       } catch (error) {
-          if (visible && statusEl) statusEl.innerHTML = '⚠️ Offline';
+          if (visible) statusEl.innerHTML = '⚠️ Offline';
       }
   }
 
@@ -518,6 +529,7 @@ export function initBroadcastAssistant() {
           }
 
           let contentHTML = "";
+          // Botões no rodapé do BAU
           let buttonsHTML = `<button id="cw-bau-toggle-btn" class="cw-btn-interactive" style="background:rgba(255,255,255,0.7); border:1px solid rgba(139, 92, 246, 0.4); border-radius:12px; padding:8px 12px; color:#6D28D9; font-size:12px; font-weight:600;">Detalhes</button>`;
 
           if (window._cwIsAdmin) {
@@ -566,7 +578,8 @@ export function initBroadcastAssistant() {
               ${contentHTML}
           `;
 
-          header.after(bauWidget);
+          // BAU is inserted after STATUS (cw-update-status)
+          statusEl.after(bauWidget);
 
           const toggleBtn = bauWidget.querySelector('#cw-bau-toggle-btn');
           const fullText = bauWidget.querySelector('#cw-bau-full');
@@ -695,7 +708,7 @@ export function initBroadcastAssistant() {
     card.appendChild(cardHead);
     card.appendChild(bodyContainer);
 
-    // --- CRUD FOOTER ---
+    // --- CRUD FOOTER (Admin) ---
     if (window._cwIsAdmin) {
         const cardActions = document.createElement("div");
         cardActions.className = "cw-card-actions";
