@@ -126,6 +126,19 @@ export function initBroadcastAssistant() {
           boxShadow: "0 4px 12px rgba(60,64,67,0.08)", // Sombra para destacar do fundo cinza
           overflow: "hidden", transition: "all 0.3s ease", position: "relative", width: "100%", boxSizing: "border-box", flexShrink: "0" 
       },
+      cardHistory: { 
+          background: "#FFFFFF", 
+          borderRadius: "16px", 
+          border: "1px solid rgba(0,0,0,0.05)", // Borda quase invisível
+          boxShadow: "none", // Sem sombra (flat)
+          opacity: "0.6", // Transparencia para indicar inativo
+          filter: "grayscale(0.8)", // Cinza para reforçar histórico
+          marginBottom: "16px", 
+          flexShrink: "0", 
+          width: "100%", 
+          boxSizing: "border-box",
+          position: "relative"
+      },
       
       cardHeader: { padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid #F1F3F4" },
       typeTag: { display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.6px", padding: "4px 8px", borderRadius: "6px" },
