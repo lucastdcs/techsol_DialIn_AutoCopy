@@ -23,7 +23,7 @@ window._cwIsAdmin = false;
 window._cwCurrentUser = null;
 
 export function initBroadcastAssistant() {
-  const CURRENT_VERSION = "v4.7 (Crash Fix)";
+  const CURRENT_VERSION = "v4.8 (UI Polished)";
   let visible = false;
   let pollInterval = null;
   let currentEditingId = null;
@@ -112,11 +112,10 @@ export function initBroadcastAssistant() {
       document.head.appendChild(s);
   }
 
-  // --- ESTILOS JS (Objetos Completos) ---
+  // --- ESTILOS JS ---
   const styles = {
       feedContainer: { padding: "20px 24px 80px 24px", overflowY: "auto", flexGrow: "1", background: "#F8F9FA", display: "flex", flexDirection: "column", gap: "20px" },
       
-      // CARD
       card: { background: "#FFFFFF", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.08)", boxShadow: "0 2px 6px rgba(60,64,67,0.05), 0 1px 2px rgba(60,64,67,0.05)", overflow: "hidden", transition: "all 0.3s ease", position: "relative", width: "100%", boxSizing: "border-box", flexShrink: "0" },
       cardHeader: { padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center", borderBottom: "1px solid rgba(0,0,0,0.04)" },
       typeTag: { display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: "700", textTransform: "uppercase", letterSpacing: "0.6px", padding: "4px 8px", borderRadius: "6px" },
@@ -126,17 +125,13 @@ export function initBroadcastAssistant() {
       msgBody: { fontSize: "14px", color: "#3c4043", lineHeight: "1.6", whiteSpace: "pre-wrap", wordBreak: "break-word" },
       msgMeta: { fontSize: "11px", color: "#9aa0a6", marginTop: "12px", display: "flex", alignItems: "center", gap: "6px" },
       
-      // Dismiss Button
       dismissBtn: { width: "28px", height: "28px", borderRadius: "50%", border: "1px solid rgba(0,0,0,0.1)", background: "#fff", color: "#5f6368", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.2s ease", marginLeft: "12px" },
 
-      // BAU Widget
       bauContainer: { margin: "16px 24px 0 24px", padding: "16px", background: "#F3E8FD", border: "1px solid #D8B4FE", borderRadius: "16px", display: "flex", flexDirection: "column", gap: "12px", boxShadow: "0 4px 12px rgba(147, 51, 234, 0.1)" },
       bauHeader: { display: "flex", alignItems: "center", justifyContent: "space-between", gap:"2px" },
       bauLabel: { fontSize: "11px", fontWeight: "800", color: "#7E22CE", textTransform: "uppercase", letterSpacing: "0.8px" },
       liveIndicator: { display: "flex", alignItems: "center", gap: "8px" },
       pulseDot: { width: "8px", height: "8px", borderRadius: "50%", background: "#9333EA", boxShadow: "0 0 0 0 rgba(147, 51, 234, 0.7)", animation: "cw-pulse 2s infinite" },
-      
-      // NOVOS ESTILOS QUE ESTAVAM FALTANDO
       bauSlotRow: { display: "flex", alignItems: "center", gap: "10px", padding: "8px 12px", background: "rgba(255,255,255,0.5)", borderRadius: "8px", marginBottom: "4px" },
       bauFlag: { fontSize: "18px", lineHeight: "1" },
       bauDate: { fontSize: "16px", fontWeight: "700", color: "#581C87", letterSpacing: "-0.5px" },
@@ -153,8 +148,6 @@ export function initBroadcastAssistant() {
   };
 
   // --- PARSERS & UTILS ---
-  
-  // FIX: Função blindada contra null/undefined
   function objectToCss(obj) {
       if (!obj) return ""; 
       return Object.entries(obj).map(([k, v]) => `${k.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}:${v}`).join(';');
@@ -203,7 +196,6 @@ export function initBroadcastAssistant() {
   let editorOverlay = null; 
 
   function tryInjectAdminButton() {
-      // Segurança: Tenta obter email
       let email = null;
       try { email = getAgentEmail(); } catch(e) { console.warn("TechSol: Auth Pending"); }
 
@@ -230,7 +222,8 @@ export function initBroadcastAssistant() {
               actionContainer.insertBefore(addBtn, actionContainer.firstChild);
               
               if(!editorOverlay) createEditorOverlay();
-              renderFeed();
+              
+              renderFeed(); // Re-renderiza para mostrar botões de admin nos cards
           }
       } else {
           if (!window._cwAdminRetries) window._cwAdminRetries = 0;
@@ -367,7 +360,8 @@ export function initBroadcastAssistant() {
       const btnSend = editorOverlay.querySelector('#cw-bc-send');
       const inputTitle = editorOverlay.querySelector('#cw-bc-title');
       const inputText = editorOverlay.querySelector('#cw-bc-text');
-      const type = editorOverlay.querySelector('input[name="cw-bc-type"]:checked').value;
+      const typeInput = editorOverlay.querySelector('input[name="cw-bc-type"]:checked');
+      const type = typeInput ? typeInput.value : 'info';
 
       if(!inputTitle.value.trim() || !inputText.value.trim()) {
           showToast("Preencha todos os campos!", { error: true });
@@ -479,7 +473,6 @@ export function initBroadcastAssistant() {
       }
   }
 
-  // --- RENDERIZADOR ---
   function renderFeed() {
       feed.innerHTML = "";
       const oldBau = popup.querySelector('#cw-bau-widget');
@@ -525,6 +518,16 @@ export function initBroadcastAssistant() {
           }
 
           let contentHTML = "";
+          let buttonsHTML = `<button id="cw-bau-toggle-btn" class="cw-btn-interactive" style="background:rgba(255,255,255,0.7); border:1px solid rgba(139, 92, 246, 0.4); border-radius:12px; padding:8px 12px; color:#6D28D9; font-size:12px; font-weight:600;">Detalhes</button>`;
+
+          if (window._cwIsAdmin) {
+              buttonsHTML = `
+                <button class="cw-bau-edit cw-btn-interactive" style="border:1px solid rgba(139, 92, 246, 0.2); background:rgba(255,255,255,0.5); border-radius:12px; padding:8px; color:#6D28D9; display:flex; align-items:center; justify-content:center;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                </button>
+                ${buttonsHTML}
+              `;
+          }
           
           if (extractedSlots.length > 0) {
               const slotsHTML = extractedSlots.map(slot => `
@@ -537,21 +540,22 @@ export function initBroadcastAssistant() {
               contentHTML = `
                   <div style="display:flex; justify-content:space-between; align-items:center;">
                       <div style="flex:1; display:flex; gap:8px;">${slotsHTML}</div>
-                      <button id="cw-bau-toggle-btn" class="cw-btn-interactive" style="background:rgba(255,255,255,0.7); border:1px solid rgba(139, 92, 246, 0.4); border-radius:12px; padding:8px 12px; color:#6D28D9; font-size:12px; font-weight:600; margin-left:12px;">Detalhes</button>
+                      <div style="display:flex; gap:8px; margin-left:12px; align-items:center;">
+                          ${buttonsHTML}
+                      </div>
                   </div>
                   <div id="cw-bau-full" style="display:none; margin-top:12px; padding-top:12px; border-top:1px dashed rgba(139, 92, 246, 0.3); font-size:13px; line-height:1.5; color:#581C87;">${parseMessageText(bauMessage.text)}</div>
               `;
           } else {
-              contentHTML = `<div style="font-size:13px; color:#581C87; line-height:1.5;">${parseMessageText(bauMessage.text)}</div>`;
-          }
-
-          let adminActionsHTML = "";
-          if (window._cwIsAdmin) {
-              adminActionsHTML = `<button class="cw-bau-edit cw-btn-interactive" style="position:absolute; top:8px; right:8px; border:none; background:rgba(255,255,255,0.5); border-radius:6px; padding:6px; color:#6D28D9;">✏️</button>`;
+              contentHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:start;">
+                    <div style="font-size:13px; color:#581C87; line-height:1.5; flex:1;">${parseMessageText(bauMessage.text)}</div>
+                    ${window._cwIsAdmin ? `<div style="margin-left:12px;"><button class="cw-bau-edit cw-btn-interactive" style="border:none; background:rgba(255,255,255,0.5); border-radius:6px; padding:6px; color:#6D28D9;">✏️</button></div>` : ''}
+                </div>
+              `;
           }
 
           bauWidget.innerHTML = `
-              ${adminActionsHTML}
               <div style="${objectToCss(styles.bauHeader)}; margin-bottom:8px;">
                   <div style="${objectToCss(styles.liveIndicator)}">
                       <div style="${objectToCss(styles.pulseDot)}"></div>
@@ -627,6 +631,7 @@ export function initBroadcastAssistant() {
     Object.assign(card.style, isHistory ? styles.cardHistory : styles.card);
     const theme = TYPE_CONFIG[msg.type] || TYPE_CONFIG.info;
 
+    // Header
     const cardHead = document.createElement("div");
     Object.assign(cardHead.style, styles.cardHeader);
     
@@ -640,6 +645,7 @@ export function initBroadcastAssistant() {
 
     cardHead.appendChild(typeLabel);
     
+    // Dismiss
     if (!isHistory) {
         const dismissBtn = document.createElement("button");
         dismissBtn.className = "cw-btn-interactive";
@@ -665,6 +671,7 @@ export function initBroadcastAssistant() {
         cardHead.appendChild(dateLabel);
     }
     
+    // Content
     const bodyContainer = document.createElement("div");
     Object.assign(bodyContainer.style, styles.cardContent);
     
@@ -688,7 +695,7 @@ export function initBroadcastAssistant() {
     card.appendChild(cardHead);
     card.appendChild(bodyContainer);
 
-    // --- CRUD FOOTER (Admin) ---
+    // --- CRUD FOOTER ---
     if (window._cwIsAdmin) {
         const cardActions = document.createElement("div");
         cardActions.className = "cw-card-actions";
@@ -711,6 +718,7 @@ export function initBroadcastAssistant() {
     return card;
   }
 
+  // --- STARTUP ---
   const cachedData = DataService.getCachedBroadcasts();
   if (cachedData.length > 0) {
       setBroadcastMessages(cachedData);
