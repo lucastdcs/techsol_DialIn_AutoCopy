@@ -2,12 +2,14 @@
 
 // Variável que guarda o nome para usar nos emails depois
 let cachedAgentName = "";
+let cachedAgentEmail = "";
 
 const esperar = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // --- 1. SHERLOCK HOLMES (Captura Silenciosa do Nome do Agente) ---
 export async function captureNameWithMagic() {
-    if (cachedAgentName) return cachedAgentName;
+    // Se já temos nome E email, retorna rápido
+    if (cachedAgentName && cachedAgentEmail) return cachedAgentName;
 
     try {
         const btn = document.querySelector('profile-icon material-button') || 
@@ -15,17 +17,20 @@ export async function captureNameWithMagic() {
         
         if (!btn) return "Agente";
 
+        // Abre o menu
         btn.click();
-        await esperar(100); 
+        await esperar(150); // Tempo para o Angular renderizar o menu
         
         let name = "Consultor";
         
-        const el = document.querySelector('profile-details .name');
-        if (el) {
-            const fullName = el.textContent.trim();
+        // 1. Captura o NOME
+        const elName = document.querySelector('profile-details .name');
+        if (elName) {
+            const fullName = elName.textContent.trim();
             name = fullName.split(' ')[0];
             name = name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
         } else {
+            // Fallback pela imagem (LDAP)
             const img = document.querySelector('profile-details img');
             if (img && img.src.includes('/photos/')) {
                 const ldap = img.src.match(/\/photos\/([^\?]+)/)[1];
@@ -33,8 +38,16 @@ export async function captureNameWithMagic() {
             }
         }
         
+        // 2. Captura o EMAIL (NOVO) 📧
+        const elEmail = document.querySelector('profile-details .email');
+        if (elEmail) {
+            cachedAgentEmail = elEmail.textContent.trim();
+            console.log("TechSol: Identidade confirmada ->", cachedAgentEmail);
+        }
+
+        // Fecha o menu
         btn.click();
-        document.body.click(); // Fecha qualquer menu aberto
+        document.body.click(); 
         
         cachedAgentName = name;
         return name;
@@ -45,11 +58,15 @@ export async function captureNameWithMagic() {
     }
 }
 
-// --- 2. GETTER SIMPLES ---
+// --- 2. GETTERS ---
 export function getAgentName() {
     return cachedAgentName || "Consultor";
 }
 
+// NOVO: Retorna o email capturado
+export function getAgentEmail() {
+    return cachedAgentEmail || null;
+}
 // --- 3. ENGINE DE SAUDAÇÃO ---
 export function getSmartGreeting(name) {
     const now = new Date();

@@ -5,23 +5,21 @@ import {
   styleResizeHandle,
   makeResizable,
   showToast,
-  parseEmojiCodes,
-  styleInput,
-  styleSelect,
-  typeBtnStyle 
+  parseEmojiCodes
 } from "../shared/utils.js";
 import { SoundManager } from "../shared/sound-manager.js";
 import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from "../shared/animations.js";
 import { BROADCAST_MESSAGES, setBroadcastMessages } from "./broadcast-data.js"; 
 import { DataService } from "../shared/data-service.js";
-import { captureInternalEmail } from "../shared/page-data.js"; 
+import { getAgentEmail } from "../shared/page-data.js"; // <--- NOVO IMPORT
 
 // --- CONFIGURAÇÃO DE ADMIN ---
-const ADMINS = ["lucaste"]; 
+const ADMINS = ["lucaste"]; // Seu LDAP
 
 export function initBroadcastAssistant() {
-  const CURRENT_VERSION = "v3.1 (Admin Debug)";
+  // ... (Mantenha todo o código existente até a parte do Header) ...
+  const CURRENT_VERSION = "v3.2 (Admin Mode)";
   let visible = false;
   let pollInterval = null;
 
@@ -39,7 +37,7 @@ export function initBroadcastAssistant() {
       } catch (e) { return String(dateInput); }
   }
 
-  // --- ESTILOS ---
+  // --- ESTILOS (Mantidos) ---
   if (!document.getElementById('cw-pulse-anim')) {
       const s = document.createElement("style");
       s.id = 'cw-pulse-anim';
@@ -54,13 +52,14 @@ export function initBroadcastAssistant() {
       document.head.appendChild(s);
   }
 
-  const TYPE_THEMES = {
+  const TYPE_THEMES = { /* ... mantido ... */ 
       critical: { bg: "#FEF2F2", border: "#FECACA", text: "#991B1B", icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>` },
       info: { bg: "#EFF6FF", border: "#BFDBFE", text: "#1E40AF", icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>` },
       success: { bg: "#F0FDF4", border: "#BBF7D0", text: "#166534", icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>` }
   };
 
   const styles = {
+      /* ... mantido ... */
       feedContainer: { padding: "24px", overflowY: "auto", flexGrow: "1", background: "#FAFAFA", display: "flex", flexDirection: "column", gap: "20px" },
       card: { background: "#FFFFFF", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.06)", boxShadow: "0 4px 12px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02)", overflow: "hidden", transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)", position: "relative", width: "100%", boxSizing: "border-box", flexShrink: "0" },
       cardHistory: { background: "#FFFFFF", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.04)", boxShadow: "none", opacity: "0.8", filter: "grayscale(0.3)", marginBottom: "16px", flexShrink: "0" },
@@ -74,17 +73,7 @@ export function initBroadcastAssistant() {
       historyDivider: { display: "flex", alignItems: "center", justifyContent: "center", margin: "10px 0 20px 0", cursor: "pointer", color: "#1a73e8", fontSize: "13px", fontWeight: "500", gap: "8px", padding: "10px", borderRadius: "8px", transition: "background 0.2s" },
       historyContainer: { display: "none", flexDirection: "column", gap: "16px", paddingTop: "10px", borderTop: "1px dashed rgba(0,0,0,0.1)" },
       
-      // --- WIDGET BAU ---
-      bauContainer: {
-          margin: "16px 24px 0 24px",
-          padding: "16px",
-          background: "#F3E8FD", 
-          border: "1px solid #D8B4FE",
-          borderRadius: "16px",
-          display: "flex", flexDirection: "column", gap: "10px",
-          position: "relative", flexShrink: "0",
-          boxShadow: "0 2px 8px rgba(147, 51, 234, 0.08)"
-      },
+      bauContainer: { margin: "16px 24px 0 24px", padding: "16px", background: "#F3E8FD", border: "1px solid #D8B4FE", borderRadius: "16px", display: "flex", flexDirection: "column", gap: "10px", position: "relative", flexShrink: "0", boxShadow: "0 2px 8px rgba(147, 51, 234, 0.08)" },
       bauHeader: { display: "flex", alignItems: "center", justifyContent: "space-between", gap:"2px" },
       bauLabel: { fontSize: "11px", fontWeight: "800", color: "#7E22CE", textTransform: "uppercase", letterSpacing: "0.8px" },
       liveIndicator: { display: "flex", alignItems: "center", gap: "8px" },
@@ -93,12 +82,12 @@ export function initBroadcastAssistant() {
       bauFlag: { fontSize: "18px", lineHeight: "1" },
       bauDate: { fontSize: "16px", fontWeight: "700", color: "#581C87", letterSpacing: "-0.5px" },
 
-      // --- ADMIN PANEL ---
+      // --- ADMIN PANEL (Styles) ---
       adminPanel: {
           padding: "20px 24px",
           background: "#fff",
           borderBottom: "1px solid #eee",
-          display: "none", // Começa oculto
+          display: "none",
           flexDirection: "column",
           gap: "16px",
           animation: "cwSlideDown 0.3s cubic-bezier(0.2, 0.0, 0.2, 1)"
@@ -106,7 +95,6 @@ export function initBroadcastAssistant() {
       adminLabel: { fontSize: "12px", fontWeight: "700", color: "#5f6368", textTransform: "uppercase", marginBottom: "4px", display: "block" }
   };
 
-  // --- PARSER E UTILS ---
   const styleScrollId = "cw-scrollbar-style";
   if (!document.getElementById(styleScrollId)) {
       const s = document.createElement("style");
@@ -115,6 +103,7 @@ export function initBroadcastAssistant() {
       document.head.appendChild(s);
   }
 
+  // --- PARSER E UTILS ---
   function parseMessageText(rawText) {
       if (!rawText || typeof rawText !== 'string') return ""; 
       let html = rawText;
@@ -162,39 +151,52 @@ export function initBroadcastAssistant() {
     animRefs, () => toggleVisibility()
   );
   
-  // --- INJEÇÃO DO BOTÃO ADMIN (DEBUGGING) ---
   const actionContainer = header.querySelector('.cw-header-actions') || header.lastElementChild;
   
-  // LOGS PARA DEBUG NO CONSOLE
-  console.log(">>> [DEBUG ADMIN] Iniciando verificação...");
-  const internalEmail = captureInternalEmail(); 
-  console.log(">>> [DEBUG ADMIN] Email capturado:", internalEmail);
-  const currentUser = internalEmail ? internalEmail.split('@')[0] : null;
-  console.log(">>> [DEBUG ADMIN] Usuário extraído:", currentUser);
-  console.log(">>> [DEBUG ADMIN] Lista de Admins:", ADMINS);
-  
-  const isAdmin = currentUser && ADMINS.includes(currentUser.toLowerCase());
-  console.log(">>> [DEBUG ADMIN] É admin?", isAdmin);
+  // --- INJEÇÃO DO BOTÃO ADMIN COM RETRY ---
+  let adminPanel = null;
+
+  function tryInjectAdminButton() {
+      // Pega do Cache do page-data.js
+      const email = getAgentEmail();
+      
+      if (email) {
+          const currentUser = email.split('@')[0].toLowerCase();
+          const isAdmin = ADMINS.includes(currentUser);
+          
+          if (isAdmin && actionContainer && !actionContainer.querySelector('#cw-admin-btn')) {
+              console.log("TechSol Admin: Acesso concedido para", currentUser);
+              
+              const addBtn = document.createElement("div");
+              addBtn.id = 'cw-admin-btn';
+              addBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
+              Object.assign(addBtn.style, {
+                  width: "32px", height: "32px", borderRadius: "50%", 
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", color: "#1a73e8", background: "rgba(26, 115, 232, 0.1)",
+                  marginRight: "8px", transition: "all 0.2s"
+              });
+              addBtn.title = "Novo Aviso (Admin)";
+              addBtn.onclick = (e) => {
+                  e.stopPropagation();
+                  toggleAdminPanel();
+              };
+              actionContainer.insertBefore(addBtn, actionContainer.firstChild);
+
+              // Cria o painel se ainda não existir
+              createAdminPanel(currentUser);
+          }
+      } else {
+          // Se ainda não pegou, tenta daqui a pouco (max 3 tentativas)
+          if (!window._cwAdminRetries) window._cwAdminRetries = 0;
+          if (window._cwAdminRetries < 3) {
+              window._cwAdminRetries++;
+              setTimeout(tryInjectAdminButton, 2000);
+          }
+      }
+  }
 
   if(actionContainer) {
-      if (isAdmin) {
-          const addBtn = document.createElement("div");
-          addBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
-          Object.assign(addBtn.style, {
-              width: "32px", height: "32px", borderRadius: "50%", 
-              display: "flex", alignItems: "center", justifyContent: "center",
-              cursor: "pointer", color: "#1a73e8", background: "rgba(26, 115, 232, 0.1)",
-              marginRight: "8px", transition: "all 0.2s"
-          });
-          addBtn.title = "Novo Aviso (Admin)";
-          addBtn.onclick = (e) => {
-              e.stopPropagation();
-              toggleAdminPanel();
-          };
-          // Insere antes do botão de ajuda/fechar, ou no início do container
-          actionContainer.insertBefore(addBtn, actionContainer.firstChild);
-      }
-
       const markAll = document.createElement("button");
       markAll.textContent = "Limpar";
       Object.assign(markAll.style, styles.markAllBtn);
@@ -211,10 +213,9 @@ export function initBroadcastAssistant() {
 
   popup.appendChild(header);
 
-  // --- PAINEL ADMIN ---
-  let adminPanel = null;
-  
-  if (isAdmin) {
+  function createAdminPanel(currentUser) {
+      if (adminPanel) return;
+      
       adminPanel = document.createElement("div");
       Object.assign(adminPanel.style, styles.adminPanel);
       
@@ -265,7 +266,7 @@ export function initBroadcastAssistant() {
               return;
           }
 
-          // Estado de Loading
+          // Loading
           btnSend.textContent = "Enviando...";
           btnSend.style.opacity = "0.7";
           btnSend.style.cursor = "wait";
@@ -277,20 +278,16 @@ export function initBroadcastAssistant() {
               author: currentUser
           });
 
-          if (success || true) { // Assumindo sucesso pois é no-cors
-              showToast("Aviso enviado com sucesso!");
-              SoundManager.playSuccess();
-              inputTitle.value = "";
-              inputText.value = "";
-              adminPanel.style.display = 'none';
-              
-              // Tenta atualizar o feed após alguns segundos
-              setTimeout(() => checkForUpdates(), 2000);
-          } else {
-              showToast("Erro ao enviar.", { error: true });
-          }
+          // Assume sucesso (no-cors)
+          showToast("Aviso enviado com sucesso!");
+          SoundManager.playSuccess();
+          inputTitle.value = "";
+          inputText.value = "";
+          adminPanel.style.display = 'none';
           
-          // Reset botão
+          // Refresh
+          setTimeout(() => checkForUpdates(), 2000);
+          
           btnSend.textContent = "Publicar";
           btnSend.style.opacity = "1";
           btnSend.style.cursor = "pointer";
@@ -617,6 +614,10 @@ export function initBroadcastAssistant() {
       setBroadcastMessages(cachedData);
       renderFeed();
   }
+  
+  // Tenta injeção do botão admin logo no início (assumindo que o page-data já rodou)
+  setTimeout(tryInjectAdminButton, 500);
+
   checkForUpdates();
   if (!pollInterval) pollInterval = setInterval(checkForUpdates, POLL_TIME_MS);
 
