@@ -5,27 +5,30 @@ import {
   styleResizeHandle,
   makeResizable,
   showToast,
-  parseEmojiCodes
+  parseEmojiCodes,
+  styleInput,
+  styleSelect
 } from "../shared/utils.js";
 import { SoundManager } from "../shared/sound-manager.js";
 import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from "../shared/animations.js";
 import { BROADCAST_MESSAGES, setBroadcastMessages } from "./broadcast-data.js"; 
 import { DataService } from "../shared/data-service.js";
-import { getAgentEmail } from "../shared/page-data.js"; // <--- NOVO IMPORT
+import { getAgentEmail } from "../shared/page-data.js"; 
 
 // --- CONFIGURAÇÃO DE ADMIN ---
-const ADMINS = ["lucaste"]; // Seu LDAP
+const ADMINS = ["lucaste"]; 
 
 export function initBroadcastAssistant() {
-  // ... (Mantenha todo o código existente até a parte do Header) ...
-  const CURRENT_VERSION = "v3.2 (Admin Mode)";
+  const CURRENT_VERSION = "v4.0 (Admin Suite)";
   let visible = false;
   let pollInterval = null;
+  let currentEditingId = null; // Rastreia se estamos editando
 
   const POLL_TIME_MS = 60 * 1000; 
 
-  function formatFriendlyDate(dateInput) {
+  // --- ESTILOS & UTILITÁRIOS ---
+  function formatFriendlyDate(dateInput) { /* ... Mantido ... */
       if (!dateInput) return "";
       try {
           const date = new Date(dateInput);
@@ -37,29 +40,49 @@ export function initBroadcastAssistant() {
       } catch (e) { return String(dateInput); }
   }
 
-  // --- ESTILOS (Mantidos) ---
-  if (!document.getElementById('cw-pulse-anim')) {
+  // Injeção de CSS
+  if (!document.getElementById('cw-broadcast-css')) {
       const s = document.createElement("style");
-      s.id = 'cw-pulse-anim';
+      s.id = 'cw-broadcast-css';
       s.innerHTML = `
         @keyframes cw-pulse {
             0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.7); }
             70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(147, 51, 234, 0); }
             100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(147, 51, 234, 0); }
         }
-        @keyframes cwSlideDown { from { opacity:0; transform: translateY(-10px); } to { opacity:1; transform: translateY(0); } }
+        @keyframes cwSlideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .cw-editor-overlay {
+            position: absolute; inset: 0; 
+            background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(8px);
+            z-index: 100; display: flex; flex-direction: column;
+            padding: 24px; box-sizing: border-box;
+            transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .cw-editor-overlay.active { transform: translateY(0); }
+        
+        .cw-admin-actions {
+            display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px;
+            padding-top: 12px; border-top: 1px dashed rgba(0,0,0,0.05);
+        }
+        .cw-admin-btn-mini {
+            padding: 4px 8px; border-radius: 4px; border: 1px solid transparent;
+            font-size: 11px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 4px;
+            background: transparent; color: #5f6368; transition: all 0.2s;
+        }
+        .cw-admin-btn-mini:hover { background: rgba(0,0,0,0.05); color: #202124; }
+        .cw-admin-btn-mini.delete:hover { background: #FEF2F2; color: #D93025; border-color: #FECACA; }
       `;
       document.head.appendChild(s);
   }
 
-  const TYPE_THEMES = { /* ... mantido ... */ 
+  const TYPE_THEMES = { /* ... Mantido ... */ 
       critical: { bg: "#FEF2F2", border: "#FECACA", text: "#991B1B", icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>` },
       info: { bg: "#EFF6FF", border: "#BFDBFE", text: "#1E40AF", icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>` },
       success: { bg: "#F0FDF4", border: "#BBF7D0", text: "#166534", icon: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>` }
   };
 
-  const styles = {
-      /* ... mantido ... */
+  const styles = { /* ... Mantido ... */
       feedContainer: { padding: "24px", overflowY: "auto", flexGrow: "1", background: "#FAFAFA", display: "flex", flexDirection: "column", gap: "20px" },
       card: { background: "#FFFFFF", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.06)", boxShadow: "0 4px 12px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.02)", overflow: "hidden", transition: "all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)", position: "relative", width: "100%", boxSizing: "border-box", flexShrink: "0" },
       cardHistory: { background: "#FFFFFF", borderRadius: "16px", border: "1px solid rgba(0,0,0,0.04)", boxShadow: "none", opacity: "0.8", filter: "grayscale(0.3)", marginBottom: "16px", flexShrink: "0" },
@@ -72,7 +95,6 @@ export function initBroadcastAssistant() {
       emptyState: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 0", color: "#bdc1c6", gap: "16px", textAlign: "center" },
       historyDivider: { display: "flex", alignItems: "center", justifyContent: "center", margin: "10px 0 20px 0", cursor: "pointer", color: "#1a73e8", fontSize: "13px", fontWeight: "500", gap: "8px", padding: "10px", borderRadius: "8px", transition: "background 0.2s" },
       historyContainer: { display: "none", flexDirection: "column", gap: "16px", paddingTop: "10px", borderTop: "1px dashed rgba(0,0,0,0.1)" },
-      
       bauContainer: { margin: "16px 24px 0 24px", padding: "16px", background: "#F3E8FD", border: "1px solid #D8B4FE", borderRadius: "16px", display: "flex", flexDirection: "column", gap: "10px", position: "relative", flexShrink: "0", boxShadow: "0 2px 8px rgba(147, 51, 234, 0.08)" },
       bauHeader: { display: "flex", alignItems: "center", justifyContent: "space-between", gap:"2px" },
       bauLabel: { fontSize: "11px", fontWeight: "800", color: "#7E22CE", textTransform: "uppercase", letterSpacing: "0.8px" },
@@ -81,18 +103,10 @@ export function initBroadcastAssistant() {
       bauSlotRow: { display: "flex", alignItems: "center", gap: "10px", padding: "8px 12px", background: "rgba(255,255,255,0.5)", borderRadius: "8px", marginBottom: "4px" },
       bauFlag: { fontSize: "18px", lineHeight: "1" },
       bauDate: { fontSize: "16px", fontWeight: "700", color: "#581C87", letterSpacing: "-0.5px" },
-
-      // --- ADMIN PANEL (Styles) ---
-      adminPanel: {
-          padding: "20px 24px",
-          background: "#fff",
-          borderBottom: "1px solid #eee",
-          display: "none",
-          flexDirection: "column",
-          gap: "16px",
-          animation: "cwSlideDown 0.3s cubic-bezier(0.2, 0.0, 0.2, 1)"
-      },
-      adminLabel: { fontSize: "12px", fontWeight: "700", color: "#5f6368", textTransform: "uppercase", marginBottom: "4px", display: "block" }
+      
+      // Estilos para o Editor Overlay
+      overlayTitle: { fontSize: "18px", fontWeight: "700", color: "#202124", marginBottom: "20px" },
+      label: { fontSize: "12px", fontWeight: "600", color: "#5f6368", textTransform: "uppercase", marginBottom: "6px", display: "block" }
   };
 
   const styleScrollId = "cw-scrollbar-style";
@@ -103,8 +117,7 @@ export function initBroadcastAssistant() {
       document.head.appendChild(s);
   }
 
-  // --- PARSER E UTILS ---
-  function parseMessageText(rawText) {
+  function parseMessageText(rawText) { /* ... Mantido ... */
       if (!rawText || typeof rawText !== 'string') return ""; 
       let html = rawText;
       const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/g;
@@ -131,7 +144,7 @@ export function initBroadcastAssistant() {
   Object.assign(popup.style, stylePopup, {
     right: "auto", left: "50%", width: "450px", height: "650px", 
     display: "flex", flexDirection: "column", transform: "translateX(-50%) scale(0.05)", 
-    backgroundColor: '#fafafa'
+    backgroundColor: '#fafafa', overflow: "hidden" // Importante para o overlay
   });
   
   const animRefs = { popup, googleLine: null };
@@ -153,20 +166,20 @@ export function initBroadcastAssistant() {
   
   const actionContainer = header.querySelector('.cw-header-actions') || header.lastElementChild;
   
-  // --- INJEÇÃO DO BOTÃO ADMIN COM RETRY ---
-  let adminPanel = null;
+  // --- INJEÇÃO DO BOTÃO ADMIN (FAB no Header) ---
+  let editorOverlay = null; // Referência ao overlay
 
   function tryInjectAdminButton() {
-      // Pega do Cache do page-data.js
       const email = getAgentEmail();
-      
       if (email) {
           const currentUser = email.split('@')[0].toLowerCase();
           const isAdmin = ADMINS.includes(currentUser);
           
+          // Guarda o estado de admin no objeto window para o createCard usar depois
+          window._cwIsAdmin = isAdmin; 
+          window._cwCurrentUser = currentUser;
+
           if (isAdmin && actionContainer && !actionContainer.querySelector('#cw-admin-btn')) {
-              console.log("TechSol Admin: Acesso concedido para", currentUser);
-              
               const addBtn = document.createElement("div");
               addBtn.id = 'cw-admin-btn';
               addBtn.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
@@ -176,18 +189,17 @@ export function initBroadcastAssistant() {
                   cursor: "pointer", color: "#1a73e8", background: "rgba(26, 115, 232, 0.1)",
                   marginRight: "8px", transition: "all 0.2s"
               });
-              addBtn.title = "Novo Aviso (Admin)";
+              addBtn.title = "Novo Aviso";
               addBtn.onclick = (e) => {
                   e.stopPropagation();
-                  toggleAdminPanel();
+                  openEditor(); // Abre modo criação
               };
               actionContainer.insertBefore(addBtn, actionContainer.firstChild);
-
-              // Cria o painel se ainda não existir
-              createAdminPanel(currentUser);
+              
+              // Cria o overlay se não existir
+              if(!editorOverlay) createEditorOverlay();
           }
       } else {
-          // Se ainda não pegou, tenta daqui a pouco (max 3 tentativas)
           if (!window._cwAdminRetries) window._cwAdminRetries = 0;
           if (window._cwAdminRetries < 3) {
               window._cwAdminRetries++;
@@ -213,103 +225,169 @@ export function initBroadcastAssistant() {
 
   popup.appendChild(header);
 
-  function createAdminPanel(currentUser) {
-      if (adminPanel) return;
+  // --- NOVO: EDITOR OVERLAY (UX Aprimorada) ---
+  function createEditorOverlay() {
+      editorOverlay = document.createElement("div");
+      editorOverlay.className = "cw-editor-overlay";
       
-      adminPanel = document.createElement("div");
-      Object.assign(adminPanel.style, styles.adminPanel);
-      
-      adminPanel.innerHTML = `
-        <div>
-            <label style="${objectToCss(styles.adminLabel)}">Tipo do Aviso</label>
-            <div style="display:flex; gap:10px;">
-                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;padding:8px 12px;background:#f8f9fa;border-radius:8px;border:1px solid #dadce0;">
-                    <input type="radio" name="cw-bc-type" value="info" checked> ℹ️ Info
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;padding:8px 12px;background:#FEF2F2;border-radius:8px;border:1px solid #FECACA;">
-                    <input type="radio" name="cw-bc-type" value="critical"> 🚨 Alerta
-                </label>
-                <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;padding:8px 12px;background:#F0FDF4;border-radius:8px;border:1px solid #BBF7D0;">
-                    <input type="radio" name="cw-bc-type" value="success"> ✅ Sucesso
-                </label>
+      editorOverlay.innerHTML = `
+        <div style="flex:1; overflow-y:auto; padding-bottom:20px;">
+            <div id="cw-editor-title-label" style="${objectToCss(styles.overlayTitle)}">Novo Aviso</div>
+            
+            <div style="margin-bottom:16px;">
+                <label style="${objectToCss(styles.label)}">Tipo</label>
+                <div style="display:flex; gap:10px;">
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;padding:8px 12px;background:#f8f9fa;border-radius:8px;border:1px solid #dadce0;">
+                        <input type="radio" name="cw-bc-type" value="info" checked> ℹ️ Info
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;padding:8px 12px;background:#FEF2F2;border-radius:8px;border:1px solid #FECACA;">
+                        <input type="radio" name="cw-bc-type" value="critical"> 🚨 Alerta
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;padding:8px 12px;background:#F0FDF4;border-radius:8px;border:1px solid #BBF7D0;">
+                        <input type="radio" name="cw-bc-type" value="success"> ✅ Sucesso
+                    </label>
+                </div>
+            </div>
+
+            <div style="margin-bottom:16px;">
+                 <label style="${objectToCss(styles.label)}">Título</label>
+                 <input id="cw-bc-title" placeholder="Ex: Disponibilidade BAU" style="width:100%; padding:12px; border:1px solid #dadce0; border-radius:8px; font-size:14px; outline:none; box-sizing:border-box;">
+            </div>
+
+            <div style="margin-bottom:16px;">
+                 <label style="${objectToCss(styles.label)}">Mensagem</label>
+                 <textarea id="cw-bc-text" placeholder="Digite a mensagem... Suporta HTML básico." style="width:100%; height:120px; padding:12px; border:1px solid #dadce0; border-radius:8px; font-size:14px; outline:none; resize:none; font-family:Roboto; box-sizing:border-box; line-height:1.5;"></textarea>
             </div>
         </div>
 
-        <div>
-             <label style="${objectToCss(styles.adminLabel)}">Título</label>
-             <input id="cw-bc-title" placeholder="Ex: Disponibilidade BAU" style="width:100%; padding:10px; border:1px solid #dadce0; border-radius:8px; font-size:14px; outline:none;">
-        </div>
-
-        <div>
-             <label style="${objectToCss(styles.adminLabel)}">Mensagem</label>
-             <textarea id="cw-bc-text" placeholder="Digite a mensagem... Suporta HTML básico." style="width:100%; height:80px; padding:10px; border:1px solid #dadce0; border-radius:8px; font-size:14px; outline:none; resize:vertical; font-family:Roboto;"></textarea>
-        </div>
-
-        <div style="display:flex; justify-content:flex-end; gap:10px; padding-top:8px;">
-            <button id="cw-bc-cancel" style="padding:8px 16px; background:white; border:1px solid #dadce0; color:#5f6368; border-radius:20px; cursor:pointer; font-weight:500;">Cancelar</button>
-            <button id="cw-bc-send" style="padding:8px 24px; background:#1a73e8; color:white; border:none; border-radius:20px; cursor:pointer; font-weight:600; box-shadow:0 2px 5px rgba(26,115,232,0.3);">Publicar</button>
+        <div style="display:flex; justify-content:flex-end; gap:10px; padding-top:16px; border-top:1px solid #eee;">
+            <button id="cw-bc-cancel" style="padding:10px 20px; background:white; border:1px solid #dadce0; color:#5f6368; border-radius:24px; cursor:pointer; font-weight:600; font-size:13px;">Cancelar</button>
+            <button id="cw-bc-send" style="padding:10px 24px; background:#1a73e8; color:white; border:none; border-radius:24px; cursor:pointer; font-weight:600; box-shadow:0 4px 12px rgba(26,115,232,0.3); font-size:13px;">Publicar</button>
         </div>
       `;
+
+      const btnCancel = editorOverlay.querySelector('#cw-bc-cancel');
+      const btnSend = editorOverlay.querySelector('#cw-bc-send');
       
-      const btnCancel = adminPanel.querySelector('#cw-bc-cancel');
-      const btnSend = adminPanel.querySelector('#cw-bc-send');
-      const inputTitle = adminPanel.querySelector('#cw-bc-title');
-      const inputText = adminPanel.querySelector('#cw-bc-text');
+      btnCancel.onclick = closeEditor;
+      btnSend.onclick = handleSend;
+
+      popup.appendChild(editorOverlay);
+  }
+
+  // --- LÓGICA DO EDITOR ---
+  function openEditor(editData = null) {
+      if(!editorOverlay) return;
       
-      btnCancel.onclick = () => { adminPanel.style.display = 'none'; };
+      const titleLabel = editorOverlay.querySelector('#cw-editor-title-label');
+      const inputTitle = editorOverlay.querySelector('#cw-bc-title');
+      const inputText = editorOverlay.querySelector('#cw-bc-text');
+      const btnSend = editorOverlay.querySelector('#cw-bc-send');
       
-      btnSend.onclick = async () => {
-          const type = adminPanel.querySelector('input[name="cw-bc-type"]:checked').value;
+      if (editData) {
+          // MODO EDIÇÃO
+          currentEditingId = editData.id;
+          titleLabel.textContent = "Editar Aviso";
+          inputTitle.value = editData.title;
+          inputText.value = editData.text;
+          btnSend.textContent = "Salvar Alterações";
           
-          if(!inputTitle.value.trim() || !inputText.value.trim()) {
-              showToast("Preencha todos os campos!", { error: true });
-              return;
-          }
+          // Seleciona o radio correto
+          const radio = editorOverlay.querySelector(`input[name="cw-bc-type"][value="${editData.type}"]`);
+          if(radio) radio.checked = true;
+          
+      } else {
+          // MODO CRIAÇÃO
+          currentEditingId = null;
+          titleLabel.textContent = "Novo Aviso";
+          inputTitle.value = "";
+          inputText.value = "";
+          btnSend.textContent = "Publicar";
+          // Reset radio default
+          const radio = editorOverlay.querySelector(`input[name="cw-bc-type"][value="info"]`);
+          if(radio) radio.checked = true;
+      }
 
-          // Loading
-          btnSend.textContent = "Enviando...";
-          btnSend.style.opacity = "0.7";
-          btnSend.style.cursor = "wait";
+      editorOverlay.classList.add('active');
+      setTimeout(() => inputTitle.focus(), 300); // Foco automático
+  }
 
-          const success = await DataService.sendBroadcast({
+  function closeEditor() {
+      if(editorOverlay) editorOverlay.classList.remove('active');
+      currentEditingId = null;
+  }
+
+  async function handleSend() {
+      const btnSend = editorOverlay.querySelector('#cw-bc-send');
+      const inputTitle = editorOverlay.querySelector('#cw-bc-title');
+      const inputText = editorOverlay.querySelector('#cw-bc-text');
+      const type = editorOverlay.querySelector('input[name="cw-bc-type"]:checked').value;
+
+      if(!inputTitle.value.trim() || !inputText.value.trim()) {
+          showToast("Preencha todos os campos!", { error: true });
+          return;
+      }
+
+      btnSend.textContent = "Processando...";
+      btnSend.style.opacity = "0.7";
+
+      let success = false;
+
+      if (currentEditingId) {
+          // UPDATE
+          success = await DataService.updateBroadcast(currentEditingId, {
+              title: inputTitle.value,
+              text: inputText.value,
+              type: type
+          });
+      } else {
+          // CREATE
+          success = await DataService.sendBroadcast({
               title: inputTitle.value,
               text: inputText.value,
               type: type,
-              author: currentUser
+              author: window._cwCurrentUser || 'admin'
           });
+      }
 
-          // Assume sucesso (no-cors)
-          showToast("Aviso enviado com sucesso!");
+      if (success) {
+          showToast(currentEditingId ? "Aviso atualizado!" : "Aviso publicado!");
           SoundManager.playSuccess();
-          inputTitle.value = "";
-          inputText.value = "";
-          adminPanel.style.display = 'none';
-          
-          // Refresh
-          setTimeout(() => checkForUpdates(), 2000);
-          
-          btnSend.textContent = "Publicar";
+          closeEditor();
+          setTimeout(() => checkForUpdates(), 1500); // Refresh rápido
+      } else {
+          showToast("Erro na operação.", { error: true });
+          btnSend.textContent = currentEditingId ? "Salvar Alterações" : "Publicar";
           btnSend.style.opacity = "1";
-          btnSend.style.cursor = "pointer";
-      };
-
-      popup.appendChild(adminPanel);
-  }
-
-  function toggleAdminPanel() {
-      if (!adminPanel) return;
-      adminPanel.style.display = adminPanel.style.display === "none" ? "flex" : "none";
-      if(adminPanel.style.display === "flex") {
-          adminPanel.querySelector('input')?.focus();
       }
   }
 
+  // --- DELETE FUNCTION ---
+  async function handleDelete(id) {
+      if(confirm("Tem certeza que deseja excluir este aviso?")) {
+          const success = await DataService.deleteBroadcast(id);
+          if(success) {
+              showToast("Aviso removido.");
+              SoundManager.playClick();
+              // Remove visualmente na hora
+              const oldMsg = BROADCAST_MESSAGES.findIndex(m => m.id === id);
+              if(oldMsg > -1) BROADCAST_MESSAGES.splice(oldMsg, 1);
+              renderFeed(); 
+              // Refresh real depois
+              setTimeout(() => checkForUpdates(), 1500);
+          } else {
+              showToast("Erro ao excluir.", { error: true });
+          }
+      }
+  }
+
+  // --- FEED CONTAINER ---
   const feed = document.createElement("div");
   feed.className = "cw-nice-scroll";
   Object.assign(feed.style, styles.feedContainer);
   popup.appendChild(feed);
 
-  async function checkForUpdates() {
+  async function checkForUpdates() { /* ... Mantido igual ... */
       let statusEl = document.getElementById('cw-update-status');
       if (visible) {
           if (!statusEl) {
@@ -360,7 +438,7 @@ export function initBroadcastAssistant() {
       }
   }
 
-  function updateBadge() {
+  function updateBadge() { /* ... Mantido ... */ 
       const btn = document.getElementById("cw-btn-broadcast");
       if (!btn) return;
       const readMessages = JSON.parse(localStorage.getItem("cw_read_broadcasts") || "[]");
@@ -384,7 +462,7 @@ export function initBroadcastAssistant() {
       }
   }
 
-  // --- RENDERIZADOR ---
+  // --- RENDERIZADOR (Modificado para Admin Actions) ---
   function renderFeed() {
       feed.innerHTML = "";
       const oldBau = popup.querySelector('#cw-bau-widget');
@@ -412,7 +490,6 @@ export function initBroadcastAssistant() {
           bauWidget.id = "cw-bau-widget";
           Object.assign(bauWidget.style, styles.bauContainer);
 
-          // EXTRAÇÃO DE DATA (SMART)
           const extractedSlots = [];
           const lines = bauMessage.text.split('\n');
           const dateRegex = /\d{1,2}\/\d{1,2}/;
@@ -421,17 +498,14 @@ export function initBroadcastAssistant() {
              const dateMatch = line.match(dateRegex);
              if (dateMatch) {
                  const date = dateMatch[0];
-                 let flag = "📅"; // Default
+                 let flag = "📅"; 
                  if (/🇧🇷|🇵🇹|PT|BR/i.test(line)) flag = "🇧🇷";
                  else if (/🇪🇸|🇲🇽|ES|LATAM/i.test(line)) flag = "🇪🇸";
-                 
-                 // Evita duplicatas
                  const exists = extractedSlots.some(s => s.flag === flag && s.date === date);
                  if (!exists) extractedSlots.push({ flag, date });
              }
           });
 
-          // Fallback se não achar nada
           if (extractedSlots.length === 0) {
              const anyDates = bauMessage.text.match(/\d{1,2}\/\d{1,2}/g);
              if (anyDates) {
@@ -442,7 +516,6 @@ export function initBroadcastAssistant() {
           let contentHTML = "";
           
           if (extractedSlots.length > 0) {
-              // GERA OS CHIPS LADO A LADO
               let slotsHTML = extractedSlots.map(slot => `
                   <div style="${objectToCss(styles.bauSlotRow)}; margin-bottom: 0; flex: 1; min-width: 100px; justify-content: center;">
                       <span style="${objectToCss(styles.bauFlag)}">${slot.flag}</span>
@@ -454,26 +527,28 @@ export function initBroadcastAssistant() {
                   <div style="display:flex; align-items:flex-start; justify-content:space-between; width:100%;">
                       <div style="display:flex; flex-direction:column; width:100%;">
                          <span style="font-size:12px; opacity:0.8; color:#581C87; margin-bottom:6px;">Próxima abertura:</span>
-                         
-                         <div style="display:flex; flex-direction:row; gap:8px; width: 100%;">
-                            ${slotsHTML}
-                         </div>
-
+                         <div style="display:flex; flex-direction:row; gap:8px; width: 100%;">${slotsHTML}</div>
                       </div>
-                      <button id="cw-bau-toggle-btn" style="background:rgba(255,255,255,0.6); border:1px solid rgba(139, 92, 246, 0.4); border-radius:8px; padding:6px 12px; cursor:pointer; color:#6D28D9; font-size:12px; font-weight:600; transition:all 0.2s; white-space:nowrap; margin-left:8px; height:38px; margin-top:20px;">
-                          Detalhes
-                      </button>
+                      <button id="cw-bau-toggle-btn" style="background:rgba(255,255,255,0.6); border:1px solid rgba(139, 92, 246, 0.4); border-radius:8px; padding:6px 12px; cursor:pointer; color:#6D28D9; font-size:12px; font-weight:600; transition:all 0.2s; white-space:nowrap; margin-left:8px; height:38px; margin-top:20px;">Detalhes</button>
                   </div>
-                  <div id="cw-bau-full" style="display:none; margin-top:12px; padding-top:12px; border-top:1px dashed rgba(139, 92, 246, 0.3); font-size:13px; line-height:1.5; color:#581C87;">
-                      ${parseMessageText(bauMessage.text)}
-                  </div>
+                  <div id="cw-bau-full" style="display:none; margin-top:12px; padding-top:12px; border-top:1px dashed rgba(139, 92, 246, 0.3); font-size:13px; line-height:1.5; color:#581C87;">${parseMessageText(bauMessage.text)}</div>
               `;
           } else {
-              // FALLBACK (Sem data detectável)
               contentHTML = `<div style="font-size:13px; color:#581C87; line-height:1.5; white-space:pre-wrap;">${parseMessageText(bauMessage.text)}</div>`;
           }
 
+          // INJEÇÃO DE BOTÕES ADMIN NO WIDGET BAU
+          let adminActionsHTML = "";
+          if (window._cwIsAdmin) {
+              adminActionsHTML = `
+                <div style="position:absolute; top:8px; right:8px; display:flex; gap:4px;">
+                    <button class="cw-bau-edit" style="border:none; background:rgba(255,255,255,0.5); border-radius:4px; padding:4px; cursor:pointer; color:#6D28D9;">✏️</button>
+                </div>
+              `;
+          }
+
           bauWidget.innerHTML = `
+              ${adminActionsHTML}
               <div style="${objectToCss(styles.bauHeader)}; margin-bottom:8px;">
                   <div style="${objectToCss(styles.liveIndicator)}">
                       <div style="${objectToCss(styles.pulseDot)}"></div>
@@ -495,6 +570,11 @@ export function initBroadcastAssistant() {
                   toggleBtn.textContent = isHidden ? "Ocultar" : "Detalhes";
                   toggleBtn.style.background = isHidden ? "#fff" : "rgba(255,255,255,0.6)";
               };
+          }
+          
+          if(window._cwIsAdmin) {
+              const editBtn = bauWidget.querySelector('.cw-bau-edit');
+              if(editBtn) editBtn.onclick = () => openEditor(bauMessage);
           }
       }
 
@@ -606,18 +686,39 @@ export function initBroadcastAssistant() {
     body.innerHTML = parseMessageText(msg.text);
     card.appendChild(body);
 
+    // --- BOTÕES DE ADMIN (EDIT/DELETE) NO CARD ---
+    if (window._cwIsAdmin) {
+        const adminActions = document.createElement("div");
+        adminActions.className = "cw-admin-actions";
+        
+        const btnEdit = document.createElement("button");
+        btnEdit.className = "cw-admin-btn-mini";
+        btnEdit.innerHTML = `✏️ Editar`;
+        btnEdit.onclick = () => openEditor(msg);
+
+        const btnDel = document.createElement("button");
+        btnDel.className = "cw-admin-btn-mini delete";
+        btnDel.innerHTML = `🗑️ Excluir`;
+        btnDel.onclick = () => handleDelete(msg.id);
+
+        adminActions.appendChild(btnEdit);
+        adminActions.appendChild(btnDel);
+        
+        // Insere no final do card (após o corpo)
+        card.appendChild(adminActions);
+    }
+
     return card;
   }
 
+  // ... (Initial setup code)
   const cachedData = DataService.getCachedBroadcasts();
   if (cachedData.length > 0) {
       setBroadcastMessages(cachedData);
       renderFeed();
   }
   
-  // Tenta injeção do botão admin logo no início (assumindo que o page-data já rodou)
   setTimeout(tryInjectAdminButton, 500);
-
   checkForUpdates();
   if (!pollInterval) pollInterval = setInterval(checkForUpdates, POLL_TIME_MS);
 

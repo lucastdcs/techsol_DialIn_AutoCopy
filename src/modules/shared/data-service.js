@@ -1,7 +1,7 @@
 // src/modules/shared/data-service.js
 
 // MANTENHA A URL QUE VOCÊ JÁ TEM (A VERSÃO /a/macros/... É IMPORTANTE AGORA)
-const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbypA8Rn86cg50mtwwzOQVTH8nabRpQnumplWxNYvNEDNRdf4CZdWxSPeEKMsnvD1E4Vtg/exec";
+const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbysAGOgn40LEQ1uJIppENtTGNSRscLRQkGA96UPYTDDbA0c_KhVUwDQ-Do8ZQ7lQizo/exec";
 
 const CACHE_KEY_BROADCAST = "cw_data_broadcast";
 const CACHE_KEY_TIPS = "cw_data_tips";
@@ -71,30 +71,41 @@ export const DataService = {
         return tips[Math.floor(Math.random() * tips.length)];
     },
 
-    // 3. ENVIAR NOVO BROADCAST (Via GET/JSONP para bypass Auth Corp)
+   // 3. ENVIAR (CREATE)
     sendBroadcast: async (payload) => {
-        console.log("📤 Enviando via JSONP (Corp Bypass)...", payload);
-        
         const fullPayload = {
             ...payload,
             date: new Date().toISOString(),
             id: Date.now().toString() 
         };
+        // Chama jsonpFetch com op='new_broadcast'
+        return await DataService._performOp('new_broadcast', fullPayload);
+    },
 
+    // 4. ATUALIZAR (UPDATE)
+    updateBroadcast: async (id, payload) => {
+        const fullPayload = { id, ...payload };
+        return await DataService._performOp('update_broadcast', fullPayload);
+    },
+
+    // 5. DELETAR (DELETE)
+    deleteBroadcast: async (id) => {
+        return await DataService._performOp('delete_broadcast', { id });
+    },
+
+    // Helper genérico para não repetir código
+    _performOp: async (op, params) => {
         try {
-            // Agora chamamos jsonpFetch passando os dados como parâmetros de URL
-            const response = await jsonpFetch('new_broadcast', fullPayload);
-            
+            console.log(`📤 Executando ${op}...`, params);
+            const response = await jsonpFetch(op, params);
             if (response && response.status === 'success') {
-                console.log("✅ Sucesso confirmado pelo servidor!");
+                console.log("✅ Sucesso:", op);
                 return true;
-            } else {
-                console.warn("⚠️ Servidor recebeu mas retornou:", response);
-                return false;
             }
+            console.warn("⚠️ Falha:", response);
+            return false;
         } catch (e) {
-            console.error("❌ Erro no envio JSONP:", e);
-            // Dica: Se der erro aqui, verifique se está logado no Google na mesma aba
+            console.error("❌ Erro JSONP:", e);
             return false;
         }
     },
