@@ -1,84 +1,65 @@
 // src/modules/shared/data-service.js
 
-// SUA URL (Mantida)
-const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbwxxY5EhL3U1ZIEvs_y28FFeIFr7rMfSzNIljclqPd9Mk58-gx7pBRfZ8pQmXt2P1IMjw/exec";
-// src/modules/shared/data-service.js
-
+// MANTENHA A URL QUE VOCÊ JÁ TEM (A VERSÃO /a/macros/... É IMPORTANTE AGORA)
+const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbysAGOgn40LEQ1uJIppENtTGNSRscLRQkGA96UPYTDDbA0c_KhVUwDQ-Do8ZQ7lQizo/exec";
 
 const CACHE_KEY_BROADCAST = "cw_data_broadcast";
 const CACHE_KEY_TIPS = "cw_data_tips";
 
-const FALLBACK_TIPS = [
-    "Processando sua solicitação...",
-    "Dica: Mantenha suas notas organizadas.",
-    "Aguarde um momento...",
-    "Quase lá..."
-];
+const FALLBACK_TIPS = ["Processando...", "Mantenha o foco!", "Aguarde..."];
 
-// Função Helper Interna para JSONP
-function jsonpFetch(operation) {
+// --- Helper JSONP Poderoso (Aceita dados) ---
+function jsonpFetch(operation, params = {}) {
     return new Promise((resolve, reject) => {
-        // 1. Cria nome único para a função
-        const callbackName = 'cw_cb_' + Math.round(10000 * Math.random());
+        const callbackName = 'cw_cb_' + Math.round(100000 * Math.random());
         const script = document.createElement('script');
         
-        // 2. Define o que acontece quando o Google responder
         window[callbackName] = (data) => {
-            document.body.removeChild(script);
+            if (document.body.contains(script)) document.body.removeChild(script);
             delete window[callbackName];
             resolve(data);
         };
 
-        // 3. Monta a URL com callback e timestamp (anti-cache)
-        script.src = `${API_URL}?op=${operation}&callback=${callbackName}&t=${Date.now()}`;
+        // Converte objeto params em string query (ex: &title=Oi&text=TudoBem)
+        const queryString = Object.keys(params)
+            .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
+            .join('&');
+
+        // Monta URL
+        const finalUrl = `${API_URL}?op=${operation}&callback=${callbackName}&t=${Date.now()}&${queryString}`;
         
-        // 4. Tratamento de erro
+        script.src = finalUrl;
+        
         script.onerror = () => {
-            document.body.removeChild(script);
+            if (document.body.contains(script)) document.body.removeChild(script);
             delete window[callbackName];
-            reject(new Error("JSONP Load Error"));
+            // Em scripts corporativos, as vezes o onerror dispara mesmo com sucesso se o mimetype variar,
+            // mas geralmente é bloqueio.
+            reject(new Error("JSONP Error (Check Corp Login)"));
         };
 
-        // 5. Dispara
         document.body.appendChild(script);
     });
 }
 
 export const DataService = {
     
-    // 1. BUSCAR DICAS (Via JSONP)
     fetchTips: async () => {
         try {
-            console.log("📥 Baixando dicas via JSONP...");
             const data = await jsonpFetch('tips');
-            
-            if (data && data.tips && Array.isArray(data.tips)) {
-                localStorage.setItem(CACHE_KEY_TIPS, JSON.stringify(data.tips));
-                console.log("✅ Dicas atualizadas:", data.tips.length);
-            }
-        } catch (err) {
-            console.warn("TechSol: Erro ao baixar dicas (Offline).", err);
-        }
+            if (data?.tips) localStorage.setItem(CACHE_KEY_TIPS, JSON.stringify(data.tips));
+        } catch (err) { console.warn("Tips offline", err); }
     },
 
-    // 2. BUSCAR BROADCASTS (Via JSONP)
     fetchData: async () => {
         try {
-            console.log("📥 Baixando Broadcasts via JSONP...");
             const data = await jsonpFetch('broadcast');
-            
-            if (data && data.broadcast) {
+            if (data?.broadcast) {
                 localStorage.setItem(CACHE_KEY_BROADCAST, JSON.stringify(data.broadcast));
-                console.log("✅ Broadcasts atualizados:", data.broadcast.length);
                 return data;
             }
-        } catch (err) {
-            console.warn("TechSol: Erro ao buscar Broadcasts.", err);
-        }
-        // Fallback Cache
-        return {
-            broadcast: JSON.parse(localStorage.getItem(CACHE_KEY_BROADCAST) || "[]")
-        };
+        } catch (err) { console.warn("Broadcast offline", err); }
+        return { broadcast: JSON.parse(localStorage.getItem(CACHE_KEY_BROADCAST) || "[]") };
     },
 
     getCachedBroadcasts: () => JSON.parse(localStorage.getItem(CACHE_KEY_BROADCAST) || "[]"),
@@ -86,22 +67,48 @@ export const DataService = {
     getRandomTip: () => {
         let tips = FALLBACK_TIPS;
         const cached = localStorage.getItem(CACHE_KEY_TIPS);
-        if (cached) {
-            try { tips = JSON.parse(cached); } catch(e){}
-        }
+        if (cached) try { tips = JSON.parse(cached); } catch(e){}
         return tips[Math.floor(Math.random() * tips.length)];
     },
 
-    logUsage: (actionType, details = "") => {
-        // Logs continuam via fetch no-cors (POST é mais chato com JSONP)
-        const user = window._USER_ID || "agente_anonimo"; 
-        const payload = { op: "log", user, action: actionType, meta: details };
-        
-        fetch(API_URL, {
-            method: "POST",
-            mode: "no-cors", 
-            headers: { "Content-Type": "text/plain;charset=utf-8" },
-            body: JSON.stringify(payload)
-        }).catch(e => console.log("Log fail", e));
-    }
+   // 3. ENVIAR (CREATE)
+    sendBroadcast: async (payload) => {
+        const fullPayload = {
+            ...payload,
+            date: new Date().toISOString(),
+            id: Date.now().toString() 
+        };
+        // Chama jsonpFetch com op='new_broadcast'
+        return await DataService._performOp('new_broadcast', fullPayload);
+    },
+
+    // 4. ATUALIZAR (UPDATE)
+    updateBroadcast: async (id, payload) => {
+        const fullPayload = { id, ...payload };
+        return await DataService._performOp('update_broadcast', fullPayload);
+    },
+
+    // 5. DELETAR (DELETE)
+    deleteBroadcast: async (id) => {
+        return await DataService._performOp('delete_broadcast', { id });
+    },
+
+    // Helper genérico para não repetir código
+    _performOp: async (op, params) => {
+        try {
+            console.log(`📤 Executando ${op}...`, params);
+            const response = await jsonpFetch(op, params);
+            if (response && response.status === 'success') {
+                console.log("✅ Sucesso:", op);
+                return true;
+            }
+            console.warn("⚠️ Falha:", response);
+            return false;
+        } catch (e) {
+            console.error("❌ Erro JSONP:", e);
+            return false;
+        }
+    },
+    
+    logUsage: () => {} // Logs desabilitados temporariamente para evitar complexidade
 };

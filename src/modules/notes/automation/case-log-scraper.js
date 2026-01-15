@@ -11,9 +11,6 @@ function simularClique(el) {
     );
 }
 
-// ============================================================
-// 1. ESTILOS CSS (Injetados dinamicamente)
-// ============================================================
 const styleId = 'cw-automation-styles';
 if (!document.getElementById(styleId)) {
     const style = document.createElement('style');
@@ -63,9 +60,7 @@ if (!document.getElementById(styleId)) {
     document.head.appendChild(style);
 }
 
-// ============================================================
-// 2. CONTROLE DO OVERLAY (Fundo Fosco)
-// ============================================================
+
 function toggleLoadingOverlay(show) {
     let overlay = document.getElementById('cw-loading-overlay');
     
@@ -109,9 +104,7 @@ export async function fetchAndInsertSpeakeasyId(targetInputId) {
     }
 
     try {
-        // ============================================================
-        // FASE 1: NAVEGAÇÃO
-        // ============================================================
+
         
         // Garante aba Case Log (Navigation)
         const btnCaseLog = document.querySelector('material-button[debug-id="dock-item-case-log"]');
@@ -149,18 +142,50 @@ export async function fetchAndInsertSpeakeasyId(targetInputId) {
             await esperar(500);
         }
 
-        // ============================================================
-        // FASE 2: EXTRAÇÃO (Bottom-Up)
-        // ============================================================
+        const headers = Array.from(document.querySelectorAll('.message-header'));
         
-        const seletor = '.preview, .speakeasy-agent-activity, .message-body';
+        for (let i = headers.length - 1; i >= 0; i--) {
+            const header = headers[i];
+            
+
+            const icon = header.querySelector('i.material-icons-extended');
+            const isPhoneIcon = icon && icon.innerText.trim() === 'phone_in_talk';
+            
+
+            const textContent = header.innerText || "";
+            const isCallText = textContent.includes("Agent joined") || 
+                               textContent.includes("outbound-call") ||
+                               textContent.includes("Speakeasy"); // Vai que aparece no título
+
+            if (isPhoneIcon || isCallText) {
+
+                const isExpanded = header.getAttribute('aria-expanded') === 'true';
+                
+                if (!isExpanded) {
+                    console.log("📂 Expandindo mensagem de chamada...", header);
+                    if(inputWidget) inputWidget.placeholder = "Lendo mensagem...";
+                    
+                    simularClique(header);
+                    
+                    await esperar(1000); 
+                }
+
+                break; 
+            }
+        }
+
+
+        const seletor = '.preview, .speakeasy-agent-activity, .message-body, .content-container';
         const elementos = Array.from(document.querySelectorAll(seletor));
+   
         const regexID = /Speakeasy.*?(P\d{15,25})/i;
 
         let idEncontrado = null;
 
+        // Varre novamente os conteúdos (agora visíveis)
         for (let i = elementos.length - 1; i >= 0; i--) {
             const el = elementos[i];
+
             if (el.offsetParent === null) continue; 
 
             const match = (el.innerText || "").match(regexID);
@@ -170,9 +195,6 @@ export async function fetchAndInsertSpeakeasyId(targetInputId) {
             }
         }
 
-        // ============================================================
-        // FASE 3: INSERÇÃO
-        // ============================================================
 
         if (inputWidget) {
             if (idEncontrado) {
@@ -208,7 +230,6 @@ export async function fetchAndInsertSpeakeasyId(targetInputId) {
         console.error("Erro na automação:", error);
         showToast("Erro ao processar.", { error: true });
     } finally {
-        // 2. DESATIVA EFEITOS
         if (inputWidget) {
             inputWidget.classList.remove('cw-scanning-active');
             if (!inputWidget.value) inputWidget.placeholder = originalPlaceholder;

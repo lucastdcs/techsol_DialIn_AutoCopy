@@ -1,4 +1,5 @@
 import { DataService } from './data-service.js'; 
+import { showToast } from './utils.js'; // <--- ADICIONADO PARA O AVISO
 
 // src/modules/shared/command-center.js
 
@@ -15,16 +16,13 @@ const COLORS = {
   red: "#F28B82",    // Email
   purple: "#C58AF9", // Script
   green: "#81C995",  // Links
-  orange: "#F9AB00", // Broadcast (NOVO)
-  
+  orange: "#F9AB00", // Broadcast
 };
 
 // Helper interno de tempo
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export function initCommandCenter(actions) {
-  // actions agora contém: { toggleNotes, toggleEmail, toggleScript, toggleLinks, broadcastControl }
-
   // 1. ESTILOS
   const styleId = "cw-command-center-style";
   if (!document.getElementById(styleId)) {
@@ -71,13 +69,13 @@ export function initCommandCenter(actions) {
             .cw-btn.email.active { color: ${COLORS.red} !important; background: rgba(242, 139, 130, 0.15); }
             .cw-btn.script.active { color: ${COLORS.purple} !important; background: rgba(197, 138, 249, 0.15); }
             .cw-btn.links.active { color: ${COLORS.green} !important; background: rgba(129, 201, 149, 0.15); }
-            .cw-btn.broadcast.active { color: ${COLORS.orange} !important; background: rgba(249, 171, 0, 0.15); } /* NOVO */
+            .cw-btn.broadcast.active { color: ${COLORS.orange} !important; background: rgba(249, 171, 0, 0.15); }
 
             .cw-btn.notes:hover { color: ${COLORS.blue}; filter: drop-shadow(0 0 5px rgba(138, 180, 248, 0.5)); }
             .cw-btn.email:hover { color: ${COLORS.red}; filter: drop-shadow(0 0 5px rgba(242, 139, 130, 0.5)); }
             .cw-btn.script:hover { color: ${COLORS.purple}; filter: drop-shadow(0 0 5px rgba(197, 138, 249, 0.5)); }
             .cw-btn.links:hover { color: ${COLORS.green}; filter: drop-shadow(0 0 5px rgba(129, 201, 149, 0.5)); }
-            .cw-btn.broadcast:hover { color: ${COLORS.orange}; filter: drop-shadow(0 0 5px rgba(249, 171, 0, 0.5)); } /* NOVO */
+            .cw-btn.broadcast:hover { color: ${COLORS.orange}; filter: drop-shadow(0 0 5px rgba(249, 171, 0, 0.5)); }
 
             /* Indicador LED */
             .cw-btn::before {
@@ -91,7 +89,7 @@ export function initCommandCenter(actions) {
             
             .cw-btn svg { width: 22px; height: 22px; fill: currentColor; pointer-events: none; }
 
-            /* BADGE DE NOTIFICAÇÃO (Bolinha Vermelha) */
+            /* BADGE DE NOTIFICAÇÃO */
             .cw-badge {
                 position: absolute; top: 8px; right: 8px;
                 width: 8px; height: 8px;
@@ -141,82 +139,63 @@ export function initCommandCenter(actions) {
             .cw-pill.side-left .cw-btn::after { left: 60px; transform-origin: left center; }
             .cw-pill.side-left .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
 
-/* ... seus estilos atuais ... */
+            /* --- ESTILOS DA ILHA DINÂMICA --- */
+            .cw-pill { transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
 
-/* --- NOVO: ESTILOS DA ILHA DINÂMICA --- */
+            .cw-pill.processing-center {
+                top: 50% !important; left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                width: 320px !important; height: 110px !important;
+                border-radius: 28px !important;
+                background: #202124 !important;
+                padding: 0 !important;
+                box-shadow: 0 40px 80px rgba(0,0,0,0.5) !important;
+                display: flex !important; flex-direction: column !important;
+                justify-content: center !important; align-items: center !important;
+            }
 
-/* 1. Transição Fluida para a Pílula (Sobrescreve a padrão para ficar igual Apple) */
-.cw-pill {
-    transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
+            .cw-pill.processing-center > *:not(.cw-center-stage) { display: none !important; }
 
-/* 2. O Estado Central (Transformação) */
-.cw-pill.processing-center {
-    top: 50% !important; left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    width: 320px !important; height: 110px !important;
-    border-radius: 28px !important;
-    background: #202124 !important; /* Fundo sólido para destaque */
-    padding: 0 !important;
-    box-shadow: 0 40px 80px rgba(0,0,0,0.5) !important;
-    
-    /* Centraliza conteúdo */
-    display: flex !important; flex-direction: column !important;
-    justify-content: center !important; align-items: center !important;
-}
+            .cw-center-stage {
+                display: flex; flex-direction: column; align-items: center; gap: 14px;
+                width: 100%; opacity: 0; animation: fadeIn 0.4s ease forwards 0.1s;
+                position: relative;
+            }
 
-/* 3. Esconde os botões velhos quando for para o centro */
-.cw-pill.processing-center > *:not(.cw-center-stage) {
-    display: none !important;
-}
+            .cw-center-dots { display: flex; gap: 8px; }
+            .cw-center-dots span {
+                width: 8px; height: 8px; border-radius: 50%;
+                animation: googleBounce 1.4s infinite ease-in-out both;
+            }
+            .cw-center-dots span:nth-child(1) { background-color: ${COLORS.blue}; animation-delay: -0.32s; }
+            .cw-center-dots span:nth-child(2) { background-color: ${COLORS.red}; animation-delay: -0.16s; }
+            .cw-center-dots span:nth-child(3) { background-color: ${COLORS.green}; }
 
-/* 4. O Palco Central (Onde as bolinhas vão viver) */
-.cw-center-stage {
-    display: flex; flex-direction: column; align-items: center; gap: 14px;
-    width: 100%; opacity: 0; animation: fadeIn 0.4s ease forwards 0.1s;
-}
+            .cw-center-text {
+                font-size: 13px; color: #E8EAED; text-align: center; max-width: 90%;
+                font-weight: 500; line-height: 1.4; opacity: 0;
+                transform: translateY(10px);
+                animation: textSlideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+                animation-delay: 0.2s;
+            }
 
-/* 5. AS BOLINHAS DO GOOGLE (Réplica exata da sua original) */
-.cw-center-dots { display: flex; gap: 8px; }
-.cw-center-dots span {
-    width: 8px; height: 8px; border-radius: 50%;
-    animation: googleBounce 1.4s infinite ease-in-out both;
-}
-/* Usa as variáveis COLORS que já existem no seu arquivo */
-.cw-center-dots span:nth-child(1) { background-color: ${COLORS.blue}; animation-delay: -0.32s; }
-.cw-center-dots span:nth-child(2) { background-color: ${COLORS.red}; animation-delay: -0.16s; }
-.cw-center-dots span:nth-child(3) { background-color: ${COLORS.green}; }
+            .cw-center-success { display: none; color: ${COLORS.green}; }
+            .cw-center-success svg { width: 40px; height: 40px; }
+            .cw-center-success.show { display: block; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
-/* 6. Texto da Dica */
-.cw-center-text {
-    font-size: 13px; 
-    color: #E8EAED; 
-    text-align: center; 
-    max-width: 90%;
-    font-weight: 500; /* Aumentei um pouco o peso */
-    line-height: 1.4;
-    
-    /* A MÁGICA: */
-    opacity: 0;
-    transform: translateY(10px); /* Começa um pouco para baixo */
-    animation: textSlideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-    animation-delay: 0.2s; /* Espera as bolinhas começarem */
-}
+            .cw-abort-btn {
+                position: absolute; bottom: -32px;
+                font-size: 10px; color: rgba(255, 255, 255, 0.2);
+                cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
+                font-weight: 600; transition: all 0.3s ease; user-select: none;
+                margin-bottom: 8px;
+            }
+            .cw-abort-btn:hover { color: #F28B82; opacity: 1; }
 
-/* 7. Sucesso */
-.cw-center-success { display: none; color: ${COLORS.green}; }
-.cw-center-success svg { width: 40px; height: 40px; }
-.cw-center-success.show { display: block; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-
-@keyframes fadeIn { to { opacity: 1; } }
-@keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-@keyframes googleBounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-}
-    @keyframes textSlideUp {
-    to { opacity: 1; transform: translateY(0); }
-}
+            @keyframes fadeIn { to { opacity: 1; } }
+            @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+            @keyframes googleBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+            @keyframes textSlideUp { to { opacity: 1; transform: translateY(0); } }
         `;
     document.head.appendChild(style);
   }
@@ -234,31 +213,22 @@ export function initCommandCenter(actions) {
   const pill = document.createElement("div");
   pill.className = "cw-pill side-right";
   
-  // ESTRUTURA ATUALIZADA (Links Subiu, Broadcast Entrou)
   pill.innerHTML = `
         <div class="cw-grip" title="Arrastar">
             <div class="cw-grip-bar"></div>
         </div>
-        
         <button class="cw-btn notes" id="cw-btn-notes" data-label="Case Notes">${ICONS.notes}</button>
-        
         <button class="cw-btn email" id="cw-btn-email" data-label="Quick Email">${ICONS.email}</button>
-        
         <button class="cw-btn script" id="cw-btn-script" data-label="Call Script">${ICONS.script}</button>
-
         <button class="cw-btn links" id="cw-btn-links" data-label="Links">${ICONS.links}</button>
-        
         <div class="cw-sep"></div>
-        
         <button class="cw-btn broadcast" id="cw-btn-broadcast" data-label="Avisos">${ICONS.broadcast}</button>
-
         <div class="cw-status-container">
             <div class="cw-dots" id="cw-loader"><span></span><span></span><span></span></div>
             <div class="cw-check" id="cw-success" style="display:none;">${ICONS.check}</div>
         </div>
     `;
 
-    // INSERE OVERLAY E PILL
     const overlay = document.createElement('div');
     overlay.className = 'cw-focus-backdrop';
     document.body.appendChild(overlay);
@@ -270,46 +240,32 @@ export function initCommandCenter(actions) {
   pill.querySelector(".script").onclick = (e) => { e.stopPropagation(); actions.toggleScript(); };
   pill.querySelector(".links").onclick = (e) => { e.stopPropagation(); actions.toggleLinks(); };
   
-  // Listener do Broadcast (Com Badge Logic)
   pill.querySelector(".broadcast").onclick = (e) => { 
       e.stopPropagation(); 
-      
-      // Remove a bolinha vermelha visualmente se existir
       const badge = e.currentTarget.querySelector('.cw-badge');
       if(badge) {
           badge.style.transform = "scale(0)";
           setTimeout(() => badge.remove(), 200);
       }
-      
       if(actions.broadcastControl) actions.broadcastControl.toggle(); 
   };
 
-  // INJETA O BADGE (Se houver não lidos)
   if (actions.broadcastControl && actions.broadcastControl.hasUnread) {
       const badge = document.createElement('div');
       badge.className = 'cw-badge';
       pill.querySelector('.broadcast').appendChild(badge);
   }
 
-  // 4. SEQUÊNCIA DE ANIMAÇÃO
+  // 4. ANIMAÇÃO INICIAL E DRAG (Mantido idêntico)
   (async function startAnimation() {
-    await esperar(2800);
-    pill.classList.add("docked");
+    await esperar(2800); pill.classList.add("docked");
     await esperar(300);
-    
     const items = pill.querySelectorAll(".cw-btn");
-    const seps = pill.querySelectorAll(".cw-sep");
-    seps.forEach((s) => s.classList.add("visible"));
-
-    for (let i = 0; i < items.length; i++) {
-      items[i].classList.add("popped");
-      await esperar(90);
-    }
-    await esperar(200);
-    pill.classList.add("system-check");
+    pill.querySelectorAll(".cw-sep").forEach((s) => s.classList.add("visible"));
+    for (let i = 0; i < items.length; i++) { items[i].classList.add("popped"); await esperar(90); }
+    await esperar(200); pill.classList.add("system-check");
   })();
 
-  // 5. FÍSICA DE ARRASTO
   let isDragging = false;
   let startX, startY, initialLeft, initialTop;
   const DRAG_THRESHOLD = 3;
@@ -373,65 +329,86 @@ export function initCommandCenter(actions) {
   }
 }
 
-// Importe DataService no topo se ainda não tiver
-
+// --- FUNÇÃO DE PROCESSAMENTO COM CANCELAMENTO ---
 export function triggerProcessingAnimation() {
     const pill = document.querySelector('.cw-pill');
     const overlay = document.querySelector('.cw-focus-backdrop');
     if (!pill) return () => {}; 
 
-    // 1. CRIAR ELEMENTOS NOVOS (Isolados do resto)
+    // Reset da flag global
+    window._CW_ABORT_PROCESS = false;
+
+    // 1. CRIAR ELEMENTOS
     const stage = document.createElement('div');
     stage.className = 'cw-center-stage';
     
-    // HTML Exato para as bolinhas funcionarem com o CSS acima
     stage.innerHTML = `
-        <div class="cw-center-dots">
-            <span></span><span></span><span></span>
-        </div>
+        <div class="cw-center-dots"><span></span><span></span><span></span></div>
         <div class="cw-center-text">${DataService.getRandomTip()}</div>
         <div class="cw-center-success">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
         </div>
     `;
 
+    const abortBtn = document.createElement('div');
+    abortBtn.className = 'cw-abort-btn';
+    abortBtn.textContent = 'Cancelar';
+    
+    // LÓGICA DE ABORTAR ATUALIZADA
+    abortBtn.onclick = (e) => {
+        e.stopPropagation();
+        
+        // A. Sinaliza parada para scripts externos
+        window._CW_ABORT_PROCESS = true; 
+        
+        // B. Feedback Visual
+        showToast("Cancelado! Mas a nota foi copiada para a área de transferência.", { duration: 4000 });
+        
+        // C. Desmonta UI imediatamente
+        stage.remove();
+        pill.classList.remove('processing-center');
+        pill.classList.remove('success');
+        if(overlay) overlay.classList.remove('active');
+    };
+
+    stage.appendChild(abortBtn);
     pill.appendChild(stage);
 
-    // 2. ATIVAR MODO CENTRO
     const startTime = Date.now();
     pill.classList.add('processing-center');
     if(overlay) overlay.classList.add('active');
 
-    // 3. RETORNAR FUNÇÃO DE FIM
     return function finish() {
+        // Se foi abortado, não faz nada (não mostra sucesso)
+        if (window._CW_ABORT_PROCESS || !pill.contains(stage)) return;
+
         const elapsed = Date.now() - startTime;
-        const remaining = Math.max(0, 2000 - elapsed); // Mínimo 2s
+        const remaining = Math.max(0, 2000 - elapsed); 
 
         setTimeout(() => {
-            // Esconde bolinhas e texto, mostra sucesso
+            // Checa de novo se foi abortado durante o timeout
+            if (window._CW_ABORT_PROCESS || !pill.contains(stage)) return;
+
             const dots = stage.querySelector('.cw-center-dots');
             const text = stage.querySelector('.cw-center-text');
             const success = stage.querySelector('.cw-center-success');
+            const abort = stage.querySelector('.cw-abort-btn');
 
             if(dots) dots.style.display = 'none';
             if(text) text.style.display = 'none';
+            if(abort) abort.style.display = 'none';
             if(success) success.classList.add('show');
             
-            // Adiciona borda verde na pílula
             pill.classList.add('success');
 
-            // Viaja de volta
             setTimeout(() => {
-                pill.classList.remove('processing-center'); // CSS faz a transição suave
-                
-                // Limpeza final (sincronizada com o CSS 0.6s)
+                pill.classList.remove('processing-center');
                 setTimeout(() => {
-                    stage.remove(); // Remove o palco temporário
+                    stage.remove();
                     pill.classList.remove('success');
                     if(overlay) overlay.classList.remove('active');
                 }, 400);
-
-            }, 1000); // Tempo exibindo o check verde
+            }, 1000); 
 
         }, remaining);
     };

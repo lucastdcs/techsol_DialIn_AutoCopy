@@ -250,6 +250,12 @@ export function initQuickEmailAssistant() {
         const iconSend = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>`;
 
 detailContent.innerHTML = `
+            <style>
+                .cw-email-content p { margin: 0 0 8px 0; } /* Margem apenas embaixo */
+                .cw-email-content ul { margin: 0 0 8px 16px; padding: 0; }
+                .cw-email-content li { margin-bottom: 4px; }
+            </style>
+
             <div style="position:sticky; top:0; background:rgba(255,255,255,0.9); backdrop-filter:blur(12px); border-bottom:1px solid #eee; padding:16px 24px; z-index:10; display:flex; align-items:center; gap:12px;">
                 <button id="csa-back-btn" style="background:none; border:none; cursor:pointer; display:flex; color:#5f6368; padding:8px; margin-left:-12px; border-radius:50%; transition:background 0.2s;">${iconBack}</button>
                 <div style="font-weight:600; font-size:16px; color:#202124; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${email.name}</div>
@@ -263,7 +269,10 @@ detailContent.innerHTML = `
                 
                 <div>
                     <div style="font-size:11px; font-weight:700; color:#5f6368; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;">Mensagem</div>
-                    <div style="font-size:13px; color:#3c4043; line-height:1.5; white-space: pre-wrap; word-break: break-word; padding:0 4px;">${email.body.replace(/\n{3,}/g, '\n\n').trim()}</div>
+                    
+                    <div class="cw-email-content" style="font-size:13px; color:#3c4043; line-height:1.5; white-space: normal; word-break: break-word; padding:0 4px;">
+                        ${email.body}
+                    </div>
                 </div>
             </div>
             
