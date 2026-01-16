@@ -111,6 +111,21 @@ const LINKS_DB = {
         url: "https://skillshop.withgoogle.com/intl/pt-BR_ALL/",
         desc: "Cursos sobre as ferramentas do Google.",
       },
+      {
+        name: "Consent Mode - Instalação",
+        url: "https://developers.google.com/tag-platform/security/guides/consent?consentmode=advanced",
+        desc: "Configurar o modo de consentimento em sites.",
+      },
+      {
+        name: "CMPs - Consent Mode",
+        url: "https://cmppartnerprogram.withgoogle.com/",
+        desc: "Lista com CMPS parceiros do Google.",
+      },
+      {
+        name: "Consent Mode - Testes",
+        url: "https://developers.google.com/tag-platform/security/guides/consent-debugging",
+        desc: "Ensina como testar CoMo.",
+      },
     ],
   },
   hr: {
