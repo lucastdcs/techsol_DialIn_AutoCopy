@@ -97,5 +97,5 @@ Este projeto não possui um servidor local (localhost) devido às restrições d
 
 -----
 
-> **Status do Projeto:** 🟢 Estável (v2.5)
-> **Mantenedor:** [Seu Nome/Time TechSol]
+> **Status do Projeto:** 🟢 Estável (v4.5)
+> **Mantenedor:** [Lucas Teixeira Di Cesare Santos/Time TechSol - in behalf of Google]
