@@ -911,6 +911,14 @@ subStatusSelect.onchange = () => {
                 text: "LM - Sem acessos (Reagendar em BAU)" 
             }
         ];
+    } else if (selectedSubStatusKey === "NI_Attempted_Contact") {
+        inputType = "radio"; 
+        scenarios = [
+            { 
+                id: "quickfill-ni-attempted-2day", 
+                text: "2 Day Rule (2 Ligações + Chat AM)" 
+            }
+        ];
     }
 
     const filteredScenarios = scenarios.filter((s) => {

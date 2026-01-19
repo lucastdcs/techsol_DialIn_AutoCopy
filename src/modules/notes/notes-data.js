@@ -592,5 +592,11 @@ export const scenarioSnippets = {
         type: 'lm', // Restringe apenas para LM (se o botão LM estiver ativo)
         'field-REASON_COMMENTS': "Discard - Falta de acessos (Reagendamento solicitado)",
         'field-COMENTARIOS': "Não conseguimos implementar nada durante a consultoria, já que o adv não tinha os acessos.\n\nIrei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando em conta a falta de acessos e solicitação de reagendamento do mesmo."
-    }
+    },
+    'quickfill-ni-attempted-2day': {
+        type: 'bau',
+        'field-REASON_COMMENTS': "Attempted Contact (Início 2 Day Rule)",
+        'field-CONTEXTO_CALL': "• Fiz a primeira tentativa de ligação, sem sucesso.\n• Enviei uma mensagem no chat para o AM.\n• Aguardei 5 minutos e fiz a segunda tentativa de ligação, novamente sem sucesso.\n• Aguardei mais 5 minutos e agora farei o acompanhamento 2 Day Rule.",
+        'field-SCREENSHOTS': "• MSG AM -\n• Tentativa 1 -\n• Tentativa 2 -"
+    },
 };
