@@ -6,7 +6,8 @@ import { initQuickEmailAssistant } from './modules/quick-email/quick-email-assis
 import { initCallScriptAssistant } from './modules/call-script/call-script-assistant.js';
 import { initFeedbackAssistant } from './modules/lm-report/lm-repot-assistant.js'; 
 import { initBroadcastAssistant } from './modules/broadcast/broadcast-assistant.js'; 
-// import { initMagicWand } from "./modules/ai/magic-wand.js"; <--- PODE REMOVER ESTA LINHA
+import { initOnboarding } from './modules/onboarding/onboarding-wizard.js';
+
 
 // Importação do Serviço de Dados
 import { DataService } from './modules/shared/data-service.js';
@@ -69,6 +70,10 @@ function initApp() {
             toggleLinks,
             broadcastControl
         });
+
+        setTimeout(() => {
+            initOnboarding();
+        }, 1500);
 
     } catch (error) {
         console.error("Erro fatal na inicialização:", error);
