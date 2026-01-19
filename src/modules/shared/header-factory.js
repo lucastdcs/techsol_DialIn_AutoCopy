@@ -1,23 +1,15 @@
 // src/modules/shared/header-factory.js
 
 import { makeDraggable } from './utils.js';
-// Removi imports de estilos antigos (stylePopupHeader, etc) pois vamos definir o novo tema aqui
 
 // Configuração Visual do Header (Dark Glass)
 const HEADER_STYLE = {
     height: '56px',
-    padding: '0 20px', // Aumentei levemente o padding lateral para ficar mais elegante
-    
-    // Fundo mais translúcido para o efeito vidro funcionar
+    padding: '0 20px', 
     backgroundColor: 'rgba(28, 28, 32, 0.85)', 
-    
-    // O segredo do Glassmorphism
     backdropFilter: 'blur(12px)',
-    webkitBackdropFilter: 'blur(12px)', // Compatibilidade
-    
-    // Borda sutil apenas embaixo para separar do conteúdo
+    webkitBackdropFilter: 'blur(12px)', 
     borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-    
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -40,7 +32,7 @@ const BTN_STYLE = {
     justifyContent: 'center',
     borderRadius: '50%', 
     cursor: 'pointer', 
-    color: '#9AA0A6', // Cinza claro
+    color: '#9AA0A6', 
     transition: 'all 0.2s ease'
 };
 
@@ -51,7 +43,7 @@ export function createStandardHeader(popupElement, titleText, versionText, helpD
     // 1. Aplica Drag
     makeDraggable(popupElement, header);
 
-    // 2. A Linha Gradiente (A Ponte Visual)
+    // 2. A Linha Gradiente
     const gradientLine = document.createElement("div");
     Object.assign(gradientLine.style, {
         position: 'absolute', bottom: '0', left: '0', width: '100%', height: '2px',
@@ -60,7 +52,6 @@ export function createStandardHeader(popupElement, titleText, versionText, helpD
     });
     header.appendChild(gradientLine);
     
-    // Salva ref se precisar animar
     if (animRefs) {
         animRefs.googleLine = gradientLine;
     }
@@ -91,13 +82,12 @@ export function createStandardHeader(popupElement, titleText, versionText, helpD
     const helpBtn = document.createElement("div");
     helpBtn.innerHTML = helpIcon;
     Object.assign(helpBtn.style, BTN_STYLE);
-    helpBtn.title = "Sobre";
+    helpBtn.title = "Sobre & Feedback"; // Tooltip atualizado
     helpBtn.classList.add('no-drag');
     
     helpBtn.onmouseenter = () => { helpBtn.style.background = 'rgba(255,255,255,0.1)'; helpBtn.style.color = '#FFF'; };
     helpBtn.onmouseleave = () => { 
-        // Só reseta se o overlay não estiver aberto (lógica simples visual)
-        if (helpBtn.style.color !== 'rgb(138, 180, 248)') { // #8AB4F8
+        if (helpBtn.style.color !== 'rgb(138, 180, 248)') { 
             helpBtn.style.background = 'transparent'; helpBtn.style.color = '#9AA0A6'; 
         }
     };
@@ -109,16 +99,15 @@ export function createStandardHeader(popupElement, titleText, versionText, helpD
     closeBtn.title = "Fechar";
     closeBtn.classList.add('no-drag');
 
-    closeBtn.onmouseenter = () => { closeBtn.style.background = 'rgba(242, 139, 130, 0.2)'; closeBtn.style.color = '#F28B82'; }; // Vermelho suave
+    closeBtn.onmouseenter = () => { closeBtn.style.background = 'rgba(242, 139, 130, 0.2)'; closeBtn.style.color = '#F28B82'; }; 
     closeBtn.onmouseleave = () => { closeBtn.style.background = 'transparent'; closeBtn.style.color = '#9AA0A6'; };
     
-    // Previne que o clique no botão inicie o drag
     closeBtn.onmousedown = (e) => e.stopPropagation(); 
     helpBtn.onmousedown = (e) => e.stopPropagation();
 
     closeBtn.onclick = onCloseCallback;
 
-    // --- HELP OVERLAY ---
+    // --- HELP OVERLAY (Com Link de Feedback) ---
     const overlay = createHelpOverlay(popupElement, titleText, versionText, helpDescription);
     
     helpBtn.onclick = (e) => {
@@ -132,7 +121,7 @@ export function createStandardHeader(popupElement, titleText, versionText, helpD
         } else {
             overlay.style.opacity = "1";
             overlay.style.pointerEvents = "auto";
-            helpBtn.style.color = "#8AB4F8"; // Azul Google
+            helpBtn.style.color = "#8AB4F8"; 
             helpBtn.style.background = "rgba(138, 180, 248, 0.1)";
         }
     };
@@ -149,15 +138,15 @@ export function createStandardHeader(popupElement, titleText, versionText, helpD
 function createHelpOverlay(parentPopup, title, version, description) {
     const overlay = document.createElement("div");
     
-    // Estilo do Overlay (Light Glass sobre o corpo branco)
+    // Estilo do Overlay
     Object.assign(overlay.style, {
         position: "absolute",
-        top: "56px", // Altura do header
+        top: "56px", 
         left: "0",
         width: "100%",
         height: "calc(100% - 56px)",
-        backgroundColor: "rgba(255, 255, 255, 0.95)", // Fundo claro quase sólido
-        backdropFilter: "blur(5px)",
+        backgroundColor: "rgba(255, 255, 255, 0.98)", // Quase sólido para leitura
+        backdropFilter: "blur(8px)",
         zIndex: "50",
         display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
         textAlign: "center", padding: "24px", boxSizing: "border-box",
@@ -170,20 +159,44 @@ function createHelpOverlay(parentPopup, title, version, description) {
         <div style="color: #202124; font-size: 18px; font-weight: 600; margin-bottom: 8px;">${title}</div>
         <div style="color: #5f6368; font-size: 14px; margin-bottom: 24px;">Versão ${version}</div>
         
-        <div style="color: #3c4043; font-size: 14px; max-width: 90%; line-height: 1.6;">
+        <div style="color: #3c4043; font-size: 14px; max-width: 90%; line-height: 1.6; margin-bottom: 24px;">
             ${description}
         </div>
 
-        <div style="margin-top: 32px; font-size: 12px; color: #9aa0a6;">
+        <div style="margin-bottom: 32px;">
+            <a href="https://forms.gle/vkvMzSEiuEHpTnKu6" target="_blank" id="cw-feedback-link" style="
+                display: inline-flex; align-items: center; gap: 8px;
+                padding: 10px 20px;
+                background-color: #F8F9FA;
+                border: 1px dashed #1a73e8;
+                border-radius: 20px;
+                color: #1a73e8;
+                font-size: 13px;
+                font-weight: 500;
+                text-decoration: none;
+                transition: all 0.2s ease;
+            ">
+                <span>💬</span> Reportar Bug ou Sugestão
+            </a>
+        </div>
+
+        <div style="font-size: 12px; color: #9aa0a6;">
             created by <span style="color: #1a73e8; font-weight: 500;">@lucaste</span>
         </div>
         
-        <button id="close-help-internal" style="margin-top: 24px; padding: 8px 24px; border: 1px solid #dadce0; background: white; border-radius: 18px; color: #1a73e8; cursor: pointer; font-weight: 500; transition: background 0.2s;">
+        <button id="close-help-internal" style="margin-top: 24px; padding: 8px 24px; border: 1px solid #dadce0; background: white; border-radius: 18px; color: #5f6368; cursor: pointer; font-weight: 500; transition: background 0.2s;">
             Voltar
         </button>
     `;
     
+    // Efeito hover no link de feedback via JS
     setTimeout(() => {
+        const link = overlay.querySelector('#cw-feedback-link');
+        if(link) {
+            link.onmouseenter = () => { link.style.backgroundColor = "#E8F0FE"; link.style.transform = "scale(1.02)"; };
+            link.onmouseleave = () => { link.style.backgroundColor = "#F8F9FA"; link.style.transform = "scale(1)"; };
+        }
+
         const btn = overlay.querySelector('#close-help-internal');
         if(btn) {
             btn.onmouseover = () => btn.style.backgroundColor = "#f8f9fa";
@@ -191,8 +204,6 @@ function createHelpOverlay(parentPopup, title, version, description) {
             btn.onclick = () => {
                 overlay.style.opacity = "0";
                 overlay.style.pointerEvents = "none";
-                // Tenta resetar a cor do botão de ajuda no header (acesso via parent)
-                // (Opcional, o usuário clica fora ou no botão de novo)
             };
         }
     }, 0);
