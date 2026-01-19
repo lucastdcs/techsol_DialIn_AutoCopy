@@ -29,6 +29,11 @@ const LINKS_DB = {
         url: "https://forms.gle/HWMhML56eE4CPZCs5",
         desc: "Form para escalação de Sellers, compartilhado pelo gpozzi@.",
       },
+      {
+        name: "[SOP] Split",
+        url: "https://sites.google.com/corp/google.com/technicalsolutions/case-handling_1/out-of-scope?authuser=0#h.obb5iieru15o",
+        desc: "Instruções para o split.",
+      },
     ]
   },
   ads: {
