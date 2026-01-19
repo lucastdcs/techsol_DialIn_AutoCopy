@@ -871,6 +871,7 @@ subStatusSelect.onchange = () => {
         { id: "quickfill-whatsapp", text: "Conversão de WhatsApp" },
         { id: "quickfill-form", text: "Conversão de Formulário (Padrão)" },
         { id: "quickfill-ecw4-close", text: "Fechamento ECW4 (Pós 7 dias)" },
+        { id: "quickfill-ga4-event-close", text: "Fechamento GA4 (Pós 2 dias)" },
       ];
     } else if (selectedSubStatusKey.startsWith("AS_")) {
       inputType = "checkbox";
