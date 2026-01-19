@@ -204,18 +204,33 @@ export function initFeedbackAssistant() {
     backgroundRepeat: "no-repeat", backgroundPosition: "12px center",
   };
 
-  const styleTabContainer = {
-    display: "flex", flexWrap: "wrap", justifyContent: "center", 
-    gap: "8px", padding: "4px 0 12px 0",
+const styleTabContainer = {
+    display: "flex", 
+    flexWrap: "nowrap",       // Força linha única
+    overflowX: "auto",        // Permite rolagem
+    gap: "8px", 
+    padding: "4px 24px 12px 24px", // Espaço lateral para o scroll não cortar seco
+    
+    // Esconde a barra de rolagem feia (mas mantém a função)
+    scrollbarWidth: "none", 
+    msOverflowStyle: "none",
+    
+    // O Segredo: Fade nas bordas para indicar que tem mais conteúdo
+    maskImage: "linear-gradient(to right, transparent, black 12px, black 95%, transparent)",
+    webkitMaskImage: "linear-gradient(to right, transparent, black 12px, black 95%, transparent)",
   };
 
   const styleTabButton = {
-    padding: "6px 14px", borderRadius: "100px", 
-    border: `1px solid #DADCE0`, background: "#FFFFFF",
-    color: COLORS.textSecondary, fontSize: "13px", fontWeight: "500",
+    padding: "6px 12px 6px 10px", // Ajuste fino
+    borderRadius: "8px",          // Mudança de 100px para 8px (Squircle) economiza espaço visual
+    border: `1px solid #DADCE0`, 
+    background: "#FFFFFF",
+    color: COLORS.textSecondary, 
+    fontSize: "13px", fontWeight: "500",
     cursor: "pointer", whiteSpace: "nowrap", transition: COLORS.transition,
     display: "inline-flex", alignItems: "center", justifyContent: "center",
-    marginBottom: "0"
+    marginBottom: "0",
+    flexShrink: "0" // IMPEDE que o botão seja esmagado
   };
 
   const styleActiveTab = {
@@ -260,6 +275,11 @@ export function initFeedbackAssistant() {
     tech: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>',
     hr: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>'
   };
+
+  // Remove a barra de rolagem visualmente do container de abas
+  const hideScrollStyle = document.createElement('style');
+  hideScrollStyle.innerHTML = `#feedback-popup div::-webkit-scrollbar { display: none; }`;
+  document.head.appendChild(hideScrollStyle);
 
   const animRefs = { popup, googleLine: null, focusElement: null };
   let visible = false;
@@ -320,7 +340,16 @@ export function initFeedbackAssistant() {
       const btn = document.createElement("button");
       const icon = CATEGORY_ICONS[key] || '';
       
-      btn.innerHTML = `<span style="display:inline-flex; align-items:center; margin-right:6px; opacity:0.9;">${icon}</span>${cat.label}`;
+      // NOVO: Adiciona o contador de links (ex: "Ads (14)")
+      const count = cat.links.length;
+      
+      // Layout interno do botão: Ícone | Texto | Contador
+      btn.innerHTML = `
+        <span style="display:flex; align-items:center; margin-right:6px; opacity:0.8;">${icon}</span>
+        ${cat.label}
+        <span style="font-size:10px; opacity:0.5; margin-left:6px; background:rgba(0,0,0,0.05); padding:1px 5px; border-radius:4px;">${count}</span>
+      `;
+      
       Object.assign(btn.style, styleTabButton);
 
       if (activeTab === key && searchTerm === "") {
@@ -335,6 +364,10 @@ export function initFeedbackAssistant() {
         searchTerm = "";
         searchInput.value = ""; 
         renderTabs();
+        
+        // Auto-scroll: Traz o botão clicado para o centro da visão
+        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        
         renderList();
       };
       tabsContainer.appendChild(btn);
