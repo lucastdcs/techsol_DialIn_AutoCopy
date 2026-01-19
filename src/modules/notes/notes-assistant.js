@@ -919,6 +919,18 @@ subStatusSelect.onchange = () => {
                 text: "2 Day Rule (2 Ligações + Chat AM)" 
             }
         ];
+    } else if (selectedSubStatusKey === "NI_Awaiting_Validation") {
+        inputType = "checkbox"; 
+        scenarios = [
+            { 
+                id: "quickfill-ni-awaiting-ecw4", 
+                text: "ECW4 (Acompanhar)" 
+            },
+             { 
+                id: "quickfill-ni-awaiting-ga4", 
+                text: "GA4 Event Tracking (Acompanhar)" 
+            },
+        ];
     }
 
     const filteredScenarios = scenarios.filter((s) => {
