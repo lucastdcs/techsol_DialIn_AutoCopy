@@ -451,6 +451,26 @@ export const scenarioSnippets = {
         'field-MINHA_ACAO': "• Coloco o caso em 2/6.\n• Assim que o anunciante tiver o acesso ou a instalação for feita, abrirei um caso em BAU para dar continuidade.",
         'field-SCREENSHOTS': "• Print do painel do CMS mostrando a falta de permissão (opcional)."
     },
+    
+    // --- NOVOS CENÁRIOS NI (AWAITING VALIDATION) ---
+    'quickfill-ni-awaiting-ecw4': {
+        type: 'all',
+        'field-REASON_COMMENTS': "Aguardando validação de dados (ECW4 - 7 Dias)",
+        'field-TASKS_SOLICITADAS': "• Implementação de Conversões Otimizadas (ECW4)",
+        'field-CONTEXTO_CALL': "• Criamos a conversão no Google Ads.\n• Configuramos o disparo das tags via GTM.\n• Adicionamos a tag de UPD (User Provided Data).\n• Testamos juntos e validamos o bom funcionamento.",
+        'field-MINHA_ACAO': "• Coloco o caso em status de Awaiting Validation para acompanhamento de 7 dias.",
+        linkedTask: 'ads_enhanced_conversions'
+    },
+    'quickfill-ni-awaiting-ga4': {
+        type: 'all',
+        'field-REASON_COMMENTS': "Aguardando validação de dados (GA4 Event - 48h)",
+        'field-TASKS_SOLICITADAS': "• Implementação de Eventos GA4",
+        'field-CONTEXTO_CALL': "• Criamos o evento no GA4.\n• Configuramos o disparo das tags via GTM.\n• Testamos juntos e validamos o bom funcionamento.",
+        'field-MINHA_ACAO': "• Coloco o caso em status de Awaiting Validation para acompanhamento de 48h.",
+        linkedTask: 'ga4_event_tracking'
+    },
+    // -----------------------------------------------
+
     'quickfill-ni-followup-bau': { 
         type: 'bau',
         'field-REASON_COMMENTS': "Aguardando informações por parte do anunciante (Follow-up BAU 2/6)",
@@ -482,7 +502,7 @@ export const scenarioSnippets = {
         'field-TASKS_SOLICITADAS': "• Instalação do GTM",
         'field-PASSOS_EXECUTADOS': "• Criamos a conta dentro do GTM\n• Instalamos dentro do CMS/Hospedagem.\n• Criamos o Vinculador de Conversões.",
         'field-RESULTADO': "• Validei a instalação.",
-        linkedTask: 'gtm_installation' // Vai marcar o checkbox da task automaticamente
+        linkedTask: 'gtm_installation' 
     },
     'quickfill-whatsapp': {
         type: 'all',
@@ -505,6 +525,16 @@ export const scenarioSnippets = {
         'field-RESULTADO': "• Valido o bom funcionamento da conversão otimizada.\n• Assim, fecho o caso.",
         linkedTask: 'ads_enhanced_conversions'
     },
+    // --- NOVO CENÁRIO SO (Fechamento GA4) ---
+    'quickfill-ga4-event-close': {
+        type: 'all',
+        'field-TASKS_SOLICITADAS': "• Acompanhamento de Eventos GA4 após 48h.",
+        'field-PASSOS_EXECUTADOS': "• Após o período de 48h de acompanhamento, verifiquei o painel.\n• O evento está sendo registrado corretamente.",
+        'field-RESULTADO': "• Valido o bom funcionamento do rastreamento de eventos.\n• Assim, fecho o caso.",
+        linkedTask: 'ga4_event_tracking'
+    },
+    // -----------------------------------------
+
     // --- Cenários de AS (Combináveis) ---
     'quickfill-as-no-show': {
         type: 'all',
