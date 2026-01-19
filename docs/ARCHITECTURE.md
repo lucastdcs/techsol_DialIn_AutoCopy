@@ -1,50 +1,36 @@
-Este documento descreve a engenharia reversa e a arquitetura do TechSol Operations Assistant.
+# 🏛️ Arquitetura do Sistema (TechSol Operations Assistant)
 
-1. O Conceito (Overlay Injection)
-O projeto não é uma extensão de navegador tradicional. É uma Single Script Application (SSA) injetada via Bookmarklet.
+## 1. Visão Geral
+O projeto é uma **Overlay Application** (Aplicação de Sobreposição) injetada via **Bookmarklet**. Diferente de extensões de navegador, ela não possui armazenamento persistente próprio além do `localStorage` e roda no contexto da página alvo (CRM), compartilhando o mesmo DOM e objeto `window`.
 
-O Host: O CRM Corporativo (Google).
+### 1.1 O Mecanismo de Injeção
+Para contornar a *Content Security Policy (CSP)* estrita do CRM, o bookmarklet de instalação utiliza a API `trustedTypes`.
+* **Política:** Cria uma política chamada `default` que autoriza a execução de scripts vindos do domínio `lucastdcs.github.io`.
+* **Cache Busting:** Anexa um timestamp (`?t=...`) na URL do script para forçar o navegador a baixar a versão mais recente a cada execução.
 
-O Invasor: Nosso script (bundle.js).
+## 2. Estrutura de Inicialização (`src/app.js`)
+O ponto de entrada é o arquivo `app.js`. Ele orquestra o "boot" da aplicação em uma ordem específica para garantir estabilidade visual e funcional:
 
-O Método: O usuário clica em um favorito. O navegador executa um código JavaScript que cria uma tag <script> no corpo da página atual, apontando para o nosso servidor (GitHub Pages).
+1.  **Bloqueio de Múltiplas Instâncias:** Verifica `window.techSolInitialized` para impedir que o script rode duas vezes na mesma aba.
+2.  **Styles & Fonts:** Injeta estilos globais e a fonte Roboto/Google Sans no `<head>` via `initGlobalStylesAndFont`.
+3.  **Audio Engine:** Inicializa o `SoundManager` e adiciona listeners globais para feedback tátil (sons de hover/click).
+4.  **Data Fetching:** Dispara a busca assíncrona de dicas e broadcasts (`DataService.fetchTips`).
+5.  **Module Init:** Instancia cada módulo (Notes, Email, Script, etc.), que retornam suas funções de controle (ex: `toggleNotes`).
+6.  **Command Center:** Injeta a pílula flutuante principal, passando as funções de controle dos módulos para os botões.
 
-O Desafio de Segurança (CSP Bypass)
-O CRM possui uma Content Security Policy (CSP) estrita que bloqueia scripts externos. Solução: Utilizamos a API trustedTypes no código do bookmarklet para criar uma política chamada "default" que autoriza a injeção da nossa URL do GitHub Pages.
+## 3. Fluxo de Dados (Backend Serverless)
+Como não possuímos um backend tradicional, utilizamos o **Google Apps Script** como API.
 
-2. Fluxo de Dados
-O aplicativo é majoritariamente Client-Side, rodando na memória do navegador do agente.
+* **Interface:** `src/modules/shared/data-service.js`.
+* **Leitura (GET via JSONP):** Para evitar bloqueios de CORS em requisições GET, utilizamos a técnica de **JSONP**.
+    * O script cria uma tag `<script>` apontando para a macro do Google.
+    * A macro retorna o JSON embrulhado em uma função de callback (`cw_cb_12345(...)`).
+    * O frontend executa essa função e resolve a Promise com os dados.
+* **Escrita (POST no-cors):** Para logs e envio de broadcasts.
+    * Utilizamos `fetch` com `mode: 'no-cors'`.
+    * **Limitação:** Não recebemos resposta de sucesso/erro (Opaque Response), mas os dados são processados pelo servidor.
 
-Frontend (A Interface)
-Tecnologia: Vanilla JavaScript (ES6+). Sem frameworks (React/Vue) para manter o bundle leve e evitar conflitos com o Angular do CRM.
-
-Estilização: CSS-in-JS (Objetos de estilo em utils.js e notes-styles.js) + Tags <style> injetadas dinamicamente no <head>.
-
-UI System: Uma implementação customizada do Material Design e Glassmorphism (Apple-like), gerenciada por header-factory.js e animations.js.
-
-Backend (Broadcast & Logs)
-Como não temos um servidor Node.js, usamos Google Apps Script como Backend Serverless.
-
-Leitura (GET): Usamos JSONP (JSON with Padding) em data-service.js.
-
-Por que? O Google Script bloqueia requisições fetch (CORS) de origens desconhecidas. O JSONP injeta um script que executa uma função de callback global (cw_cb_...) com os dados.
-
-Escrita (POST): Usamos fetch com mode: 'no-cors'. Não recebemos resposta de sucesso (opaque response), mas os dados são enviados (Fire-and-forget).
-
-3. Estrutura de Diretórios
-Plaintext
-
-src/
-├── app.js                  # Ponto de entrada. Inicializa todos os módulos.
-├── modules/
-│   ├── shared/             # O "Kernel". Utilitários usados por tudo.
-│   │   ├── command-center.js # A pílula flutuante (Menu Principal).
-│   │   ├── utils.js        # Helpers de DOM, Drag&Drop, Toast.
-│   │   ├── sound-manager.js# Engine de áudio (Sons em Base64).
-│   │   └── page-data.js    # Scrapers que leem o DOM do CRM.
-│   ├── notes/              # O módulo mais complexo (Gerador de Notas).
-│   ├── quick-email/        # Automação de Templates de Email.
-│   ├── broadcast/          # Sistema de Avisos (Feed de notícias).
-│   ├── call-script/        # Checklist interativo.
-│   └── lm-report/          # Hub de Links.
-└── ...
+## 4. Design System & UI
+A interface não usa frameworks (React/Vue). É construída com **Vanilla JS** e **CSS-in-JS**.
+* **Header Factory:** Padroniza as janelas com efeito "Glassmorphism" (vidro), barra de gradiente Google e botões de controle.
+* **Genie Effect:** O sistema de animação (`animations.js`) calcula a posição do botão flutuante e do centro da tela para criar o efeito de "gênio da lâmpada" ao abrir/fechar módulos.
