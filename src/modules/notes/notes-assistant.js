@@ -2,23 +2,14 @@
 
 import {
   showToast,
-  makeDraggable,
-  styleSelect,
-  styleLabel,
   stylePopup,
-  stylePopupHeader,
-  stylePopupTitle,
-  stylePopupCloseBtn,
-  styleFloatingButton,
-  stylePopupVersion,
   styleCredit,
-  styleExpandButton,
   typeBtnStyle,
   getRandomGoogleStyle,
-  styleResizeHandle, 
+  styleResizeHandle,
   makeResizable      
 } from "../shared/utils.js";
-// No topo do src/modules/notes/notes-assistant.js
+
 import { fetchAndInsertSpeakeasyId } from "./automation/case-log-scraper.js";
 import {
   TASKS_DB,
@@ -34,189 +25,137 @@ import { runEmailAutomation } from "../email/email-automation.js";
 import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from "../shared/animations.js";
 import { triggerProcessingAnimation } from "../shared/command-center.js";
-import { constrainToViewport } from '../shared/utils.js';
 import { createScenariosComponent } from "./components/step-scenarios.js"; 
 import {
   copyHtmlToClipboard,
   ensureNoteCardIsOpen,
-  triggerInputEvents,
-  createGoogleSelect
+  triggerInputEvents
 } from "./notes-bridge.js";
 
-// MÓDULOS DE LÓGICA
 import { createTagSupportModule } from "./tag-support.js";
-import { createStepTasksComponent } from "./components/step-tasks.js"; 
+import { createStepTasksComponent } from "./components/step-tasks.js";
+// NOVO IMPORT
+import { createSplitTransferComponent } from "./components/split-transfer.js"; 
 
 export function initCaseNotesAssistant() {
-  const CURRENT_VERSION = "v3.6.0";
+  const CURRENT_VERSION = "v3.7.0 (S&T Mode)";
 
   let currentCaseType = "bau";
   let currentLang = "pt";
   let isPortugalCase = false;
   let visible = false;
+  let isSplitView = false; // Estado da View S&T
 
+  // --- ESTILOS INLINE (Preservados do seu código) ---
   const styles = {
-    input: {
-      width: "100%",
-      padding: "8px",
-      borderRadius: "8px",
-      border: "1px solid #dadce0",
-      fontSize: "14px",
-      marginBottom: "12px",
-      boxSizing: "border-box",
-      fontFamily: "'Google Sans', Roboto, sans-serif",
-      transition: "border-color 0.2s ease, box-shadow 0.2s ease",
-    },
-    textarea: {
-      width: "100%",
-      padding: "8px",
-      borderRadius: "8px",
-      border: "1px solid #dadce0",
-      fontSize: "14px",
-      marginBottom: "12px",
-      boxSizing: "border-box",
-      fontFamily: "'Google Sans', Roboto, sans-serif",
-      transition: "border-color 0.2s ease, box-shadow 0.2s ease",
-      height: "100px",
-      resize: "vertical",
-    },
-    h3: {
-      fontSize: "14px",
-      fontWeight: "600",
-      color: "#202124",
-      margin: "0 0 12px 0",
-    },
-    label: {
-      display: "block",
-      fontSize: "14px",
-      fontWeight: "500",
-      color: "#3c4043",
-      marginBottom: "8px",
-      marginTop: "16px",
-    },
-    checkboxLabel: {
-      display: "flex",
-      alignItems: "center",
-      marginBottom: "10px",
-      fontSize: "14px",
-      fontWeight: "400",
-      cursor: "pointer",
-      padding: "8px",
-      background: "#f8f9fa",
-      borderRadius: "6px",
-      transition: "background-color 0.2s ease, box-shadow 0.2s ease",
-      userSelect: "none",
-    },
-    checkboxInput: {
-      width: "auto",
-      marginRight: "10px",
-      marginBottom: "0",
-      cursor: "pointer",
-      accentColor: "#1a73e8",
-    },
-    buttonBase: {
-      flex: "1 1 0",
-      padding: "10px 0",
-      color: "#fff",
-      border: "none",
-      borderRadius: "8px",
-      fontSize: "14px",
-      fontWeight: "500",
-      cursor: "pointer",
-      marginTop: "16px",
-    },
-    stepBlock: {
-      borderTop: "1px solid #eee",
-      paddingTop: "12px",
-      marginTop: "12px",
-    },
+    input: { width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #dadce0", fontSize: "14px", marginBottom: "12px", boxSizing: "border-box", fontFamily: "'Google Sans', Roboto, sans-serif", transition: "border-color 0.2s ease, box-shadow 0.2s ease", },
+    textarea: { width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #dadce0", fontSize: "14px", marginBottom: "12px", boxSizing: "border-box", fontFamily: "'Google Sans', Roboto, sans-serif", transition: "border-color 0.2s ease, box-shadow 0.2s ease", height: "100px", resize: "vertical", },
+    h3: { fontSize: "14px", fontWeight: "600", color: "#202124", margin: "0 0 12px 0", },
+    label: { display: "block", fontSize: "14px", fontWeight: "500", color: "#3c4043", marginBottom: "8px", marginTop: "16px", },
+    checkboxLabel: { display: "flex", alignItems: "center", marginBottom: "10px", fontSize: "14px", fontWeight: "400", cursor: "pointer", padding: "8px", background: "#f8f9fa", borderRadius: "6px", transition: "background-color 0.2s ease, box-shadow 0.2s ease", userSelect: "none", },
+    checkboxInput: { width: "auto", marginRight: "10px", marginBottom: "0", cursor: "pointer", accentColor: "#1a73e8", },
+    buttonBase: { flex: "1 1 0", padding: "10px 0", color: "#fff", border: "none", borderRadius: "8px", fontSize: "14px", fontWeight: "500", cursor: "pointer", marginTop: "16px", },
+    stepBlock: { borderTop: "1px solid #eee", paddingTop: "12px", marginTop: "12px", },
     radioContainer: { display: "flex", gap: "15px", marginBottom: "10px" },
-    optionalBtn: {
-      width: "100%",
-      padding: "10px",
-      background: "white",
-      border: "1px dashed #1a73e8",
-      color: "#1a73e8",
-      borderRadius: "6px",
-      cursor: "pointer",
-      fontWeight: "500",
-      fontSize: "13px",
-      marginBottom: "10px",
-      transition: "all 0.2s",
-    },
-    helpLink: {
-      fontSize: "12px",
-      color: "#1a73e8",
-      textDecoration: "none",
-      cursor: "pointer",
-      fontWeight: "500",
-      display: "flex",
-      alignItems: "center",
-      gap: "4px",
-      marginLeft: "auto",
-      transition: "color 0.2s",
-    },
+    optionalBtn: { width: "100%", padding: "10px", background: "white", border: "1px dashed #1a73e8", color: "#1a73e8", borderRadius: "6px", cursor: "pointer", fontWeight: "500", fontSize: "13px", marginBottom: "10px", transition: "all 0.2s", },
+    helpLink: { fontSize: "12px", color: "#1a73e8", textDecoration: "none", cursor: "pointer", fontWeight: "500", display: "flex", alignItems: "center", gap: "4px", marginLeft: "auto", transition: "color 0.2s", },
   };
-
-
 
   const tagSupport = createTagSupportModule();
 
-
   const stepTasks = createStepTasksComponent(() => {
-
-  
     const checkedElements = stepTasks.getCheckedElements();
     const checkedValues = checkedElements.map((c) => c.value);
-
     if (subStatusSelect && subStatusSelect.value) {
       tagSupport.updateVisibility(subStatusSelect.value, checkedValues);
     }
   });
 
-
-  // --- Popup ---
+  // --- POPUP SETUP ---
   const popup = document.createElement("div");
   popup.id = "autofill-popup";
-
-  // 1. [CRUCIAL] Adiciona a classe que conecta com o animations.js
   popup.classList.add("cw-module-window"); 
-
   Object.assign(popup.style, stylePopup, {
-    right: "100px", 
-    width: "400px", 
-    
-    // 2. [AJUSTE] Removemos opacity e pointerEvents daqui, 
-    // pois a classe .cw-module-window já define isso (opacity: 0).
-    
-    // 3. [AJUSTE] Removemos a transição de transform/opacity daqui.
-    // Deixamos apenas a de 'width' (para o resize), senão o inline
-    // bloqueia a animação "Genie" do arquivo animations.js.
+    right: "100px", width: "400px", 
     transition: "width 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)",
   });
 
   const animRefs = { popup, googleLine: null };
 
-  // Header (Factory)
   const header = createStandardHeader(
-    popup,
-    "Case Notes Assistant",
-    CURRENT_VERSION,
-    "Gera notas padronizadas automaticamente. Selecione o status, as tasks realizadas e preencha os detalhes para inserir no caso.",
-    animRefs,
-    () => toggleVisibility()
+    popup, "Case Notes", CURRENT_VERSION, "Gera notas padronizadas.",
+    animRefs, () => toggleVisibility()
   );
-
-
   popup.appendChild(header);
 
+  // --- NOVO: BOTÃO TOGGLE S&T NO HEADER ---
+  const headerActions = header.lastElementChild; // O container da direita no header
+  if (headerActions) {
+      const toggleBtn = document.createElement("div");
+      // Ícone de Setas de Transferência
+      toggleBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>`;
+      
+      Object.assign(toggleBtn.style, {
+          width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          borderRadius: '50%', cursor: 'pointer', color: '#9AA0A6', transition: 'all 0.2s ease', marginLeft: '4px'
+      });
+      toggleBtn.title = "Alternar para Split & Transfer";
+      
+      toggleBtn.onmouseenter = () => { toggleBtn.style.background = 'rgba(255,255,255,0.1)'; toggleBtn.style.color = '#FFF'; };
+      toggleBtn.onmouseleave = () => { if(!isSplitView) { toggleBtn.style.background = 'transparent'; toggleBtn.style.color = '#9AA0A6'; } };
+      
+      toggleBtn.onclick = (e) => {
+          e.stopPropagation();
+          toggleSplitView(toggleBtn);
+      };
+      
+      // Insere antes do botão de ajuda
+      headerActions.insertBefore(toggleBtn, headerActions.firstChild);
+  }
+
+  // CONTAINER PRINCIPAL (Notes Padrão)
   const popupContent = document.createElement("div");
-  Object.assign(popupContent.style, {
-    padding: "0 16px 16px 16px",
-    overflowY: "auto",
-    flexGrow: "1",
-  });
+  Object.assign(popupContent.style, { padding: "0 16px 16px 16px", overflowY: "auto", flexGrow: "1", });
   popup.appendChild(popupContent);
+
+  // CONTAINER SECUNDÁRIO (Split & Transfer)
+  const splitContent = document.createElement("div");
+  Object.assign(splitContent.style, { flexGrow: "1", display: "none", overflow: "hidden" }); // Começa oculto
+  
+  // Inicializa o componente S&T
+  const splitComponent = createSplitTransferComponent(() => toggleSplitView()); // Passa callback de voltar
+  splitContent.appendChild(splitComponent);
+  popup.appendChild(splitContent);
+
+  // --- LÓGICA DE TROCA DE VIEW ---
+  function toggleSplitView(btnRef) {
+      isSplitView = !isSplitView;
+      
+      if (isSplitView) {
+          // Ativa Modo Split
+          popupContent.style.display = 'none';
+          splitContent.style.display = 'flex';
+          
+          // Visual do Header
+          if(animRefs.googleLine) animRefs.googleLine.style.background = "linear-gradient(to right, #8e24aa, #7b1fa2)"; // Roxo para diferenciar
+          if(btnRef) {
+              btnRef.style.color = "#C58AF9"; 
+              btnRef.style.background = "rgba(197, 138, 249, 0.15)";
+          }
+          
+      } else {
+          // Volta ao Normal
+          popupContent.style.display = 'block';
+          splitContent.style.display = 'none';
+          
+          // Visual do Header
+          if(animRefs.googleLine) animRefs.googleLine.style.background = 'linear-gradient(to right, #4285F4, #EA4335, #FBBC05, #34A853)';
+          if(btnRef) {
+              btnRef.style.color = "#9AA0A6"; 
+              btnRef.style.background = "transparent";
+          }
+      }
+  }
 
   const credit = document.createElement("div");
   credit.textContent = "created by lucaste@";
