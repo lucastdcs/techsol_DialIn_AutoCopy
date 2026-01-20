@@ -504,7 +504,7 @@ export function initFeedbackAssistant() {
       // Actions
       card.onclick = () => {
           if(!isHistory && catKey) addToHistory(link, catKey);
-          renderMainContent(); 
+          renderContent(); 
           window.open(link.url, '_blank');
       };
 
@@ -514,7 +514,7 @@ export function initFeedbackAssistant() {
           navigator.clipboard.writeText(link.url);
           
           if(!isHistory && catKey) addToHistory(link, catKey);
-          renderMainContent();
+          renderContent();
 
           showToast("Link copiado!");
       };
