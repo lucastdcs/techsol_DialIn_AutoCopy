@@ -1,4 +1,4 @@
-// src/modules/lm-report/lm-repot.js
+// src/modules/lm-report/lm-repot-assistant.js
 
 import {
   stylePopup,
@@ -103,7 +103,7 @@ const LINKS_DB = {
       },
       {
         name: "Doc. Enhanced Conversion",
-        url: "https://support.google.com/google-ads/answer/9888656?hl=en",
+        url: "https://support.google.com/google-ads/answer/9888656?hl=pt",
         desc: "Como funcionam as conversões otimizadas?",
       },
       {
@@ -169,10 +169,19 @@ const LINKS_DB = {
   }
 };
 
-export function initFeedbackAssistant() {
-  const CURRENT_VERSION = "v3.1.0 Full";
+// --- DEFINIÇÃO DOS MAIS USADOS (IDs Manuais para performance) ---
+const MOST_USED_LINKS = [
+    { name: "Web Clock Punch", url: "https://compass.talent.cognizant.com/psp/HCMPRD/EMPLOYEE/HRMS/h/?tab=DEFAULT", desc: "Ponto Eletrônico", cat: "tasks" },
+    { name: "SPA (Tag Support)", url: "https://tagsupport.corp.google.com/create-session", desc: "Tag Support", cat: "ads" },
+    { name: "GTM ICS Ghost", url: "http://go/tagmanager-ics", desc: "Ghost GTM", cat: "tech" },
+    { name: "Ads ICS Ghost", url: "http://go/pqp", desc: "Ghost Ads", cat: "tech" },
+    { name: "Webão Help Deluxe", url: "http://go/webao-help-deluxe", desc: "Ajuda Interna", cat: "tasks" }
+];
 
-  let activeTab = "tasks";
+export function initFeedbackAssistant() {
+  const CURRENT_VERSION = "v3.2.0 (Scroll Fix)";
+
+  let activeTab = "home"; // Começa na nova aba 'Home'
   let searchTerm = "";
 
   // --- DESIGN SYSTEM (HD) ---
@@ -204,7 +213,8 @@ export function initFeedbackAssistant() {
     backgroundRepeat: "no-repeat", backgroundPosition: "12px center",
   };
 
-const styleTabContainer = {
+  // ESTILO CORRIGIDO PARA O CONTAINER DE ABAS
+  const styleTabContainer = {
     display: "flex", 
     flexWrap: "nowrap",       // Força linha única
     overflowX: "auto",        // Permite rolagem
@@ -256,6 +266,11 @@ const styleTabContainer = {
     transition: "background 0.2s, color 0.2s"
   };
 
+  const styleSectionTitle = {
+      fontSize: "11px", fontWeight: "700", textTransform: "uppercase", 
+      color: COLORS.textSecondary, margin: "16px 0 8px 0", letterSpacing: "0.5px"
+  };
+
   // --- POPUP ---
   const popup = document.createElement("div");
   popup.id = "feedback-popup";
@@ -265,6 +280,7 @@ const styleTabContainer = {
   });
 
   const CATEGORY_ICONS = {
+    home: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>',
     tasks: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm-2 14l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>',
     lm: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>', 
     qa: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>',
@@ -335,15 +351,37 @@ const styleTabContainer = {
 
   function renderTabs() {
     tabsContainer.innerHTML = "";
+    
+    // --- BOTÃO HOME ---
+    const homeBtn = document.createElement("button");
+    homeBtn.innerHTML = `
+        <span style="display:flex; align-items:center; margin-right:6px; opacity:0.8;">${CATEGORY_ICONS.home}</span>
+        Início
+    `;
+    Object.assign(homeBtn.style, styleTabButton);
+    if (activeTab === "home" && searchTerm === "") {
+        Object.assign(homeBtn.style, styleActiveTab);
+    } else {
+        homeBtn.onmouseenter = () => { homeBtn.style.background = "#F1F3F4"; homeBtn.style.borderColor = "#DADCE0"; };
+        homeBtn.onmouseleave = () => { homeBtn.style.background = "#FFFFFF"; homeBtn.style.borderColor = "#DADCE0"; };
+    }
+    homeBtn.onclick = () => {
+        activeTab = "home";
+        searchTerm = "";
+        searchInput.value = "";
+        renderTabs();
+        renderList();
+    };
+    tabsContainer.appendChild(homeBtn);
+
+    // --- OUTROS BOTÕES ---
     Object.keys(LINKS_DB).forEach((key) => {
       const cat = LINKS_DB[key];
       const btn = document.createElement("button");
       const icon = CATEGORY_ICONS[key] || '';
       
-      // NOVO: Adiciona o contador de links (ex: "Ads (14)")
       const count = cat.links.length;
       
-      // Layout interno do botão: Ícone | Texto | Contador
       btn.innerHTML = `
         <span style="display:flex; align-items:center; margin-right:6px; opacity:0.8;">${icon}</span>
         ${cat.label}
@@ -365,7 +403,6 @@ const styleTabContainer = {
         searchInput.value = ""; 
         renderTabs();
         
-        // Auto-scroll: Traz o botão clicado para o centro da visão
         btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
         
         renderList();
@@ -376,6 +413,39 @@ const styleTabContainer = {
 
   function renderList() {
     contentArea.innerHTML = "";
+    
+    // --- MODO HOME (DASHBOARD) ---
+    if (activeTab === "home" && searchTerm === "") {
+        
+        // 1. Mais Usados
+        const titleMost = document.createElement("div");
+        Object.assign(titleMost.style, styleSectionTitle);
+        titleMost.textContent = "⭐ Mais Usados";
+        contentArea.appendChild(titleMost);
+
+        MOST_USED_LINKS.forEach((link, index) => {
+            const item = createLinkItem(link, CATEGORY_ICONS[link.cat] || CATEGORY_ICONS.home);
+            contentArea.appendChild(item);
+            animateItem(item, index);
+        });
+
+        // 2. Tarefas Diárias
+        const titleTasks = document.createElement("div");
+        Object.assign(titleTasks.style, styleSectionTitle, { marginTop: "24px" });
+        titleTasks.textContent = "📋 Minhas Tarefas";
+        contentArea.appendChild(titleTasks);
+
+        // Clona e limita para não ficar enorme
+        LINKS_DB.tasks.links.slice(0, 5).forEach((link, index) => {
+            const item = createLinkItem(link, CATEGORY_ICONS.tasks);
+            contentArea.appendChild(item);
+            animateItem(item, index + MOST_USED_LINKS.length);
+        });
+
+        return;
+    }
+
+    // --- MODO LISTA / BUSCA ---
     let linksToShow = [];
     const isSearching = searchTerm.trim() !== "";
 
@@ -406,13 +476,20 @@ const styleTabContainer = {
     }
 
     linksToShow.forEach((link, index) => {
+      const item = createLinkItem(link, link._catIcon);
+      contentArea.appendChild(item);
+      animateItem(item, index);
+    });
+  }
+
+  function createLinkItem(link, iconSvg) {
       const item = document.createElement("div");
       Object.assign(item.style, styleListItem);
 
       // Ícone
       const iconDiv = document.createElement("div");
       Object.assign(iconDiv.style, styleListIcon);
-      iconDiv.innerHTML = link._catIcon || '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>';
+      iconDiv.innerHTML = iconSvg || '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>';
       item.appendChild(iconDiv);
       
       // Texto
@@ -424,7 +501,7 @@ const styleTabContainer = {
       textDiv.style.gap = "2px";
 
       const highlight = (text) => {
-          if (!isSearching) return text;
+          if (!searchTerm) return text;
           const regex = new RegExp(`(${searchTerm})`, 'gi');
           return text.replace(regex, '<span style="color:#1a73e8; font-weight:700;">$1</span>');
       };
@@ -482,24 +559,28 @@ const styleTabContainer = {
           item.style.transform = "translateY(-2px)";
           item.style.boxShadow = COLORS.shadowHover;
           actionsDiv.style.opacity = "1";
-          iconDiv.style.background = "#E8F0FE"; iconDiv.style.color = "#1967D2"; 
+          item.querySelector('div:first-child').style.background = "#E8F0FE"; 
+          item.querySelector('div:first-child').style.color = "#1967D2"; 
           arrow.style.color = "#1A73E8"; 
       };
       item.onmouseleave = () => {
           item.style.transform = "translateY(0)";
           item.style.boxShadow = COLORS.shadowCard;
           actionsDiv.style.opacity = "0.4";
-          iconDiv.style.background = "#F1F3F4"; iconDiv.style.color = COLORS.textSecondary;
+          item.querySelector('div:first-child').style.background = "#F1F3F4"; 
+          item.querySelector('div:first-child').style.color = COLORS.textSecondary;
           arrow.style.color = "#DADCE0";
       };
 
-      contentArea.appendChild(item);
+      return item;
+  }
+
+  function animateItem(item, index) {
       requestAnimationFrame(() => {
           setTimeout(() => {
               item.style.opacity = "1"; item.style.transform = "translateY(0)";
           }, index * 30); 
       });
-    });
   }
 
   searchInput.addEventListener("input", (e) => {
