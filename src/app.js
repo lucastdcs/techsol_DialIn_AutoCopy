@@ -7,7 +7,7 @@ import { initCallScriptAssistant } from './modules/call-script/call-script-assis
 import { initFeedbackAssistant } from './modules/lm-report/lm-repot-assistant.js'; 
 import { initBroadcastAssistant } from './modules/broadcast/broadcast-assistant.js'; 
 import { initOnboarding } from './modules/onboarding/onboarding-wizard.js';
-import { checkAndShowChangelog } from './modules/changelog/changelog-wizard.js'; 
+import { checkAndShowChangelog } from './modules/changelog/changelog-wizard.js';
 
 // Importação do Serviço de Dados
 import { DataService } from './modules/shared/data-service.js';
@@ -20,8 +20,8 @@ import { initGlobalStylesAndFont, playStartupAnimation, showToast } from './modu
 import { SoundManager } from './modules/shared/sound-manager.js';
 
 function initApp() {
+    // Se já iniciou, só toca a animação de novo e sai (evita duplicidade)
     if (window.techSolInitialized) {
-        // Se já iniciou, só toca a animação de novo (opcional)
         playStartupAnimation();
         return;
     }
@@ -37,24 +37,16 @@ function initApp() {
 
         // --- Inicialização Sonora ---
         try {
-            // 1. Liga o "Ouvido Global" para Hovers em todos os botões
             SoundManager.initGlobalListeners(); 
-            
-            // 2. Toca o som de Startup (THX Style)
             SoundManager.playStartup(); 
         } catch (audioErr) {
-            console.warn("Áudio não pôde ser iniciado automaticamente:", audioErr);
+            console.warn("Áudio bloqueado:", audioErr);
         }
-        // ---------------------------------
         
-        // B. Busca as Dicas em Background (Silenciosamente)
+        // B. Busca as Dicas
         DataService.fetchTips();
 
-        // [NOVO] Analytics de Startup
-        // Registra o início da sessão e o horário
-        DataService.logEvent("App", "Start", "Session Start");
-
-        // C. Animação de Entrada Visual
+        // C. Animação de Entrada (Aqui o 'Sherlock' começa a buscar o nome)
         playStartupAnimation();
 
         // D. Inicializa os Módulos
@@ -63,7 +55,6 @@ function initApp() {
         const toggleScript = initCallScriptAssistant();
         const toggleLinks = initFeedbackAssistant();
         
-        // Broadcast
         const broadcastControl = initBroadcastAssistant(); 
 
         // E. Inicializa a Barra de Comando
@@ -75,19 +66,21 @@ function initApp() {
             broadcastControl
         });
 
-        // F. Lógica de Onboarding e Updates (Sequencial)
+        // F. Logs e Modais (COM DELAY TÁTICO)
+        // Esperamos 2.5s para garantir que a animação capturou o e-mail do agente
         setTimeout(() => {
-            // 1. Tenta rodar o Tutorial de Primeiro Acesso
-            // (Se o usuário nunca viu o tutorial, ele roda e o changelog NÃO roda)
+            
+            // 1. Agora sim, logamos o Start (já teremos o LDAP em cache)
+            DataService.logEvent("App", "Start", "Session Start");
+            
+            // 2. Verifica Tutoriais / Changelog
             initOnboarding(); 
             
-            // 2. Verifica se houve update de versão
-            // (Só roda se o usuário já passou pelo onboarding em algum momento)
             setTimeout(() => {
                 checkAndShowChangelog(APP_VERSION);
             }, 500);
             
-        }, 1500);
+        }, 2500);
 
     } catch (error) {
         console.error("Erro fatal na inicialização:", error);
