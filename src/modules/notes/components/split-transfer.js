@@ -9,13 +9,15 @@ export function createSplitTransferComponent(onBack) {
     const container = document.createElement("div");
     // height: 100% é crucial para herdar a altura do pai
     // display: flex e flex-direction: column organizam header, corpo e footer
-    container.style.cssText = "display: flex; flex-direction: column; height: 100%; width: 100%; background: #F8F9FA; overflow: hidden;";
+    // min-height: 0 é o segredo para scroll dentro de flex items no Firefox/Chrome
+    container.style.cssText = "display: flex; flex-direction: column; height: 100%; width: 100%; background: #F8F9FA; overflow: hidden; position: relative;";
 
     // 2. ÁREA DE SCROLL (Onde o conteúdo vive)
     const scrollArea = document.createElement("div");
     // flex: 1 faz ele ocupar todo o espaço disponível
     // overflow-y: auto habilita o scroll apenas aqui
-    scrollArea.style.cssText = "flex: 1; overflow-y: auto; padding: 20px 24px 100px 24px;"; 
+    // padding-bottom suficiente para o footer não cobrir o último campo
+    scrollArea.style.cssText = "flex: 1; overflow-y: auto; padding: 20px 24px 80px 24px; min-height: 0;"; 
 
     // --- ESTILOS VISUAIS (Google Material 3 / Apple HD) ---
     const styles = {
@@ -285,7 +287,8 @@ export function createSplitTransferComponent(onBack) {
     // --- FOOTER FIXO (Ações) ---
     const footer = document.createElement("div");
     // backdrop-filter blur para o conteúdo passar por baixo suavemente
-    footer.style.cssText = "padding: 16px 24px; background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); border-top: 1px solid #E0E0E0; display: flex; justify-content: flex-end; position: absolute; bottom: 0; width: 100%; box-sizing: border-box; z-index: 100;";
+    // z-index alto para ficar sobre o scrollArea
+    footer.style.cssText = "padding: 16px 24px; background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); border-top: 1px solid #E0E0E0; display: flex; justify-content: flex-end; position: absolute; bottom: 0; left: 0; width: 100%; box-sizing: border-box; z-index: 100;";
 
     const btnGenerate = document.createElement("button");
     btnGenerate.textContent = "Gerar Nota S&T";
