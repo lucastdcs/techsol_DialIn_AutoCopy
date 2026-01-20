@@ -192,7 +192,7 @@ export function initFeedbackAssistant() {
   sidebar.style.cssText = `
       width: 80px; flex-shrink: 0; background: ${COLORS.bgSidebar};
       border-right: 1px solid ${COLORS.borderSubtle};
-      display: flex; flexDirection: column; align-items: center;
+      display: flex; flex-direction: column; align-items: center;
       padding: 16px 0; overflow-y: auto; gap: 4px;
       scrollbar-width: none; z-index: 2;
   `;
