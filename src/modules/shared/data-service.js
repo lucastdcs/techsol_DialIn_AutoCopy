@@ -10,7 +10,7 @@ const CACHE_KEY_TIPS = "cw_data_tips";
 
 const FALLBACK_TIPS = ["Processando...", "Mantenha o foco!", "Aguarde..."];
 
-// --- Helper JSONP Poderoso (Aceita dados) ---
+
 function jsonpFetch(operation, params = {}) {
     return new Promise((resolve, reject) => {
         const callbackName = 'cw_cb_' + Math.round(100000 * Math.random());
