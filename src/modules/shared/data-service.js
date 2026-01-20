@@ -1,7 +1,9 @@
 // src/modules/shared/data-service.js
 
-// MANTENHA A URL QUE VOCÊ JÁ TEM (A VERSÃO /a/macros/... É IMPORTANTE AGORA)
-const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbysAGOgn40LEQ1uJIppENtTGNSRscLRQkGA96UPYTDDbA0c_KhVUwDQ-Do8ZQ7lQizo/exec";
+import { getAgentEmail } from './page-data.js'; // Importação para o Analytics
+
+
+const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbwmfC4kRv1Fyv5KCwEGkqsLq47Reg_VoQ9TtOg8ffsfO9yKx3HZYsu5Fc39qxfs2ZOjQw/exec";
 
 const CACHE_KEY_BROADCAST = "cw_data_broadcast";
 const CACHE_KEY_TIPS = "cw_data_tips";
@@ -110,5 +112,38 @@ export const DataService = {
         }
     },
     
-    logUsage: () => {} // Logs desabilitados temporariamente para evitar complexidade
+    // --- NOVO: FUNÇÃO DE ANALYTICS ---
+    logEvent: (category, action, label = "", value = null) => {
+        try {
+            // 1. Tenta pegar o LDAP do email (ex: lucaste@google.com -> lucaste)
+            let user = "anon";
+            const email = getAgentEmail(); 
+            if (email) user = email.split('@')[0].toLowerCase();
+
+            // 2. Monta o Payload
+            const payload = {
+                timestamp: new Date().toISOString(),
+                user: user,
+                version: "v4.5", // Versão para log (sincronizar com app.js se possível, ou manter fixo aqui)
+                category: category,
+                action: action,
+                label: label,
+                value: value
+            };
+
+            // 3. Envio Silencioso (Fire-and-Forget)
+            // Usa fetch com 'no-cors' para enviar dados via POST sem esperar resposta JSONP
+            // O Apps Script deve tratar o 'doPost' para receber isso.
+            const params = new URLSearchParams(payload).toString();
+            fetch(`${API_URL}?op=log&${params}`, { 
+                mode: 'no-cors', 
+                method: 'POST' 
+            }).catch(e => console.warn("Log falhou", e));
+
+        } catch (err) {
+            console.warn("Analytics error", err);
+        }
+    },
+
+    logUsage: () => {} // Mantido para compatibilidade, mas agora usamos logEvent
 };

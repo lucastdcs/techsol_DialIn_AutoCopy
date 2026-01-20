@@ -7,7 +7,7 @@ import { initCallScriptAssistant } from './modules/call-script/call-script-assis
 import { initFeedbackAssistant } from './modules/lm-report/lm-repot-assistant.js'; 
 import { initBroadcastAssistant } from './modules/broadcast/broadcast-assistant.js'; 
 import { initOnboarding } from './modules/onboarding/onboarding-wizard.js';
-import { checkAndShowChangelog } from './modules/changelog/changelog-wizard.js'; // <--- NOVO IMPORT
+import { checkAndShowChangelog } from './modules/changelog/changelog-wizard.js'; 
 
 // Importação do Serviço de Dados
 import { DataService } from './modules/shared/data-service.js';
@@ -49,6 +49,10 @@ function initApp() {
         
         // B. Busca as Dicas em Background (Silenciosamente)
         DataService.fetchTips();
+
+        // [NOVO] Analytics de Startup
+        // Registra o início da sessão e o horário
+        DataService.logEvent("App", "Start", "Session Start");
 
         // C. Animação de Entrada Visual
         playStartupAnimation();
