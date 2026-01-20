@@ -7,7 +7,7 @@ import { initCallScriptAssistant } from './modules/call-script/call-script-assis
 import { initFeedbackAssistant } from './modules/lm-report/lm-repot-assistant.js'; 
 import { initBroadcastAssistant } from './modules/broadcast/broadcast-assistant.js'; 
 import { initOnboarding } from './modules/onboarding/onboarding-wizard.js';
-
+import { checkAndShowChangelog } from './modules/changelog/changelog-wizard.js'; // <--- NOVO IMPORT
 
 // Importação do Serviço de Dados
 import { DataService } from './modules/shared/data-service.js';
@@ -16,7 +16,7 @@ import { DataService } from './modules/shared/data-service.js';
 import { initCommandCenter } from './modules/shared/command-center.js';
 import { initGlobalStylesAndFont, playStartupAnimation, showToast } from './modules/shared/utils.js';
 
-// --- NOVO: Gerenciador de Som ---
+// --- Gerenciador de Som ---
 import { SoundManager } from './modules/shared/sound-manager.js';
 
 function initApp() {
@@ -26,21 +26,21 @@ function initApp() {
         return;
     }
     window.techSolInitialized = true;
+    
+    const APP_VERSION = "v4.5"; 
 
-    console.log('🚀 TechSol Suite Initializing...');
+    console.log(`🚀 TechSol Suite Initializing (${APP_VERSION})...`);
 
     try {
         // A. Injeta estilos globais
         initGlobalStylesAndFont();
 
-        // --- NOVO: Inicialização Sonora ---
+        // --- Inicialização Sonora ---
         try {
             // 1. Liga o "Ouvido Global" para Hovers em todos os botões
             SoundManager.initGlobalListeners(); 
             
             // 2. Toca o som de Startup (THX Style)
-            // Nota: Navegadores podem bloquear se não houver interação prévia, 
-            // mas como é um bookmarklet clicado, costuma passar.
             SoundManager.playStartup(); 
         } catch (audioErr) {
             console.warn("Áudio não pôde ser iniciado automaticamente:", audioErr);
@@ -71,8 +71,18 @@ function initApp() {
             broadcastControl
         });
 
+        // F. Lógica de Onboarding e Updates (Sequencial)
         setTimeout(() => {
-            initOnboarding();
+            // 1. Tenta rodar o Tutorial de Primeiro Acesso
+            // (Se o usuário nunca viu o tutorial, ele roda e o changelog NÃO roda)
+            initOnboarding(); 
+            
+            // 2. Verifica se houve update de versão
+            // (Só roda se o usuário já passou pelo onboarding em algum momento)
+            setTimeout(() => {
+                checkAndShowChangelog(APP_VERSION);
+            }, 500);
+            
         }, 1500);
 
     } catch (error) {
