@@ -22,7 +22,7 @@ const LINKS_DB = {
     ]
   },
   ads: {
-    label: "Ads",
+    label: "Google Ads",
     links: [
       { name: "SPA (Tag Support)", url: "https://tagsupport.corp.google.com/create-session", desc: "Single Page App" },
       { name: "[SOP] Conv. Tracking", url: "https://docs.google.com/document/d/1By5Jv40kGeGWFUzMXT9xuNAeUl_s1clYybZO1nhNnAI/edit", desc: "Procedimento Padrão" },
@@ -38,7 +38,7 @@ const LINKS_DB = {
     ]
   },
   analytics: {
-    label: "GA4",
+    label: "Analytics",
     links: [
       { name: "[SOP] GA4 Setup", url: "https://docs.google.com/document/d/1cLDh6RIo-lxfv-pffvBwhFpI-fSTOaAsMXwwsID1yNk/edit", desc: "Instalação Config." },
       { name: "Win Criteria: GA4", url: "https://docs.google.com/spreadsheets/d/1X5yeIZZzWQRrPdSDM7oZt2Kt0ooSN4dgLN4J7gWe8O4/edit?resourcekey=0-GiUc9KwVTDkVaUxwlyNCtA#gid=971616043&range=A45:A51", desc: "Validação GA4" },
@@ -50,7 +50,7 @@ const LINKS_DB = {
     ]
   },
   shopping: {
-    label: "Shop",
+    label: "Shopping",
     links: [
       { name: "[SOP] Onboarding MC", url: "https://docs.google.com/document/d/1yJGEssn9Uvxa3eWjp2Y5MQSkL26AElh6sSAKgD6qmjg/edit", desc: "Setup Inicial" },
       { name: "[SOP] Feed Opt", url: "https://docs.google.com/document/d/1VBYH6b3r0uyjXHN749pDK7IajF5Ii0-rm6M-BZuaJGY/edit", desc: "Otimização Feed" },
@@ -61,7 +61,7 @@ const LINKS_DB = {
     ]
   },
   tech: {
-    label: "Tech",
+    label: "Tech Helper",
     links: [
        { name: "Soluções por CMS", url: "https://sites.google.com/corp/google.com/webao-sme-cms/solu%C3%A7%C3%B5es-via-cms?authuser=0", desc: "Guias CMS" },
        { name: "Iframes & Cross-Origin", url: "https://sites.google.com/corp/google.com/webao-sme-cms/solu%C3%A7%C3%B5es-t%C3%A9cnicas/iframes-contentdocument-e-message?authuser=0", desc: "Soluções Iframes" },
@@ -86,7 +86,7 @@ const LINKS_DB = {
     ]
   },
   lm: {
-    label: "Forms",
+    label: "Formulários",
     links: [
       { name: "Ocorrências e Pausas", url: "https://docs.google.com/forms/d/e/1FAIpQLSc6CamPehrREeVr7yCWMyqFETrFYYezNcLb_13W4yZDQkfY6Q/viewform", desc: "Reportar problemas" },
       { name: "Chamadas >50min", url: "https://docs.google.com/forms/d/e/1FAIpQLSfE8EMHNJMTKYeA6XM2RZjZ9AQ4LhGk1Dwm_WLu3kcMdKMikA/viewform", desc: "Registro chamadas" },
@@ -102,7 +102,7 @@ const LINKS_DB = {
     ]
   },
   suporte: {
-    label: "Ajuda",
+    label: "Suportes",
     links: [
       { name: "Fale Conosco Ads", url: "https://support.google.com/google-ads/gethelp", desc: "Chat/Email Ads" },
       { name: "Fale Conosco Merchant", url: "https://support.google.com/merchants/gethelp", desc: "Chat/Email Shopping" },
@@ -114,7 +114,6 @@ const LINKS_DB = {
 };
 
 const CATEGORY_ICONS = {
-    // Usando ícones simples e limpos (Material/Apple style)
     tasks: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`,
     lm: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>`, 
     qa: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>`,
@@ -128,25 +127,30 @@ const CATEGORY_ICONS = {
 };
 
 // --- LOGICA DE HISTÓRICO ---
-const HISTORY_KEY = 'cw_link_history_v3';
+const HISTORY_KEY = 'cw_link_history_v4';
 
 function addToHistory(linkObj, catKey) {
-    let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-    // Remove duplicado para jogar pro topo
-    history = history.filter(h => h.url !== linkObj.url);
-    // Adiciona no topo
-    history.unshift({ ...linkObj, _originalCat: catKey });
-    // Mantém apenas 3
-    history = history.slice(0, 3);
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    try {
+        let history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+        // Remove duplicado para jogar pro topo
+        history = history.filter(h => h.url !== linkObj.url);
+        // Adiciona no topo
+        history.unshift({ ...linkObj, _originalCat: catKey });
+        // Mantém apenas 3
+        history = history.slice(0, 3);
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    } catch (e) { console.warn("Erro ao salvar histórico", e); }
 }
 
 function getHistory() {
-    return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    try {
+        return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+    } catch (e) { return []; }
 }
 
+// --- APP INIT ---
 export function initFeedbackAssistant() {
-  const CURRENT_VERSION = "v4.0 (Nav Rail)";
+  const CURRENT_VERSION = "v4.2 (Nav Rail Fixed)";
   let searchTerm = "";
   let visible = false;
   let activeCategoryKey = null; // Para highlight visual
@@ -192,7 +196,7 @@ export function initFeedbackAssistant() {
   sidebar.style.cssText = `
       width: 80px; flex-shrink: 0; background: ${COLORS.bgSidebar};
       border-right: 1px solid ${COLORS.borderSubtle};
-      display: flex; flexDirection: column; align-items: center;
+      display: flex; flex-direction: column; align-items: center;
       padding: 16px 0; overflow-y: auto; gap: 4px;
       scrollbar-width: none;
   `;
@@ -538,11 +542,9 @@ export function initFeedbackAssistant() {
       toggleGenieAnimation(visible, popup, 'cw-btn-links');
   }
 
+  document.body.appendChild(popup);
   renderSidebar();
   renderContent();
-  
-  // Seleciona 'Recentes' por padrão visualmente
-  updateActiveSidebar(getHistory().length > 0 ? 'history' : Object.keys(LINKS_DB)[0]);
 
   return toggleVisibility;
 }
