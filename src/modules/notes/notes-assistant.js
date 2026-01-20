@@ -76,7 +76,7 @@ export function initCaseNotesAssistant() {
   popup.id = "autofill-popup";
   popup.classList.add("cw-module-window"); 
   Object.assign(popup.style, stylePopup, {
-    right: "100px", width: "400px", 
+    right: "100px", width: "450px", 
     transition: "width 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)",
   });
 
