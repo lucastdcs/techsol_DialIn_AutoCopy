@@ -1,8 +1,8 @@
 // src/modules/shared/data-service.js
 
-import { getAgentEmail } from './page-data.js'; // Importação para o Analytics
+import { getAgentEmail } from './page-data.js'; 
 
-
+// URL da API atualizada
 const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbxFxh1cVk6r0t_JTA2TBfHBLJe_mOBQFsidwL1jwsUDcBtQYk3afu25SN-FR3vafJChHw/exec";
 
 const CACHE_KEY_BROADCAST = "cw_data_broadcast";
@@ -22,7 +22,7 @@ function jsonpFetch(operation, params = {}) {
             resolve(data);
         };
 
-        // Converte objeto params em string query (ex: &title=Oi&text=TudoBem)
+        // Converte objeto params em string query
         const queryString = Object.keys(params)
             .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
             .join('&');
@@ -35,8 +35,6 @@ function jsonpFetch(operation, params = {}) {
         script.onerror = () => {
             if (document.body.contains(script)) document.body.removeChild(script);
             delete window[callbackName];
-            // Em scripts corporativos, as vezes o onerror dispara mesmo com sucesso se o mimetype variar,
-            // mas geralmente é bloqueio.
             reject(new Error("JSONP Error (Check Corp Login)"));
         };
 
@@ -80,7 +78,6 @@ export const DataService = {
             date: new Date().toISOString(),
             id: Date.now().toString() 
         };
-        // Chama jsonpFetch com op='new_broadcast'
         return await DataService._performOp('new_broadcast', fullPayload);
     },
 
@@ -95,7 +92,7 @@ export const DataService = {
         return await DataService._performOp('delete_broadcast', { id });
     },
 
-    // Helper genérico para não repetir código
+    // Helper genérico para Broadcast (Usa JSONP/GET para confiabilidade)
     _performOp: async (op, params) => {
         try {
             console.log(`📤 Executando ${op}...`, params);
@@ -112,32 +109,32 @@ export const DataService = {
         }
     },
     
-    // --- NOVO: FUNÇÃO DE ANALYTICS ---
+    // --- ANALYTICS VIA GET (Fix para erros 401/302) ---
     logEvent: (category, action, label = "", value = null) => {
         try {
-            // 1. Tenta pegar o LDAP do email (ex: lucaste@google.com -> lucaste)
             let user = "anon";
-            const email = getAgentEmail(); 
-            if (email) user = email.split('@')[0].toLowerCase();
+            try {
+                const email = getAgentEmail(); 
+                if (email) user = email.split('@')[0].toLowerCase();
+            } catch(e){}
 
-            // 2. Monta o Payload
-            const payload = {
+            // Monta os parâmetros na URL
+            const params = new URLSearchParams({
+                op: 'log', // Operação Log no doGet
                 timestamp: new Date().toISOString(),
                 user: user,
-                version: "v4.5", // Versão para log (sincronizar com app.js se possível, ou manter fixo aqui)
+                version: "v4.5", // Sincronizado com a versão
                 category: category,
                 action: action,
                 label: label,
-                value: value
-            };
+                value: value || ''
+            }).toString();
 
-            // 3. Envio Silencioso (Fire-and-Forget)
-            // Usa fetch com 'no-cors' para enviar dados via POST sem esperar resposta JSONP
-            // O Apps Script deve tratar o 'doPost' para receber isso.
-            const params = new URLSearchParams(payload).toString();
-            fetch(`${API_URL}?op=log&${params}`, { 
-                mode: 'no-cors', 
-                method: 'POST' 
+            // Dispara GET sem esperar resposta (no-cors)
+            // Isso evita preflight OPTIONS e erros de autenticação do POST
+            fetch(`${API_URL}?${params}`, { 
+                method: 'GET',
+                mode: 'no-cors' 
             }).catch(e => console.warn("Log falhou", e));
 
         } catch (err) {
@@ -145,5 +142,5 @@ export const DataService = {
         }
     },
 
-    logUsage: () => {} // Mantido para compatibilidade, mas agora usamos logEvent
+    logUsage: () => {} 
 };
