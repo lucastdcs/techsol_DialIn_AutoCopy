@@ -408,10 +408,12 @@ export function initCommandCenter(actions) {
       let targetTop = Math.max(24, Math.min(rect.top, screenH - rect.height - 24));
 
       // [A CORREÇÃO] Use requestAnimationFrame para aplicar a posição no próximo frame de pintura
-      requestAnimationFrame(() => {
-          pill.style.left = `${targetLeft}px`;
-          pill.style.top = `${targetTop}px`;
-          pill.style.bottom = "auto"; 
+requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+              pill.style.left = `${targetLeft}px`;
+              pill.style.top = `${targetTop}px`;
+              pill.style.bottom = "auto"; 
+          });
       });
 
       // Limpa a transição depois
