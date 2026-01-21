@@ -78,9 +78,9 @@ style.innerHTML = `
                 /* SEQUÊNCIA DE FECHAMENTO: Container DEPOIS (Delay 0.2s) */
                 /* Espera o conteúdo sumir para não "mastigar" os ícones */
                 transition: 
-                    width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 1s,
+                    width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s,
                     height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 1s,
-                    padding 0.5s ease 1s,
+                    padding 0.5s ease 0.2s,
                     border-radius 0.5s ease 1s,
                     opacity 0.3s ease 0s,
                     transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 1s !important;
