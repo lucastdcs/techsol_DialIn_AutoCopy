@@ -3,13 +3,13 @@ import { showToast } from './utils.js';
 
 // src/modules/shared/command-center.js
 
-// --- 1. CONFIGURAÇÃO VISUAL (Original do Repositório) ---
+// --- 1. CONFIGURAÇÃO VISUAL (Original) ---
 const COLORS = {
   glassBg: "rgba(61, 61, 61, 0.77)",
   glassBorder: "rgba(255, 255, 255, 0.15)",
   glassActive: "rgba(79, 79, 79, 0.89)",
   glassHighlight: "rgba(255, 255, 255, 0.08)",
-  iconIdle: "#c2c5c8ff", // Cinza original
+  iconIdle: "#c2c5c8ff", 
   iconActive: "#FFFFFF",
   
   // Cores de Marca
@@ -46,7 +46,6 @@ export function initCommandCenter(actions) {
                 display: flex; flex-direction: column; align-items: center; gap: 12px;
                 padding: 16px 8px;
                 
-                /* Visual Original */
                 background: ${COLORS.glassBg};
                 backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
                 border: 1px solid ${COLORS.glassBorder}; border-radius: 50px;
@@ -54,18 +53,22 @@ export function initCommandCenter(actions) {
                 
                 opacity: 0; transform: translateX(40px) scale(0.95);
                 
-                /* Transições refinadas para o Morphing */
-                transition: opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1),
-                            width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
-                            height 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
-                            padding 0.4s ease, border-radius 0.4s ease;
-                
                 min-width: 50px; 
                 overflow: hidden;
+
+                /* ANIMAÇÃO DE ABERTURA (ENERGIA) */
+                /* Quando remove a classe .collapsed, usa esta transição rápida e elástica */
+                transition: 
+                    width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                    height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                    padding 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                    border-radius 0.5s ease,
+                    opacity 0.4s ease,
+                    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
             .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
-            /* --- ESTADO COLAPSADO (A Bolinha) --- */
+            /* --- ESTADO COLAPSADO (O Descanso) --- */
             .cw-pill.collapsed {
                 width: 50px !important; 
                 height: 50px !important;
@@ -74,26 +77,42 @@ export function initCommandCenter(actions) {
                 gap: 0;
                 justify-content: center;
                 cursor: pointer;
+
+                /* ANIMAÇÃO DE FECHAMENTO (FLUIDEZ) */
+                /* Sobrescreve a transição padrão para ser mais lenta e suave (sem bounce) */
+                /* Isso cria o efeito de "relaxar" */
+                transition: 
+                    width 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    height 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    padding 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    border-radius 0.6s ease,
+                    opacity 0.4s ease,
+                    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
             }
             
-            /* Ícone Principal (Logo) - Só visível quando fechado */
             .cw-main-logo {
                 position: absolute; top: 0; left: 0; width: 100%; height: 100%;
                 display: flex; align-items: center; justify-content: center;
-                opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+                opacity: 0; pointer-events: none; 
+                /* O logo aparece devagar */
+                transition: opacity 0.4s ease 0.2s; 
                 color: #fff;
             }
             .cw-main-logo svg { width: 24px; height: 24px; fill: currentColor; }
             
             .cw-pill.collapsed .cw-main-logo { opacity: 1; }
 
-            /* Esconde itens internos quando fechado */
+            /* Conteúdo interno some rápido ao fechar */
             .cw-pill.collapsed .cw-btn, 
             .cw-pill.collapsed .cw-grip, 
             .cw-pill.collapsed .cw-sep,
             .cw-pill.collapsed .cw-status-container {
-                opacity: 0; pointer-events: none; position: absolute;
+                opacity: 0; 
+                pointer-events: none; 
+                position: absolute;
+                transition: opacity 0.2s ease; /* Some rápido para não vazar */
             }
+
             /* --- FIM COLAPSADO --- */
 
             .cw-btn {
@@ -104,8 +123,8 @@ export function initCommandCenter(actions) {
                 opacity: 0; transform: scale(0.5);
                 transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
-            /* Delay na aparição dos botões para suavidade ao abrir */
-            .cw-pill:not(.collapsed) .cw-btn { transition-delay: 0.1s; }
+            /* Delay na aparição dos botões ao abrir para suavidade */
+            .cw-pill:not(.collapsed) .cw-btn { transition-delay: 0.15s; }
             
             .cw-btn.popped { opacity: 1; transform: scale(1); }
 
@@ -124,7 +143,6 @@ export function initCommandCenter(actions) {
             .cw-btn.links:hover { color: ${COLORS.green}; filter: drop-shadow(0 0 5px rgba(129, 201, 149, 0.5)); }
             .cw-btn.broadcast:hover { color: ${COLORS.orange}; filter: drop-shadow(0 0 5px rgba(249, 171, 0, 0.5)); }
 
-            /* Indicador LED */
             .cw-btn::before {
                 content: ''; position: absolute; bottom: 2px; left: 50%; 
                 width: 4px; height: 4px; border-radius: 50%;
@@ -133,10 +151,8 @@ export function initCommandCenter(actions) {
                 transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none;
             }
             .cw-btn.active::before { transform: translateX(-50%) scale(1); }
-            
             .cw-btn svg { width: 22px; height: 22px; fill: currentColor; pointer-events: none; }
 
-            /* BADGE DE NOTIFICAÇÃO */
             .cw-badge {
                 position: absolute; top: 8px; right: 8px;
                 width: 8px; height: 8px;
@@ -166,6 +182,7 @@ export function initCommandCenter(actions) {
             .cw-grip:active { cursor: grabbing; }
             .cw-pill.dragging .cw-grip-bar { background-color: ${COLORS.blue}; width: 16px; opacity: 1; }
 
+            /* Processing Center Styles */
             @keyframes successPop {
                 0% { box-shadow: 0 0 0 transparent; transform: scale(1); }
                 50% { box-shadow: 0 0 15px #81C995; transform: scale(1.05); border-color: #81C995; }
@@ -299,22 +316,22 @@ export function initCommandCenter(actions) {
       pill.querySelector('.broadcast').appendChild(badge);
   }
 
-  // --- LÓGICA DE FECHAMENTO AUTOMÁTICO ---
+  // --- LÓGICA DE FECHAMENTO AUTOMÁTICO (FLUIDA) ---
   let closeTimer = null;
 
   pill.onmouseleave = () => {
-      // Verifica se tem algum botão ativo
+      // Trava de Segurança: Não fecha se módulo aberto ou processando
       const isAnyActive = pill.querySelector('.cw-btn.active');
       if (isAnyActive || pill.classList.contains('processing-center')) return; 
 
       closeTimer = setTimeout(() => {
           pill.classList.add('collapsed');
-      }, 500); 
+      }, 500); // Delay para não fechar acidentalmente
   };
 
   pill.onmouseenter = () => {
       if (closeTimer) clearTimeout(closeTimer);
-      // Mantivemos sem lógica de abrir aqui (só clique)
+      // Não abre no hover (só no clique)
   };
 
   // 4. ANIMAÇÃO INICIAL
@@ -327,13 +344,12 @@ export function initCommandCenter(actions) {
     await esperar(200); pill.classList.add("system-check");
   })();
 
-  // 5. DRAG & DROP ORIGINAL (Com Lógica Collapsed)
+  // 5. DRAG & DROP ORIGINAL (Perfeito)
   let isDragging = false;
   let startX, startY, initialLeft, initialTop;
   const DRAG_THRESHOLD = 3;
 
   pill.onmousedown = (e) => {
-    // Permite clicar nos botões se estiver aberto (e previne drag no clique do botão)
     if (e.target.closest("button")) return;
     
     e.preventDefault();
@@ -349,10 +365,9 @@ export function initCommandCenter(actions) {
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
     
-    // Detecta intenção de arrasto
     if (!isDragging && Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD) {
       isDragging = true;
-      pill.style.transition = "none"; // Remove transição para o drag ficar 1:1
+      pill.style.transition = "none";
       if(closeTimer) clearTimeout(closeTimer);
     }
     
@@ -368,9 +383,8 @@ export function initCommandCenter(actions) {
     document.removeEventListener("mouseup", onMouseUp);
     
     if (isDragging) {
-      // FOI UM ARRASTO -> SNAP
+      // FOI ARRASTO
       isDragging = false;
-      // Restaura a transição suave
       pill.style.transition = "left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease";
       
       const screenW = window.innerWidth;
@@ -392,20 +406,17 @@ export function initCommandCenter(actions) {
       pill.style.top = `${targetTop}px`;
 
     } else {
-      // FOI UM CLIQUE -> TOGGLE COLLAPSE
-      
-      // Lógica: Se fechado, abre. Se aberto (e clicou no fundo), fecha.
+      // FOI CLIQUE
       if (pill.classList.contains('collapsed')) {
           pill.classList.remove('collapsed');
       } else {
-          // Se clicou no fundo e nenhum módulo tá ativo, fecha
+          // Se clicou no fundo e nenhum módulo ativo, fecha
           const isAnyActive = pill.querySelector('.cw-btn.active');
           if (!isAnyActive) {
              pill.classList.add('collapsed');
           }
       }
 
-      // Efeito de clique no botão (se houver) - mantido do original
       const btn = e.target.closest("button");
       if (btn) {
         btn.style.transform = "scale(0.9)";
@@ -415,13 +426,13 @@ export function initCommandCenter(actions) {
   }
 }
 
-// --- FUNÇÃO DE PROCESSAMENTO COM CANCELAMENTO (MANTIDA IGUAL) ---
+// --- FUNÇÃO DE PROCESSAMENTO COM CANCELAMENTO ---
 export function triggerProcessingAnimation() {
     const pill = document.querySelector('.cw-pill');
     const overlay = document.querySelector('.cw-focus-backdrop');
     if (!pill) return () => {}; 
 
-    pill.classList.remove('collapsed'); // Garante aberto
+    pill.classList.remove('collapsed'); 
     window._CW_ABORT_PROCESS = false;
 
     const stage = document.createElement('div');
