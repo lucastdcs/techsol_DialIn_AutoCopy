@@ -52,7 +52,8 @@ export function initCommandCenter(actions) {
                 border: 1px solid ${COLORS.glassBorder}; border-radius: 50px;
                 box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 2147483647;
                 
-                opacity: 0; transform: translateX(40px) scale(0.95);
+                opacity: 0; 
+                
                 
                 transition: 
                     width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), 
