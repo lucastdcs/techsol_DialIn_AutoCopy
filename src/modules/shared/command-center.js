@@ -3,16 +3,16 @@ import { showToast } from './utils.js';
 
 // src/modules/shared/command-center.js
 
-// --- 1. CONFIGURAÇÃO VISUAL ORIGINAL (Preservada) ---
+// --- 1. CONFIGURAÇÃO VISUAL (Original do Repositório) ---
 const COLORS = {
   glassBg: "rgba(61, 61, 61, 0.77)",
   glassBorder: "rgba(255, 255, 255, 0.15)",
   glassActive: "rgba(79, 79, 79, 0.89)",
   glassHighlight: "rgba(255, 255, 255, 0.08)",
-  iconIdle: "#c2c5c8ff", // Cor original dos ícones (Cinza claro)
+  iconIdle: "#c2c5c8ff", // Cinza original
   iconActive: "#FFFFFF",
   
-  // Cores de Marca (mantidas para os estados ativos/hover)
+  // Cores de Marca
   blue: "#8AB4F8",   
   red: "#F28B82",    
   purple: "#C58AF9", 
@@ -20,10 +20,11 @@ const COLORS = {
   orange: "#F9AB00", 
 };
 
+// Helper interno de tempo
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export function initCommandCenter(actions) {
-  // 1. ESTILOS (Original + Lógica Collapsed)
+  // 1. ESTILOS
   const styleId = "cw-command-center-style";
   if (!document.getElementById(styleId)) {
     const style = document.createElement("style");
@@ -39,24 +40,27 @@ export function initCommandCenter(actions) {
             }
             .cw-focus-backdrop.active { opacity: 1; pointer-events: auto; }
 
+            /* --- PILL PRINCIPAL --- */
             .cw-pill {
                 position: fixed; top: 30%; right: 24px;
                 display: flex; flex-direction: column; align-items: center; gap: 12px;
                 padding: 16px 8px;
                 
-                /* Estilo Original */
+                /* Visual Original */
                 background: ${COLORS.glassBg};
                 backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
                 border: 1px solid ${COLORS.glassBorder}; border-radius: 50px;
                 box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 2147483647;
                 
                 opacity: 0; transform: translateX(40px) scale(0.95);
+                
+                /* Transições refinadas para o Morphing */
                 transition: opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1),
                             width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
                             height 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
                             padding 0.4s ease, border-radius 0.4s ease;
                 
-                min-width: 50px; /* Garante a largura da bolinha */
+                min-width: 50px; 
                 overflow: hidden;
             }
             .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
@@ -90,7 +94,6 @@ export function initCommandCenter(actions) {
             .cw-pill.collapsed .cw-status-container {
                 opacity: 0; pointer-events: none; position: absolute;
             }
-
             /* --- FIM COLAPSADO --- */
 
             .cw-btn {
@@ -101,7 +104,7 @@ export function initCommandCenter(actions) {
                 opacity: 0; transform: scale(0.5);
                 transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
-            /* Delay na aparição dos botões para não "vazar" ao abrir */
+            /* Delay na aparição dos botões para suavidade ao abrir */
             .cw-pill:not(.collapsed) .cw-btn { transition-delay: 0.1s; }
             
             .cw-btn.popped { opacity: 1; transform: scale(1); }
@@ -163,7 +166,6 @@ export function initCommandCenter(actions) {
             .cw-grip:active { cursor: grabbing; }
             .cw-pill.dragging .cw-grip-bar { background-color: ${COLORS.blue}; width: 16px; opacity: 1; }
 
-            /* Processing Center Styles (MANTIDOS) */
             @keyframes successPop {
                 0% { box-shadow: 0 0 0 transparent; transform: scale(1); }
                 50% { box-shadow: 0 0 15px #81C995; transform: scale(1.05); border-color: #81C995; }
@@ -268,19 +270,12 @@ export function initCommandCenter(actions) {
     document.body.appendChild(pill);
 
   // 3. LISTENERS INTELIGENTES
-  // Função para marcar botão como ativo e travar fechamento
   const toggleModule = (btnClass, actionFn) => {
       const btn = pill.querySelector(`.${btnClass}`);
-      
-      // Remove active de todos os outros
       pill.querySelectorAll('.cw-btn').forEach(b => {
           if (b !== btn) b.classList.remove('active');
       });
-
-      // Toggle no atual
       btn.classList.toggle('active');
-      
-      // Executa ação
       actionFn();
   };
 
@@ -307,11 +302,10 @@ export function initCommandCenter(actions) {
   // --- LÓGICA DE FECHAMENTO AUTOMÁTICO ---
   let closeTimer = null;
 
-  // Só fecha se NENHUM módulo estiver ativo (classe .active nos botões)
   pill.onmouseleave = () => {
       // Verifica se tem algum botão ativo
       const isAnyActive = pill.querySelector('.cw-btn.active');
-      if (isAnyActive || pill.classList.contains('processing-center')) return; // Não fecha se tiver módulo aberto
+      if (isAnyActive || pill.classList.contains('processing-center')) return; 
 
       closeTimer = setTimeout(() => {
           pill.classList.add('collapsed');
@@ -320,7 +314,7 @@ export function initCommandCenter(actions) {
 
   pill.onmouseenter = () => {
       if (closeTimer) clearTimeout(closeTimer);
-      // Removemos a lógica de abrir no hover. Só abre no clique.
+      // Mantivemos sem lógica de abrir aqui (só clique)
   };
 
   // 4. ANIMAÇÃO INICIAL
@@ -333,14 +327,14 @@ export function initCommandCenter(actions) {
     await esperar(200); pill.classList.add("system-check");
   })();
 
-  // 5. DRAG & DROP + CLICK HANDLER
+  // 5. DRAG & DROP ORIGINAL (Com Lógica Collapsed)
   let isDragging = false;
   let startX, startY, initialLeft, initialTop;
   const DRAG_THRESHOLD = 3;
 
   pill.onmousedown = (e) => {
-    // Permite clicar nos botões se estiver aberto
-    if (!pill.classList.contains('collapsed') && e.target.closest("button")) return;
+    // Permite clicar nos botões se estiver aberto (e previne drag no clique do botão)
+    if (e.target.closest("button")) return;
     
     e.preventDefault();
     startX = e.clientX; startY = e.clientY;
@@ -354,10 +348,14 @@ export function initCommandCenter(actions) {
   function onMouseMove(e) {
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
+    
+    // Detecta intenção de arrasto
     if (!isDragging && Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD) {
       isDragging = true;
+      pill.style.transition = "none"; // Remove transição para o drag ficar 1:1
       if(closeTimer) clearTimeout(closeTimer);
     }
+    
     if (isDragging) {
       pill.style.left = `${initialLeft + dx}px`;
       pill.style.top = `${initialTop + dy}px`;
@@ -370,11 +368,11 @@ export function initCommandCenter(actions) {
     document.removeEventListener("mouseup", onMouseUp);
     
     if (isDragging) {
-      // FOI UM ARRASTO
+      // FOI UM ARRASTO -> SNAP
       isDragging = false;
+      // Restaura a transição suave
       pill.style.transition = "left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease";
       
-      // Snap logic
       const screenW = window.innerWidth;
       const screenH = window.innerHeight;
       const rect = pill.getBoundingClientRect();
@@ -394,20 +392,20 @@ export function initCommandCenter(actions) {
       pill.style.top = `${targetTop}px`;
 
     } else {
-      // FOI UM CLIQUE (Não arrastou)
+      // FOI UM CLIQUE -> TOGGLE COLLAPSE
       
-      // Lógica Principal: Se fechado, abre. Se aberto (e clicou no fundo/logo), fecha (exceto se módulo ativo).
+      // Lógica: Se fechado, abre. Se aberto (e clicou no fundo), fecha.
       if (pill.classList.contains('collapsed')) {
           pill.classList.remove('collapsed');
       } else {
-          // Se clicou fora dos botões (no grip ou fundo) E nenhum módulo tá ativo, pode fechar manual
+          // Se clicou no fundo e nenhum módulo tá ativo, fecha
           const isAnyActive = pill.querySelector('.cw-btn.active');
-          if (!isAnyActive && !e.target.closest('button')) {
+          if (!isAnyActive) {
              pill.classList.add('collapsed');
           }
       }
 
-      // Animação de clique nos botões (se houver)
+      // Efeito de clique no botão (se houver) - mantido do original
       const btn = e.target.closest("button");
       if (btn) {
         btn.style.transform = "scale(0.9)";
@@ -417,7 +415,7 @@ export function initCommandCenter(actions) {
   }
 }
 
-// --- FUNÇÃO DE PROCESSAMENTO COM CANCELAMENTO ---
+// --- FUNÇÃO DE PROCESSAMENTO COM CANCELAMENTO (MANTIDA IGUAL) ---
 export function triggerProcessingAnimation() {
     const pill = document.querySelector('.cw-pill');
     const overlay = document.querySelector('.cw-focus-backdrop');
@@ -477,8 +475,6 @@ export function triggerProcessingAnimation() {
                 setTimeout(() => {
                     stage.remove();
                     pill.classList.remove('success');
-                    // Fecha apenas se não tiver nada ativo, mas geralmente após processar o usuário quer ver o resultado.
-                    // Vamos fechar para manter limpo.
                     pill.classList.add('collapsed'); 
                     if(overlay) overlay.classList.remove('active');
                 }, 400);
