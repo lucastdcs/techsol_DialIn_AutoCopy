@@ -131,7 +131,7 @@ export function initTimezoneAssistant() {
     popup.id = "timezone-popup";
     popup.classList.add("cw-module-window");
     Object.assign(popup.style, stylePopup, { 
-        right: "100px", width: "440px", height: "620px", overflow: "hidden" 
+        right: "100px", width: "440px", height: "700px", overflow: "hidden" 
     });
 
     const animRefs = { popup };
