@@ -107,7 +107,7 @@ transition:
             .cw-pill.collapsed .cw-grip, 
             .cw-pill.collapsed .cw-sep,
             .cw-pill.collapsed .cw-status-container {
-                opacity: 0; pointer-events: none; position: absolute;
+                opacity: 0; pointer-events: none; transform: scale(0.5);
             }
             /* --- FIM COLAPSADO --- */
 
