@@ -384,15 +384,18 @@ export function initCommandCenter(actions) {
       // --- CENÁRIO 1: ARRASTO (SNAP) ---
       isDragging = false;
       
-      // Define a animação de "pulo" para encostar na borda
+      // 1. Define a regra de animação (Mola)
       pill.style.transition = "left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease";
-      void pill.offsetWidth;
+      
+      // Força reflow (Garante que o navegador 'viu' a transition acima)
+      void pill.offsetWidth; 
+
       const screenW = window.innerWidth;
       const screenH = window.innerHeight;
       const rect = pill.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       
-      // Lógica Horizontal (Snap Lateral)
+      // Cálculos de Alvo
       let targetLeft;
       if (centerX < screenW / 2) {
         targetLeft = 24;
@@ -402,15 +405,16 @@ export function initCommandCenter(actions) {
         pill.classList.remove("side-left"); pill.classList.add("side-right");
       }
       
-      // Lógica Vertical (Trava nas bordas)
       let targetTop = Math.max(24, Math.min(rect.top, screenH - rect.height - 24));
 
-      // Aplica posição (Sempre reseta para Top/Left ao arrastar)
-      pill.style.left = `${targetLeft}px`;
-      pill.style.top = `${targetTop}px`;
-      pill.style.bottom = "auto"; // Garante que não haja conflito
+      // [A CORREÇÃO] Use requestAnimationFrame para aplicar a posição no próximo frame de pintura
+      requestAnimationFrame(() => {
+          pill.style.left = `${targetLeft}px`;
+          pill.style.top = `${targetTop}px`;
+          pill.style.bottom = "auto"; 
+      });
 
-      // Limpa a transição inline após o movimento (para o CSS assumir o 'dormir' depois)
+      // Limpa a transição depois
       setTimeout(() => { pill.style.transition = ""; }, 600);
 
     } else {
