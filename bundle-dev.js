@@ -469,7 +469,7 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
             }
             .cw-focus-backdrop.active { opacity: 1; pointer-events: auto; }
 
-            /* --- PILL PRINCIPAL (O Palco) --- */
+            /* --- PILL PRINCIPAL --- */
             .cw-pill {
                 position: fixed; top: 30%; right: 24px;
                 display: flex; flex-direction: column; align-items: center; gap: 12px;
@@ -484,7 +484,7 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
                 min-width: 50px; 
                 overflow: hidden;
 
-                /* ABRIR: A p\xEDlula cresce r\xE1pido (Delay 0s) */
+                /* ABRIR: Cresce instantaneamente (Delay 0s) */
                 transition: 
                     width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s, 
                     height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s,
@@ -495,7 +495,7 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
             }
             .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
-            /* --- ESTADO COLAPSADO (A Bolinha) --- */
+            /* --- ESTADO COLAPSADO --- */
             .cw-pill.collapsed {
                 width: 50px !important; 
                 height: 50px !important;
@@ -504,15 +504,14 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
                 gap: 0;
                 cursor: pointer;
 
-                /* FECHAR: A p\xEDlula espera (Delay 0.15s) os \xEDcones come\xE7arem a sumir */
-                /* A dura\xE7\xE3o (0.55s) \xE9 calibrada para terminar junto com o \xFAltimo \xEDcone */
+                /* FECHAR: Espera (Delay 0.35s) a cascata terminar antes de encolher */
                 transition: 
-                    width 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s,
-                    height 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s,
-                    padding 0.5s ease 0.15s,
-                    border-radius 0.5s ease 0.15s,
+                    width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.35s,
+                    height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.35s,
+                    padding 0.5s ease 0.35s,
+                    border-radius 0.5s ease 0.35s,
                     opacity 0.3s ease 0s,
-                    transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s !important;
+                    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.35s !important;
             }
             
             /* --- LOGO DA BOLINHA --- */
@@ -522,49 +521,49 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
                 opacity: 0; pointer-events: none; 
                 transform: scale(0.5) rotate(-45deg);
                 color: #fff;
-                transition: all 0.3s ease 0s;
+                /* Ao abrir: some r\xE1pido (0s delay) */
+                transition: all 0.2s ease 0s;
             }
             .cw-main-logo svg { width: 24px; height: 24px; fill: currentColor; }
             
             .cw-pill.collapsed .cw-main-logo { 
                 opacity: 1; 
                 transform: scale(1) rotate(0deg);
-                /* Aparece por \xFAltimo, suavemente */
-                transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s;
+                /* Ao fechar: Aparece S\xD3 DEPOIS que a p\xEDlula come\xE7ou a encolher (Delay 0.4s) */
+                transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s;
             }
 
-            /* --- ITENS INTERNOS (Anima\xE7\xE3o Base) --- */
+            /* --- CONTE\xDADO INTERNO --- */
             .cw-pill > *:not(.cw-main-logo) {
                 opacity: 1;
-                transform: scale(1) translateY(0);
-                /* ABRIR: Aparecem depois da p\xEDlula (Delay base 0.2s) */
+                transform: scale(1);
+                /* ABRIR: Aparece em cascata (Delay base 0.2s) */
                 transition: opacity 0.3s ease 0.2s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s;
             }
 
-            /* --- CASCATA DE SA\xCDDA (O Segredo) --- */
-            /* Quando fechado (.collapsed), os itens somem um por um */
-            
             .cw-pill.collapsed > *:not(.cw-main-logo) {
-                opacity: 0;
-                pointer-events: none;
-                transform: scale(0.8) translateY(-5px); /* Sobem um pouco */
-                /* A transi\xE7\xE3o base de sa\xEDda \xE9 r\xE1pida (0.2s) */
-                transition: opacity 0.2s ease, transform 0.2s ease;
+                opacity: 0; 
+                pointer-events: none; 
+                transform: scale(0.6); /* Encolhe levemente */
+                /* FECHAR: Some r\xE1pido (0.2s duration, 0s delay base) */
+                transition: opacity 0.2s ease 0s, transform 0.2s ease 0s;
             }
 
-            /* Aplica delays sequenciais para cada filho (Grip, Buttons, Sep, etc) */
-            .cw-pill.collapsed > *:nth-child(1) { transition-delay: 0.00s; } /* Grip */
-            .cw-pill.collapsed > *:nth-child(2) { transition-delay: 0.03s; } /* Btn 1 */
-            .cw-pill.collapsed > *:nth-child(3) { transition-delay: 0.06s; } /* Btn 2 */
-            .cw-pill.collapsed > *:nth-child(4) { transition-delay: 0.09s; } /* Btn 3 */
-            .cw-pill.collapsed > *:nth-child(5) { transition-delay: 0.12s; } /* Btn 4 */
-            .cw-pill.collapsed > *:nth-child(6) { transition-delay: 0.15s; } /* Sep */
-            .cw-pill.collapsed > *:nth-child(7) { transition-delay: 0.18s; } /* Broadcast */
-            .cw-pill.collapsed > *:nth-child(8) { transition-delay: 0.21s; } /* Status */
-            .cw-pill.collapsed > *:nth-child(9) { transition-delay: 0.24s; } /* Extra */
+            /* --- CASCATA DE SA\xCDDA (Escadinha) --- */
+            /* O \xFAltimo item (transition-delay m\xE1x) \xE9 0.24s. */
+            /* Como a p\xEDlula espera 0.35s, d\xE1 tempo de sobra para limpar a tela. */
+            
+            .cw-pill.collapsed > *:nth-child(1) { transition-delay: 0.00s; }
+            .cw-pill.collapsed > *:nth-child(2) { transition-delay: 0.03s; }
+            .cw-pill.collapsed > *:nth-child(3) { transition-delay: 0.06s; }
+            .cw-pill.collapsed > *:nth-child(4) { transition-delay: 0.09s; }
+            .cw-pill.collapsed > *:nth-child(5) { transition-delay: 0.12s; }
+            .cw-pill.collapsed > *:nth-child(6) { transition-delay: 0.15s; }
+            .cw-pill.collapsed > *:nth-child(7) { transition-delay: 0.18s; }
+            .cw-pill.collapsed > *:nth-child(8) { transition-delay: 0.21s; }
+            .cw-pill.collapsed > *:nth-child(9) { transition-delay: 0.24s; }
 
-            /* --- CASCATA DE ENTRADA (Opcional: Inverso) --- */
-            /* Ao abrir, eles tamb\xE9m entram em ondinha */
+            /* --- CASCATA DE ENTRADA (Opcional) --- */
             .cw-pill:not(.collapsed) > *:nth-child(1) { transition-delay: 0.10s; }
             .cw-pill:not(.collapsed) > *:nth-child(2) { transition-delay: 0.15s; }
             .cw-pill:not(.collapsed) > *:nth-child(3) { transition-delay: 0.20s; }
@@ -572,14 +571,16 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
             .cw-pill:not(.collapsed) > *:nth-child(5) { transition-delay: 0.30s; }
             .cw-pill:not(.collapsed) > *:nth-child(6) { transition-delay: 0.35s; }
             .cw-pill:not(.collapsed) > *:nth-child(7) { transition-delay: 0.40s; }
-            
-            /* --- RESTO DOS ESTILOS (Bot\xF5es, Cores, etc) --- */
+            .cw-pill:not(.collapsed) > *:nth-child(8) { transition-delay: 0.45s; }
+            .cw-pill:not(.collapsed) > *:nth-child(9) { transition-delay: 0.50s; }
+
+            /* --- RESTO DOS ESTILOS (Mantidos) --- */
             .cw-btn {
                 width: 40px; height: 40px; 
                 border-radius: 50%; border: none; background: transparent;
                 display: flex; align-items: center; justify-content: center; 
                 cursor: pointer; position: relative; color: ${pe.iconIdle};
-                flex-shrink: 0; /* Garante que n\xE3o amassem */
+                flex-shrink: 0;
             }
             .cw-btn:hover { background: ${pe.glassHighlight}; color: ${pe.iconActive}; transform: scale(1.1) !important; }
 
@@ -621,9 +622,11 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
 
             .cw-sep {
                 width: 20px; height: 1px; background: rgba(255,255,255,0.2);
-                margin: 4px 0; /* Espa\xE7o extra vertical */
+                transition: opacity 0.3s ease 0.3s;
+                margin: 4px 0;
             }
             .cw-sep.visible { opacity: 1; }
+            .cw-pill.collapsed .cw-sep { opacity: 0; transition: opacity 0.1s ease 0s; }
 
             .cw-grip {
                 width: 100%; height: 24px; display: flex; align-items: center; justify-content: center; 
