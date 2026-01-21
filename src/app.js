@@ -8,6 +8,7 @@ import { initFeedbackAssistant } from './modules/lm-report/lm-repot-assistant.js
 import { initBroadcastAssistant } from './modules/broadcast/broadcast-assistant.js'; 
 import { initOnboarding } from './modules/onboarding/onboarding-wizard.js';
 import { checkAndShowChangelog } from './modules/changelog/changelog-wizard.js';
+import { initTimezoneAssistant } from './modules/timezone/timezone-assistant.js';
 
 // Importação do Serviço de Dados
 import { DataService } from './modules/shared/data-service.js';
@@ -54,6 +55,7 @@ function initApp() {
         const toggleEmail = initQuickEmailAssistant();
         const toggleScript = initCallScriptAssistant();
         const toggleLinks = initFeedbackAssistant();
+        const toggleTimezone = initTimezoneAssistant();
         
         const broadcastControl = initBroadcastAssistant(); 
 
@@ -63,6 +65,7 @@ function initApp() {
             toggleEmail,
             toggleScript,
             toggleLinks,
+            toggleTimezone,
             broadcastControl
         });
 
