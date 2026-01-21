@@ -4,22 +4,19 @@ import { showToast } from './utils.js';
 // src/modules/shared/command-center.js
 
 const COLORS = {
-  glassBg: "rgba(61, 61, 61, 0.77)",
-  glassBorder: "rgba(255, 255, 255, 0.15)",
-  glassActive: "rgba(79, 79, 79, 0.89)",
-  glassHighlight: "rgba(255, 255, 255, 0.08)",
-  iconIdle: "#c2c5c8ff",
+  glassBg: "rgba(32, 33, 36, 0.85)", // Um pouco mais escuro para contraste melhor
+  glassBorder: "rgba(255, 255, 255, 0.1)",
+  iconIdle: "#9AA0A6",
   iconActive: "#FFFFFF",
   
   // Cores de Marca
-  blue: "#8AB4F8",   // Notes
-  red: "#F28B82",    // Email
-  purple: "#C58AF9", // Script
-  green: "#81C995",  // Links
-  orange: "#F9AB00", // Broadcast
+  blue: "#8AB4F8",
+  red: "#F28B82",
+  purple: "#C58AF9",
+  green: "#81C995",
+  orange: "#F9AB00",
 };
 
-// Helper interno de tempo
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export function initCommandCenter(actions) {
@@ -35,54 +32,86 @@ export function initCommandCenter(actions) {
                 position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
                 background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px);
                 z-index: 2147483646; opacity: 0; pointer-events: none;
-                transition: opacity 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+                transition: opacity 0.5s ease;
             }
             .cw-focus-backdrop.active { opacity: 1; pointer-events: auto; }
 
+            /* --- PILL PRINCIPAL --- */
             .cw-pill {
                 position: fixed; top: 30%; right: 24px;
                 display: flex; flex-direction: column; align-items: center; gap: 12px;
-                padding: 16px 8px;
+                padding: 16px 6px; /* Padding padrão aberto */
+                
+                /* Glassmorphism Consistente */
                 background: ${COLORS.glassBg};
-                backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-                border: 1px solid ${COLORS.glassBorder}; border-radius: 50px;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 2147483647;
+                backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+                border: 1px solid ${COLORS.glassBorder}; 
+                border-radius: 50px;
+                box-shadow: 0 12px 40px rgba(0,0,0,0.4); 
+                
+                z-index: 2147483647;
                 opacity: 0; transform: translateX(40px) scale(0.95);
-                transition: opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1),
-                            width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), 
-                            height 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
-                            padding 0.4s ease;
-                min-width: 50px; /* Garante tamanho mínimo */
+                
+                /* Transições complexas para o efeito "Morph" */
+                transition: 
+                    opacity 0.4s ease-out,
+                    transform 0.5s cubic-bezier(0.19, 1, 0.22, 1),
+                    width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), 
+                    height 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    padding 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    border-radius 0.4s ease;
+                
+                min-width: 52px; /* Tamanho base */
+                overflow: hidden; /* Importante para cortar o conteúdo ao fechar */
             }
             .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
-            /* --- ESTADO COLAPSADO (Bolinha) --- */
+            /* --- ESTADO COLAPSADO (A Bolinha Perfeita) --- */
             .cw-pill.collapsed {
-                width: 44px !important; height: 44px !important;
-                padding: 0 !important;
-                border-radius: 50% !important;
-                gap: 0; overflow: hidden;
-                background: rgba(61, 61, 61, 0.95); /* Um pouco mais escuro quando fechado */
+                width: 52px !important; 
+                height: 52px !important;
+                padding: 0 !important; /* Remove padding para centralizar */
+                gap: 0;
+                border-radius: 50% !important; /* Círculo perfeito */
                 cursor: pointer;
             }
+            
+            /* Efeito Hover na Bolinha Fechada */
+            .cw-pill.collapsed:hover {
+                background: rgba(45, 46, 50, 0.95);
+                border-color: rgba(255,255,255,0.3);
+                transform: scale(1.05); /* Leve respiro */
+            }
 
-            /* Ícone Principal (Só aparece quando colapsado) */
+            /* Ícone Principal (Logo) */
             .cw-main-logo {
                 position: absolute; top: 0; left: 0; width: 100%; height: 100%;
                 display: flex; align-items: center; justify-content: center;
-                opacity: 0; transition: opacity 0.3s; pointer-events: none;
-                color: #fff;
+                opacity: 0; transform: scale(0.5);
+                transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+                color: #fff; pointer-events: none;
             }
             .cw-main-logo svg { width: 24px; height: 24px; fill: currentColor; }
             
-            .cw-pill.collapsed .cw-main-logo { opacity: 1; }
+            .cw-pill.collapsed .cw-main-logo { 
+                opacity: 1; transform: scale(1); 
+            }
 
-            /* Esconde itens internos quando colapsado */
+            /* Conteúdo Interno (Botões) */
+            /* Quando fechado, eles somem rápido e perdem interação */
             .cw-pill.collapsed .cw-btn, 
             .cw-pill.collapsed .cw-grip, 
             .cw-pill.collapsed .cw-sep,
             .cw-pill.collapsed .cw-status-container {
-                opacity: 0; pointer-events: none; position: absolute;
+                opacity: 0; 
+                pointer-events: none; 
+                transform: scale(0.8);
+                transition: opacity 0.2s ease, transform 0.2s ease; /* Some rápido */
+            }
+            
+            /* Quando aberto, eles aparecem com leve delay */
+            .cw-btn, .cw-grip, .cw-sep {
+                transition: opacity 0.4s ease 0.1s, transform 0.4s ease 0.1s; /* Delay para esperar abrir */
             }
 
             /* --- FIM COLAPSADO --- */
@@ -93,86 +122,53 @@ export function initCommandCenter(actions) {
                 display: flex; align-items: center; justify-content: center; 
                 cursor: pointer; position: relative; color: ${COLORS.iconIdle};
                 opacity: 0; transform: scale(0.5);
-                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
             .cw-btn.popped { opacity: 1; transform: scale(1); }
 
-            .cw-btn:hover { background: ${COLORS.glassHighlight}; color: ${COLORS.iconActive}; transform: scale(1.1); }
+            .cw-btn:hover { background: rgba(255,255,255,0.1); color: ${COLORS.iconActive}; transform: scale(1.1); }
 
-            /* Estados Ativos e Cores */
             .cw-btn.notes.active { color: ${COLORS.blue} !important; background: rgba(138, 180, 248, 0.15); }
             .cw-btn.email.active { color: ${COLORS.red} !important; background: rgba(242, 139, 130, 0.15); }
             .cw-btn.script.active { color: ${COLORS.purple} !important; background: rgba(197, 138, 249, 0.15); }
             .cw-btn.links.active { color: ${COLORS.green} !important; background: rgba(129, 201, 149, 0.15); }
             .cw-btn.broadcast.active { color: ${COLORS.orange} !important; background: rgba(249, 171, 0, 0.15); }
 
-            .cw-btn.notes:hover { color: ${COLORS.blue}; filter: drop-shadow(0 0 5px rgba(138, 180, 248, 0.5)); }
-            .cw-btn.email:hover { color: ${COLORS.red}; filter: drop-shadow(0 0 5px rgba(242, 139, 130, 0.5)); }
-            .cw-btn.script:hover { color: ${COLORS.purple}; filter: drop-shadow(0 0 5px rgba(197, 138, 249, 0.5)); }
-            .cw-btn.links:hover { color: ${COLORS.green}; filter: drop-shadow(0 0 5px rgba(129, 201, 149, 0.5)); }
-            .cw-btn.broadcast:hover { color: ${COLORS.orange}; filter: drop-shadow(0 0 5px rgba(249, 171, 0, 0.5)); }
-
-            /* Indicador LED */
-            .cw-btn::before {
-                content: ''; position: absolute; bottom: 2px; left: 50%; 
-                width: 4px; height: 4px; border-radius: 50%;
-                background-color: currentColor; box-shadow: 0 0 6px currentColor;
-                transform: translateX(-50%) scale(0);
-                transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none;
-            }
-            .cw-btn.active::before { transform: translateX(-50%) scale(1); }
-            
-            .cw-btn svg { width: 22px; height: 22px; fill: currentColor; pointer-events: none; }
-
-            /* BADGE DE NOTIFICAÇÃO */
-            .cw-badge {
-                position: absolute; top: 8px; right: 8px;
-                width: 8px; height: 8px;
-                background-color: #d93025; border-radius: 50%;
-                border: 1px solid #fff; pointer-events: none;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-                z-index: 10;
-                animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            }
-            @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
-
             .cw-sep {
-                width: 20px; height: 1px; background: rgba(255,255,255,0.2);
-                opacity: 0; transition: opacity 0.5s ease;
+                width: 24px; height: 1px; background: rgba(255,255,255,0.15);
+                margin: 2px 0;
             }
-            .cw-sep.visible { opacity: 1; }
 
             .cw-grip {
-                width: 100%; height: 24px; display: flex; align-items: center; justify-content: center; 
-                cursor: grab; margin-bottom: 2px; 
+                width: 100%; height: 20px; display: flex; align-items: center; justify-content: center; 
+                cursor: grab; margin-bottom: 4px;
             }
             .cw-grip-bar { 
                 width: 24px; height: 4px; background-color: ${COLORS.iconIdle}; border-radius: 4px; 
-                opacity: 0.4; transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); 
+                opacity: 0.3; transition: all 0.3s; 
             }
-            .cw-grip:hover .cw-grip-bar { opacity: 1; background-color: #FFFFFF; transform: scaleY(1.2); }
+            .cw-grip:hover .cw-grip-bar { opacity: 0.8; background-color: #FFF; }
             .cw-grip:active { cursor: grabbing; }
-            .cw-pill.dragging .cw-grip-bar { background-color: ${COLORS.blue}; width: 16px; opacity: 1; }
 
-            @keyframes successPop {
-                0% { box-shadow: 0 0 0 transparent; transform: scale(1); }
-                50% { box-shadow: 0 0 15px #81C995; transform: scale(1.05); border-color: #81C995; }
-                100% { box-shadow: 0 0 0 transparent; transform: scale(1); }
-            }
-            .cw-pill.system-check { animation: successPop 0.6s ease-out; }
-            
-            /* Tooltips */
+            /* Tooltips (Só aparecem se aberto) */
             .cw-btn::after { 
                 content: attr(data-label); position: absolute; top: 50%; transform: translateY(-50%) scale(0.9); 
                 padding: 6px 12px; border-radius: 6px; background: #202124; color: #fff; 
                 font-family: 'Google Sans', sans-serif; font-size: 12px; font-weight: 500; 
-                opacity: 0; pointer-events: none; transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1); 
+                opacity: 0; pointer-events: none; transition: all 0.2s; 
                 box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: nowrap; border: 1px solid rgba(255,255,255,0.15);
+                z-index: 200;
             }
-            .cw-pill.side-right .cw-btn::after { right: 60px; transform-origin: right center; }
-            .cw-pill.side-right .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
-            .cw-pill.side-left .cw-btn::after { left: 60px; transform-origin: left center; }
-            .cw-pill.side-left .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
+            .cw-pill:not(.collapsed) .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
+            .cw-pill.side-right .cw-btn::after { right: 50px; transform-origin: right center; }
+            .cw-pill.side-left .cw-btn::after { left: 50px; transform-origin: left center; }
+
+            /* --- DRAGGING STATE --- */
+            .cw-pill.dragging {
+                transition: none !important; /* Remove transição para seguir o mouse rápido */
+                cursor: grabbing;
+                transform: scale(1.02);
+                border-color: rgba(255,255,255,0.3);
+            }
 
             /* --- ESTILOS DA ILHA DINÂMICA (Processing) --- */
             .cw-pill.processing-center {
@@ -187,13 +183,10 @@ export function initCommandCenter(actions) {
                 justify-content: center !important; align-items: center !important;
             }
             
-            /* Remove estado colapsado durante processamento */
             .cw-pill.processing-center.collapsed {
-                 background: #202124 !important;
-                 overflow: visible !important;
+                 background: #202124 !important; overflow: visible !important;
             }
             .cw-pill.processing-center .cw-main-logo { display: none !important; }
-
             .cw-pill.processing-center > *:not(.cw-center-stage) { display: none !important; }
 
             .cw-center-stage {
@@ -201,7 +194,6 @@ export function initCommandCenter(actions) {
                 width: 100%; opacity: 0; animation: fadeIn 0.4s ease forwards 0.1s;
                 position: relative;
             }
-
             .cw-center-dots { display: flex; gap: 8px; }
             .cw-center-dots span {
                 width: 8px; height: 8px; border-radius: 50%;
@@ -210,25 +202,19 @@ export function initCommandCenter(actions) {
             .cw-center-dots span:nth-child(1) { background-color: ${COLORS.blue}; animation-delay: -0.32s; }
             .cw-center-dots span:nth-child(2) { background-color: ${COLORS.red}; animation-delay: -0.16s; }
             .cw-center-dots span:nth-child(3) { background-color: ${COLORS.green}; }
-
             .cw-center-text {
                 font-size: 13px; color: #E8EAED; text-align: center; max-width: 90%;
                 font-weight: 500; line-height: 1.4; opacity: 0;
                 transform: translateY(10px);
-                animation: textSlideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-                animation-delay: 0.2s;
+                animation: textSlideUp 0.5s forwards; animation-delay: 0.2s;
             }
-
             .cw-center-success { display: none; color: ${COLORS.green}; }
             .cw-center-success svg { width: 40px; height: 40px; }
             .cw-center-success.show { display: block; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-
             .cw-abort-btn {
-                position: absolute; bottom: -32px;
-                font-size: 10px; color: rgba(255, 255, 255, 0.2);
-                cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px;
-                font-weight: 600; transition: all 0.3s ease; user-select: none;
-                margin-bottom: 8px;
+                position: absolute; bottom: -32px; font-size: 10px; color: rgba(255, 255, 255, 0.2);
+                cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; 
+                transition: all 0.3s ease; user-select: none;
             }
             .cw-abort-btn:hover { color: #F28B82; opacity: 1; }
 
@@ -248,13 +234,11 @@ export function initCommandCenter(actions) {
     script: `<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`,
     links: `<svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>`,
     broadcast: `<svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`,
-    // Logo Principal (TechSol)
     main: `<svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>`
   };
 
   const pill = document.createElement("div");
-  // Adiciona 'collapsed' inicial para começar fechado
-  pill.className = "cw-pill side-right collapsed";
+  pill.className = "cw-pill side-right collapsed"; // Começa fechado
   
   pill.innerHTML = `
         <div class="cw-main-logo">${ICONS.main}</div>
@@ -279,19 +263,18 @@ export function initCommandCenter(actions) {
     document.body.appendChild(overlay);
     document.body.appendChild(pill);
 
-  // 3. LISTENERS
-  pill.querySelector(".notes").onclick = (e) => { e.stopPropagation(); actions.toggleNotes(); };
-  pill.querySelector(".email").onclick = (e) => { e.stopPropagation(); actions.toggleEmail(); };
-  pill.querySelector(".script").onclick = (e) => { e.stopPropagation(); actions.toggleScript(); };
-  pill.querySelector(".links").onclick = (e) => { e.stopPropagation(); actions.toggleLinks(); };
+  // 3. LISTENERS DE BOTÕES
+  const handleAction = (fn) => (e) => { e.stopPropagation(); fn(); };
+  
+  pill.querySelector(".notes").onclick = handleAction(actions.toggleNotes);
+  pill.querySelector(".email").onclick = handleAction(actions.toggleEmail);
+  pill.querySelector(".script").onclick = handleAction(actions.toggleScript);
+  pill.querySelector(".links").onclick = handleAction(actions.toggleLinks);
   
   pill.querySelector(".broadcast").onclick = (e) => { 
       e.stopPropagation(); 
       const badge = e.currentTarget.querySelector('.cw-badge');
-      if(badge) {
-          badge.style.transform = "scale(0)";
-          setTimeout(() => badge.remove(), 200);
-      }
+      if(badge) badge.remove();
       if(actions.broadcastControl) actions.broadcastControl.toggle(); 
   };
 
@@ -301,34 +284,50 @@ export function initCommandCenter(actions) {
       pill.querySelector('.broadcast').appendChild(badge);
   }
 
-  // --- AUTO COLLAPSE ---
-  pill.onmouseleave = () => {
-      // Se não estiver em modo de processamento, fecha
-      if (!pill.classList.contains('processing-center')) {
-          pill.classList.add('collapsed');
+  // --- LÓGICA DE INTERAÇÃO INTELIGENTE ---
+  let closeTimer = null;
+
+  // Ao entrar: Abre imediatamente e cancela qualquer ordem de fechar
+  pill.onmouseenter = () => {
+      if (closeTimer) clearTimeout(closeTimer);
+      if (!isDragging) {
+          pill.classList.remove('collapsed');
       }
   };
 
-  // 4. ANIMAÇÃO INICIAL E DRAG
+  // Ao sair: Espera 500ms antes de fechar (UX friendly)
+  pill.onmouseleave = () => {
+      // Se estiver processando ou arrastando, não fecha
+      if (pill.classList.contains('processing-center') || isDragging) return;
+
+      closeTimer = setTimeout(() => {
+          pill.classList.add('collapsed');
+      }, 500); // 500ms de tolerância
+  };
+
+  // 4. ANIMAÇÃO INICIAL
   (async function startAnimation() {
     await esperar(2800); pill.classList.add("docked");
     await esperar(300);
     const items = pill.querySelectorAll(".cw-btn");
-    pill.querySelectorAll(".cw-sep").forEach((s) => s.classList.add("visible"));
-    for (let i = 0; i < items.length; i++) { items[i].classList.add("popped"); await esperar(90); }
-    await esperar(200); pill.classList.add("system-check");
+    for (let i = 0; i < items.length; i++) { items[i].classList.add("popped"); await esperar(80); }
+    // Não precisa de animation check no colapsado, só visual
   })();
 
+  // 5. DRAG & DROP
   let isDragging = false;
   let startX, startY, initialLeft, initialTop;
-  const DRAG_THRESHOLD = 3;
+  const DRAG_THRESHOLD = 5;
 
   pill.onmousedown = (e) => {
-    if (e.target.closest("button")) return;
+    // Permite clicar nos botões se estiver aberto
+    if (!pill.classList.contains('collapsed') && e.target.closest("button")) return;
+    
     e.preventDefault();
     startX = e.clientX; startY = e.clientY;
     const rect = pill.getBoundingClientRect();
     initialLeft = rect.left; initialTop = rect.top;
+    
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
   };
@@ -336,10 +335,14 @@ export function initCommandCenter(actions) {
   function onMouseMove(e) {
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
+    
+    // Inicia arrasto apenas após mover X pixels
     if (!isDragging && Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD) {
       isDragging = true;
-      pill.style.transition = "none";
+      pill.classList.add('dragging'); // Feedback visual
+      if(closeTimer) clearTimeout(closeTimer); // Não fecha enquanto arrasta
     }
+    
     if (isDragging) {
       pill.style.left = `${initialLeft + dx}px`;
       pill.style.top = `${initialTop + dy}px`;
@@ -352,9 +355,11 @@ export function initCommandCenter(actions) {
     document.removeEventListener("mouseup", onMouseUp);
     
     if (isDragging) {
-      // FINALIZA ARRASTO (Lógica original intacta)
+      // FIM DO ARRASTO
       isDragging = false;
-      pill.style.transition = "left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease";
+      pill.classList.remove('dragging');
+      
+      // Lógica de "Snap" para as bordas
       const screenW = window.innerWidth;
       const screenH = window.innerHeight;
       const rect = pill.getBoundingClientRect();
@@ -368,68 +373,54 @@ export function initCommandCenter(actions) {
         targetLeft = screenW - rect.width - 24;
         pill.classList.remove("side-left"); pill.classList.add("side-right");
       }
-      let targetTop = rect.top;
-      if (targetTop < 24) targetTop = 24;
-      if (targetTop > screenH - rect.height - 24) targetTop = screenH - rect.height - 24;
+      let targetTop = Math.max(24, Math.min(rect.top, screenH - rect.height - 24));
 
+      pill.style.transition = "left 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), top 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)";
       pill.style.left = `${targetLeft}px`;
       pill.style.top = `${targetTop}px`;
-    } else {
-      // NÃO ARRASTOU (Foi um clique)
       
-      // Se estava colapsado, abre
+      // Remove a transition inline após a animação para permitir resize do CSS
+      setTimeout(() => pill.style.transition = "", 500);
+
+    } else {
+      // CLIQUE (Sem arrasto)
       if (pill.classList.contains('collapsed')) {
           pill.classList.remove('collapsed');
-          return; // Para não processar cliques em botões se houver
-      }
-
-      // Se já estava aberto, anima o botão clicado
-      const btn = e.target.closest("button");
-      if (btn) {
-        btn.style.transform = "scale(0.9)";
-        setTimeout(() => (btn.style.transform = ""), 150);
       }
     }
   }
 }
 
-// --- FUNÇÃO DE PROCESSAMENTO COM CANCELAMENTO (MANTIDA) ---
+// --- FUNÇÃO DE PROCESSAMENTO COM CANCELAMENTO (Mantida igual) ---
 export function triggerProcessingAnimation() {
     const pill = document.querySelector('.cw-pill');
     const overlay = document.querySelector('.cw-focus-backdrop');
     if (!pill) return () => {}; 
 
-    // Garante que não está colapsado durante processamento
-    pill.classList.remove('collapsed');
-
+    pill.classList.remove('collapsed'); // Garante aberto
     window._CW_ABORT_PROCESS = false;
 
     const stage = document.createElement('div');
     stage.className = 'cw-center-stage';
-    
     stage.innerHTML = `
         <div class="cw-center-dots"><span></span><span></span><span></span></div>
         <div class="cw-center-text">${DataService.getRandomTip()}</div>
-        <div class="cw-center-success">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-        </div>
+        <div class="cw-center-success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
     `;
 
     const abortBtn = document.createElement('div');
     abortBtn.className = 'cw-abort-btn';
     abortBtn.textContent = 'Cancelar';
-    
     abortBtn.onclick = (e) => {
         e.stopPropagation();
         window._CW_ABORT_PROCESS = true; 
-        showToast("Cancelado! Mas a nota foi copiada para a área de transferência.", { duration: 4000 });
+        showToast("Cancelado!", { duration: 3000 });
         stage.remove();
         pill.classList.remove('processing-center');
         pill.classList.remove('success');
-        pill.classList.add('collapsed'); // Volta a fechar
+        pill.classList.add('collapsed');
         if(overlay) overlay.classList.remove('active');
     };
-
     stage.appendChild(abortBtn);
     pill.appendChild(stage);
 
@@ -439,35 +430,31 @@ export function triggerProcessingAnimation() {
 
     return function finish() {
         if (window._CW_ABORT_PROCESS || !pill.contains(stage)) return;
-
         const elapsed = Date.now() - startTime;
         const remaining = Math.max(0, 2000 - elapsed); 
 
         setTimeout(() => {
             if (window._CW_ABORT_PROCESS || !pill.contains(stage)) return;
-
             const dots = stage.querySelector('.cw-center-dots');
             const text = stage.querySelector('.cw-center-text');
             const success = stage.querySelector('.cw-center-success');
             const abort = stage.querySelector('.cw-abort-btn');
-
+            
             if(dots) dots.style.display = 'none';
             if(text) text.style.display = 'none';
             if(abort) abort.style.display = 'none';
             if(success) success.classList.add('show');
             
             pill.classList.add('success');
-
             setTimeout(() => {
                 pill.classList.remove('processing-center');
                 setTimeout(() => {
                     stage.remove();
                     pill.classList.remove('success');
-                    pill.classList.add('collapsed'); // Volta a fechar após sucesso
+                    pill.classList.add('collapsed');
                     if(overlay) overlay.classList.remove('active');
                 }, 400);
             }, 1000); 
-
         }, remaining);
     };
 }
