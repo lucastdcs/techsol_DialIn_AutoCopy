@@ -1,5 +1,5 @@
 import { DataService } from './data-service.js'; 
-import { showToast } from './utils.js'; // <--- ADICIONADO PARA O AVISO
+import { showToast } from './utils.js';
 
 // src/modules/shared/command-center.js
 
@@ -48,9 +48,44 @@ export function initCommandCenter(actions) {
                 border: 1px solid ${COLORS.glassBorder}; border-radius: 50px;
                 box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 2147483647;
                 opacity: 0; transform: translateX(40px) scale(0.95);
-                transition: opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+                transition: opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1),
+                            width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), 
+                            height 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+                            padding 0.4s ease;
+                min-width: 50px; /* Garante tamanho mínimo */
             }
             .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
+
+            /* --- ESTADO COLAPSADO (Bolinha) --- */
+            .cw-pill.collapsed {
+                width: 44px !important; height: 44px !important;
+                padding: 0 !important;
+                border-radius: 50% !important;
+                gap: 0; overflow: hidden;
+                background: rgba(61, 61, 61, 0.95); /* Um pouco mais escuro quando fechado */
+                cursor: pointer;
+            }
+
+            /* Ícone Principal (Só aparece quando colapsado) */
+            .cw-main-logo {
+                position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+                display: flex; align-items: center; justify-content: center;
+                opacity: 0; transition: opacity 0.3s; pointer-events: none;
+                color: #fff;
+            }
+            .cw-main-logo svg { width: 24px; height: 24px; fill: currentColor; }
+            
+            .cw-pill.collapsed .cw-main-logo { opacity: 1; }
+
+            /* Esconde itens internos quando colapsado */
+            .cw-pill.collapsed .cw-btn, 
+            .cw-pill.collapsed .cw-grip, 
+            .cw-pill.collapsed .cw-sep,
+            .cw-pill.collapsed .cw-status-container {
+                opacity: 0; pointer-events: none; position: absolute;
+            }
+
+            /* --- FIM COLAPSADO --- */
 
             .cw-btn {
                 width: 40px; height: 40px; 
@@ -139,9 +174,7 @@ export function initCommandCenter(actions) {
             .cw-pill.side-left .cw-btn::after { left: 60px; transform-origin: left center; }
             .cw-pill.side-left .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
 
-            /* --- ESTILOS DA ILHA DINÂMICA --- */
-            .cw-pill { transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1); }
-
+            /* --- ESTILOS DA ILHA DINÂMICA (Processing) --- */
             .cw-pill.processing-center {
                 top: 50% !important; left: 50% !important;
                 transform: translate(-50%, -50%) !important;
@@ -153,6 +186,13 @@ export function initCommandCenter(actions) {
                 display: flex !important; flex-direction: column !important;
                 justify-content: center !important; align-items: center !important;
             }
+            
+            /* Remove estado colapsado durante processamento */
+            .cw-pill.processing-center.collapsed {
+                 background: #202124 !important;
+                 overflow: visible !important;
+            }
+            .cw-pill.processing-center .cw-main-logo { display: none !important; }
 
             .cw-pill.processing-center > *:not(.cw-center-stage) { display: none !important; }
 
@@ -207,13 +247,18 @@ export function initCommandCenter(actions) {
     email: `<svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>`,
     script: `<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`,
     links: `<svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>`,
-    broadcast: `<svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`
+    broadcast: `<svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`,
+    // Logo Principal (TechSol)
+    main: `<svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>`
   };
 
   const pill = document.createElement("div");
-  pill.className = "cw-pill side-right";
+  // Adiciona 'collapsed' inicial para começar fechado
+  pill.className = "cw-pill side-right collapsed";
   
   pill.innerHTML = `
+        <div class="cw-main-logo">${ICONS.main}</div>
+
         <div class="cw-grip" title="Arrastar">
             <div class="cw-grip-bar"></div>
         </div>
@@ -256,7 +301,15 @@ export function initCommandCenter(actions) {
       pill.querySelector('.broadcast').appendChild(badge);
   }
 
-  // 4. ANIMAÇÃO INICIAL E DRAG (Mantido idêntico)
+  // --- AUTO COLLAPSE ---
+  pill.onmouseleave = () => {
+      // Se não estiver em modo de processamento, fecha
+      if (!pill.classList.contains('processing-center')) {
+          pill.classList.add('collapsed');
+      }
+  };
+
+  // 4. ANIMAÇÃO INICIAL E DRAG
   (async function startAnimation() {
     await esperar(2800); pill.classList.add("docked");
     await esperar(300);
@@ -297,7 +350,9 @@ export function initCommandCenter(actions) {
   function onMouseUp(e) {
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
+    
     if (isDragging) {
+      // FINALIZA ARRASTO (Lógica original intacta)
       isDragging = false;
       pill.style.transition = "left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease";
       const screenW = window.innerWidth;
@@ -320,6 +375,15 @@ export function initCommandCenter(actions) {
       pill.style.left = `${targetLeft}px`;
       pill.style.top = `${targetTop}px`;
     } else {
+      // NÃO ARRASTOU (Foi um clique)
+      
+      // Se estava colapsado, abre
+      if (pill.classList.contains('collapsed')) {
+          pill.classList.remove('collapsed');
+          return; // Para não processar cliques em botões se houver
+      }
+
+      // Se já estava aberto, anima o botão clicado
       const btn = e.target.closest("button");
       if (btn) {
         btn.style.transform = "scale(0.9)";
@@ -329,16 +393,17 @@ export function initCommandCenter(actions) {
   }
 }
 
-// --- FUNÇÃO DE PROCESSAMENTO COM CANCELAMENTO ---
+// --- FUNÇÃO DE PROCESSAMENTO COM CANCELAMENTO (MANTIDA) ---
 export function triggerProcessingAnimation() {
     const pill = document.querySelector('.cw-pill');
     const overlay = document.querySelector('.cw-focus-backdrop');
     if (!pill) return () => {}; 
 
-    // Reset da flag global
+    // Garante que não está colapsado durante processamento
+    pill.classList.remove('collapsed');
+
     window._CW_ABORT_PROCESS = false;
 
-    // 1. CRIAR ELEMENTOS
     const stage = document.createElement('div');
     stage.className = 'cw-center-stage';
     
@@ -354,20 +419,14 @@ export function triggerProcessingAnimation() {
     abortBtn.className = 'cw-abort-btn';
     abortBtn.textContent = 'Cancelar';
     
-    // LÓGICA DE ABORTAR ATUALIZADA
     abortBtn.onclick = (e) => {
         e.stopPropagation();
-        
-        // A. Sinaliza parada para scripts externos
         window._CW_ABORT_PROCESS = true; 
-        
-        // B. Feedback Visual
         showToast("Cancelado! Mas a nota foi copiada para a área de transferência.", { duration: 4000 });
-        
-        // C. Desmonta UI imediatamente
         stage.remove();
         pill.classList.remove('processing-center');
         pill.classList.remove('success');
+        pill.classList.add('collapsed'); // Volta a fechar
         if(overlay) overlay.classList.remove('active');
     };
 
@@ -379,14 +438,12 @@ export function triggerProcessingAnimation() {
     if(overlay) overlay.classList.add('active');
 
     return function finish() {
-        // Se foi abortado, não faz nada (não mostra sucesso)
         if (window._CW_ABORT_PROCESS || !pill.contains(stage)) return;
 
         const elapsed = Date.now() - startTime;
         const remaining = Math.max(0, 2000 - elapsed); 
 
         setTimeout(() => {
-            // Checa de novo se foi abortado durante o timeout
             if (window._CW_ABORT_PROCESS || !pill.contains(stage)) return;
 
             const dots = stage.querySelector('.cw-center-dots');
@@ -406,6 +463,7 @@ export function triggerProcessingAnimation() {
                 setTimeout(() => {
                     stage.remove();
                     pill.classList.remove('success');
+                    pill.classList.add('collapsed'); // Volta a fechar após sucesso
                     if(overlay) overlay.classList.remove('active');
                 }, 400);
             }, 1000); 
