@@ -381,7 +381,7 @@ export function initCommandCenter(actions) {
     document.removeEventListener("mouseup", onMouseUp);
     
     if (isDragging) {
-      // --- CENÁRIO 1: FOI UM ARRASTO (SNAP) ---
+      // --- CENÁRIO 1: ARRASTO (SNAP) ---
       isDragging = false;
       
       // Define a animação de "pulo" para encostar na borda
@@ -392,6 +392,7 @@ export function initCommandCenter(actions) {
       const rect = pill.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       
+      // Lógica Horizontal (Snap Lateral)
       let targetLeft;
       if (centerX < screenW / 2) {
         targetLeft = 24;
@@ -400,41 +401,65 @@ export function initCommandCenter(actions) {
         targetLeft = screenW - rect.width - 24;
         pill.classList.remove("side-left"); pill.classList.add("side-right");
       }
-      // Trava vertical (padding 24px)
+      
+      // Lógica Vertical (Trava nas bordas)
       let targetTop = Math.max(24, Math.min(rect.top, screenH - rect.height - 24));
 
+      // Aplica posição (Sempre reseta para Top/Left ao arrastar)
       pill.style.left = `${targetLeft}px`;
       pill.style.top = `${targetTop}px`;
+      pill.style.bottom = "auto"; // Garante que não haja conflito
 
-      // [IMPORTANTE] Limpa a transição inline depois que o movimento acaba (600ms)
-      // Isso devolve o controle para o CSS, permitindo que o efeito de "dormir" funcione depois.
-      setTimeout(() => {
-          pill.style.transition = "";
-      }, 600);
+      // Limpa a transição inline após o movimento (para o CSS assumir o 'dormir' depois)
+      setTimeout(() => { pill.style.transition = ""; }, 600);
 
     } else {
-      // --- CENÁRIO 2: FOI UM CLIQUE RÁPIDO (TOGGLE) ---
+      // --- CENÁRIO 2: CLIQUE (TOGGLE) ---
       
+      // Se clicou no fundo vazio, manda dormir (fecha)
+      const isAnyActive = pill.querySelector('.cw-btn.active');
+      const isBtnClick = e.target.closest('button');
+
       if (pill.classList.contains('collapsed')) {
-          // ABRIR: Remove a classe. O CSS usa a transição "Spring" (Rápida/Elástica)
-          pill.classList.remove('collapsed');
-      } else {
-          // FECHAR: Se clicou no fundo (e não num botão) e não tem módulo ativo
-          const isAnyActive = pill.querySelector('.cw-btn.active');
+          // ABRIR: Smart Docking (Cresce para o lado certo)
+          const rect = pill.getBoundingClientRect();
+          const screenH = window.innerHeight;
+          const isBottomHalf = rect.top > (screenH / 2);
+
+          // Remove transição de posição para a troca de âncora ser instantânea
+          // (Evita que ele deslize a tela inteira ao trocar de top para bottom)
+          pill.style.transition = "none";
+
+          if (isBottomHalf) {
+              // Está embaixo: Fixa BOTTOM, libera TOP -> Cresce pra Cima
+              const currentBottom = screenH - rect.bottom;
+              pill.style.top = 'auto';
+              pill.style.bottom = `${currentBottom}px`;
+          } else {
+              // Está em cima: Fixa TOP, libera BOTTOM -> Cresce pra Baixo
+              pill.style.bottom = 'auto';
+              pill.style.top = `${rect.top}px`;
+          }
+
+          // Força um reflow para o navegador processar a troca de âncora
+          void pill.offsetWidth;
           
-          // Se clicou no botão de um módulo, o evento do botão já tratou.
-          // Aqui tratamos cliques no "vazio" da pílula.
-          if (!isAnyActive && !e.target.closest('button')) {
-             // FECHAR: Adiciona a classe. O CSS usa a transição "Ease" (Lenta/Fluida)
+          // Restaura transição (vazia = usa a do CSS)
+          pill.style.transition = ""; 
+
+          pill.classList.remove('collapsed');
+
+      } else {
+          // FECHAR
+          if (!isAnyActive && !isBtnClick) {
              pill.classList.add('collapsed');
           }
       }
 
-      // Efeito visual de clique no botão (se houver)
-      const btn = e.target.closest("button");
-      if (btn) {
-        btn.style.transform = "scale(0.9)";
-        setTimeout(() => (btn.style.transform = ""), 150);
+      // Efeito visual de clique no botão
+      if (isBtnClick) {
+        isBtnClick.style.transform = "scale(0.9)";
+        setTimeout(() => (isBtnClick.style.transform = ""), 150);
       }
     }
   }
