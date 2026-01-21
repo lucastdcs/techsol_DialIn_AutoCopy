@@ -469,24 +469,27 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
             }
             .cw-focus-backdrop.active { opacity: 1; pointer-events: auto; }
 
+            /* --- PILL PRINCIPAL --- */
             .cw-pill {
                 position: fixed; top: 30%; right: 24px;
                 display: flex; flex-direction: column; align-items: center; gap: 12px;
                 padding: 16px 8px;
                 
-                /* Estilo Original */
+                /* Visual Original */
                 background: ${pe.glassBg};
                 backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
                 border: 1px solid ${pe.glassBorder}; border-radius: 50px;
                 box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 2147483647;
                 
                 opacity: 0; transform: translateX(40px) scale(0.95);
+                
+                /* Transi\xE7\xF5es refinadas para o Morphing */
                 transition: opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1),
                             width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
                             height 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
                             padding 0.4s ease, border-radius 0.4s ease;
                 
-                min-width: 50px; /* Garante a largura da bolinha */
+                min-width: 50px; 
                 overflow: hidden;
             }
             .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
@@ -520,7 +523,6 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
             .cw-pill.collapsed .cw-status-container {
                 opacity: 0; pointer-events: none; position: absolute;
             }
-
             /* --- FIM COLAPSADO --- */
 
             .cw-btn {
@@ -531,7 +533,7 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
                 opacity: 0; transform: scale(0.5);
                 transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
-            /* Delay na apari\xE7\xE3o dos bot\xF5es para n\xE3o "vazar" ao abrir */
+            /* Delay na apari\xE7\xE3o dos bot\xF5es para suavidade ao abrir */
             .cw-pill:not(.collapsed) .cw-btn { transition-delay: 0.1s; }
             
             .cw-btn.popped { opacity: 1; transform: scale(1); }
@@ -593,7 +595,6 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
             .cw-grip:active { cursor: grabbing; }
             .cw-pill.dragging .cw-grip-bar { background-color: ${pe.blue}; width: 16px; opacity: 1; }
 
-            /* Processing Center Styles (MANTIDOS) */
             @keyframes successPop {
                 0% { box-shadow: 0 0 0 transparent; transform: scale(1); }
                 50% { box-shadow: 0 0 15px #81C995; transform: scale(1.05); border-color: #81C995; }
@@ -671,7 +672,7 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
             <div class="cw-dots" id="cw-loader"><span></span><span></span><span></span></div>
             <div class="cw-check" id="cw-success" style="display:none;">${n.check}</div>
         </div>
-    `;let s=document.createElement("div");s.className="cw-focus-backdrop",document.body.appendChild(s),document.body.appendChild(o);let i=(g,A)=>{let N=o.querySelector(`.${g}`);o.querySelectorAll(".cw-btn").forEach(z=>{z!==N&&z.classList.remove("active")}),N.classList.toggle("active"),A()};if(o.querySelector(".notes").onclick=g=>{g.stopPropagation(),i("notes",e.toggleNotes)},o.querySelector(".email").onclick=g=>{g.stopPropagation(),i("email",e.toggleEmail)},o.querySelector(".script").onclick=g=>{g.stopPropagation(),i("script",e.toggleScript)},o.querySelector(".links").onclick=g=>{g.stopPropagation(),i("links",e.toggleLinks)},o.querySelector(".broadcast").onclick=g=>{g.stopPropagation(),i("broadcast",()=>{let A=g.currentTarget.querySelector(".cw-badge");A&&A.remove(),e.broadcastControl&&e.broadcastControl.toggle()})},e.broadcastControl&&e.broadcastControl.hasUnread){let g=document.createElement("div");g.className="cw-badge",o.querySelector(".broadcast").appendChild(g)}let a=null;o.onmouseleave=()=>{o.querySelector(".cw-btn.active")||o.classList.contains("processing-center")||(a=setTimeout(()=>{o.classList.add("collapsed")},500))},o.onmouseenter=()=>{a&&clearTimeout(a)},(async function(){await vt(2800),o.classList.add("docked"),await vt(300);let A=o.querySelectorAll(".cw-btn");o.querySelectorAll(".cw-sep").forEach(N=>N.classList.add("visible"));for(let N=0;N<A.length;N++)A[N].classList.add("popped"),await vt(90);await vt(200),o.classList.add("system-check")})();let r=!1,p,d,u,c,m=3;o.onmousedown=g=>{if(!o.classList.contains("collapsed")&&g.target.closest("button"))return;g.preventDefault(),p=g.clientX,d=g.clientY;let A=o.getBoundingClientRect();u=A.left,c=A.top,document.addEventListener("mousemove",T),document.addEventListener("mouseup",h)};function T(g){let A=g.clientX-p,N=g.clientY-d;!r&&Math.sqrt(A*A+N*N)>m&&(r=!0,a&&clearTimeout(a)),r&&(o.style.left=`${u+A}px`,o.style.top=`${c+N}px`,o.style.right="auto",o.style.bottom="auto",o.style.transform="none")}function h(g){if(document.removeEventListener("mousemove",T),document.removeEventListener("mouseup",h),r){r=!1,o.style.transition="left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease";let A=window.innerWidth,N=window.innerHeight,z=o.getBoundingClientRect(),oe=z.left+z.width/2,ne;oe<A/2?(ne=24,o.classList.remove("side-right"),o.classList.add("side-left")):(ne=A-z.width-24,o.classList.remove("side-left"),o.classList.add("side-right"));let E=Math.max(24,Math.min(z.top,N-z.height-24));o.style.left=`${ne}px`,o.style.top=`${E}px`}else{o.classList.contains("collapsed")?o.classList.remove("collapsed"):!o.querySelector(".cw-btn.active")&&!g.target.closest("button")&&o.classList.add("collapsed");let A=g.target.closest("button");A&&(A.style.transform="scale(0.9)",setTimeout(()=>A.style.transform="",150))}}}function wt(){let e=document.querySelector(".cw-pill"),t=document.querySelector(".cw-focus-backdrop");if(!e)return()=>{};e.classList.remove("collapsed"),window._CW_ABORT_PROCESS=!1;let n=document.createElement("div");n.className="cw-center-stage",n.innerHTML=`
+    `;let s=document.createElement("div");s.className="cw-focus-backdrop",document.body.appendChild(s),document.body.appendChild(o);let i=(g,A)=>{let N=o.querySelector(`.${g}`);o.querySelectorAll(".cw-btn").forEach(z=>{z!==N&&z.classList.remove("active")}),N.classList.toggle("active"),A()};if(o.querySelector(".notes").onclick=g=>{g.stopPropagation(),i("notes",e.toggleNotes)},o.querySelector(".email").onclick=g=>{g.stopPropagation(),i("email",e.toggleEmail)},o.querySelector(".script").onclick=g=>{g.stopPropagation(),i("script",e.toggleScript)},o.querySelector(".links").onclick=g=>{g.stopPropagation(),i("links",e.toggleLinks)},o.querySelector(".broadcast").onclick=g=>{g.stopPropagation(),i("broadcast",()=>{let A=g.currentTarget.querySelector(".cw-badge");A&&A.remove(),e.broadcastControl&&e.broadcastControl.toggle()})},e.broadcastControl&&e.broadcastControl.hasUnread){let g=document.createElement("div");g.className="cw-badge",o.querySelector(".broadcast").appendChild(g)}let a=null;o.onmouseleave=()=>{o.querySelector(".cw-btn.active")||o.classList.contains("processing-center")||(a=setTimeout(()=>{o.classList.add("collapsed")},500))},o.onmouseenter=()=>{a&&clearTimeout(a)},(async function(){await vt(2800),o.classList.add("docked"),await vt(300);let A=o.querySelectorAll(".cw-btn");o.querySelectorAll(".cw-sep").forEach(N=>N.classList.add("visible"));for(let N=0;N<A.length;N++)A[N].classList.add("popped"),await vt(90);await vt(200),o.classList.add("system-check")})();let r=!1,p,d,u,c,m=3;o.onmousedown=g=>{if(g.target.closest("button"))return;g.preventDefault(),p=g.clientX,d=g.clientY;let A=o.getBoundingClientRect();u=A.left,c=A.top,document.addEventListener("mousemove",T),document.addEventListener("mouseup",h)};function T(g){let A=g.clientX-p,N=g.clientY-d;!r&&Math.sqrt(A*A+N*N)>m&&(r=!0,o.style.transition="none",a&&clearTimeout(a)),r&&(o.style.left=`${u+A}px`,o.style.top=`${c+N}px`,o.style.right="auto",o.style.bottom="auto",o.style.transform="none")}function h(g){if(document.removeEventListener("mousemove",T),document.removeEventListener("mouseup",h),r){r=!1,o.style.transition="left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease";let A=window.innerWidth,N=window.innerHeight,z=o.getBoundingClientRect(),oe=z.left+z.width/2,ne;oe<A/2?(ne=24,o.classList.remove("side-right"),o.classList.add("side-left")):(ne=A-z.width-24,o.classList.remove("side-left"),o.classList.add("side-right"));let E=Math.max(24,Math.min(z.top,N-z.height-24));o.style.left=`${ne}px`,o.style.top=`${E}px`}else{o.classList.contains("collapsed")?o.classList.remove("collapsed"):o.querySelector(".cw-btn.active")||o.classList.add("collapsed");let A=g.target.closest("button");A&&(A.style.transform="scale(0.9)",setTimeout(()=>A.style.transform="",150))}}}function wt(){let e=document.querySelector(".cw-pill"),t=document.querySelector(".cw-focus-backdrop");if(!e)return()=>{};e.classList.remove("collapsed"),window._CW_ABORT_PROCESS=!1;let n=document.createElement("div");n.className="cw-center-stage",n.innerHTML=`
         <div class="cw-center-dots"><span></span><span></span><span></span></div>
         <div class="cw-center-text">${we.getRandomTip()}</div>
         <div class="cw-center-success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
