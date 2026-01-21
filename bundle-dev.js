@@ -508,11 +508,11 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
                 /* Espera o conte\xFAdo sumir para n\xE3o "mastigar" os \xEDcones */
                 transition: 
                     width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s,
-                    height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s,
+                    height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 1s,
                     padding 0.5s ease 0.2s,
                     border-radius 0.5s ease 0.2s,
                     opacity 0.3s ease 0s,
-                    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s !important;
+                    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 1s !important;
             }
             
             /* --- CONTE\xDADO INTERNO (Bot\xF5es) --- */
