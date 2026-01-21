@@ -3,24 +3,27 @@ import { showToast } from './utils.js';
 
 // src/modules/shared/command-center.js
 
+// --- 1. CONFIGURAÇÃO VISUAL ORIGINAL (Preservada) ---
 const COLORS = {
-  glassBg: "rgba(32, 33, 36, 0.85)", // Um pouco mais escuro para contraste melhor
-  glassBorder: "rgba(255, 255, 255, 0.1)",
-  iconIdle: "#9AA0A6",
+  glassBg: "rgba(61, 61, 61, 0.77)",
+  glassBorder: "rgba(255, 255, 255, 0.15)",
+  glassActive: "rgba(79, 79, 79, 0.89)",
+  glassHighlight: "rgba(255, 255, 255, 0.08)",
+  iconIdle: "#c2c5c8ff", // Cor original dos ícones (Cinza claro)
   iconActive: "#FFFFFF",
   
-  // Cores de Marca
-  blue: "#8AB4F8",
-  red: "#F28B82",
-  purple: "#C58AF9",
-  green: "#81C995",
-  orange: "#F9AB00",
+  // Cores de Marca (mantidas para os estados ativos/hover)
+  blue: "#8AB4F8",   
+  red: "#F28B82",    
+  purple: "#C58AF9", 
+  green: "#81C995",  
+  orange: "#F9AB00", 
 };
 
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export function initCommandCenter(actions) {
-  // 1. ESTILOS
+  // 1. ESTILOS (Original + Lógica Collapsed)
   const styleId = "cw-command-center-style";
   if (!document.getElementById(styleId)) {
     const style = document.createElement("style");
@@ -32,86 +35,60 @@ export function initCommandCenter(actions) {
                 position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
                 background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px);
                 z-index: 2147483646; opacity: 0; pointer-events: none;
-                transition: opacity 0.5s ease;
+                transition: opacity 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
             }
             .cw-focus-backdrop.active { opacity: 1; pointer-events: auto; }
 
-            /* --- PILL PRINCIPAL --- */
             .cw-pill {
                 position: fixed; top: 30%; right: 24px;
                 display: flex; flex-direction: column; align-items: center; gap: 12px;
-                padding: 16px 6px; /* Padding padrão aberto */
+                padding: 16px 8px;
                 
-                /* Glassmorphism Consistente */
+                /* Estilo Original */
                 background: ${COLORS.glassBg};
-                backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
-                border: 1px solid ${COLORS.glassBorder}; 
-                border-radius: 50px;
-                box-shadow: 0 12px 40px rgba(0,0,0,0.4); 
+                backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+                border: 1px solid ${COLORS.glassBorder}; border-radius: 50px;
+                box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 2147483647;
                 
-                z-index: 2147483647;
                 opacity: 0; transform: translateX(40px) scale(0.95);
+                transition: opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1),
+                            width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+                            height 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+                            padding 0.4s ease, border-radius 0.4s ease;
                 
-                /* Transições complexas para o efeito "Morph" */
-                transition: 
-                    opacity 0.4s ease-out,
-                    transform 0.5s cubic-bezier(0.19, 1, 0.22, 1),
-                    width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), 
-                    height 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
-                    padding 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
-                    border-radius 0.4s ease;
-                
-                min-width: 52px; /* Tamanho base */
-                overflow: hidden; /* Importante para cortar o conteúdo ao fechar */
+                min-width: 50px; /* Garante a largura da bolinha */
+                overflow: hidden;
             }
             .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
-            /* --- ESTADO COLAPSADO (A Bolinha Perfeita) --- */
+            /* --- ESTADO COLAPSADO (A Bolinha) --- */
             .cw-pill.collapsed {
-                width: 52px !important; 
-                height: 52px !important;
-                padding: 0 !important; /* Remove padding para centralizar */
+                width: 50px !important; 
+                height: 50px !important;
+                padding: 0 !important;
+                border-radius: 50% !important;
                 gap: 0;
-                border-radius: 50% !important; /* Círculo perfeito */
+                justify-content: center;
                 cursor: pointer;
             }
             
-            /* Efeito Hover na Bolinha Fechada */
-            .cw-pill.collapsed:hover {
-                background: rgba(45, 46, 50, 0.95);
-                border-color: rgba(255,255,255,0.3);
-                transform: scale(1.05); /* Leve respiro */
-            }
-
-            /* Ícone Principal (Logo) */
+            /* Ícone Principal (Logo) - Só visível quando fechado */
             .cw-main-logo {
                 position: absolute; top: 0; left: 0; width: 100%; height: 100%;
                 display: flex; align-items: center; justify-content: center;
-                opacity: 0; transform: scale(0.5);
-                transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-                color: #fff; pointer-events: none;
+                opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+                color: #fff;
             }
             .cw-main-logo svg { width: 24px; height: 24px; fill: currentColor; }
             
-            .cw-pill.collapsed .cw-main-logo { 
-                opacity: 1; transform: scale(1); 
-            }
+            .cw-pill.collapsed .cw-main-logo { opacity: 1; }
 
-            /* Conteúdo Interno (Botões) */
-            /* Quando fechado, eles somem rápido e perdem interação */
+            /* Esconde itens internos quando fechado */
             .cw-pill.collapsed .cw-btn, 
             .cw-pill.collapsed .cw-grip, 
             .cw-pill.collapsed .cw-sep,
             .cw-pill.collapsed .cw-status-container {
-                opacity: 0; 
-                pointer-events: none; 
-                transform: scale(0.8);
-                transition: opacity 0.2s ease, transform 0.2s ease; /* Some rápido */
-            }
-            
-            /* Quando aberto, eles aparecem com leve delay */
-            .cw-btn, .cw-grip, .cw-sep {
-                transition: opacity 0.4s ease 0.1s, transform 0.4s ease 0.1s; /* Delay para esperar abrir */
+                opacity: 0; pointer-events: none; position: absolute;
             }
 
             /* --- FIM COLAPSADO --- */
@@ -122,55 +99,90 @@ export function initCommandCenter(actions) {
                 display: flex; align-items: center; justify-content: center; 
                 cursor: pointer; position: relative; color: ${COLORS.iconIdle};
                 opacity: 0; transform: scale(0.5);
+                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
+            /* Delay na aparição dos botões para não "vazar" ao abrir */
+            .cw-pill:not(.collapsed) .cw-btn { transition-delay: 0.1s; }
+            
             .cw-btn.popped { opacity: 1; transform: scale(1); }
 
-            .cw-btn:hover { background: rgba(255,255,255,0.1); color: ${COLORS.iconActive}; transform: scale(1.1); }
+            .cw-btn:hover { background: ${COLORS.glassHighlight}; color: ${COLORS.iconActive}; transform: scale(1.1); }
 
+            /* Estados Ativos e Cores */
             .cw-btn.notes.active { color: ${COLORS.blue} !important; background: rgba(138, 180, 248, 0.15); }
             .cw-btn.email.active { color: ${COLORS.red} !important; background: rgba(242, 139, 130, 0.15); }
             .cw-btn.script.active { color: ${COLORS.purple} !important; background: rgba(197, 138, 249, 0.15); }
             .cw-btn.links.active { color: ${COLORS.green} !important; background: rgba(129, 201, 149, 0.15); }
             .cw-btn.broadcast.active { color: ${COLORS.orange} !important; background: rgba(249, 171, 0, 0.15); }
 
-            .cw-sep {
-                width: 24px; height: 1px; background: rgba(255,255,255,0.15);
-                margin: 2px 0;
+            .cw-btn.notes:hover { color: ${COLORS.blue}; filter: drop-shadow(0 0 5px rgba(138, 180, 248, 0.5)); }
+            .cw-btn.email:hover { color: ${COLORS.red}; filter: drop-shadow(0 0 5px rgba(242, 139, 130, 0.5)); }
+            .cw-btn.script:hover { color: ${COLORS.purple}; filter: drop-shadow(0 0 5px rgba(197, 138, 249, 0.5)); }
+            .cw-btn.links:hover { color: ${COLORS.green}; filter: drop-shadow(0 0 5px rgba(129, 201, 149, 0.5)); }
+            .cw-btn.broadcast:hover { color: ${COLORS.orange}; filter: drop-shadow(0 0 5px rgba(249, 171, 0, 0.5)); }
+
+            /* Indicador LED */
+            .cw-btn::before {
+                content: ''; position: absolute; bottom: 2px; left: 50%; 
+                width: 4px; height: 4px; border-radius: 50%;
+                background-color: currentColor; box-shadow: 0 0 6px currentColor;
+                transform: translateX(-50%) scale(0);
+                transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); pointer-events: none;
             }
+            .cw-btn.active::before { transform: translateX(-50%) scale(1); }
+            
+            .cw-btn svg { width: 22px; height: 22px; fill: currentColor; pointer-events: none; }
+
+            /* BADGE DE NOTIFICAÇÃO */
+            .cw-badge {
+                position: absolute; top: 8px; right: 8px;
+                width: 8px; height: 8px;
+                background-color: #d93025; border-radius: 50%;
+                border: 1px solid #fff; pointer-events: none;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+                z-index: 10;
+                animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }
+            @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+
+            .cw-sep {
+                width: 20px; height: 1px; background: rgba(255,255,255,0.2);
+                opacity: 0; transition: opacity 0.5s ease;
+            }
+            .cw-sep.visible { opacity: 1; }
 
             .cw-grip {
-                width: 100%; height: 20px; display: flex; align-items: center; justify-content: center; 
-                cursor: grab; margin-bottom: 4px;
+                width: 100%; height: 24px; display: flex; align-items: center; justify-content: center; 
+                cursor: grab; margin-bottom: 2px; 
             }
             .cw-grip-bar { 
                 width: 24px; height: 4px; background-color: ${COLORS.iconIdle}; border-radius: 4px; 
-                opacity: 0.3; transition: all 0.3s; 
+                opacity: 0.4; transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); 
             }
-            .cw-grip:hover .cw-grip-bar { opacity: 0.8; background-color: #FFF; }
+            .cw-grip:hover .cw-grip-bar { opacity: 1; background-color: #FFFFFF; transform: scaleY(1.2); }
             .cw-grip:active { cursor: grabbing; }
+            .cw-pill.dragging .cw-grip-bar { background-color: ${COLORS.blue}; width: 16px; opacity: 1; }
 
-            /* Tooltips (Só aparecem se aberto) */
+            /* Processing Center Styles (MANTIDOS) */
+            @keyframes successPop {
+                0% { box-shadow: 0 0 0 transparent; transform: scale(1); }
+                50% { box-shadow: 0 0 15px #81C995; transform: scale(1.05); border-color: #81C995; }
+                100% { box-shadow: 0 0 0 transparent; transform: scale(1); }
+            }
+            .cw-pill.system-check { animation: successPop 0.6s ease-out; }
+            
             .cw-btn::after { 
                 content: attr(data-label); position: absolute; top: 50%; transform: translateY(-50%) scale(0.9); 
                 padding: 6px 12px; border-radius: 6px; background: #202124; color: #fff; 
                 font-family: 'Google Sans', sans-serif; font-size: 12px; font-weight: 500; 
-                opacity: 0; pointer-events: none; transition: all 0.2s; 
+                opacity: 0; pointer-events: none; transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1); 
                 box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: nowrap; border: 1px solid rgba(255,255,255,0.15);
-                z-index: 200;
             }
-            .cw-pill:not(.collapsed) .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
-            .cw-pill.side-right .cw-btn::after { right: 50px; transform-origin: right center; }
-            .cw-pill.side-left .cw-btn::after { left: 50px; transform-origin: left center; }
+            .cw-pill.side-right .cw-btn::after { right: 60px; transform-origin: right center; }
+            .cw-pill.side-right .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
+            .cw-pill.side-left .cw-btn::after { left: 60px; transform-origin: left center; }
+            .cw-pill.side-left .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
 
-            /* --- DRAGGING STATE --- */
-            .cw-pill.dragging {
-                transition: none !important; /* Remove transição para seguir o mouse rápido */
-                cursor: grabbing;
-                transform: scale(1.02);
-                border-color: rgba(255,255,255,0.3);
-            }
-
-            /* --- ESTILOS DA ILHA DINÂMICA (Processing) --- */
             .cw-pill.processing-center {
                 top: 50% !important; left: 50% !important;
                 transform: translate(-50%, -50%) !important;
@@ -182,31 +194,23 @@ export function initCommandCenter(actions) {
                 display: flex !important; flex-direction: column !important;
                 justify-content: center !important; align-items: center !important;
             }
-            
-            .cw-pill.processing-center.collapsed {
-                 background: #202124 !important; overflow: visible !important;
-            }
+            .cw-pill.processing-center.collapsed { background: #202124 !important; overflow: visible !important; }
             .cw-pill.processing-center .cw-main-logo { display: none !important; }
             .cw-pill.processing-center > *:not(.cw-center-stage) { display: none !important; }
-
             .cw-center-stage {
                 display: flex; flex-direction: column; align-items: center; gap: 14px;
                 width: 100%; opacity: 0; animation: fadeIn 0.4s ease forwards 0.1s;
                 position: relative;
             }
             .cw-center-dots { display: flex; gap: 8px; }
-            .cw-center-dots span {
-                width: 8px; height: 8px; border-radius: 50%;
-                animation: googleBounce 1.4s infinite ease-in-out both;
-            }
+            .cw-center-dots span { width: 8px; height: 8px; border-radius: 50%; animation: googleBounce 1.4s infinite ease-in-out both; }
             .cw-center-dots span:nth-child(1) { background-color: ${COLORS.blue}; animation-delay: -0.32s; }
             .cw-center-dots span:nth-child(2) { background-color: ${COLORS.red}; animation-delay: -0.16s; }
             .cw-center-dots span:nth-child(3) { background-color: ${COLORS.green}; }
             .cw-center-text {
                 font-size: 13px; color: #E8EAED; text-align: center; max-width: 90%;
-                font-weight: 500; line-height: 1.4; opacity: 0;
-                transform: translateY(10px);
-                animation: textSlideUp 0.5s forwards; animation-delay: 0.2s;
+                font-weight: 500; line-height: 1.4; opacity: 0; transform: translateY(10px);
+                animation: textSlideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: 0.2s;
             }
             .cw-center-success { display: none; color: ${COLORS.green}; }
             .cw-center-success svg { width: 40px; height: 40px; }
@@ -214,10 +218,9 @@ export function initCommandCenter(actions) {
             .cw-abort-btn {
                 position: absolute; bottom: -32px; font-size: 10px; color: rgba(255, 255, 255, 0.2);
                 cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; 
-                transition: all 0.3s ease; user-select: none;
+                transition: all 0.3s ease; user-select: none; margin-bottom: 8px;
             }
             .cw-abort-btn:hover { color: #F28B82; opacity: 1; }
-
             @keyframes fadeIn { to { opacity: 1; } }
             @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
             @keyframes googleBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
@@ -238,7 +241,8 @@ export function initCommandCenter(actions) {
   };
 
   const pill = document.createElement("div");
-  pill.className = "cw-pill side-right collapsed"; // Começa fechado
+  // Começa Fechado (Collapsed)
+  pill.className = "cw-pill side-right collapsed";
   
   pill.innerHTML = `
         <div class="cw-main-logo">${ICONS.main}</div>
@@ -263,19 +267,35 @@ export function initCommandCenter(actions) {
     document.body.appendChild(overlay);
     document.body.appendChild(pill);
 
-  // 3. LISTENERS DE BOTÕES
-  const handleAction = (fn) => (e) => { e.stopPropagation(); fn(); };
-  
-  pill.querySelector(".notes").onclick = handleAction(actions.toggleNotes);
-  pill.querySelector(".email").onclick = handleAction(actions.toggleEmail);
-  pill.querySelector(".script").onclick = handleAction(actions.toggleScript);
-  pill.querySelector(".links").onclick = handleAction(actions.toggleLinks);
+  // 3. LISTENERS INTELIGENTES
+  // Função para marcar botão como ativo e travar fechamento
+  const toggleModule = (btnClass, actionFn) => {
+      const btn = pill.querySelector(`.${btnClass}`);
+      
+      // Remove active de todos os outros
+      pill.querySelectorAll('.cw-btn').forEach(b => {
+          if (b !== btn) b.classList.remove('active');
+      });
+
+      // Toggle no atual
+      btn.classList.toggle('active');
+      
+      // Executa ação
+      actionFn();
+  };
+
+  pill.querySelector(".notes").onclick = (e) => { e.stopPropagation(); toggleModule('notes', actions.toggleNotes); };
+  pill.querySelector(".email").onclick = (e) => { e.stopPropagation(); toggleModule('email', actions.toggleEmail); };
+  pill.querySelector(".script").onclick = (e) => { e.stopPropagation(); toggleModule('script', actions.toggleScript); };
+  pill.querySelector(".links").onclick = (e) => { e.stopPropagation(); toggleModule('links', actions.toggleLinks); };
   
   pill.querySelector(".broadcast").onclick = (e) => { 
       e.stopPropagation(); 
-      const badge = e.currentTarget.querySelector('.cw-badge');
-      if(badge) badge.remove();
-      if(actions.broadcastControl) actions.broadcastControl.toggle(); 
+      toggleModule('broadcast', () => {
+        const badge = e.currentTarget.querySelector('.cw-badge');
+        if(badge) badge.remove();
+        if(actions.broadcastControl) actions.broadcastControl.toggle(); 
+      });
   };
 
   if (actions.broadcastControl && actions.broadcastControl.hasUnread) {
@@ -284,25 +304,23 @@ export function initCommandCenter(actions) {
       pill.querySelector('.broadcast').appendChild(badge);
   }
 
-  // --- LÓGICA DE INTERAÇÃO INTELIGENTE ---
+  // --- LÓGICA DE FECHAMENTO AUTOMÁTICO ---
   let closeTimer = null;
 
-  // Ao entrar: Abre imediatamente e cancela qualquer ordem de fechar
-  pill.onmouseenter = () => {
-      if (closeTimer) clearTimeout(closeTimer);
-      if (!isDragging) {
-          pill.classList.remove('collapsed');
-      }
-  };
-
-  // Ao sair: Espera 500ms antes de fechar (UX friendly)
+  // Só fecha se NENHUM módulo estiver ativo (classe .active nos botões)
   pill.onmouseleave = () => {
-      // Se estiver processando ou arrastando, não fecha
-      if (pill.classList.contains('processing-center') || isDragging) return;
+      // Verifica se tem algum botão ativo
+      const isAnyActive = pill.querySelector('.cw-btn.active');
+      if (isAnyActive || pill.classList.contains('processing-center')) return; // Não fecha se tiver módulo aberto
 
       closeTimer = setTimeout(() => {
           pill.classList.add('collapsed');
-      }, 500); // 500ms de tolerância
+      }, 500); 
+  };
+
+  pill.onmouseenter = () => {
+      if (closeTimer) clearTimeout(closeTimer);
+      // Removemos a lógica de abrir no hover. Só abre no clique.
   };
 
   // 4. ANIMAÇÃO INICIAL
@@ -310,14 +328,15 @@ export function initCommandCenter(actions) {
     await esperar(2800); pill.classList.add("docked");
     await esperar(300);
     const items = pill.querySelectorAll(".cw-btn");
-    for (let i = 0; i < items.length; i++) { items[i].classList.add("popped"); await esperar(80); }
-    // Não precisa de animation check no colapsado, só visual
+    pill.querySelectorAll(".cw-sep").forEach((s) => s.classList.add("visible"));
+    for (let i = 0; i < items.length; i++) { items[i].classList.add("popped"); await esperar(90); }
+    await esperar(200); pill.classList.add("system-check");
   })();
 
-  // 5. DRAG & DROP
+  // 5. DRAG & DROP + CLICK HANDLER
   let isDragging = false;
   let startX, startY, initialLeft, initialTop;
-  const DRAG_THRESHOLD = 5;
+  const DRAG_THRESHOLD = 3;
 
   pill.onmousedown = (e) => {
     // Permite clicar nos botões se estiver aberto
@@ -335,14 +354,10 @@ export function initCommandCenter(actions) {
   function onMouseMove(e) {
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
-    
-    // Inicia arrasto apenas após mover X pixels
     if (!isDragging && Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD) {
       isDragging = true;
-      pill.classList.add('dragging'); // Feedback visual
-      if(closeTimer) clearTimeout(closeTimer); // Não fecha enquanto arrasta
+      if(closeTimer) clearTimeout(closeTimer);
     }
-    
     if (isDragging) {
       pill.style.left = `${initialLeft + dx}px`;
       pill.style.top = `${initialTop + dy}px`;
@@ -355,11 +370,11 @@ export function initCommandCenter(actions) {
     document.removeEventListener("mouseup", onMouseUp);
     
     if (isDragging) {
-      // FIM DO ARRASTO
+      // FOI UM ARRASTO
       isDragging = false;
-      pill.classList.remove('dragging');
+      pill.style.transition = "left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease";
       
-      // Lógica de "Snap" para as bordas
+      // Snap logic
       const screenW = window.innerWidth;
       const screenH = window.innerHeight;
       const rect = pill.getBoundingClientRect();
@@ -375,23 +390,34 @@ export function initCommandCenter(actions) {
       }
       let targetTop = Math.max(24, Math.min(rect.top, screenH - rect.height - 24));
 
-      pill.style.transition = "left 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), top 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)";
       pill.style.left = `${targetLeft}px`;
       pill.style.top = `${targetTop}px`;
-      
-      // Remove a transition inline após a animação para permitir resize do CSS
-      setTimeout(() => pill.style.transition = "", 500);
 
     } else {
-      // CLIQUE (Sem arrasto)
+      // FOI UM CLIQUE (Não arrastou)
+      
+      // Lógica Principal: Se fechado, abre. Se aberto (e clicou no fundo/logo), fecha (exceto se módulo ativo).
       if (pill.classList.contains('collapsed')) {
           pill.classList.remove('collapsed');
+      } else {
+          // Se clicou fora dos botões (no grip ou fundo) E nenhum módulo tá ativo, pode fechar manual
+          const isAnyActive = pill.querySelector('.cw-btn.active');
+          if (!isAnyActive && !e.target.closest('button')) {
+             pill.classList.add('collapsed');
+          }
+      }
+
+      // Animação de clique nos botões (se houver)
+      const btn = e.target.closest("button");
+      if (btn) {
+        btn.style.transform = "scale(0.9)";
+        setTimeout(() => (btn.style.transform = ""), 150);
       }
     }
   }
 }
 
-// --- FUNÇÃO DE PROCESSAMENTO COM CANCELAMENTO (Mantida igual) ---
+// --- FUNÇÃO DE PROCESSAMENTO COM CANCELAMENTO ---
 export function triggerProcessingAnimation() {
     const pill = document.querySelector('.cw-pill');
     const overlay = document.querySelector('.cw-focus-backdrop');
@@ -451,7 +477,9 @@ export function triggerProcessingAnimation() {
                 setTimeout(() => {
                     stage.remove();
                     pill.classList.remove('success');
-                    pill.classList.add('collapsed');
+                    // Fecha apenas se não tiver nada ativo, mas geralmente após processar o usuário quer ver o resultado.
+                    // Vamos fechar para manter limpo.
+                    pill.classList.add('collapsed'); 
                     if(overlay) overlay.classList.remove('active');
                 }, 400);
             }, 1000); 
