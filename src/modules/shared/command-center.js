@@ -384,18 +384,12 @@ export function initCommandCenter(actions) {
       // --- CENÁRIO 1: ARRASTO (SNAP) ---
       isDragging = false;
       
-      // 1. Define a regra de animação (Mola)
-      pill.style.transition = "left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease";
-      
-      // Força reflow (Garante que o navegador 'viu' a transition acima)
-      void pill.offsetWidth; 
-
       const screenW = window.innerWidth;
       const screenH = window.innerHeight;
       const rect = pill.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       
-      // Cálculos de Alvo
+      // Cálculos de Posição (Snap Lateral)
       let targetLeft;
       if (centerX < screenW / 2) {
         targetLeft = 24;
@@ -404,20 +398,27 @@ export function initCommandCenter(actions) {
         targetLeft = screenW - rect.width - 24;
         pill.classList.remove("side-left"); pill.classList.add("side-right");
       }
-      
+      // Trava Vertical
       let targetTop = Math.max(24, Math.min(rect.top, screenH - rect.height - 24));
 
-      // [A CORREÇÃO] Use requestAnimationFrame para aplicar a posição no próximo frame de pintura
-requestAnimationFrame(() => {
-          requestAnimationFrame(() => {
-              pill.style.left = `${targetLeft}px`;
-              pill.style.top = `${targetTop}px`;
-              pill.style.bottom = "auto"; 
-          });
-      });
+      // [CORREÇÃO] setTimeout para quebrar o ciclo de renderização.
+      // 1. O navegador processa o fim do arrasto.
+      // 2. 10ms depois, aplicamos a animação. Isso garante que a transição funcione.
+      setTimeout(() => {
+          // Define a mola
+          pill.style.transition = "left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease";
+          
+          // Aplica coordenadas e limpa transformações inline (para voltar ao CSS .docked)
+          pill.style.left = `${targetLeft}px`;
+          pill.style.top = `${targetTop}px`;
+          pill.style.bottom = "auto";
+          pill.style.transform = ""; 
+      }, 10);
 
-      // Limpa a transição depois
-      setTimeout(() => { pill.style.transition = ""; }, 600);
+      // Limpa a transição inline depois que a animação acabar (devolve controle pro CSS)
+      setTimeout(() => { 
+          pill.style.transition = ""; 
+      }, 700);
 
     } else {
       // --- CENÁRIO 2: CLIQUE (TOGGLE) ---
