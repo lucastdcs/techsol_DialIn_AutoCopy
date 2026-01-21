@@ -386,7 +386,7 @@ export function initCommandCenter(actions) {
       
       // Define a animação de "pulo" para encostar na borda
       pill.style.transition = "left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease";
-      
+      void pill.offsetWidth;
       const screenW = window.innerWidth;
       const screenH = window.innerHeight;
       const rect = pill.getBoundingClientRect();
