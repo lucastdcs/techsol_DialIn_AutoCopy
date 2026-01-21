@@ -126,6 +126,19 @@ const CATEGORY_ICONS = {
     history: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/></svg>`
 };
 
+const CAT_THEMES = {
+    tasks:   { color: "#0097A7", bg: "#E0F7FA" }, // Cyan
+    ads:     { color: "#1967D2", bg: "#E8F0FE" }, // Google Blue
+    analytics:{ color: "#E37400", bg: "#FEF7E0" }, // Orange
+    shopping:{ color: "#188038", bg: "#E6F4EA" }, // Green
+    tech:    { color: "#9334E6", bg: "#F3E8FD" }, // Purple
+    hr:      { color: "#C5221F", bg: "#FCE8E6" }, // Red
+    lm:      { color: "#5F6368", bg: "#F1F3F4" }, // Slate
+    qa:      { color: "#F09D00", bg: "#FFF3E0" }, // Amber
+    suporte: { color: "#0B57D0", bg: "#D3E3FD" }, // Light Blue
+    history: { color: "#5F6368", bg: "#FFFFFF" }  // Default
+};
+
 // --- LOGICA DE HISTÓRICO ---
 const HISTORY_KEY = 'cw_link_history_v4';
 
@@ -146,21 +159,20 @@ function getHistory() {
 }
 
 export function initFeedbackAssistant() {
-  const CURRENT_VERSION = "v4.5 (Fixed Search + History Overlay)";
+  const CURRENT_VERSION = "v4.6 (Colorful UI)";
   let searchTerm = "";
   let visible = false;
   let activeCategoryKey = null;
+  let isHistoryOpen = false; // Controle de estado do histórico
 
   // --- DESIGN SYSTEM ---
   const COLORS = {
       bgApp: "#F8F9FA",
-      bgSidebar: "#F0F3F8",
+      bgSidebar: "#FFFFFF", // Sidebar branca fica mais limpa com ícones coloridos
       bgSurface: "#FFFFFF",
       textPrimary: "#202124",
       textSecondary: "#5F6368",
-      primary: "#1A73E8",
-      primaryBg: "#E8F0FE",
-      borderSubtle: "rgba(0,0,0,0.08)"
+      borderSubtle: "rgba(0,0,0,0.06)"
   };
 
   // --- POPUP ---
@@ -168,7 +180,7 @@ export function initFeedbackAssistant() {
   popup.id = "links-popup";
   popup.classList.add("cw-module-window");
   Object.assign(popup.style, stylePopup, { 
-      right: "100px", width: "580px", height: "650px", 
+      right: "100px", width: "600px", height: "650px", 
       background: COLORS.bgApp, overflow: "hidden" 
   });
 
@@ -193,7 +205,7 @@ export function initFeedbackAssistant() {
       width: 80px; flex-shrink: 0; background: ${COLORS.bgSidebar};
       border-right: 1px solid ${COLORS.borderSubtle};
       display: flex; flex-direction: column; align-items: center;
-      padding: 16px 0; overflow-y: auto; gap: 4px;
+      padding: 16px 0; overflow-y: auto; gap: 8px;
       scrollbar-width: none; z-index: 2;
   `;
   mainLayout.appendChild(sidebar);
@@ -203,26 +215,26 @@ export function initFeedbackAssistant() {
   contentWrapper.style.cssText = "flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #F8F9FA; position: relative; z-index: 1;";
   mainLayout.appendChild(contentWrapper);
 
-  // 3.1. Barra de Busca (CORRIGIDA)
+  // 3.1. Barra de Busca
   const searchBar = document.createElement("div");
-  searchBar.style.cssText = "padding: 16px 24px; flex-shrink: 0; border-bottom: 1px solid rgba(0,0,0,0.04); background: #FFF;";
+  searchBar.style.cssText = "padding: 16px 24px; flex-shrink: 0; background: transparent;";
   
-  // Wrapper para o input e ícone
   const searchInputWrapper = document.createElement("div");
   searchInputWrapper.style.cssText = `
-      position: relative; width: 100%; height: 40px;
-      border-radius: 12px; border: 1px solid ${COLORS.borderSubtle};
-      background: #F1F3F4; transition: all 0.2s;
+      position: relative; width: 100%; height: 44px;
+      border-radius: 12px; border: 1px solid transparent;
+      background: #FFFFFF; transition: all 0.2s;
       display: flex; align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
   `;
 
   const searchIcon = document.createElement("div");
-  searchIcon.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5F6368" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`;
-  searchIcon.style.cssText = "margin-left: 12px; display: flex; align-items: center; justify-content: center; pointer-events: none;";
+  searchIcon.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5F6368" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`;
+  searchIcon.style.cssText = "margin-left: 14px; display: flex; align-items: center; justify-content: center; pointer-events: none;";
 
   const searchInput = document.createElement("input");
   searchInput.type = "text";
-  searchInput.placeholder = "Buscar link, SOP ou ferramenta...";
+  searchInput.placeholder = "Buscar ferramenta ou SOP...";
   searchInput.style.cssText = `
       flex: 1; height: 100%; border: none; background: transparent;
       padding: 0 12px; font-size: 14px; color: ${COLORS.textPrimary};
@@ -230,14 +242,12 @@ export function initFeedbackAssistant() {
   `;
   
   searchInput.onfocus = () => { 
-      searchInputWrapper.style.background = "#FFF"; 
-      searchInputWrapper.style.boxShadow = "0 2px 8px rgba(0,0,0,0.05)"; 
-      searchInputWrapper.style.borderColor = COLORS.primary;
+      searchInputWrapper.style.boxShadow = "0 4px 12px rgba(26,115,232,0.15)"; 
+      searchInputWrapper.style.border = "1px solid #1a73e8";
   };
   searchInput.onblur = () => { 
-      searchInputWrapper.style.background = "#F1F3F4"; 
-      searchInputWrapper.style.boxShadow = "none"; 
-      searchInputWrapper.style.borderColor = COLORS.borderSubtle; 
+      searchInputWrapper.style.boxShadow = "0 2px 6px rgba(0,0,0,0.04)"; 
+      searchInputWrapper.style.border = "1px solid transparent";
   };
   
   searchInputWrapper.appendChild(searchIcon);
@@ -265,23 +275,28 @@ export function initFeedbackAssistant() {
           box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
       `;
 
-      // Header do Overlay
       const hHead = document.createElement("div");
       hHead.style.cssText = "padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #F1F3F4;";
-      hHead.innerHTML = `<span style="font-size: 16px; font-weight: 700; color: #202124;">🕒 Histórico Recente</span>`;
+      hHead.innerHTML = `<span style="font-size: 16px; font-weight: 700; color: #202124;">🕒 Recentes</span>`;
       
       const closeBtn = document.createElement("button");
       closeBtn.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`;
       closeBtn.style.cssText = "background: none; border: none; cursor: pointer; color: #5f6368;";
-      closeBtn.onclick = hideHistoryOverlay;
+      
+      // Fecha ao clicar no X
+      closeBtn.onclick = () => {
+          hideHistoryOverlay();
+          // Atualiza estado do botão da sidebar
+          isHistoryOpen = false;
+          updateSidebarVisuals();
+      };
       
       hHead.appendChild(closeBtn);
       historyOverlay.appendChild(hHead);
 
-      // Lista do Overlay
       const hList = document.createElement("div");
       hList.id = "cw-history-list";
-      hList.style.cssText = "flex: 1; overflow-y: auto; padding: 20px;";
+      hList.style.cssText = "flex: 1; overflow-y: auto; padding: 20px; background: #F8F9FA;";
       historyOverlay.appendChild(hList);
 
       contentWrapper.appendChild(historyOverlay);
@@ -289,30 +304,23 @@ export function initFeedbackAssistant() {
 
   function showHistoryOverlay() {
       if (!historyOverlay) createHistoryOverlay();
-      
       const list = historyOverlay.querySelector("#cw-history-list");
       list.innerHTML = "";
-      
       const history = getHistory();
+      
       if (history.length === 0) {
-          list.innerHTML = `<div style="text-align: center; color: #999; margin-top: 40px;">Nenhum link acessado recentemente.</div>`;
+          list.innerHTML = `<div style="text-align: center; color: #999; margin-top: 60px; font-size:13px;">Nada por aqui ainda.</div>`;
       } else {
           history.forEach(link => {
-              const card = createLinkCard(link, CATEGORY_ICONS[link._originalCat], true);
+              const card = createLinkCard(link, CATEGORY_ICONS[link._originalCat], true, link._originalCat);
               list.appendChild(card);
           });
       }
-
-      // Pequeno delay para permitir que o elemento entre no DOM antes da transição
-      requestAnimationFrame(() => {
-          historyOverlay.style.transform = "translateY(0)";
-      });
+      requestAnimationFrame(() => historyOverlay.style.transform = "translateY(0)");
   }
 
   function hideHistoryOverlay() {
-      if (historyOverlay) {
-          historyOverlay.style.transform = "translateY(100%)";
-      }
+      if (historyOverlay) historyOverlay.style.transform = "translateY(100%)";
   }
 
   // --- RENDERIZAÇÃO ---
@@ -320,26 +328,44 @@ export function initFeedbackAssistant() {
   function renderSidebar() {
       sidebar.innerHTML = "";
       
-      // Botão "Recentes" (Abre Overlay)
+      // Botão "Recentes" (Com Toggle)
       const histBtn = createNavBtn('history', 'Recentes', CATEGORY_ICONS.history);
+      
+      // ID para manipular estilo facilmente
+      histBtn.id = "cw-sidebar-btn-history";
+      
       histBtn.onclick = () => {
           SoundManager.playClick();
-          showHistoryOverlay();
+          isHistoryOpen = !isHistoryOpen; // Inverte Estado
+
+          if (isHistoryOpen) {
+              showHistoryOverlay();
+          } else {
+              hideHistoryOverlay();
+          }
+          updateSidebarVisuals();
       };
       
-      const div = document.createElement('div');
-      div.style.cssText = "width: 40px; height: 1px; background: rgba(0,0,0,0.06); margin: 8px 0;";
-      
       sidebar.appendChild(histBtn);
+
+      // Separador
+      const div = document.createElement('div');
+      div.style.cssText = "width: 32px; height: 1px; background: rgba(0,0,0,0.08); margin: 4px 0;";
       sidebar.appendChild(div);
 
-      // Botões de Categoria (Âncoras)
+      // Botões de Categoria
       Object.keys(LINKS_DB).forEach(key => {
           const cat = LINKS_DB[key];
           const btn = createNavBtn(key, cat.label, CATEGORY_ICONS[key]);
-          // Sobrescreve onclick padrão
+          btn.id = `cw-sidebar-btn-${key}`;
+          
           btn.onclick = () => {
               SoundManager.playClick();
+              // Se clicar numa categoria, fecha o histórico se estiver aberto
+              if (isHistoryOpen) {
+                  isHistoryOpen = false;
+                  hideHistoryOverlay();
+              }
               scrollToSection(key);
           };
           sidebar.appendChild(btn);
@@ -349,34 +375,35 @@ export function initFeedbackAssistant() {
   function createNavBtn(key, label, iconSvg) {
       const btn = document.createElement("div");
       btn.style.cssText = `
-          width: 64px; height: 56px; border-radius: 12px;
+          width: 56px; height: 56px; border-radius: 16px;
           display: flex; flex-direction: column; align-items: center; justify-content: center;
           cursor: pointer; color: ${COLORS.textSecondary}; 
           transition: all 0.2s cubic-bezier(0.2, 0.0, 0.2, 1);
-          margin-bottom: 4px; position: relative;
+          position: relative;
       `;
       btn.title = label;
       btn.dataset.key = key;
 
       const iconDiv = document.createElement("div");
-      iconDiv.style.cssText = "width: 24px; height: 24px; margin-bottom: 4px; transition: transform 0.2s;";
+      iconDiv.style.cssText = "width: 24px; height: 24px; margin-bottom: 2px; transition: transform 0.2s;";
       iconDiv.innerHTML = iconSvg || CATEGORY_ICONS.tasks;
 
       const labelDiv = document.createElement("div");
-      labelDiv.style.cssText = "font-size: 10px; font-weight: 500; opacity: 0.8;";
+      labelDiv.style.cssText = "font-size: 9px; font-weight: 600; opacity: 0.7; letter-spacing: 0.3px;";
       labelDiv.textContent = label;
 
       btn.appendChild(iconDiv);
       btn.appendChild(labelDiv);
 
+      // Efeito Hover sutil
       btn.onmouseenter = () => { 
-          if(activeCategoryKey !== key) {
-              btn.style.background = "rgba(0,0,0,0.04)";
+          if(activeCategoryKey !== key && !(key === 'history' && isHistoryOpen)) {
+              btn.style.background = "#F1F3F4";
               iconDiv.style.transform = "scale(1.1)";
           }
       };
       btn.onmouseleave = () => { 
-          if(activeCategoryKey !== key) {
+          if(activeCategoryKey !== key && !(key === 'history' && isHistoryOpen)) {
               btn.style.background = "transparent";
               iconDiv.style.transform = "scale(1)";
           }
@@ -389,28 +416,40 @@ export function initFeedbackAssistant() {
       const target = document.getElementById(`cat-anchor-${key}`);
       if(target) {
           target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          updateActiveSidebar(key);
+          activeCategoryKey = key;
+          updateSidebarVisuals();
       }
   }
 
-  function updateActiveSidebar(key) {
-      activeCategoryKey = key;
-      Array.from(sidebar.children).forEach(child => {
-          if(!child.dataset.key) return;
-          const icon = child.querySelector('div:first-child');
+  function updateSidebarVisuals() {
+      // 1. Atualiza Categorias
+      Object.keys(LINKS_DB).forEach(key => {
+          const btn = sidebar.querySelector(`#cw-sidebar-btn-${key}`);
+          if(!btn) return;
           
-          if (child.dataset.key === key) {
-              child.style.background = "#E8F0FE";
-              child.style.color = "#1967D2";
-              child.style.fontWeight = "600";
-              if(icon) icon.style.transform = "scale(1.1)";
+          if (activeCategoryKey === key && !isHistoryOpen) {
+              const theme = CAT_THEMES[key];
+              btn.style.background = theme.bg;
+              btn.style.color = theme.color;
+              btn.querySelector('div:first-child').style.transform = "scale(1.1)";
           } else {
-              child.style.background = "transparent";
-              child.style.color = COLORS.textSecondary;
-              child.style.fontWeight = "500";
-              if(icon) icon.style.transform = "scale(1)";
+              btn.style.background = "transparent";
+              btn.style.color = COLORS.textSecondary;
+              btn.querySelector('div:first-child').style.transform = "scale(1)";
           }
       });
+
+      // 2. Atualiza Botão de Histórico
+      const histBtn = sidebar.querySelector(`#cw-sidebar-btn-history`);
+      if(histBtn) {
+          if (isHistoryOpen) {
+              histBtn.style.background = "#3C4043"; // Escuro para destacar
+              histBtn.style.color = "#FFFFFF";
+          } else {
+              histBtn.style.background = "transparent";
+              histBtn.style.color = COLORS.textSecondary;
+          }
+      }
   }
 
   function renderContent() {
@@ -428,118 +467,132 @@ export function initFeedbackAssistant() {
           });
 
           if(results.length === 0) {
-              scrollContent.innerHTML = `<div style="text-align:center; padding: 60px; color:#999; font-size:13px;">Nenhum link encontrado.</div>`;
+              scrollContent.innerHTML = `<div style="text-align:center; padding: 60px; color:#999; font-size:13px;">Nada encontrado.</div>`;
               return;
           }
 
           const searchHeader = document.createElement("div");
           searchHeader.innerHTML = "Resultados da busca";
-          searchHeader.style.cssText = "font-size:12px; font-weight:700; color:#5f6368; margin:20px 0 10px; text-transform:uppercase;";
+          searchHeader.style.cssText = "font-size:12px; font-weight:700; color:#5f6368; margin:20px 0 10px; text-transform:uppercase; letter-spacing:0.5px;";
           scrollContent.appendChild(searchHeader);
 
           results.forEach(link => {
-              const card = createLinkCard(link, CATEGORY_ICONS[link._cat], false);
+              const card = createLinkCard(link, CATEGORY_ICONS[link._cat], false, link._cat);
               scrollContent.appendChild(card);
           });
           return;
       }
 
-      // MODO LISTA
+      // MODO LISTA (Renderiza todas as categorias)
       Object.entries(LINKS_DB).forEach(([key, cat]) => {
+          const theme = CAT_THEMES[key];
           const catSection = document.createElement("div");
           
           const catHeader = document.createElement("div");
           catHeader.id = `cat-anchor-${key}`;
-          catHeader.innerHTML = `<span style="opacity:0.6; margin-right:8px;">${CATEGORY_ICONS[key]}</span> ${cat.label}`;
+          // Título com cor temática
           catHeader.style.cssText = `
-              display: flex; align-items: center;
-              font-size: 12px; font-weight: 700; color: #1a73e8; 
-              text-transform: uppercase; margin: 32px 0 12px 0;
-              padding-top: 10px;
+              display: flex; align-items: center; gap: 8px;
+              font-size: 13px; font-weight: 800; color: ${theme.color}; 
+              text-transform: uppercase; letter-spacing: 0.5px;
+              margin: 32px 0 12px 0; padding-top: 10px;
           `;
+          
+          // Bolinha colorida antes do nome
+          catHeader.innerHTML = `
+            <div style="width:8px; height:8px; border-radius:50%; background:${theme.color};"></div>
+            ${cat.label}
+          `;
+          
           catSection.appendChild(catHeader);
+
+          const grid = document.createElement("div");
+          grid.style.cssText = "display: grid; grid-template-columns: 1fr; gap: 8px;";
 
           cat.links.forEach(link => {
               const card = createLinkCard(link, CATEGORY_ICONS[key], false, key);
-              catSection.appendChild(card);
+              grid.appendChild(card);
           });
           
+          catSection.appendChild(grid);
           scrollContent.appendChild(catSection);
       });
       
       const spacer = document.createElement("div");
-      spacer.style.height = "60px";
+      spacer.style.height = "80px";
       scrollContent.appendChild(spacer);
   }
 
   function createLinkCard(link, iconSvg, isHistory, catKey) {
       const card = document.createElement("div");
-      
-      const bg = isHistory ? "#FFF8E1" : "#FFFFFF";
-      const border = isHistory ? "1px solid #FFE082" : "1px solid rgba(0,0,0,0.08)";
+      const theme = CAT_THEMES[catKey] || CAT_THEMES.history; // Pega o tema da categoria
 
       card.style.cssText = `
-          display: flex; align-items: center; gap: 14px;
-          padding: 12px 16px; margin-bottom: 8px;
-          background: ${bg}; border: ${border};
-          border-radius: 12px; cursor: pointer;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-          transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.2s;
+          display: flex; align-items: center; gap: 16px;
+          padding: 12px 16px; 
+          background: #FFFFFF; 
+          border: 1px solid transparent;
+          border-radius: 16px; 
+          cursor: pointer;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+          transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
           position: relative; overflow: hidden;
       `;
 
+      // Icon Box Colorido
       const iconBox = document.createElement("div");
       iconBox.style.cssText = `
-          width: 36px; height: 36px; border-radius: 10px;
-          background: #F1F3F4; color: ${COLORS.textSecondary};
+          width: 40px; height: 40px; border-radius: 12px;
+          background: ${theme.bg}; color: ${theme.color};
           display: flex; align-items: center; justify-content: center;
           flex-shrink: 0; transition: all 0.2s;
       `;
-      if(isHistory) iconBox.style.background = "#FFFFFF";
       
       iconBox.innerHTML = iconSvg || CATEGORY_ICONS.tasks;
       const svg = iconBox.querySelector('svg');
-      if(svg) { svg.style.width = "20px"; svg.style.height = "20px"; }
+      if(svg) { svg.style.width = "22px"; svg.style.height = "22px"; }
 
       const meta = document.createElement("div");
       meta.style.cssText = "flex: 1; display: flex; flex-direction: column; gap: 2px; overflow: hidden;";
       
       const title = document.createElement("div");
-      title.style.cssText = `font-size: 13px; font-weight: 600; color: ${COLORS.textPrimary}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;`;
+      title.style.cssText = `font-size: 14px; font-weight: 600; color: ${COLORS.textPrimary}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;`;
       title.textContent = link.name;
 
       const desc = document.createElement("div");
-      desc.style.cssText = `font-size: 11px; color: ${COLORS.textSecondary}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;`;
+      desc.style.cssText = `font-size: 12px; color: ${COLORS.textSecondary}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;`;
       desc.textContent = link.desc;
 
       meta.appendChild(title);
       meta.appendChild(desc);
 
+      // Botão de Copiar (Só aparece no hover)
       const copyBtn = document.createElement("div");
       copyBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
       copyBtn.style.cssText = `
           width: 32px; height: 32px; border-radius: 8px;
           display: flex; align-items: center; justify-content: center;
-          color: #9AA0A6; transition: all 0.2s; opacity: 0.6;
+          color: #9AA0A6; transition: all 0.2s; opacity: 0;
       `;
       copyBtn.title = "Copiar URL";
 
       card.onmouseenter = () => {
           card.style.transform = "translateY(-2px)";
-          card.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)";
-          iconBox.style.background = COLORS.primaryBg;
-          iconBox.style.color = COLORS.primary;
+          card.style.boxShadow = "0 8px 20px rgba(0,0,0,0.08)";
+          card.style.borderColor = "rgba(0,0,0,0.05)";
+          // Efeito: Borda esquerda colorida
+          card.style.borderLeft = `4px solid ${theme.color}`;
+          
           copyBtn.style.opacity = "1";
-          copyBtn.style.color = COLORS.primary;
           copyBtn.style.background = "#F1F3F4";
       };
+      
       card.onmouseleave = () => {
           card.style.transform = "translateY(0)";
-          card.style.boxShadow = "0 1px 2px rgba(0,0,0,0.04)";
-          iconBox.style.background = isHistory ? "#FFFFFF" : "#F1F3F4";
-          iconBox.style.color = COLORS.textSecondary;
-          copyBtn.style.opacity = "0.6";
-          copyBtn.style.color = "#9AA0A6";
+          card.style.boxShadow = "0 1px 3px rgba(0,0,0,0.05)";
+          card.style.border = "1px solid transparent"; // Reseta borda
+          
+          copyBtn.style.opacity = "0";
           copyBtn.style.background = "transparent";
       };
 
