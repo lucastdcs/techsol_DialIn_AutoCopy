@@ -42,7 +42,7 @@ style.innerHTML = `
             }
             .cw-focus-backdrop.active { opacity: 1; pointer-events: auto; }
 
-            /* --- ESTADO ABERTO (A Mágica acontece aqui) --- */
+            /* --- ESTADO ABERTO --- */
             .cw-pill {
                 position: fixed; top: 30%; right: 24px;
                 display: flex; flex-direction: column; align-items: center; gap: 12px;
@@ -57,7 +57,7 @@ style.innerHTML = `
                 min-width: 50px; 
                 overflow: hidden;
 
-                /* SEQUÊNCIA DE ABERTURA: Container PRIMEIRO (Delay 0s) */
+                /* ABRIR: Cresce rápido (Delay 0s) */
                 transition: 
                     width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s, 
                     height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s,
@@ -68,7 +68,7 @@ style.innerHTML = `
             }
             .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
-            /* --- ESTADO COLAPSADO (A Bolinha) --- */
+            /* --- ESTADO COLAPSADO --- */
             .cw-pill.collapsed {
                 width: 50px !important; 
                 height: 50px !important;
@@ -77,65 +77,88 @@ style.innerHTML = `
                 gap: 0;
                 cursor: pointer;
 
-                /* SEQUÊNCIA DE FECHAMENTO: Container DEPOIS (Delay 0.2s) */
-                /* Espera o conteúdo sumir para não "mastigar" os ícones */
+                /* FECHAR: Espera os ícones sumirem (Delay 0.3s) */
                 transition: 
-                    width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s,
-                    height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 1s,
-                    padding 0.5s ease 0.2s,
-                    border-radius 0.5s ease 1s,
+                    width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s,
+                    height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s,
+                    padding 0.5s ease 0.3s,
+                    border-radius 0.5s ease 0.3s,
                     opacity 0.3s ease 0s,
-                    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 1s !important;
+                    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s !important;
             }
             
-            /* --- CONTEÚDO INTERNO (Botões) --- */
-            .cw-btn, .cw-grip, .cw-sep, .cw-status-container {
-                opacity: 1;
-                transform: scale(1);
-                
-                /* ABERTURA: Conteúdo aparece DEPOIS (Delay 0.3s) */
-                /* Dá tempo da pílula esticar antes de mostrar o recheio */
-                transition: 
-                    opacity 0.3s ease 0.3s, 
-                    transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s;
-            }
-
-            /* --- CONTEÚDO QUANDO FECHADO --- */
-            .cw-pill.collapsed .cw-btn, 
-            .cw-pill.collapsed .cw-grip, 
-            .cw-pill.collapsed .cw-sep, 
-            .cw-pill.collapsed .cw-status-container {
-                opacity: 0; 
-                pointer-events: none; 
-                transform: scale(0.5); /* Encolhe para o fundo */
-                
-                /* FECHAMENTO: Conteúdo some PRIMEIRO (Delay 0s) */
-                transition: 
-                    opacity 0.15s ease 0s, 
-                    transform 0.15s ease 0s;
-            }
-
-            /* --- LOGO PRINCIPAL --- */
+            /* --- LOGO (Bolinha) --- */
             .cw-main-logo {
                 position: absolute; top: 0; left: 0; width: 100%; height: 100%;
                 display: flex; align-items: center; justify-content: center;
                 opacity: 0; pointer-events: none; 
                 transform: scale(0.5) rotate(-90deg);
                 color: #fff;
-                
-                /* Some rápido ao abrir */
-                transition: all 0.2s ease 0s;
+                transition: all 0.3s ease 0s; /* Some rápido ao abrir */
             }
             .cw-main-logo svg { width: 24px; height: 24px; fill: currentColor; }
             
             .cw-pill.collapsed .cw-main-logo { 
                 opacity: 1; 
                 transform: scale(1) rotate(0deg);
-                /* Aparece suavemente DEPOIS que virou bolinha (Delay 0.3s) */
-                transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s;
+                transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s; /* Aparece por último ao fechar */
             }
 
-            /* --- RESTO DOS ESTILOS (Mantidos) --- */
+            /* --- ITENS INTERNOS (Botões) --- */
+            .cw-btn, .cw-grip, .cw-sep, .cw-status-container {
+                opacity: 1;
+                transform: scale(1);
+                /* ABRIR: Aparecem depois da pílula crescer (Delay Base 0.2s) */
+                transition: opacity 0.3s ease 0.2s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s;
+            }
+
+            .cw-pill.collapsed .cw-btn, 
+            .cw-pill.collapsed .cw-grip, 
+            .cw-pill.collapsed .cw-sep, 
+            .cw-pill.collapsed .cw-status-container {
+                opacity: 0; 
+                pointer-events: none; 
+                transform: scale(0.5);
+                /* FECHAR: Somem rápido (Delay 0s) */
+                transition: opacity 0.2s ease 0s, transform 0.2s ease 0s;
+            }
+
+            /* --- A MÁGICA: CASCATA DE SAÍDA (Um por um) --- */
+            
+            /* Grip (Topo) */
+            .cw-grip { transition-delay: 0.05s; }
+            .cw-pill.collapsed .cw-grip { transition-delay: 0s; }
+
+            /* Botão 1 */
+            .cw-btn:nth-of-type(1) { transition-delay: 0.1s; }
+            .cw-pill.collapsed .cw-btn:nth-of-type(1) { transition-delay: 0.05s; }
+
+            /* Botão 2 */
+            .cw-btn:nth-of-type(2) { transition-delay: 0.15s; }
+            .cw-pill.collapsed .cw-btn:nth-of-type(2) { transition-delay: 0.1s; }
+
+            /* Botão 3 */
+            .cw-btn:nth-of-type(3) { transition-delay: 0.2s; }
+            .cw-pill.collapsed .cw-btn:nth-of-type(3) { transition-delay: 0.15s; }
+
+            /* Botão 4 */
+            .cw-btn:nth-of-type(4) { transition-delay: 0.25s; }
+            .cw-pill.collapsed .cw-btn:nth-of-type(4) { transition-delay: 0.2s; }
+
+            /* Botão 5 (Timezone) */
+            .cw-btn:nth-of-type(5) { transition-delay: 0.3s; }
+            .cw-pill.collapsed .cw-btn:nth-of-type(5) { transition-delay: 0.25s; }
+
+            /* Separador */
+            .cw-sep { transition-delay: 0.32s; }
+            .cw-pill.collapsed .cw-sep { transition-delay: 0.28s; }
+
+            /* Botão 6 (Broadcast) */
+            .cw-btn:nth-of-type(6) { transition-delay: 0.35s; }
+            .cw-pill.collapsed .cw-btn:nth-of-type(6) { transition-delay: 0.3s; }
+
+
+            /* RESTO DOS ESTILOS (Mantidos) */
             .cw-btn {
                 width: 40px; height: 40px; 
                 border-radius: 50%; border: none; background: transparent;
@@ -150,13 +173,13 @@ style.innerHTML = `
             .cw-btn.links.active { color: ${COLORS.green} !important; background: rgba(129, 201, 149, 0.15); }
             .cw-btn.broadcast.active { color: ${COLORS.orange} !important; background: rgba(249, 171, 0, 0.15); }
             .cw-btn.timezone.active { color: ${COLORS.teal} !important; background: rgba(0, 191, 165, 0.15); }
-.cw-btn.timezone:hover { color: ${COLORS.teal}; filter: drop-shadow(0 0 5px rgba(0, 191, 165, 0.5)); }
 
             .cw-btn.notes:hover { color: ${COLORS.blue}; filter: drop-shadow(0 0 5px rgba(138, 180, 248, 0.5)); }
             .cw-btn.email:hover { color: ${COLORS.red}; filter: drop-shadow(0 0 5px rgba(242, 139, 130, 0.5)); }
             .cw-btn.script:hover { color: ${COLORS.purple}; filter: drop-shadow(0 0 5px rgba(197, 138, 249, 0.5)); }
             .cw-btn.links:hover { color: ${COLORS.green}; filter: drop-shadow(0 0 5px rgba(129, 201, 149, 0.5)); }
             .cw-btn.broadcast:hover { color: ${COLORS.orange}; filter: drop-shadow(0 0 5px rgba(249, 171, 0, 0.5)); }
+            .cw-btn.timezone:hover { color: ${COLORS.teal}; filter: drop-shadow(0 0 5px rgba(0, 191, 165, 0.5)); }
 
             .cw-btn::before {
                 content: ''; position: absolute; bottom: 2px; left: 50%; 
@@ -182,7 +205,7 @@ style.innerHTML = `
 
             .cw-sep {
                 width: 20px; height: 1px; background: rgba(255,255,255,0.2);
-                transition: opacity 0.3s ease 0.3s; /* Delay também no separador */
+                transition: opacity 0.3s ease 0.3s;
             }
             .cw-sep.visible { opacity: 1; }
             .cw-pill.collapsed .cw-sep { opacity: 0; transition: opacity 0.1s ease 0s; }
