@@ -42,7 +42,7 @@ style.innerHTML = `
             }
             .cw-focus-backdrop.active { opacity: 1; pointer-events: auto; }
 
-            /* --- ESTADO ABERTO --- */
+            /* --- PILL PRINCIPAL (O Palco) --- */
             .cw-pill {
                 position: fixed; top: 30%; right: 24px;
                 display: flex; flex-direction: column; align-items: center; gap: 12px;
@@ -51,13 +51,13 @@ style.innerHTML = `
                 background: ${COLORS.glassBg};
                 backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
                 border: 1px solid ${COLORS.glassBorder}; border-radius: 50px;
-                box-shadow: 0 12px 32px rgba(0,0,0,0.2); z-index: 2147483647;
+                box-shadow: 0 12px 32px rgba(0,0,0,0.25); z-index: 2147483647;
                 
                 opacity: 0; 
                 min-width: 50px; 
                 overflow: hidden;
 
-                /* ABRIR: Cresce rápido (Delay 0s) */
+                /* ABRIR: A pílula cresce rápido (Delay 0s) */
                 transition: 
                     width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s, 
                     height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s,
@@ -68,7 +68,7 @@ style.innerHTML = `
             }
             .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
-            /* --- ESTADO COLAPSADO --- */
+            /* --- ESTADO COLAPSADO (A Bolinha) --- */
             .cw-pill.collapsed {
                 width: 50px !important; 
                 height: 50px !important;
@@ -77,93 +77,82 @@ style.innerHTML = `
                 gap: 0;
                 cursor: pointer;
 
-                /* FECHAR: Espera os ícones sumirem (Delay 0.3s) */
+                /* FECHAR: A pílula espera (Delay 0.15s) os ícones começarem a sumir */
+                /* A duração (0.55s) é calibrada para terminar junto com o último ícone */
                 transition: 
-                    width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s,
-                    height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s,
-                    padding 0.5s ease 0.3s,
-                    border-radius 0.5s ease 0.3s,
+                    width 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s,
+                    height 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s,
+                    padding 0.5s ease 0.15s,
+                    border-radius 0.5s ease 0.15s,
                     opacity 0.3s ease 0s,
-                    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s !important;
+                    transform 0.55s cubic-bezier(0.2, 0.8, 0.2, 1) 0.15s !important;
             }
             
-            /* --- LOGO (Bolinha) --- */
+            /* --- LOGO DA BOLINHA --- */
             .cw-main-logo {
                 position: absolute; top: 0; left: 0; width: 100%; height: 100%;
                 display: flex; align-items: center; justify-content: center;
                 opacity: 0; pointer-events: none; 
-                transform: scale(0.5) rotate(-90deg);
+                transform: scale(0.5) rotate(-45deg);
                 color: #fff;
-                transition: all 0.3s ease 0s; /* Some rápido ao abrir */
+                transition: all 0.3s ease 0s;
             }
             .cw-main-logo svg { width: 24px; height: 24px; fill: currentColor; }
             
             .cw-pill.collapsed .cw-main-logo { 
                 opacity: 1; 
                 transform: scale(1) rotate(0deg);
-                transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s; /* Aparece por último ao fechar */
+                /* Aparece por último, suavemente */
+                transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s;
             }
 
-            /* --- ITENS INTERNOS (Botões) --- */
-            .cw-btn, .cw-grip, .cw-sep, .cw-status-container {
+            /* --- ITENS INTERNOS (Animação Base) --- */
+            .cw-pill > *:not(.cw-main-logo) {
                 opacity: 1;
-                transform: scale(1);
-                /* ABRIR: Aparecem depois da pílula crescer (Delay Base 0.2s) */
+                transform: scale(1) translateY(0);
+                /* ABRIR: Aparecem depois da pílula (Delay base 0.2s) */
                 transition: opacity 0.3s ease 0.2s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s;
             }
 
-            .cw-pill.collapsed .cw-btn, 
-            .cw-pill.collapsed .cw-grip, 
-            .cw-pill.collapsed .cw-sep, 
-            .cw-pill.collapsed .cw-status-container {
-                opacity: 0; 
-                pointer-events: none; 
-                transform: scale(0.5);
-                /* FECHAR: Somem rápido (Delay 0s) */
-                transition: opacity 0.2s ease 0s, transform 0.2s ease 0s;
+            /* --- CASCATA DE SAÍDA (O Segredo) --- */
+            /* Quando fechado (.collapsed), os itens somem um por um */
+            
+            .cw-pill.collapsed > *:not(.cw-main-logo) {
+                opacity: 0;
+                pointer-events: none;
+                transform: scale(0.8) translateY(-5px); /* Sobem um pouco */
+                /* A transição base de saída é rápida (0.2s) */
+                transition: opacity 0.2s ease, transform 0.2s ease;
             }
 
-            /* --- A MÁGICA: CASCATA DE SAÍDA (Um por um) --- */
+            /* Aplica delays sequenciais para cada filho (Grip, Buttons, Sep, etc) */
+            .cw-pill.collapsed > *:nth-child(1) { transition-delay: 0.00s; } /* Grip */
+            .cw-pill.collapsed > *:nth-child(2) { transition-delay: 0.03s; } /* Btn 1 */
+            .cw-pill.collapsed > *:nth-child(3) { transition-delay: 0.06s; } /* Btn 2 */
+            .cw-pill.collapsed > *:nth-child(4) { transition-delay: 0.09s; } /* Btn 3 */
+            .cw-pill.collapsed > *:nth-child(5) { transition-delay: 0.12s; } /* Btn 4 */
+            .cw-pill.collapsed > *:nth-child(6) { transition-delay: 0.15s; } /* Sep */
+            .cw-pill.collapsed > *:nth-child(7) { transition-delay: 0.18s; } /* Broadcast */
+            .cw-pill.collapsed > *:nth-child(8) { transition-delay: 0.21s; } /* Status */
+            .cw-pill.collapsed > *:nth-child(9) { transition-delay: 0.24s; } /* Extra */
+
+            /* --- CASCATA DE ENTRADA (Opcional: Inverso) --- */
+            /* Ao abrir, eles também entram em ondinha */
+            .cw-pill:not(.collapsed) > *:nth-child(1) { transition-delay: 0.10s; }
+            .cw-pill:not(.collapsed) > *:nth-child(2) { transition-delay: 0.15s; }
+            .cw-pill:not(.collapsed) > *:nth-child(3) { transition-delay: 0.20s; }
+            .cw-pill:not(.collapsed) > *:nth-child(4) { transition-delay: 0.25s; }
+            .cw-pill:not(.collapsed) > *:nth-child(5) { transition-delay: 0.30s; }
+            .cw-pill:not(.collapsed) > *:nth-child(6) { transition-delay: 0.35s; }
+            .cw-pill:not(.collapsed) > *:nth-child(7) { transition-delay: 0.40s; }
             
-            /* Grip (Topo) */
-            .cw-grip { transition-delay: 0.05s; }
-            .cw-pill.collapsed .cw-grip { transition-delay: 0s; }
-
-            /* Botão 1 */
-            .cw-btn:nth-of-type(1) { transition-delay: 0.1s; }
-            .cw-pill.collapsed .cw-btn:nth-of-type(1) { transition-delay: 0.05s; }
-
-            /* Botão 2 */
-            .cw-btn:nth-of-type(2) { transition-delay: 0.15s; }
-            .cw-pill.collapsed .cw-btn:nth-of-type(2) { transition-delay: 0.1s; }
-
-            /* Botão 3 */
-            .cw-btn:nth-of-type(3) { transition-delay: 0.2s; }
-            .cw-pill.collapsed .cw-btn:nth-of-type(3) { transition-delay: 0.15s; }
-
-            /* Botão 4 */
-            .cw-btn:nth-of-type(4) { transition-delay: 0.25s; }
-            .cw-pill.collapsed .cw-btn:nth-of-type(4) { transition-delay: 0.2s; }
-
-            /* Botão 5 (Timezone) */
-            .cw-btn:nth-of-type(5) { transition-delay: 0.3s; }
-            .cw-pill.collapsed .cw-btn:nth-of-type(5) { transition-delay: 0.25s; }
-
-            /* Separador */
-            .cw-sep { transition-delay: 0.32s; }
-            .cw-pill.collapsed .cw-sep { transition-delay: 0.28s; }
-
-            /* Botão 6 (Broadcast) */
-            .cw-btn:nth-of-type(6) { transition-delay: 0.35s; }
-            .cw-pill.collapsed .cw-btn:nth-of-type(6) { transition-delay: 0.3s; }
-
-
-            /* RESTO DOS ESTILOS (Mantidos) */
+            /* --- RESTO DOS ESTILOS (Botões, Cores, etc) --- */
             .cw-btn {
                 width: 40px; height: 40px; 
                 border-radius: 50%; border: none; background: transparent;
                 display: flex; align-items: center; justify-content: center; 
                 cursor: pointer; position: relative; color: ${COLORS.iconIdle};
+                flex-shrink: 0; /* Garante que não amassem */
             }
             .cw-btn:hover { background: ${COLORS.glassHighlight}; color: ${COLORS.iconActive}; transform: scale(1.1) !important; }
 
@@ -205,10 +194,9 @@ style.innerHTML = `
 
             .cw-sep {
                 width: 20px; height: 1px; background: rgba(255,255,255,0.2);
-                transition: opacity 0.3s ease 0.3s;
+                margin: 4px 0; /* Espaço extra vertical */
             }
             .cw-sep.visible { opacity: 1; }
-            .cw-pill.collapsed .cw-sep { opacity: 0; transition: opacity 0.1s ease 0s; }
 
             .cw-grip {
                 width: 100%; height: 24px; display: flex; align-items: center; justify-content: center; 
@@ -235,13 +223,14 @@ style.innerHTML = `
                 font-family: 'Google Sans', sans-serif; font-size: 12px; font-weight: 500; 
                 opacity: 0; pointer-events: none; transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1); 
                 box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: nowrap; border: 1px solid rgba(255,255,255,0.15);
+                z-index: 100;
             }
             .cw-pill.side-right .cw-btn::after { right: 60px; transform-origin: right center; }
             .cw-pill.side-right .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
             .cw-pill.side-left .cw-btn::after { left: 60px; transform-origin: left center; }
             .cw-pill.side-left .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
 
-            /* Processing Center */
+            /* Processing Center Styles */
             .cw-pill.processing-center {
                 top: 50% !important; left: 50% !important;
                 transform: translate(-50%, -50%) !important;
