@@ -57,7 +57,7 @@ style.innerHTML = `
                 min-width: 50px; 
                 overflow: hidden;
 
-                /* ABRIR: Cresce instantaneamente (Delay 0s) */
+                /* ABRIR: A pílula cresce rápido e sem delay */
                 transition: 
                     width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s, 
                     height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s,
@@ -77,7 +77,8 @@ style.innerHTML = `
                 gap: 0;
                 cursor: pointer;
 
-                /* FECHAR: Espera (Delay 0.35s) a cascata terminar antes de encolher */
+                /* FECHAR: Aumentamos o delay para 0.35s */
+                /* Isso garante que a pílula fique imóvel enquanto os ícones somem em cascata */
                 transition: 
                     width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.35s,
                     height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.35s,
@@ -94,7 +95,7 @@ style.innerHTML = `
                 opacity: 0; pointer-events: none; 
                 transform: scale(0.5) rotate(-45deg);
                 color: #fff;
-                /* Ao abrir: some rápido (0s delay) */
+                /* Ao abrir: some imediatamente */
                 transition: all 0.2s ease 0s;
             }
             .cw-main-logo svg { width: 24px; height: 24px; fill: currentColor; }
@@ -102,7 +103,7 @@ style.innerHTML = `
             .cw-pill.collapsed .cw-main-logo { 
                 opacity: 1; 
                 transform: scale(1) rotate(0deg);
-                /* Ao fechar: Aparece SÓ DEPOIS que a pílula começou a encolher (Delay 0.4s) */
+                /* Ao fechar: Entra suavemente depois que virou bolinha (Delay 0.4s) */
                 transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s;
             }
 
@@ -110,21 +111,20 @@ style.innerHTML = `
             .cw-pill > *:not(.cw-main-logo) {
                 opacity: 1;
                 transform: scale(1);
-                /* ABRIR: Aparece em cascata (Delay base 0.2s) */
+                /* ABRIR: Conteúdo entra depois da pílula crescer (Delay 0.2s) */
                 transition: opacity 0.3s ease 0.2s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s;
             }
 
             .cw-pill.collapsed > *:not(.cw-main-logo) {
                 opacity: 0; 
                 pointer-events: none; 
-                transform: scale(0.6); /* Encolhe levemente */
-                /* FECHAR: Some rápido (0.2s duration, 0s delay base) */
+                transform: scale(0.6); 
+                /* FECHAR: Conteúdo sai rápido (sem delay base, apenas a cascata) */
                 transition: opacity 0.2s ease 0s, transform 0.2s ease 0s;
             }
 
             /* --- CASCATA DE SAÍDA (Escadinha) --- */
-            /* O último item (transition-delay máx) é 0.24s. */
-            /* Como a pílula espera 0.35s, dá tempo de sobra para limpar a tela. */
+            /* O último item termina em ~0.24s. Como a pílula espera 0.35s, dá tempo perfeito. */
             
             .cw-pill.collapsed > *:nth-child(1) { transition-delay: 0.00s; }
             .cw-pill.collapsed > *:nth-child(2) { transition-delay: 0.03s; }
@@ -136,7 +136,7 @@ style.innerHTML = `
             .cw-pill.collapsed > *:nth-child(8) { transition-delay: 0.21s; }
             .cw-pill.collapsed > *:nth-child(9) { transition-delay: 0.24s; }
 
-            /* --- CASCATA DE ENTRADA (Opcional) --- */
+            /* --- CASCATA DE ENTRADA --- */
             .cw-pill:not(.collapsed) > *:nth-child(1) { transition-delay: 0.10s; }
             .cw-pill:not(.collapsed) > *:nth-child(2) { transition-delay: 0.15s; }
             .cw-pill:not(.collapsed) > *:nth-child(3) { transition-delay: 0.20s; }
@@ -147,7 +147,7 @@ style.innerHTML = `
             .cw-pill:not(.collapsed) > *:nth-child(8) { transition-delay: 0.45s; }
             .cw-pill:not(.collapsed) > *:nth-child(9) { transition-delay: 0.50s; }
 
-            /* --- RESTO DOS ESTILOS (Mantidos) --- */
+            /* --- RESTO DOS ESTILOS --- */
             .cw-btn {
                 width: 40px; height: 40px; 
                 border-radius: 50%; border: none; background: transparent;
