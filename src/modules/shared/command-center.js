@@ -29,7 +29,7 @@ export function initCommandCenter(actions) {
   if (!document.getElementById(styleId)) {
     const style = document.createElement("style");
     style.id = styleId;
-    style.innerHTML = `
+style.innerHTML = `
             @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@500&display=swap');
 
             .cw-focus-backdrop {
@@ -40,33 +40,30 @@ export function initCommandCenter(actions) {
             }
             .cw-focus-backdrop.active { opacity: 1; pointer-events: auto; }
 
-            /* --- PILL PRINCIPAL --- */
+            /* --- CONTAINER DA PILL (O Palco) --- */
             .cw-pill {
                 position: fixed; top: 30%; right: 24px;
                 display: flex; flex-direction: column; align-items: center; gap: 12px;
                 padding: 16px 8px;
                 
-                /* Visual Original */
                 background: ${COLORS.glassBg};
                 backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
                 border: 1px solid ${COLORS.glassBorder}; border-radius: 50px;
-                box-shadow: 0 8px 32px rgba(0,0,0,0.4); z-index: 2147483647;
+                box-shadow: 0 12px 32px rgba(0,0,0,0.2); z-index: 2147483647;
                 
                 opacity: 0; 
-                
-                
-transition: 
-                    width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), 
-                    height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-                    padding 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
-                    border-radius 0.4s ease,
-                    opacity 0.3s ease,
-                    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-                    left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), /* Suaviza movimento lateral */
-                    top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);  /* Suaviza movimento vertical */
-                
                 min-width: 50px; 
                 overflow: hidden;
+
+                /* ANIMAÇÃO DE ABERTURA (EXPANDIR) */
+                /* Delay 0s: Cresce imediatamente para dar espaço aos ícones */
+                transition: 
+                    width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s, 
+                    height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s,
+                    padding 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0s,
+                    border-radius 0.4s ease 0s,
+                    opacity 0.3s ease 0s,
+                    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s;
             }
             .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
@@ -77,56 +74,101 @@ transition:
                 padding: 0 !important;
                 border-radius: 50% !important;
                 gap: 0;
-                justify-content: center;
                 cursor: pointer;
 
-               transition: 
-                    width 0.65s cubic-bezier(0.2, 0.8, 0.2, 1),
-                    height 0.65s cubic-bezier(0.2, 0.8, 0.2, 1),
-                    padding 0.5s ease,
-                    border-radius 0.5s ease,
-                    opacity 0.3s ease,
-                    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
-                
-                cursor: pointer;
+                /* ANIMAÇÃO DE FECHAMENTO (ENCOLHER) */
+                /* Delay 0.25s: Espera os ícones sumirem antes de virar bolinha */
+                transition: 
+                    width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.25s,
+                    height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.25s,
+                    padding 0.5s ease 0.25s,
+                    border-radius 0.5s ease 0.25s,
+                    opacity 0.3s ease 0s, /* Opacidade não espera */
+                    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.25s !important;
             }
             
-            /* Ícone Principal (Logo) - Só visível quando fechado */
+            /* --- LOGO PRINCIPAL (Só aparece na bolinha) --- */
             .cw-main-logo {
                 position: absolute; top: 0; left: 0; width: 100%; height: 100%;
                 display: flex; align-items: center; justify-content: center;
-                opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+                opacity: 0; pointer-events: none; 
+                transform: scale(0.5) rotate(-90deg);
                 color: #fff;
+                
+                /* Ao abrir: Some rápido */
+                transition: all 0.3s ease 0s;
             }
             .cw-main-logo svg { width: 24px; height: 24px; fill: currentColor; }
             
-            .cw-pill.collapsed .cw-main-logo { opacity: 1; }
+            .cw-pill.collapsed .cw-main-logo { 
+                opacity: 1; 
+                transform: scale(1) rotate(0deg);
+                /* Ao fechar: Aparece por último (Delay alto) */
+                transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s;
+            }
 
-            /* Esconde itens internos quando fechado */
+            /* --- ITENS INTERNOS (Botões) --- */
+            .cw-btn, .cw-grip, .cw-sep, .cw-status-container {
+                /* Estado Normal (Visível) */
+                opacity: 1;
+                transform: scale(1) translateY(0);
+                /* Ao abrir: Entram em cascata (Delay base 0.2s + nth-child) */
+                transition: opacity 0.3s ease 0.2s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s;
+            }
+
+            /* Estado Colapsado (Invisível) */
             .cw-pill.collapsed .cw-btn, 
             .cw-pill.collapsed .cw-grip, 
             .cw-pill.collapsed .cw-sep,
             .cw-pill.collapsed .cw-status-container {
-                opacity: 0; pointer-events: none; transform: scale(0.5);
+                opacity: 0; 
+                pointer-events: none; 
+                transform: scale(0.4) translateY(10px); /* Caem um pouco */
+                /* Ao fechar: Somem IMEDIATAMENTE (Delay 0s) para a pílula poder encolher */
+                transition: opacity 0.2s ease 0s, transform 0.2s ease 0s;
             }
-            /* --- FIM COLAPSADO --- */
 
+            /* --- CASCATA DE SAÍDA/ENTRADA (A Coreografia) --- */
+            /* Isso faz um desaparecer depois do outro */
+            
+            /* Grip (Topo) */
+            .cw-grip { transition-delay: 0.05s; }
+            .cw-pill.collapsed .cw-grip { transition-delay: 0s; }
+
+            /* Botão 1 (Notes) */
+            .cw-btn:nth-of-type(1) { transition-delay: 0.1s; }
+            .cw-pill.collapsed .cw-btn:nth-of-type(1) { transition-delay: 0.05s; }
+
+            /* Botão 2 (Email) */
+            .cw-btn:nth-of-type(2) { transition-delay: 0.15s; }
+            .cw-pill.collapsed .cw-btn:nth-of-type(2) { transition-delay: 0.1s; }
+
+            /* Botão 3 (Script) */
+            .cw-btn:nth-of-type(3) { transition-delay: 0.2s; }
+            .cw-pill.collapsed .cw-btn:nth-of-type(3) { transition-delay: 0.15s; }
+
+            /* Botão 4 (Links) */
+            .cw-btn:nth-of-type(4) { transition-delay: 0.25s; }
+            .cw-pill.collapsed .cw-btn:nth-of-type(4) { transition-delay: 0.2s; }
+
+            /* Separador */
+            .cw-sep { transition-delay: 0.28s; }
+            .cw-pill.collapsed .cw-sep { transition-delay: 0.22s; }
+
+            /* Botão 5 (Broadcast) */
+            .cw-btn:nth-of-type(5) { transition-delay: 0.3s; }
+            .cw-pill.collapsed .cw-btn:nth-of-type(5) { transition-delay: 0.25s; }
+
+
+            /* ESTILOS GERAIS DOS BOTÕES (Mantidos) */
             .cw-btn {
                 width: 40px; height: 40px; 
                 border-radius: 50%; border: none; background: transparent;
                 display: flex; align-items: center; justify-content: center; 
                 cursor: pointer; position: relative; color: ${COLORS.iconIdle};
-                opacity: 0; transform: scale(0.5);
-                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
-            /* Delay na aparição dos botões para suavidade ao abrir */
-            .cw-pill:not(.collapsed) .cw-btn { transition-delay: 0.1s; }
-            
-            .cw-btn.popped { opacity: 1; transform: scale(1); }
+            .cw-btn:hover { background: ${COLORS.glassHighlight}; color: ${COLORS.iconActive}; transform: scale(1.1) !important; }
 
-            .cw-btn:hover { background: ${COLORS.glassHighlight}; color: ${COLORS.iconActive}; transform: scale(1.1); }
-
-            /* Estados Ativos e Cores */
             .cw-btn.notes.active { color: ${COLORS.blue} !important; background: rgba(138, 180, 248, 0.15); }
             .cw-btn.email.active { color: ${COLORS.red} !important; background: rgba(242, 139, 130, 0.15); }
             .cw-btn.script.active { color: ${COLORS.purple} !important; background: rgba(197, 138, 249, 0.15); }
@@ -139,7 +181,6 @@ transition:
             .cw-btn.links:hover { color: ${COLORS.green}; filter: drop-shadow(0 0 5px rgba(129, 201, 149, 0.5)); }
             .cw-btn.broadcast:hover { color: ${COLORS.orange}; filter: drop-shadow(0 0 5px rgba(249, 171, 0, 0.5)); }
 
-            /* Indicador LED */
             .cw-btn::before {
                 content: ''; position: absolute; bottom: 2px; left: 50%; 
                 width: 4px; height: 4px; border-radius: 50%;
@@ -151,7 +192,6 @@ transition:
             
             .cw-btn svg { width: 22px; height: 22px; fill: currentColor; pointer-events: none; }
 
-            /* BADGE DE NOTIFICAÇÃO */
             .cw-badge {
                 position: absolute; top: 8px; right: 8px;
                 width: 8px; height: 8px;
@@ -165,7 +205,6 @@ transition:
 
             .cw-sep {
                 width: 20px; height: 1px; background: rgba(255,255,255,0.2);
-                opacity: 0; transition: opacity 0.5s ease;
             }
             .cw-sep.visible { opacity: 1; }
 
@@ -383,15 +422,13 @@ function onMouseUp(e) {
     document.removeEventListener("mouseup", onMouseUp);
     
     if (isDragging) {
-      // --- CENÁRIO 1: FIM DO ARRASTO (SNAP PHYSICS) ---
+      // --- ARRASTO ---
       isDragging = false;
-      
       const screenW = window.innerWidth;
       const screenH = window.innerHeight;
       const rect = pill.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       
-      // Cálculos de Posição (Gruda nas bordas)
       let targetLeft;
       if (centerX < screenW / 2) {
         targetLeft = 24;
@@ -402,42 +439,36 @@ function onMouseUp(e) {
       }
       let targetTop = Math.max(24, Math.min(rect.top, screenH - rect.height - 24));
 
-      // [A CORREÇÃO DO PULO SECO]
-      // Forçamos o navegador a usar nossa transição suave AGORA, vencendo o CSS .collapsed
-      // Usamos setTimeout(..., 0) para garantir que saímos do loop de renderização do 'drag'
+      // 1. Aplica o movimento do arrasto com prioridade
       setTimeout(() => {
-          // 1. Aplica a regra de animação com prioridade máxima
           pill.style.setProperty(
               'transition', 
-              'left 0.6s cubic-bezier(0.19, 1, 0.22, 1), top 0.6s cubic-bezier(0.19, 1, 0.22, 1)', 
+              'left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)', 
               'important'
           );
-          
-          // 2. Define o destino
           pill.style.left = `${targetLeft}px`;
           pill.style.top = `${targetTop}px`;
           pill.style.bottom = "auto";
-          pill.style.transform = ""; // Limpa transforms residuais
-      }, 0);
+          pill.style.transform = ""; 
+      }, 10);
 
-      // 3. Limpeza Pós-Animação (Devolve o controle para o CSS de abrir/fechar)
+      // 2. Limpa para o CSS "Coreografado" voltar a funcionar
       setTimeout(() => { 
-          pill.style.removeProperty('transition'); 
+          pill.style.transition = ""; 
+          pill.style.removeProperty('transition');
       }, 700);
 
     } else {
-      // --- CENÁRIO 2: CLIQUE (ABRIR/FECHAR) ---
-      
+      // --- CLIQUE ---
       const isAnyActive = pill.querySelector('.cw-btn.active');
       const isBtnClick = e.target.closest('button');
 
       if (pill.classList.contains('collapsed')) {
-          // --- AÇÃO: ACORDAR (OPEN) ---
+          // ABRIR: Smart Docking
           const rect = pill.getBoundingClientRect();
           const screenH = window.innerHeight;
           const isBottomHalf = rect.top > (screenH / 2);
 
-          // Prepara a âncora (sem animar a troca de eixo)
           pill.style.setProperty('transition', 'none', 'important');
 
           if (isBottomHalf) {
@@ -449,23 +480,18 @@ function onMouseUp(e) {
               pill.style.top = `${rect.top}px`;
           }
 
-          // Força o navegador a recalcular
           void pill.offsetWidth;
-          
-          // Remove a trava para o CSS 'Open' assumir com a curva elástica
-          pill.style.removeProperty('transition'); 
+          pill.style.removeProperty('transition');
 
           pill.classList.remove('collapsed');
 
       } else {
-          // --- AÇÃO: DORMIR (CLOSE) ---
+          // FECHAR
           if (!isAnyActive && !isBtnClick) {
-             // Apenas adiciona a classe. O CSS .collapsed cuidará da animação suave.
              pill.classList.add('collapsed');
           }
       }
 
-      // Micro-interação no botão clicado
       if (isBtnClick) {
         isBtnClick.style.transform = "scale(0.9)";
         setTimeout(() => (isBtnClick.style.transform = ""), 150);
