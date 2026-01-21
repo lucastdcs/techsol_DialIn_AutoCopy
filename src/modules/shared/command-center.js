@@ -55,13 +55,15 @@ export function initCommandCenter(actions) {
                 opacity: 0; 
                 
                 
-                transition: 
+transition: 
                     width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), 
                     height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
                     padding 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
                     border-radius 0.4s ease,
                     opacity 0.3s ease,
-                    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                    left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), /* Suaviza movimento lateral */
+                    top 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);  /* Suaviza movimento vertical */
                 
                 min-width: 50px; 
                 overflow: hidden;
@@ -78,12 +80,12 @@ export function initCommandCenter(actions) {
                 justify-content: center;
                 cursor: pointer;
 
-                transition: 
-                    width 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
-                    height 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
-                    padding 0.7s ease,
-                    border-radius 0.6s ease,
-                    opacity 0.4s ease,
+               transition: 
+                    width 0.65s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    height 0.65s cubic-bezier(0.2, 0.8, 0.2, 1),
+                    padding 0.5s ease,
+                    border-radius 0.5s ease,
+                    opacity 0.3s ease,
                     transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
                 
                 cursor: pointer;
@@ -381,7 +383,7 @@ function onMouseUp(e) {
     document.removeEventListener("mouseup", onMouseUp);
     
     if (isDragging) {
-      // --- CENÁRIO 1: ARRASTO (SNAP) ---
+      // --- CENÁRIO 1: FIM DO ARRASTO (SNAP PHYSICS) ---
       isDragging = false;
       
       const screenW = window.innerWidth;
@@ -389,7 +391,7 @@ function onMouseUp(e) {
       const rect = pill.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       
-      // Cálculos de Posição
+      // Cálculos de Posição (Gruda nas bordas)
       let targetLeft;
       if (centerX < screenW / 2) {
         targetLeft = 24;
@@ -400,40 +402,42 @@ function onMouseUp(e) {
       }
       let targetTop = Math.max(24, Math.min(rect.top, screenH - rect.height - 24));
 
-      // [A CORREÇÃO] Usamos setProperty com 'important' para vencer o CSS
-      // Isso força o navegador a aceitar nossa transição de left/top
+      // [A CORREÇÃO DO PULO SECO]
+      // Forçamos o navegador a usar nossa transição suave AGORA, vencendo o CSS .collapsed
+      // Usamos setTimeout(..., 0) para garantir que saímos do loop de renderização do 'drag'
       setTimeout(() => {
+          // 1. Aplica a regra de animação com prioridade máxima
           pill.style.setProperty(
               'transition', 
-              'left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)', 
+              'left 0.6s cubic-bezier(0.19, 1, 0.22, 1), top 0.6s cubic-bezier(0.19, 1, 0.22, 1)', 
               'important'
           );
           
+          // 2. Define o destino
           pill.style.left = `${targetLeft}px`;
           pill.style.top = `${targetTop}px`;
           pill.style.bottom = "auto";
-          pill.style.transform = ""; 
-      }, 10);
+          pill.style.transform = ""; // Limpa transforms residuais
+      }, 0);
 
-      // Limpeza: Removemos a transição inline para o CSS original voltar a funcionar
-      // (Isso restaura o efeito de "dormir" lento depois que o snap acaba)
+      // 3. Limpeza Pós-Animação (Devolve o controle para o CSS de abrir/fechar)
       setTimeout(() => { 
           pill.style.removeProperty('transition'); 
       }, 700);
 
     } else {
-      // --- CENÁRIO 2: CLIQUE (TOGGLE) ---
+      // --- CENÁRIO 2: CLIQUE (ABRIR/FECHAR) ---
       
       const isAnyActive = pill.querySelector('.cw-btn.active');
       const isBtnClick = e.target.closest('button');
 
       if (pill.classList.contains('collapsed')) {
-          // ABRIR
+          // --- AÇÃO: ACORDAR (OPEN) ---
           const rect = pill.getBoundingClientRect();
           const screenH = window.innerHeight;
           const isBottomHalf = rect.top > (screenH / 2);
 
-          // Remove transição para troca de âncora instantânea
+          // Prepara a âncora (sem animar a troca de eixo)
           pill.style.setProperty('transition', 'none', 'important');
 
           if (isBottomHalf) {
@@ -445,18 +449,23 @@ function onMouseUp(e) {
               pill.style.top = `${rect.top}px`;
           }
 
-          void pill.offsetWidth; // Reflow
-          pill.style.removeProperty('transition'); // Volta pro CSS normal
+          // Força o navegador a recalcular
+          void pill.offsetWidth;
+          
+          // Remove a trava para o CSS 'Open' assumir com a curva elástica
+          pill.style.removeProperty('transition'); 
 
           pill.classList.remove('collapsed');
 
       } else {
-          // FECHAR
+          // --- AÇÃO: DORMIR (CLOSE) ---
           if (!isAnyActive && !isBtnClick) {
+             // Apenas adiciona a classe. O CSS .collapsed cuidará da animação suave.
              pill.classList.add('collapsed');
           }
       }
 
+      // Micro-interação no botão clicado
       if (isBtnClick) {
         isBtnClick.style.transform = "scale(0.9)";
         setTimeout(() => (isBtnClick.style.transform = ""), 150);
