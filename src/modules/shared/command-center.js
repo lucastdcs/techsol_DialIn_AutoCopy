@@ -398,61 +398,50 @@ export function initCommandCenter(actions) {
         targetLeft = screenW - rect.width - 24;
         pill.classList.remove("side-left"); pill.classList.add("side-right");
       }
+      
       // Trava Vertical
       let targetTop = Math.max(24, Math.min(rect.top, screenH - rect.height - 24));
 
-      // [CORREÇÃO] setTimeout para quebrar o ciclo de renderização.
-      // 1. O navegador processa o fim do arrasto.
-      // 2. 10ms depois, aplicamos a animação. Isso garante que a transição funcione.
-      setTimeout(() => {
-          // Define a mola
-          pill.style.transition = "left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease";
-          
-          // Aplica coordenadas e limpa transformações inline (para voltar ao CSS .docked)
-          pill.style.left = `${targetLeft}px`;
-          pill.style.top = `${targetTop}px`;
-          pill.style.bottom = "auto";
-          pill.style.transform = ""; 
-      }, 10);
+      // [A CORREÇÃO] Simplicidade Total.
+      // Definimos a transição e a posição no mesmo ciclo. 
+      // Isso sobrescreve o "transition: none" do arrasto imediatamente.
+      pill.style.transition = "left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease";
+      pill.style.left = `${targetLeft}px`;
+      pill.style.top = `${targetTop}px`;
+      pill.style.bottom = "auto";
 
-      // Limpa a transição inline depois que a animação acabar (devolve controle pro CSS)
+      // Limpa a transição inline depois que a animação acabar (600ms)
+      // Isso é crucial para que as transições CSS de width/height (colapso) voltem a funcionar.
       setTimeout(() => { 
           pill.style.transition = ""; 
-      }, 700);
+      }, 600);
 
     } else {
       // --- CENÁRIO 2: CLIQUE (TOGGLE) ---
       
-      // Se clicou no fundo vazio, manda dormir (fecha)
       const isAnyActive = pill.querySelector('.cw-btn.active');
       const isBtnClick = e.target.closest('button');
 
       if (pill.classList.contains('collapsed')) {
-          // ABRIR: Smart Docking (Cresce para o lado certo)
+          // ABRIR: Smart Docking
           const rect = pill.getBoundingClientRect();
           const screenH = window.innerHeight;
           const isBottomHalf = rect.top > (screenH / 2);
 
-          // Remove transição de posição para a troca de âncora ser instantânea
-          // (Evita que ele deslize a tela inteira ao trocar de top para bottom)
+          // Troca de âncora instantânea
           pill.style.transition = "none";
 
           if (isBottomHalf) {
-              // Está embaixo: Fixa BOTTOM, libera TOP -> Cresce pra Cima
               const currentBottom = screenH - rect.bottom;
               pill.style.top = 'auto';
               pill.style.bottom = `${currentBottom}px`;
           } else {
-              // Está em cima: Fixa TOP, libera BOTTOM -> Cresce pra Baixo
               pill.style.bottom = 'auto';
               pill.style.top = `${rect.top}px`;
           }
 
-          // Força um reflow para o navegador processar a troca de âncora
-          void pill.offsetWidth;
-          
-          // Restaura transição (vazia = usa a do CSS)
-          pill.style.transition = ""; 
+          void pill.offsetWidth; // Reflow
+          pill.style.transition = ""; // Retoma CSS
 
           pill.classList.remove('collapsed');
 
