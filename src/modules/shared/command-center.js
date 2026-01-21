@@ -376,7 +376,7 @@ export function initCommandCenter(actions) {
     }
   }
 
- function onMouseUp(e) {
+function onMouseUp(e) {
     document.removeEventListener("mousemove", onMouseMove);
     document.removeEventListener("mouseup", onMouseUp);
     
@@ -389,7 +389,7 @@ export function initCommandCenter(actions) {
       const rect = pill.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       
-      // Cálculos de Posição (Snap Lateral)
+      // Cálculos de Posição
       let targetLeft;
       if (centerX < screenW / 2) {
         targetLeft = 24;
@@ -398,23 +398,28 @@ export function initCommandCenter(actions) {
         targetLeft = screenW - rect.width - 24;
         pill.classList.remove("side-left"); pill.classList.add("side-right");
       }
-      
-      // Trava Vertical
       let targetTop = Math.max(24, Math.min(rect.top, screenH - rect.height - 24));
 
-      // [A CORREÇÃO] Simplicidade Total.
-      // Definimos a transição e a posição no mesmo ciclo. 
-      // Isso sobrescreve o "transition: none" do arrasto imediatamente.
-      pill.style.transition = "left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.4s ease";
-      pill.style.left = `${targetLeft}px`;
-      pill.style.top = `${targetTop}px`;
-      pill.style.bottom = "auto";
+      // [A CORREÇÃO] Usamos setProperty com 'important' para vencer o CSS
+      // Isso força o navegador a aceitar nossa transição de left/top
+      setTimeout(() => {
+          pill.style.setProperty(
+              'transition', 
+              'left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)', 
+              'important'
+          );
+          
+          pill.style.left = `${targetLeft}px`;
+          pill.style.top = `${targetTop}px`;
+          pill.style.bottom = "auto";
+          pill.style.transform = ""; 
+      }, 10);
 
-      // Limpa a transição inline depois que a animação acabar (600ms)
-      // Isso é crucial para que as transições CSS de width/height (colapso) voltem a funcionar.
+      // Limpeza: Removemos a transição inline para o CSS original voltar a funcionar
+      // (Isso restaura o efeito de "dormir" lento depois que o snap acaba)
       setTimeout(() => { 
-          pill.style.transition = ""; 
-      }, 600);
+          pill.style.removeProperty('transition'); 
+      }, 700);
 
     } else {
       // --- CENÁRIO 2: CLIQUE (TOGGLE) ---
@@ -423,13 +428,13 @@ export function initCommandCenter(actions) {
       const isBtnClick = e.target.closest('button');
 
       if (pill.classList.contains('collapsed')) {
-          // ABRIR: Smart Docking
+          // ABRIR
           const rect = pill.getBoundingClientRect();
           const screenH = window.innerHeight;
           const isBottomHalf = rect.top > (screenH / 2);
 
-          // Troca de âncora instantânea
-          pill.style.transition = "none";
+          // Remove transição para troca de âncora instantânea
+          pill.style.setProperty('transition', 'none', 'important');
 
           if (isBottomHalf) {
               const currentBottom = screenH - rect.bottom;
@@ -441,7 +446,7 @@ export function initCommandCenter(actions) {
           }
 
           void pill.offsetWidth; // Reflow
-          pill.style.transition = ""; // Retoma CSS
+          pill.style.removeProperty('transition'); // Volta pro CSS normal
 
           pill.classList.remove('collapsed');
 
@@ -452,7 +457,6 @@ export function initCommandCenter(actions) {
           }
       }
 
-      // Efeito visual de clique no botão
       if (isBtnClick) {
         isBtnClick.style.transform = "scale(0.9)";
         setTimeout(() => (isBtnClick.style.transform = ""), 150);
