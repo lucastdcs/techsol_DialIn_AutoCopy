@@ -5,140 +5,57 @@ import { showToast } from "../../shared/utils.js";
 import { copyHtmlToClipboard, ensureNoteCardIsOpen, triggerInputEvents } from "../notes-bridge.js";
 
 export function createSplitTransferComponent(onBack) {
-    // 1. CONTAINER PRINCIPAL (Fix de Layout)
+    // --- 1. LAYOUT & STRUCTURE ---
     const container = document.createElement("div");
-    // height: 100% é crucial para herdar a altura do pai
-    // display: flex e flex-direction: column organizam header, corpo e footer
-    // min-height: 0 é o segredo para scroll dentro de flex items no Firefox/Chrome
     container.style.cssText = "display: flex; flex-direction: column; height: 100%; width: 100%; background: #F8F9FA; overflow: hidden; position: relative;";
 
-    // 2. ÁREA DE SCROLL (Onde o conteúdo vive)
     const scrollArea = document.createElement("div");
-    // flex: 1 faz ele ocupar todo o espaço disponível
-    // overflow-y: auto habilita o scroll apenas aqui
-    // padding-bottom suficiente para o footer não cobrir o último campo
-    scrollArea.style.cssText = "flex: 1; overflow-y: auto; padding: 20px 24px 80px 24px; min-height: 0;"; 
+    scrollArea.style.cssText = "flex: 1; overflow-y: auto; padding: 20px 24px 100px 24px; min-height: 0; scroll-behavior: smooth;";
 
-    // --- ESTILOS VISUAIS (Google Material 3 / Apple HD) ---
+    // Header Shadow Element (UX Polish)
+    const headerShadow = document.createElement("div");
+    headerShadow.style.cssText = "position: absolute; top: 0; left: 0; width: 100%; height: 1px; background: transparent; transition: box-shadow 0.3s; z-index: 10;";
+    container.appendChild(headerShadow);
+
+    scrollArea.addEventListener('scroll', () => {
+        headerShadow.style.boxShadow = scrollArea.scrollTop > 10 ? "0 4px 12px rgba(0,0,0,0.05)" : "none";
+    });
+
+    // --- 2. STYLES (Consolidated) ---
     const styles = {
-        sectionTitle: `
-            font-family: 'Google Sans', Roboto, sans-serif;
-            font-size: 11px; 
-            font-weight: 700; 
-            color: #5F6368; 
-            text-transform: uppercase; 
-            letter-spacing: 0.8px; 
-            margin: 28px 0 12px 0;
-            display: flex; align-items: center; gap: 8px;
-        `,
-        label: `
-            display: block; 
-            font-size: 13px; 
-            font-weight: 600; 
-            color: #3C4043; 
-            margin-bottom: 8px;
-        `,
-        inputWrapper: `
-            margin-bottom: 16px;
-        `,
-        input: `
-            width: 100%; 
-            padding: 12px 14px; 
-            border-radius: 8px; 
-            border: 1px solid #DADCE0; 
-            background: #FFFFFF; 
-            font-size: 14px; 
-            color: #202124; 
-            transition: border 0.2s, box-shadow 0.2s; 
-            outline: none; 
-            box-sizing: border-box;
-            font-family: Roboto, sans-serif;
-        `,
-        inputFocus: `
-            border-color: #1a73e8; 
-            box-shadow: 0 0 0 2px rgba(26,115,232,0.15);
-        `,
-        textarea: `
-            min-height: 80px; 
-            resize: vertical; 
-            line-height: 1.5;
-        `,
+        section: `margin-bottom: 24px; animation: fadeIn 0.3s ease;`,
+        sectionTitle: `font-family: 'Google Sans', Roboto, sans-serif; font-size: 11px; font-weight: 700; color: #5F6368; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;`,
+        label: `display: block; font-size: 13px; font-weight: 600; color: #3C4043; margin-bottom: 6px;`,
+        inputWrapper: `margin-bottom: 14px; position: relative;`,
+        input: `width: 100%; padding: 10px 12px; border-radius: 6px; border: 1px solid #DADCE0; background: #FFF; font-size: 14px; color: #202124; outline: none; transition: all 0.2s; box-sizing: border-box; font-family: Roboto, sans-serif;`,
+        inputError: `border-color: #D93025; background: #FFF4F4;`,
+        textarea: `min-height: 80px; resize: vertical; line-height: 1.5;`,
         
-        // Radio Cards (Botões selecionáveis)
-        radioGroup: `
-            display: flex; 
-            gap: 10px; 
-            margin-bottom: 20px;
-        `,
-        radioLabel: `
-            flex: 1; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            padding: 10px; 
-            border: 1px solid #DADCE0; 
-            border-radius: 8px; 
-            background: #FFF; 
-            cursor: pointer; 
-            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1); 
-            font-size: 13px; 
-            font-weight: 500; 
-            color: #3C4043; 
-            user-select: none;
-        `,
-        radioActive: `
-            background: #E8F0FE; 
-            border-color: #1967D2; 
-            color: #1967D2; 
-            font-weight: 600;
-            box-shadow: 0 1px 2px rgba(26,115,232,0.1);
-        `,
+        // Segmented Control (Radios)
+        radioGroup: `display: flex; gap: 8px; margin-bottom: 16px; background: #F1F3F4; padding: 4px; border-radius: 8px;`,
+        radioLabel: `flex: 1; text-align: center; padding: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 6px; color: #5F6368; transition: all 0.2s; user-select: none;`,
+        radioActive: `background: #FFFFFF; color: #1967D2; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.1);`,
         
-        // Banner de Aviso
-        banner: `
-            background: #FEF7E0; 
-            border: 1px solid #FEEFC3; 
-            border-radius: 12px; 
-            padding: 16px; 
-            margin-bottom: 24px; 
-            font-size: 13px; 
-            color: #B06000; 
-            line-height: 1.5; 
-            display: flex; 
-            gap: 12px; 
-            align-items: start;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-        `,
+        // Banner
+        banner: `background: #FFF8E1; border: 1px solid #FEEFC3; border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 13px; color: #B06000; line-height: 1.4; display: flex; gap: 10px;`,
         
-        // Botão Mágico
-        magicBtn: `
-            width: 100%; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            gap: 8px; 
-            padding: 12px; 
-            background: #FFFFFF; 
-            color: #1A73E8; 
-            border: 1px solid #DADCE0; 
-            border-radius: 12px; 
-            font-size: 13px; 
-            font-weight: 600; 
-            cursor: pointer; 
-            transition: all 0.2s; 
-            margin-bottom: 8px;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        `
+        // Hidden Field Transition
+        hiddenField: `display: none; opacity: 0; transform: translateY(-10px); transition: all 0.3s ease;`,
+        visibleField: `display: block; opacity: 1; transform: translateY(0);`
     };
 
-    // --- HELPER: INPUT BUILDER ---
-    function createField(id, labelText, type = "text", placeholder = "") {
+    // --- 3. COMPONENT BUILDERS ---
+
+    // Generic Input Builder
+    const fields = {}; // Store references for easy access later
+
+    function createField({ id, label, type = "text", placeholder = "", required = false, parent = scrollArea }) {
         const wrapper = document.createElement("div");
         wrapper.style.cssText = styles.inputWrapper;
         
         const lbl = document.createElement("label");
         lbl.style.cssText = styles.label;
-        lbl.textContent = labelText;
+        lbl.innerHTML = `${label} ${required ? '<span style="color:#D93025">*</span>' : ''}`;
         
         let input;
         if (type === "textarea") {
@@ -150,207 +67,273 @@ export function createSplitTransferComponent(onBack) {
             input.style.cssText = styles.input;
         }
         
-        // UX: Focus States
-        const originalStyle = input.style.cssText;
-        input.onfocus = () => input.style.cssText = originalStyle + styles.inputFocus;
-        input.onblur = () => input.style.cssText = originalStyle;
-
-        input.id = `st-${id}`;
+        input.id = id;
         input.placeholder = placeholder;
         
+        // Focus Effects
+        input.addEventListener('focus', () => {
+            input.style.borderColor = "#1a73e8";
+            input.style.boxShadow = "0 0 0 2px rgba(26,115,232,0.15)";
+        });
+        input.addEventListener('blur', () => {
+            input.style.borderColor = "#DADCE0";
+            input.style.boxShadow = "none";
+            if(required && input.value.trim() !== "") {
+                input.style.backgroundColor = "#FFF"; // Remove error bg if fixed
+            }
+        });
+
+        // Store reference
+        fields[id] = { input, wrapper, required };
+
         wrapper.appendChild(lbl);
         wrapper.appendChild(input);
-        return { wrapper, input };
+        parent.appendChild(wrapper);
+        return wrapper;
     }
 
-    function createRadioGroup(id, labelText) {
+    // Segmented Radio Builder
+    function createRadio({ id, label, options = ["Yes", "No"], defaultValue = "No", onChange = null }) {
         const wrapper = document.createElement("div");
+        wrapper.style.cssText = styles.inputWrapper;
         
         const lbl = document.createElement("label");
         lbl.style.cssText = styles.label;
-        lbl.textContent = labelText;
+        lbl.textContent = label;
         wrapper.appendChild(lbl);
 
         const group = document.createElement("div");
         group.style.cssText = styles.radioGroup;
 
-        ['Yes', 'No'].forEach(val => {
-            const labelRadio = document.createElement("label");
-            labelRadio.style.cssText = styles.radioLabel;
+        // Hidden input to store value for easier retrieval
+        const hiddenInput = document.createElement("input");
+        hiddenInput.type = "hidden";
+        hiddenInput.id = id;
+        hiddenInput.value = defaultValue;
+        wrapper.appendChild(hiddenInput);
 
-            const radio = document.createElement("input");
-            radio.type = "radio";
-            radio.name = `st-${id}`;
-            radio.value = val === 'Yes' ? 'Y' : 'N';
-            radio.style.display = "none"; // Esconde o radio nativo (UI limpa)
+        options.forEach(opt => {
+            const btn = document.createElement("div");
+            btn.textContent = opt;
+            btn.style.cssText = styles.radioLabel;
             
-            if(val === 'No') {
-                radio.checked = true;
-            }
+            const isActive = opt === defaultValue;
+            if (isActive) btn.style.cssText += styles.radioActive;
 
-            // Feedback Tátil
-            labelRadio.onmousedown = () => labelRadio.style.transform = "scale(0.96)";
-            labelRadio.onmouseup = () => labelRadio.style.transform = "scale(1)";
-            labelRadio.onmouseleave = () => labelRadio.style.transform = "scale(1)";
+            btn.onclick = () => {
+                // Visual Toggle
+                Array.from(group.children).forEach(c => c.style.cssText = styles.radioLabel);
+                btn.style.cssText += styles.radioActive;
+                
+                // Logic Update
+                hiddenInput.value = opt;
+                if (onChange) onChange(opt);
+            };
 
-            labelRadio.appendChild(radio);
-            labelRadio.appendChild(document.createTextNode(val));
-            
-            // Lógica Visual (Toggle Class)
-            radio.addEventListener('change', () => {
-                // Reseta todos
-                group.querySelectorAll('label').forEach(l => l.style.cssText = styles.radioLabel);
-                // Ativa o clicado
-                if (radio.checked) labelRadio.style.cssText = styles.radioLabel + styles.radioActive;
-            });
-            
-            // Inicializa estado visual
-            if(val === 'No') labelRadio.style.cssText = styles.radioLabel + styles.radioActive;
-
-            group.appendChild(labelRadio);
+            group.appendChild(btn);
         });
+
+        fields[id] = { input: hiddenInput, wrapper, required: false }; // Store ref
+        
         wrapper.appendChild(group);
-        return { wrapper };
+        scrollArea.appendChild(wrapper);
+        return wrapper;
     }
 
-    // --- CONSTRUÇÃO DO CONTEÚDO ---
+    // --- 4. UI CONSTRUCTION ---
 
-    // 1. DISCLAIMER (Topo)
-    const disclaimer = document.createElement("div");
-    disclaimer.style.cssText = styles.banner;
-    disclaimer.innerHTML = `
-        <span style="font-size: 18px;">⚠️</span>
+    // A. Warning Banner
+    const banner = document.createElement("div");
+    banner.style.cssText = styles.banner;
+    banner.innerHTML = `
+        <span>⚠️</span>
         <div>
-            <div style="font-weight:700; margin-bottom:4px;">Processo Crítico</div>
-            Antes de transferir, verifique o <a href="https://sites.google.com/corp/google.com/technicalsolutions/case-handling_1/out-of-scope?authuser=0#h.obb5iieru15o" target="_blank" style="color:#B06000; text-decoration:underline;">SOP de Out of Scope</a> e consulte um <a href="http://go/webao-help-deluxe" target="_blank" style="color:#B06000; text-decoration:underline;">SME</a>.
+            <b>Out of Scope Check:</b><br>
+            Certifique-se de consultar o <a href="#" style="color:inherit;text-decoration:underline;">SOP</a> antes de transferir.
         </div>
     `;
-    scrollArea.appendChild(disclaimer);
+    scrollArea.appendChild(banner);
 
-    // 2. MAGIC FILL BTN
+    // B. Magic Fill Button
+    const magicContainer = document.createElement("div");
+    magicContainer.style.marginBottom = "24px";
     const btnMagic = document.createElement("button");
-    btnMagic.style.cssText = styles.magicBtn;
-    btnMagic.innerHTML = `<span style="font-size:16px">✨</span> Preencher Automaticamente`;
+    btnMagic.innerHTML = `✨ &nbsp; Auto-Preencher Dados da Página`;
+    btnMagic.style.cssText = "width:100%; padding:10px; border:1px dashed #1a73e8; background:#F0F7FF; color:#1a73e8; border-radius:8px; font-weight:600; cursor:pointer; font-size:13px; transition:all 0.2s;";
     
-    // Hover e Active
-    btnMagic.onmouseover = () => btnMagic.style.backgroundColor = "#F8F9FA";
-    btnMagic.onmouseout = () => btnMagic.style.backgroundColor = "#FFFFFF";
-    btnMagic.onmousedown = () => btnMagic.style.transform = "scale(0.98)";
-    btnMagic.onmouseup = () => btnMagic.style.transform = "scale(1)";
+    btnMagic.onmouseover = () => btnMagic.style.background = "#E1EFFF";
+    btnMagic.onmouseout = () => btnMagic.style.background = "#F0F7FF";
     
-    scrollArea.appendChild(btnMagic);
+    magicContainer.appendChild(btnMagic);
+    scrollArea.appendChild(magicContainer);
 
-    // 3. SEÇÃO: DADOS TÉCNICOS
-    const techTitle = document.createElement("div");
-    techTitle.style.cssText = styles.sectionTitle;
-    techTitle.style.marginTop = "24px"; 
-    techTitle.innerHTML = `<span>🛠️</span> Dados Técnicos`;
-    scrollArea.appendChild(techTitle);
+    // C. Technical Data
+    const techSection = document.createElement("div");
+    techSection.style.cssText = styles.section;
+    techSection.innerHTML = `<div style="${styles.sectionTitle}">🛠️ Dados Técnicos</div>`;
+    scrollArea.appendChild(techSection);
 
-    const fAds = createField("cid", "Ads CID", "text", "000-000-0000");
-    const fGa4 = createField("ga4", "GA4 ID");
-    const fGtm = createField("gtm", "GTM ID");
-    const fAccess = createRadioGroup("access", "Advertiser has access to GA4/GTM?");
-    const fAccessEmail = createField("access-email", "If Yes, User Email");
-    const fGhost = createRadioGroup("ghost", "Ghosting Access Available?");
-
-    scrollArea.append(fAds.wrapper, fGa4.wrapper, fGtm.wrapper, fAccess.wrapper, fAccessEmail.wrapper, fGhost.wrapper);
-
-    // 4. SEÇÃO: CONTATO
-    const contactTitle = document.createElement("div");
-    contactTitle.style.cssText = styles.sectionTitle;
-    contactTitle.innerHTML = `<span>📞</span> Contato & Problema`;
-    scrollArea.appendChild(contactTitle);
-
-    const fName = createField("name", "Name of Advertiser");
-    const fUrl = createField("url", "Website Address");
-    const fPhone = createField("phone", "Phone Number");
-    const fEmail = createField("email", "Email Address");
-    const fTime = createField("callback", "Preferred Call Back Time (w/ Timezone)");
-    const fDesc = createField("desc", "Detailed Issue Description", "textarea", "Descreva o problema técnico em detalhes...");
-    const fChecks = createField("checks", "Checks Performed by Tech Team", "textarea", "Liste o troubleshooting já realizado...");
-    const fScreens = createField("screens", "Uncropped Screenshots (Links)", "textarea", "https://...");
-
-    scrollArea.append(fName.wrapper, fUrl.wrapper, fPhone.wrapper, fEmail.wrapper, fTime.wrapper, fDesc.wrapper, fChecks.wrapper, fScreens.wrapper);
-
-    // 5. SEÇÃO: CÓPIA
-    const copyTitle = document.createElement("div");
-    copyTitle.style.cssText = styles.sectionTitle;
-    copyTitle.innerHTML = `<span>📧</span> Contatos para Cópia (CC)`;
-    scrollArea.appendChild(copyTitle);
+    createField({ id: "cid", label: "Ads CID", placeholder: "000-000-0000", required: true, parent: techSection });
+    createField({ id: "ga4", label: "GA4 Property ID", parent: techSection });
+    createField({ id: "gtm", label: "GTM Container ID", parent: techSection });
     
-    const fAdvContact = createField("c-adv", "Advertiser Contact");
-    const fAmContact = createField("c-am", "Account Manager");
+    // Dynamic Logic: Access Email
+    const emailWrapper = document.createElement("div");
+    emailWrapper.style.cssText = styles.hiddenField;
+    techSection.appendChild(emailWrapper); // Placeholder for ordering
 
-    scrollArea.append(fAdvContact.wrapper, fAmContact.wrapper);
+    createRadio({ 
+        id: "hasAccess", 
+        label: "Advertiser has access to GA4/GTM?", 
+        defaultValue: "No", 
+        onChange: (val) => {
+            if (val === "Yes") {
+                emailWrapper.style.cssText = styles.visibleField + "margin-bottom:14px;";
+            } else {
+                emailWrapper.style.cssText = styles.hiddenField;
+                fields['accessEmail'].input.value = ""; // Clear if hidden
+            }
+        }
+    });
 
-    // --- FOOTER FIXO (Ações) ---
+    // Create the conditional field inside the wrapper
+    createField({ id: "accessEmail", label: "User Access Email", parent: emailWrapper });
+    
+    createRadio({ id: "ghosting", label: "Ghosting Available?", defaultValue: "No" }); // Appended to scrollArea by default
+
+    // D. Contact & Issue
+    const contactSection = document.createElement("div");
+    contactSection.style.cssText = styles.section;
+    contactSection.innerHTML = `<div style="${styles.sectionTitle}">📞 Contato & Problema</div>`;
+    scrollArea.appendChild(contactSection);
+
+    createField({ id: "name", label: "Advertiser Name", required: true, parent: contactSection });
+    createField({ id: "url", label: "Website URL", parent: contactSection });
+    createField({ id: "phone", label: "Phone Number", parent: contactSection });
+    createField({ id: "email", label: "Contact Email", parent: contactSection });
+    createField({ id: "callback", label: "Preferred Callback Time (Timezone)", parent: contactSection });
+    
+    createField({ id: "desc", label: "Detailed Issue Description", type: "textarea", placeholder: "Descreva o erro, passos para reproduzir...", required: true, parent: contactSection });
+    createField({ id: "checks", label: "Troubleshooting Performed", type: "textarea", placeholder: "O que você já testou?", parent: contactSection });
+    createField({ id: "screens", label: "Screenshots (Links)", type: "textarea", parent: contactSection });
+
+    // E. CC Contacts
+    const copySection = document.createElement("div");
+    copySection.style.cssText = styles.section;
+    copySection.innerHTML = `<div style="${styles.sectionTitle}">📧 Cópias (CC)</div>`;
+    scrollArea.appendChild(copySection);
+
+    createField({ id: "cc_adv", label: "Advertiser Contact", parent: copySection });
+    createField({ id: "cc_am", label: "Account Manager", parent: copySection });
+
+
+    // --- 5. FOOTER & ACTIONS ---
     const footer = document.createElement("div");
-    // backdrop-filter blur para o conteúdo passar por baixo suavemente
-    // z-index alto para ficar sobre o scrollArea
-    footer.style.cssText = "padding: 16px 24px; background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); border-top: 1px solid #E0E0E0; display: flex; justify-content: flex-end; position: absolute; bottom: 0; left: 0; width: 100%; box-sizing: border-box; z-index: 100;";
+    footer.style.cssText = "padding: 16px 24px; background: rgba(255,255,255,0.95); border-top: 1px solid #E0E0E0; display: flex; justify-content: space-between; align-items: center; position: absolute; bottom: 0; left: 0; width: 100%; box-sizing: border-box; z-index: 20;";
+
+    const btnBack = document.createElement("button");
+    btnBack.innerHTML = "Voltar";
+    btnBack.style.cssText = "border:none; background:transparent; color:#5F6368; font-weight:600; cursor:pointer; padding: 8px;";
+    btnBack.onclick = onBack;
 
     const btnGenerate = document.createElement("button");
-    btnGenerate.textContent = "Gerar Nota S&T";
-    btnGenerate.style.cssText = "padding: 10px 24px; background: #1a73e8; color: #fff; border: none; border-radius: 24px; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3); transition: transform 0.1s, box-shadow 0.2s;";
+    btnGenerate.textContent = "Gerar Nota";
+    btnGenerate.style.cssText = "padding: 10px 24px; background: #1a73e8; color: #fff; border: none; border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: all 0.2s;";
     
-    // Efeito de clique físico
-    btnGenerate.onmousedown = () => {
-        btnGenerate.style.transform = "scale(0.96)";
-        btnGenerate.style.boxShadow = "0 1px 3px rgba(26, 115, 232, 0.2)";
-    };
-    btnGenerate.onmouseup = () => {
-        btnGenerate.style.transform = "scale(1)";
-        btnGenerate.style.boxShadow = "0 2px 6px rgba(26, 115, 232, 0.3)";
-    };
-    
+    footer.appendChild(btnBack);
     footer.appendChild(btnGenerate);
-
-    // MONTAGEM FINAL
-    container.appendChild(scrollArea);
     container.appendChild(footer);
 
-    // --- LÓGICA (Mantida) ---
 
-    // 1. Magic Fill
+    // --- 6. LOGIC IMPLEMENTATION ---
+
+    // Magic Fill Logic
     btnMagic.onclick = async () => {
-        btnMagic.innerHTML = `<span style="font-size:16px">⏳</span> Buscando...`;
-        const data = await getPageData();
+        const oldText = btnMagic.innerHTML;
+        btnMagic.innerHTML = "⏳ Buscando dados...";
         
-        if (data.advertiserName) fName.input.value = data.advertiserName;
-        if (data.websiteUrl) fUrl.input.value = data.websiteUrl;
-        if (data.clientEmail) {
-            fEmail.input.value = data.clientEmail;
-            fAdvContact.input.value = data.clientEmail;
-        }
-        
-        const bodyText = document.body.innerText;
-        const cidMatch = bodyText.match(/\d{3}-\d{3}-\d{4}/);
-        if (cidMatch) fAds.input.value = cidMatch[0];
+        try {
+            const data = await getPageData();
+            let filledCount = 0;
 
-        btnMagic.innerHTML = `<span style="font-size:16px; color:#188038">✅</span> Dados Preenchidos!`;
-        btnMagic.style.background = "#E6F4EA";
-        btnMagic.style.borderColor = "#188038";
-        
-        setTimeout(() => {
-             btnMagic.innerHTML = `<span style="font-size:16px">✨</span> Preencher Automaticamente`;
-             btnMagic.style.background = "#FFFFFF";
-             btnMagic.style.borderColor = "#DADCE0";
-        }, 2000);
-        
-        showToast("Dados capturados com sucesso!");
+            const safeFill = (id, val) => {
+                const f = fields[id];
+                if (val && f && f.input.value === "") { // Only fill if empty
+                    f.input.value = val;
+                    // Visual Flash Effect
+                    f.input.style.backgroundColor = "#E6F4EA";
+                    f.input.style.borderColor = "#34A853";
+                    setTimeout(() => {
+                        f.input.style.backgroundColor = "#FFF";
+                        f.input.style.borderColor = "#DADCE0";
+                    }, 1000);
+                    filledCount++;
+                }
+            };
+
+            safeFill("name", data.advertiserName);
+            safeFill("url", data.websiteUrl);
+            if (data.clientEmail) {
+                safeFill("email", data.clientEmail);
+                safeFill("cc_adv", data.clientEmail);
+            }
+
+            // Simple Regex for CID (Basic heuristic)
+            const bodyText = document.body.innerText;
+            const cidMatch = bodyText.match(/\d{3}-\d{3}-\d{4}/);
+            if (cidMatch) safeFill("cid", cidMatch[0]);
+
+            if (filledCount > 0) {
+                showToast(`${filledCount} campos preenchidos!`);
+            } else {
+                showToast("Nenhum dado novo encontrado.");
+            }
+
+        } catch (e) {
+            console.error(e);
+            showToast("Erro ao ler página.");
+        } finally {
+            btnMagic.innerHTML = oldText;
+        }
     };
 
-    // 2. Gerar Nota
+    // Validation Logic
+    const validate = () => {
+        let isValid = true;
+        let firstError = null;
+
+        Object.values(fields).forEach(field => {
+            if (field.required && !field.input.value.trim()) {
+                isValid = false;
+                field.input.style.cssText += styles.inputError;
+                // Shake animation
+                field.wrapper.animate([
+                    { transform: 'translateX(0)' },
+                    { transform: 'translateX(-5px)' },
+                    { transform: 'translateX(5px)' },
+                    { transform: 'translateX(0)' }
+                ], { duration: 300 });
+                
+                if (!firstError) firstError = field.input;
+            }
+        });
+
+        if (firstError) firstError.scrollIntoView({ behavior: "smooth", block: "center" });
+        return isValid;
+    };
+
+    // Generation Logic
     btnGenerate.onclick = async () => {
-        const getVal = (id) => {
-            const el = container.querySelector(`#st-${id}`);
-            return el ? el.value : '';
-        };
-        const getRadio = (name) => {
-            const el = container.querySelector(`input[name="st-${name}"]:checked`);
-            return el ? el.value : 'N';
-        };
+        if (!validate()) {
+            showToast("Preencha os campos obrigatórios.", { isError: true });
+            return;
+        }
+
+        const getVal = (id) => fields[id].input.value || "N/A";
+        
+        // Handling the Access Logic for template
+        const hasAccess = getVal("hasAccess");
+        const accessEmail = hasAccess === "Yes" ? getVal("accessEmail") : "N/A";
 
         const template = `Split & Transfer : Phone Note Format [Mandatory]
 
@@ -358,35 +341,28 @@ export function createSplitTransferComponent(onBack) {
 <b>Ads CID:</b> ${getVal('cid')}
 <b>GA4 ID:</b> ${getVal('ga4')}
 <b>GTM ID:</b> ${getVal('gtm')}
-<b>Advertiser has access to either GA4 or GTM (Y/N):</b> ${getRadio('access')}
-<b>If Yes, user access email to GA4/GTM:</b> ${getVal('access-email')}
-<b>Ghosting Access Available (Y/N):</b> ${getRadio('ghost')}
-<b>Name of the advertiser:</b> ${getVal('name')}
-<b>Website Address:</b> ${getVal('url')}
-<b>Advertiser’s preferred mode of communication:</b> Phone
-<b>Advertiser/Web Master’s Phone Number:</b> ${getVal('phone')}
-<b>Preferred Call Back time with time zone and contact number:</b> ${getVal('callback')}
-<b>Advertiser/Web Master’s Email Address:</b> ${getVal('email')}
+<b>Advertiser has access to GA4/GTM (Y/N):</b> ${hasAccess === "Yes" ? "Y" : "N"}
+<b>If Yes, user access email:</b> ${accessEmail}
+<b>Ghosting Access Available (Y/N):</b> ${getVal('ghosting') === "Yes" ? "Y" : "N"}
+<b>Name of advertiser:</b> ${getVal('name')}
+<b>Website:</b> ${getVal('url')}
+<b>Phone Number:</b> ${getVal('phone')}
+<b>Preferred Callback:</b> ${getVal('callback')}
+<b>Email Address:</b> ${getVal('email')}
 
 <b>Detailed Issue Description:</b>
 ${getVal('desc')}
 
-<b>Name of the conversion action or event in the question:</b> N/A
-<b>Date range:</b> N/A
-<b>Uncropped screenshots of the issue:</b>
+<b>Uncropped screenshots:</b>
 ${getVal('screens')}
 
-<b>Test conversion details (if any):</b> N/A
-
-<b>Checks performed by Technical Solutions Team (Detailed Info + Screenshot doc):</b>
+<b>Checks performed by Technical Solutions Team:</b>
 ${getVal('checks')}
 
-[IMP] Contacts to be copied on all communication about this case
-<b>Advertiser contact -</b> ${getVal('c-adv')}
-<b>Account Manager -</b> ${getVal('c-am')}
-<b>Additional Contact -</b> N/A
-
-<b>Additional Comments:</b> (Optional)`;
+[IMP] Contacts to be copied
+<b>Advertiser contact:</b> ${getVal('cc_adv')}
+<b>Account Manager:</b> ${getVal('cc_am')}
+`;
 
         const htmlToInsert = template.replace(/\n/g, '<br>');
         copyHtmlToClipboard(htmlToInsert);
@@ -396,7 +372,7 @@ ${getVal('checks')}
             if (editor.innerText.trim() === "") editor.innerHTML = "";
             document.execCommand("insertHTML", false, htmlToInsert);
             triggerInputEvents(editor);
-            showToast("Nota S&T inserida!");
+            showToast("Nota gerada e inserida!");
         } else {
             showToast("Copiado! Abra uma nota para colar.");
         }
