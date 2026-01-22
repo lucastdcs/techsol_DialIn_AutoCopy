@@ -32,7 +32,7 @@ export function initCommandCenter(actions) {
     const style = document.createElement("style");
     style.id = styleId;
 style.innerHTML = `
-           @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@500&display=swap');
+          @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@500&display=swap');
 
 .cw-focus-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.4); z-index: 2147483646; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
 .cw-focus-backdrop.active { opacity: 1; pointer-events: auto; }
