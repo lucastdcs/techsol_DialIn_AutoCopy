@@ -32,14 +32,9 @@ export function initCommandCenter(actions) {
     const style = document.createElement("style");
     style.id = styleId;
 style.innerHTML = `
-            @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@500&display=swap');
+           @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@500&display=swap');
 
-.cw-focus-backdrop {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px);
-    z-index: 2147483646; opacity: 0; pointer-events: none;
-    transition: opacity 0.5s ease;
-}
+.cw-focus-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.4); z-index: 2147483646; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
 .cw-focus-backdrop.active { opacity: 1; pointer-events: auto; }
 
 /* --- CONTAINER (PILL) --- */
@@ -48,19 +43,17 @@ style.innerHTML = `
     display: flex; flex-direction: column; align-items: center; gap: 12px;
     padding: 16px 8px;
     
-    /* Vidro Intenso estilo iOS */
-    background: rgba(40, 40, 40, 0.85);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 50px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    /* Look mais sólido/técnico */
+    background: #202124;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px; /* Bordas menos arredondadas quando aberto */
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
     z-index: 2147483647;
     
     opacity: 0; min-width: 50px; overflow: hidden;
-
-    /* ABRIR: Mola suave */
-    transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+    
+    /* ABRIR: Rápido e linear */
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
@@ -70,51 +63,48 @@ style.innerHTML = `
     padding: 0 !important; gap: 0 !important;
     border-radius: 50% !important; cursor: pointer;
     
-    /* FECHAR: Delay de 0.1s no container para dar tempo do blur acontecer */
-    transition: all 0.6s cubic-bezier(0.32, 0.72, 0, 1) 0.1s;
+    /* FECHAR: Snap agressivo (Ease-in-back) */
+    transition: all 0.3s cubic-bezier(0.6, -0.28, 0.735, 0.045);
 }
 
 /* --- CONTEÚDO --- */
 .cw-btn, .cw-grip, .cw-sep {
-    opacity: 1; transform: scale(1); filter: blur(0px);
-    transition: all 0.4s ease 0.2s; /* Delay ao abrir */
+    opacity: 1; transform: scale(1);
+    transition: all 0.2s ease 0.1s;
 }
 
-/* Quando fecha: Blur + Scale Down rápido */
+/* Quando fecha: Some INSTANTANEAMENTE */
 .cw-pill.collapsed > *:not(.cw-main-logo) {
     opacity: 0; pointer-events: none;
-    transform: scale(0.8);
-    filter: blur(12px); /* O segredo: o ícone vira fumaça */
-    transition: all 0.2s ease 0s; /* Sem delay, some na hora */
+    transition: opacity 0.05s linear 0s; /* Tchau imediato */
 }
 
 /* --- LOGO --- */
 .cw-main-logo {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     display: flex; align-items: center; justify-content: center; color: #fff;
-    opacity: 0; transform: scale(0.5); filter: blur(4px);
-    transition: all 0.2s ease;
+    opacity: 0; transform: scale(0.5);
+    transition: all 0.1s ease;
 }
 .cw-pill.collapsed .cw-main-logo {
-    opacity: 1; transform: scale(1); filter: blur(0px);
-    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) 0.2s;
+    opacity: 1; transform: scale(1);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.1s;
 }
 
-/* --- ESTILOS PADRÃO DOS BOTÕES (Necessário manter) --- */
-.cw-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: ${COLORS.iconIdle}; position: relative; flex-shrink:0; }
-.cw-btn:hover { background: rgba(255, 255, 255, 0.1); color: #FFF; transform: scale(1.15) !important; }
+/* --- ESTILOS PADRÃO DOS BOTÕES --- */
+.cw-btn { width: 40px; height: 40px; border-radius: 8px; /* Quadrado arredondado */ border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: ${COLORS.iconIdle}; position: relative; flex-shrink:0; }
+.cw-btn:hover { background: rgba(255, 255, 255, 0.15); color: #FFF; }
 .cw-btn svg { width: 22px; height: 22px; fill: currentColor; pointer-events: none; }
-.cw-sep { width: 20px; height: 1px; background: rgba(255,255,255,0.2); margin: 4px 0; }
+.cw-sep { width: 24px; height: 2px; background: rgba(255,255,255,0.1); margin: 4px 0; }
 .cw-grip { width: 100%; height: 24px; display: flex; align-items: center; justify-content: center; cursor: grab; }
-.cw-grip-bar { width: 24px; height: 4px; background-color: ${COLORS.iconIdle}; border-radius: 4px; opacity: 0.4; }
-.cw-badge { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background: #d93025; border-radius: 50%; border: 2px solid rgba(40,40,40,0.8); }
+.cw-grip-bar { width: 24px; height: 4px; background-color: ${COLORS.iconIdle}; border-radius: 2px; }
+.cw-badge { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; background: #d93025; border-radius: 50%; }
 
 /* --- processing center styles (mantidos simplificados) --- */
 .cw-pill.processing-center { top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; width: 320px !important; height: 110px !important; background: #202124 !important; padding: 0 !important; }
 .cw-pill.processing-center > *:not(.cw-center-stage) { display: none !important; }
 .cw-center-stage { display: flex; flex-direction: column; align-items: center; width: 100%; opacity: 0; animation: fadeIn 0.4s forwards; }
-@keyframes fadeIn { to { opacity: 1; } }
-        `;
+@keyframes fadeIn { to { opacity: 1; } }`;
     document.head.appendChild(style);
   }
 
