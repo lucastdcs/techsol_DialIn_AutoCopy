@@ -483,10 +483,9 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
         opacity: 0; 
         min-width: 50px; 
         
-        /* CORRE\xC7\xC3O AQUI: Visible para mostrar os tooltips laterais */
-        overflow: visible; 
+        overflow: visible;
 
-        /* ABRIR: Efeito "El\xE1stico" (Overshoot) */
+        /* ABRIR: Efeito "El\xE1stico" */
         transition: 
             width 0.6s cubic-bezier(0.47, 1.64, 0.41, 0.8), 
             height 0.6s cubic-bezier(0.47, 1.64, 0.41, 0.8),
@@ -506,7 +505,6 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
         gap: 0;
         cursor: pointer;
         
-        /* CORRE\xC7\xC3O AQUI: Hidden para manter a bolinha perfeita */
         overflow: hidden !important;
 
         /* FECHAR: Efeito "Back-in" */
@@ -519,16 +517,22 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
             transform 0.5s cubic-bezier(0.36, 0, 0.66, -0.56) !important;
     }
     
-    /* --- LOGO DA BOLINHA --- */
+    /* --- LOGO DA BOLINHA (COM GRADIENTE GOOGLE) --- */
     .cw-main-logo {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         display: flex; align-items: center; justify-content: center;
         opacity: 0; pointer-events: none; 
         transform: scale(2) rotate(180deg);
-        color: #fff;
         transition: all 0.3s ease;
+
+        /* TRUQUE DO GRADIENTE: Usamos o \xEDcone como M\xC1SCARA */
+        background-color: #fff; /* Cor padr\xE3o branca */
+        -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center/35% no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center/35% no-repeat;
     }
-    .cw-main-logo svg { width: 24px; height: 24px; fill: currentColor; }
+    
+    /* Esconde o SVG original filho pois o DIV pai j\xE1 virou o \xEDcone via m\xE1scara */
+    .cw-main-logo svg { opacity: 0; }
     
     .cw-pill.collapsed .cw-main-logo { 
         opacity: 1; 
@@ -536,11 +540,17 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
         transition: all 0.5s cubic-bezier(0.47, 1.64, 0.41, 0.8) 0.2s;
     }
 
+    /* --- HOVER NO \xCDCONE PRINCIPAL (O GRADIENTE) --- */
+    .cw-pill.collapsed:hover .cw-main-logo {
+        /* Gradiente Google: Azul, Vermelho, Amarelo, Verde */
+        background-image: linear-gradient(135deg, #4285F4 0%, #EA4335 33%, #FBBC05 66%, #34A853 100%);
+        transform: scale(1.15) rotate(0deg); /* Leve pop */
+    }
+
     /* --- CONTE\xDADO INTERNO --- */
     .cw-pill > *:not(.cw-main-logo) {
         opacity: 1;
         transform: scale(1);
-        /* ABRIR: Itens pulam para fora */
         transition: 
             opacity 0.4s ease 0.2s, 
             transform 0.5s cubic-bezier(0.47, 1.64, 0.41, 0.8) 0.2s;
@@ -549,7 +559,6 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
     .cw-pill.collapsed > *:not(.cw-main-logo) {
         opacity: 0; 
         pointer-events: none; 
-        /* FECHAR: Sugados para o centro */
         transform: scale(0); 
         transition: 
             opacity 0.25s ease 0s, 
@@ -593,7 +602,7 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
     
     .cw-btn svg { width: 22px; height: 22px; fill: currentColor; pointer-events: none; }
 
-    /* TOOLTIP (O Nome do M\xF3dulo) */
+    /* TOOLTIP */
     .cw-btn::after { 
         content: attr(data-label); position: absolute; top: 50%; transform: translateY(-50%) scale(0.9); 
         padding: 6px 12px; border-radius: 6px; 
@@ -603,17 +612,13 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
         transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1); 
         box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: nowrap; 
         border: 1px solid rgba(255,255,255,0.15);
-        z-index: 2147483648; /* Acima de tudo */
+        z-index: 2147483648; 
     }
-    
-    /* Posi\xE7\xE3o do Tooltip baseada no lado da tela */
     .cw-pill.side-right .cw-btn::after { right: 55px; transform-origin: right center; }
     .cw-pill.side-right .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
-    
     .cw-pill.side-left .cw-btn::after { left: 55px; transform-origin: left center; }
     .cw-pill.side-left .cw-btn:hover::after { opacity: 1; transform: translateY(-50%) scale(1); }
 
-    /* Outros Elementos */
     .cw-badge {
         position: absolute; top: 8px; right: 8px;
         width: 8px; height: 8px;
@@ -652,7 +657,7 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
     }
     .cw-pill.system-check { animation: successPop 0.6s ease-out; }
 
-    /* Processing Center Styles */
+    /* Processing Styles */
     .cw-pill.processing-center {
         top: 50% !important; left: 50% !important;
         transform: translate(-50%, -50%) !important;
