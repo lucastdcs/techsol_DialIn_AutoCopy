@@ -377,6 +377,5 @@ ${getVal('checks')}
             showToast("Copiado! Abra uma nota para colar.");
         }
     };
-
     return container;
 }
