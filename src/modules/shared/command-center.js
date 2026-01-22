@@ -57,7 +57,7 @@ style.innerHTML = `
                 min-width: 50px; 
                 overflow: hidden;
 
-                /* ABRIR: A pílula cresce rápido e sem delay */
+                /* ABRIR: Cresce rápido (Energia) */
                 transition: 
                     width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s, 
                     height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s,
@@ -77,15 +77,16 @@ style.innerHTML = `
                 gap: 0;
                 cursor: pointer;
 
-                /* FECHAR: Aumentamos o delay para 0.35s */
-                /* Isso garante que a pílula fique imóvel enquanto os ícones somem em cascata */
+                /* FECHAR: AQUI ESTÁ A MUDANÇA */
+                /* Delay: 0.5s (Espera MUITO os ícones sumirem) */
+                /* Duration: 0.7s (Move mais devagar/preguiçoso) */
                 transition: 
-                    width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.35s,
-                    height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.35s,
-                    padding 0.5s ease 0.35s,
-                    border-radius 0.5s ease 0.35s,
+                    width 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s,
+                    height 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s,
+                    padding 0.5s ease 0.5s,
+                    border-radius 0.5s ease 0.5s,
                     opacity 0.3s ease 0s,
-                    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.35s !important;
+                    transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) 0.5s !important;
             }
             
             /* --- LOGO DA BOLINHA --- */
@@ -95,7 +96,6 @@ style.innerHTML = `
                 opacity: 0; pointer-events: none; 
                 transform: scale(0.5) rotate(-45deg);
                 color: #fff;
-                /* Ao abrir: some imediatamente */
                 transition: all 0.2s ease 0s;
             }
             .cw-main-logo svg { width: 24px; height: 24px; fill: currentColor; }
@@ -103,28 +103,29 @@ style.innerHTML = `
             .cw-pill.collapsed .cw-main-logo { 
                 opacity: 1; 
                 transform: scale(1) rotate(0deg);
-                /* Ao fechar: Entra suavemente depois que virou bolinha (Delay 0.4s) */
-                transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s;
+                /* Aparece suavemente no final (0.6s delay) */
+                transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s;
             }
 
             /* --- CONTEÚDO INTERNO --- */
             .cw-pill > *:not(.cw-main-logo) {
                 opacity: 1;
                 transform: scale(1);
-                /* ABRIR: Conteúdo entra depois da pílula crescer (Delay 0.2s) */
+                /* ABRIR: Aparece DEPOIS da pílula (0.2s delay) */
                 transition: opacity 0.3s ease 0.2s, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s;
             }
 
             .cw-pill.collapsed > *:not(.cw-main-logo) {
                 opacity: 0; 
                 pointer-events: none; 
-                transform: scale(0.6); 
-                /* FECHAR: Conteúdo sai rápido (sem delay base, apenas a cascata) */
+                transform: scale(0.7); /* Encolhe menos para não parecer que "caiu" */
+                /* FECHAR: Some rápido (0.2s) */
                 transition: opacity 0.2s ease 0s, transform 0.2s ease 0s;
             }
 
-            /* --- CASCATA DE SAÍDA (Escadinha) --- */
-            /* O último item termina em ~0.24s. Como a pílula espera 0.35s, dá tempo perfeito. */
+            /* --- CASCATA DE SAÍDA (A "Onda") --- */
+            /* Último item termina em 0.24s + 0.2s = 0.44s */
+            /* A pílula começa em 0.50s. Margem segura. */
             
             .cw-pill.collapsed > *:nth-child(1) { transition-delay: 0.00s; }
             .cw-pill.collapsed > *:nth-child(2) { transition-delay: 0.03s; }
