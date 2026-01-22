@@ -459,14 +459,9 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
             cursor: pointer; /* Indica clic\xE1vel */
         }
     `,document.head.appendChild(t)}function Ee(t,e,n){let o=document.getElementById(n);if(!e)return;let s=e.getAttribute("data-moved")==="true",i={x:0,y:0};if(o){let g=o.getBoundingClientRect();i.x=g.left+g.width/2,i.y=g.top+g.height/2}let a,r;if(!s)a=window.innerWidth/2,r=window.innerHeight/2;else{let g=e.getBoundingClientRect();a=g.left+g.width/2,r=g.top+g.height/2,a===0&&r===0&&(a=window.innerWidth/2,r=window.innerHeight/2)}let u=i.x-a,m=i.y-r;t?(W.playGenieOpen(),e.style.transition="none",e.style.opacity="0",e.style.pointerEvents="auto",s?e.style.transform=`translate(${u}px, ${m}px) scale(0.05)`:e.style.transform=`translate(calc(-50% + ${u}px), calc(-50% + ${m}px)) scale(0.05)`,e.offsetWidth,requestAnimationFrame(()=>{e.classList.add("open"),o&&o.classList.add("active"),e.style.transition="opacity 0.4s ease-out, transform 0.5s cubic-bezier(0.19, 1, 0.22, 1)",e.style.opacity="1",s?e.style.transform="translate(0, 0) scale(1)":e.style.transform="translate(-50%, -50%) scale(1)"}),typeof bo=="function"&&bo(e,n)):(W.playSwoosh(),e.style.transition="opacity 0.25s ease, transform 0.3s cubic-bezier(0.5, 0, 1, 1)",e.style.pointerEvents="none",requestAnimationFrame(()=>{e.style.opacity="0",s?e.style.transform=`translate(${u}px, ${m}px) scale(0.1)`:e.style.transform=`translate(calc(-50% + ${u}px), calc(-50% + ${m}px)) scale(0.1)`}),setTimeout(()=>{e.classList.remove("open"),o&&o.classList.remove("active"),e.style.transition="",e.style.transform=""},300),typeof Pt=="function"&&Pt(e))}function bo(t,e){Pt(t);let n=o=>{if(!t.classList.contains("open"))return;let s=t.contains(o.target),i=document.querySelector(".cw-pill"),a=i&&i.contains(o.target);s?(t.classList.remove("idle"),t.style.zIndex="2147483648"):a||(t.classList.add("idle"),t.style.zIndex="2147483646")};t._idleHandler=n,document.addEventListener("mousedown",n)}function Pt(t){t._idleHandler&&(document.removeEventListener("mousedown",t._idleHandler),t._idleHandler=null)}var Vo="https://script.google.com/a/macros/google.com/s/AKfycbxFxh1cVk6r0t_JTA2TBfHBLJe_mOBQFsidwL1jwsUDcBtQYk3afu25SN-FR3vafJChHw/exec",jt="cw_data_broadcast",fo="cw_data_tips",Uo=["Processando...","Mantenha o foco!","Aguarde..."];function vt(t,e={}){return new Promise((n,o)=>{let s="cw_cb_"+Math.round(1e5*Math.random()),i=document.createElement("script");window[s]=u=>{document.body.contains(i)&&document.body.removeChild(i),delete window[s],n(u)};let a=Object.keys(e).map(u=>encodeURIComponent(u)+"="+encodeURIComponent(e[u])).join("&"),r=`${Vo}?op=${t}&callback=${s}&t=${Date.now()}&${a}`;i.src=r,i.onerror=()=>{document.body.contains(i)&&document.body.removeChild(i),delete window[s],o(new Error("JSONP Error (Check Corp Login)"))},document.body.appendChild(i)})}var ve={fetchTips:async()=>{try{let t=await vt("tips");t?.tips&&localStorage.setItem(fo,JSON.stringify(t.tips))}catch(t){console.warn("Tips offline",t)}},fetchData:async()=>{try{let t=await vt("broadcast");if(t?.broadcast)return localStorage.setItem(jt,JSON.stringify(t.broadcast)),t}catch(t){console.warn("Broadcast offline",t)}return{broadcast:JSON.parse(localStorage.getItem(jt)||"[]")}},getCachedBroadcasts:()=>JSON.parse(localStorage.getItem(jt)||"[]"),getRandomTip:()=>{let t=Uo,e=localStorage.getItem(fo);if(e)try{t=JSON.parse(e)}catch{}return t[Math.floor(Math.random()*t.length)]},sendBroadcast:async t=>{let e={...t,date:new Date().toISOString(),id:Date.now().toString()};return await ve._performOp("new_broadcast",e)},updateBroadcast:async(t,e)=>{let n={id:t,...e};return await ve._performOp("update_broadcast",n)},deleteBroadcast:async t=>await ve._performOp("delete_broadcast",{id:t}),_performOp:async(t,e)=>{try{console.log(`\u{1F4E4} Executando ${t}...`,e);let n=await vt(t,e);return n&&n.status==="success"?(console.log("\u2705 Sucesso:",t),!0):(console.warn("\u26A0\uFE0F Falha:",n),!1)}catch(n){return console.error("\u274C Erro JSONP:",n),!1}},logEvent:(t,e,n="",o=null)=>{try{let s="anon";try{let a=bt();a&&(s=a.split("@")[0].toLowerCase())}catch{}let i={timestamp:new Date().toISOString(),user:s,version:"v4.5.1",category:t,action:e,label:n,value:o||""};vt("log",i).catch(a=>{})}catch(s){console.warn("Analytics error",s)}},logUsage:()=>{}};var ho={glassBg:"rgba(61, 61, 61, 0.77)",glassBorder:"rgba(255, 255, 255, 0.15)",glassActive:"rgba(79, 79, 79, 0.89)",glassHighlight:"rgba(255, 255, 255, 0.08)",iconIdle:"#c2c5c8ff",iconActive:"#FFFFFF",blue:"#8AB4F8",red:"#F28B82",purple:"#C58AF9",green:"#81C995",orange:"#F9AB00",teal:"#00BFA5"},wt=t=>new Promise(e=>setTimeout(e,t));function xo(t){let e="cw-command-center-style";if(!document.getElementById(e)){let b=document.createElement("style");b.id=e,b.innerHTML=`
-            @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@500&display=swap');
+           @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@500&display=swap');
 
-.cw-focus-backdrop {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(4px);
-    z-index: 2147483646; opacity: 0; pointer-events: none;
-    transition: opacity 0.5s ease;
-}
+.cw-focus-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.4); z-index: 2147483646; opacity: 0; pointer-events: none; transition: opacity 0.2s ease; }
 .cw-focus-backdrop.active { opacity: 1; pointer-events: auto; }
 
 /* --- CONTAINER (PILL) --- */
@@ -475,19 +470,17 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
     display: flex; flex-direction: column; align-items: center; gap: 12px;
     padding: 16px 8px;
     
-    /* Vidro Intenso estilo iOS */
-    background: rgba(40, 40, 40, 0.85);
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 50px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+    /* Look mais s\xF3lido/t\xE9cnico */
+    background: #202124;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px; /* Bordas menos arredondadas quando aberto */
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
     z-index: 2147483647;
     
     opacity: 0; min-width: 50px; overflow: hidden;
-
-    /* ABRIR: Mola suave */
-    transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+    
+    /* ABRIR: R\xE1pido e linear */
+    transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
@@ -497,51 +490,48 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
     padding: 0 !important; gap: 0 !important;
     border-radius: 50% !important; cursor: pointer;
     
-    /* FECHAR: Delay de 0.1s no container para dar tempo do blur acontecer */
-    transition: all 0.6s cubic-bezier(0.32, 0.72, 0, 1) 0.1s;
+    /* FECHAR: Snap agressivo (Ease-in-back) */
+    transition: all 0.3s cubic-bezier(0.6, -0.28, 0.735, 0.045);
 }
 
 /* --- CONTE\xDADO --- */
 .cw-btn, .cw-grip, .cw-sep {
-    opacity: 1; transform: scale(1); filter: blur(0px);
-    transition: all 0.4s ease 0.2s; /* Delay ao abrir */
+    opacity: 1; transform: scale(1);
+    transition: all 0.2s ease 0.1s;
 }
 
-/* Quando fecha: Blur + Scale Down r\xE1pido */
+/* Quando fecha: Some INSTANTANEAMENTE */
 .cw-pill.collapsed > *:not(.cw-main-logo) {
     opacity: 0; pointer-events: none;
-    transform: scale(0.8);
-    filter: blur(12px); /* O segredo: o \xEDcone vira fuma\xE7a */
-    transition: all 0.2s ease 0s; /* Sem delay, some na hora */
+    transition: opacity 0.05s linear 0s; /* Tchau imediato */
 }
 
 /* --- LOGO --- */
 .cw-main-logo {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     display: flex; align-items: center; justify-content: center; color: #fff;
-    opacity: 0; transform: scale(0.5); filter: blur(4px);
-    transition: all 0.2s ease;
+    opacity: 0; transform: scale(0.5);
+    transition: all 0.1s ease;
 }
 .cw-pill.collapsed .cw-main-logo {
-    opacity: 1; transform: scale(1); filter: blur(0px);
-    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) 0.2s;
+    opacity: 1; transform: scale(1);
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.1s;
 }
 
-/* --- ESTILOS PADR\xC3O DOS BOT\xD5ES (Necess\xE1rio manter) --- */
-.cw-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: ${ho.iconIdle}; position: relative; flex-shrink:0; }
-.cw-btn:hover { background: rgba(255, 255, 255, 0.1); color: #FFF; transform: scale(1.15) !important; }
+/* --- ESTILOS PADR\xC3O DOS BOT\xD5ES --- */
+.cw-btn { width: 40px; height: 40px; border-radius: 8px; /* Quadrado arredondado */ border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: ${ho.iconIdle}; position: relative; flex-shrink:0; }
+.cw-btn:hover { background: rgba(255, 255, 255, 0.15); color: #FFF; }
 .cw-btn svg { width: 22px; height: 22px; fill: currentColor; pointer-events: none; }
-.cw-sep { width: 20px; height: 1px; background: rgba(255,255,255,0.2); margin: 4px 0; }
+.cw-sep { width: 24px; height: 2px; background: rgba(255,255,255,0.1); margin: 4px 0; }
 .cw-grip { width: 100%; height: 24px; display: flex; align-items: center; justify-content: center; cursor: grab; }
-.cw-grip-bar { width: 24px; height: 4px; background-color: ${ho.iconIdle}; border-radius: 4px; opacity: 0.4; }
-.cw-badge { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background: #d93025; border-radius: 50%; border: 2px solid rgba(40,40,40,0.8); }
+.cw-grip-bar { width: 24px; height: 4px; background-color: ${ho.iconIdle}; border-radius: 2px; }
+.cw-badge { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; background: #d93025; border-radius: 50%; }
 
 /* --- processing center styles (mantidos simplificados) --- */
 .cw-pill.processing-center { top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; width: 320px !important; height: 110px !important; background: #202124 !important; padding: 0 !important; }
 .cw-pill.processing-center > *:not(.cw-center-stage) { display: none !important; }
 .cw-center-stage { display: flex; flex-direction: column; align-items: center; width: 100%; opacity: 0; animation: fadeIn 0.4s forwards; }
-@keyframes fadeIn { to { opacity: 1; } }
-        `,document.head.appendChild(b)}let n={check:'<svg viewBox="0 0 24 24" fill="none" stroke="#81C995" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',notes:'<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>',email:'<svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>',script:'<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>',links:'<svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>',broadcast:'<svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>',main:'<svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>',timezone:'<svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>'},o=document.createElement("div");o.className="cw-pill side-right collapsed",o.innerHTML=`
+@keyframes fadeIn { to { opacity: 1; } }`,document.head.appendChild(b)}let n={check:'<svg viewBox="0 0 24 24" fill="none" stroke="#81C995" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',notes:'<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>',email:'<svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>',script:'<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>',links:'<svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>',broadcast:'<svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>',main:'<svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>',timezone:'<svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>'},o=document.createElement("div");o.className="cw-pill side-right collapsed",o.innerHTML=`
         <div class="cw-main-logo">${n.main}</div>
 
         <div class="cw-grip" title="Arrastar">
