@@ -16,6 +16,7 @@ export function createSplitTransferComponent(onBack) {
     const headerShadow = document.createElement("div");
     headerShadow.style.cssText = "position: absolute; top: 0; left: 0; width: 100%; height: 1px; background: transparent; transition: box-shadow 0.3s; z-index: 10;";
     container.appendChild(headerShadow);
+    container.appendChild(scrollArea);
 
     scrollArea.addEventListener('scroll', () => {
         headerShadow.style.boxShadow = scrollArea.scrollTop > 10 ? "0 4px 12px rgba(0,0,0,0.05)" : "none";
