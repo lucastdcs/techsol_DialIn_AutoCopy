@@ -44,7 +44,7 @@ style.innerHTML = `
 
     /* --- PILL PRINCIPAL --- */
     .cw-pill {
-        position: fixed; top: 30%; right: 24px;
+        position: fixed; top: 90%; right: 24px;
         display: flex; flex-direction: column; align-items: center; gap: 12px;
         padding: 16px 8px;
         
