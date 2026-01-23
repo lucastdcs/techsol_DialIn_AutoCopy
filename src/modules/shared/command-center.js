@@ -344,7 +344,7 @@ style.innerHTML = `
 
         closeTimer = setTimeout(() => {
             pill.classList.add('collapsed');
-        }, 700);
+        }, 3000);
     };
 
     pill.onmouseenter = () => {
