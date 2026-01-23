@@ -124,7 +124,7 @@ export const DataService = {
             const payload = {
                 timestamp: new Date().toISOString(),
                 user: user,
-                version: "v4.5.1",
+                version: "v5.0",
                 category: category,
                 action: action,
                 label: label,
