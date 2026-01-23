@@ -3,7 +3,7 @@
 export const RELEASE_NOTES = {
     version: "v5.0", 
     
-    title: "Atualização Épica: TechSol v5.0 🚀",
+    title: "Atualização: v5.0 🚀",
     
     slides: [
         {
