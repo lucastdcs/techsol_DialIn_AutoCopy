@@ -163,7 +163,7 @@ export function initCommandCenter(actions) {
             opacity 0.3s ease 0s, 
             transform 0.3s ease 0s,
             filter 0.3s ease 0s;
-            display 0.5s ease 1s
+            display 0.8s ease 0.8s
     }
 
     /* --- CASCATA DE SAÍDA (BAIXO PARA CIMA) --- */
