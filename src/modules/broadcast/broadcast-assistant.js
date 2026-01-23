@@ -15,7 +15,7 @@ import { DataService } from "../shared/data-service.js";
 import { getAgentEmail } from "../shared/page-data.js"; 
 
 // --- CONFIGURAÇÃO ---
-const ADMINS = ["lucaste"]; // Seu LDAP
+const ADMINS = ["lucaste", "ricardogi"]; 
 const POLL_TIME_MS = 60 * 1000; 
 
 // Inicializa estado global
