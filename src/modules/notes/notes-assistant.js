@@ -120,7 +120,7 @@ export function initCaseNotesAssistant() {
 
   // CONTAINER SECUNDÁRIO (Split & Transfer)
   const splitContent = document.createElement("div");
-  Object.assign(splitContent.style, { flexGrow: "1", display: "none", overflow: "hidden" }); // Começa oculto
+  Object.assign(splitContent.style, { flexGrow: "1", display: "none", overflow: "auto" }); // Começa oculto
   
   // Inicializa o componente S&T
   const splitComponent = createSplitTransferComponent(() => toggleSplitView()); // Passa callback de voltar
