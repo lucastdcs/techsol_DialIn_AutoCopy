@@ -54,16 +54,16 @@ style.innerHTML = `
         box-shadow: 0 12px 32px rgba(0,0,0,0.25); z-index: 2147483647;
         
         opacity: 0; 
-        min-width: 50px;
+        min-width: 50px; 
         
-        /* Tooltips visíveis quando aberto */
         overflow: visible;
 
-        /* ABRIR: Expansão Imediata (Delay 0s) */
+        /* ABRIR: A pílula expande IMEDIATAMENTE (Delay 0s) */
         transition: 
             width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s, 
             height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s,
             padding 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s,
+            gap 0.5s ease 0s,
             border-radius 0.5s ease 0s,
             opacity 0.3s ease 0s,
             transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s;
@@ -75,117 +75,118 @@ style.innerHTML = `
         width: 50px !important; 
         height: 50px !important;
         padding: 0 !important;
+        gap: 0 !important; /* Importante para não somar altura */
         border-radius: 50% !important;
-        gap: 0;
         cursor: pointer;
         
-        /* Corta os "fantasmas" dos ícones ao fechar */
         overflow: hidden !important; 
 
-        /* FECHAR: AQUI ESTÁ O SEGREDO DO "UÉ?" */
-        /* Delay de 0.45s: Espera todos os ícones fazerem "Puff-Out" antes de encolher */
+        /* FECHAR: Delay de 0.4s em TUDO que afeta tamanho */
+        /* Isso força a pílula a ficar "congelada" enquanto os ícones somem */
         transition: 
-            width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s,
-            height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s,
-            padding 0.5s ease 0.45s,
-            border-radius 0.5s ease 0.45s,
+            width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s,
+            height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s,
+            padding 0.5s ease 0.4s,
+            gap 0.5s ease 0.4s,
+            border-radius 0.5s ease 0.4s,
             opacity 0.3s ease 0s,
-            transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s !important;
+            transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s !important;
     }
     
-    /* --- LOGO DA BOLINHA (A REVELAÇÃO) --- */
+    /* --- LOGO DA BOLINHA (FIX DA COR PRETA) --- */
     .cw-main-logo {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         display: flex; align-items: center; justify-content: center;
         opacity: 0; pointer-events: none; 
         
-        /* Começa rodado e pequeno */
         transform: rotate(-180deg) scale(0.5);
-        color: #fff;
+        color: #fff; /* Garante branco */
         
-        /* Ao ABRIR: Some muito rápido para não atrapalhar */
         transition: all 0.2s ease 0s;
-
-        /* Gradiente Mask */
-        background-color: #fff;
-        -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center/35% no-repeat;
-        mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center/35% no-repeat;
     }
     
+    /* SVG Padrão (Branco) */
+    .cw-main-logo svg { 
+        fill: #fff; 
+        width: 24px; height: 24px;
+        transition: fill 0.3s;
+    }
+    
+    /* Logo Entrando (Ao fechar) */
     .cw-pill.collapsed .cw-main-logo { 
         opacity: 1; 
-        /* Efeito Rotate-In Center */
         transform: rotate(0) scale(1);
-        
-        /* DELAY DRAMÁTICO: */
-        /* 0.45s (ícones saindo) + 0.5s (pill fechando) + 0.2s (pausa dramática) = ~1.15s */
-        transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1.15s;
+        /* Delay alto (0.8s) para entrar só no finalzinho */
+        transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.8s;
     }
     
+    /* --- EFEITO GRADIENTE (SÓ NO HOVER) --- */
+    .cw-pill.collapsed:hover .cw-main-logo svg {
+        /* Esconde o SVG branco e mostra o fundo do container pai que terá o gradiente? */
+        /* Melhor: Usar o SVG como mascara neste momento */
+        fill: transparent;
+    }
+    
+    /* No hover, aplicamos o gradiente no container do logo e usamos o SVG como mascara */
     .cw-pill.collapsed:hover .cw-main-logo {
         background-image: linear-gradient(135deg, #4285F4 0%, #EA4335 33%, #FBBC05 66%, #34A853 100%);
-        transform: scale(1.15);
-        transition-delay: 0s; /* Hover responde na hora */
+        -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center/24px no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center/24px no-repeat;
+        transform: scale(1.1) rotate(0deg);
+        transition-delay: 0s;
     }
 
-    /* --- CONTEÚDO (BOTÕES) --- */
+    /* --- CONTEÚDO INTERNO --- */
     .cw-pill > *:not(.cw-main-logo) {
         opacity: 1;
-        transform: translateY(0) scale(1);
-        filter: blur(0);
-        
-        /* ABRIR: Slide-In Blurred Top */
-        /* Espera a pílula abrir (0.4s) antes de começar a entrar */
+        transform: scale(1);
+        /* ABRIR: Slide-in com delay (0.3s) */
         transition: 
-            opacity 0.4s ease 0.4s, 
-            transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s,
-            filter 0.4s ease 0.4s;
+            opacity 0.4s ease 0.3s, 
+            transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s;
     }
 
-    /* --- EFEITO PUFF-OUT (SAÍDA) --- */
+    /* --- EFEITO PUFF-OUT (SAÍDA IMEDIATA) --- */
     .cw-pill.collapsed > *:not(.cw-main-logo) {
         opacity: 0; 
         pointer-events: none; 
         
-        /* Puff-Out Center: Escala aumenta (explode) e desfoca */
-        transform: scale(1.5); 
-        filter: blur(4px);
+        /* Puff-Out: Aumenta e Desfoca */
+        transform: scale(1.4); 
+        filter: blur(8px);
         
-        /* A saída é rápida (0.3s) */
+        /* SAIR: Imediato (Delay 0s). Duration 0.3s. */
+        /* Termina em 0.3s. A pílula começa a fechar em 0.4s. Margem segura. */
         transition: 
-            opacity 0.3s ease, 
-            transform 0.3s ease,
-            filter 0.3s ease;
+            opacity 0.3s ease 0s, 
+            transform 0.3s ease 0s,
+            filter 0.3s ease 0s;
     }
 
     /* --- CASCATA DE SAÍDA (BAIXO PARA CIMA) --- */
-    /* Quando .collapsed é adicionado, os delays disparam nesta ordem inversa */
-    /* Total da sequência: ~0.4s */
-
-    .cw-pill.collapsed > *:nth-last-child(1) { transition-delay: 0.00s; } /* Footer/Status */
-    .cw-pill.collapsed > *:nth-last-child(2) { transition-delay: 0.05s; } /* Broadcast */
-    .cw-pill.collapsed > *:nth-last-child(3) { transition-delay: 0.10s; } /* Sep */
-    .cw-pill.collapsed > *:nth-last-child(4) { transition-delay: 0.15s; } /* Timezone */
-    .cw-pill.collapsed > *:nth-last-child(5) { transition-delay: 0.20s; } /* Links */
-    .cw-pill.collapsed > *:nth-last-child(6) { transition-delay: 0.25s; } /* Script */
-    .cw-pill.collapsed > *:nth-last-child(7) { transition-delay: 0.30s; } /* Email */
-    .cw-pill.collapsed > *:nth-last-child(8) { transition-delay: 0.35s; } /* Notes */
-    .cw-pill.collapsed > *:nth-last-child(9) { transition-delay: 0.40s; } /* Grip */
+    .cw-pill.collapsed > *:nth-last-child(1) { transition-delay: 0.00s; }
+    .cw-pill.collapsed > *:nth-last-child(2) { transition-delay: 0.04s; }
+    .cw-pill.collapsed > *:nth-last-child(3) { transition-delay: 0.08s; }
+    .cw-pill.collapsed > *:nth-last-child(4) { transition-delay: 0.12s; }
+    .cw-pill.collapsed > *:nth-last-child(5) { transition-delay: 0.16s; }
+    .cw-pill.collapsed > *:nth-last-child(6) { transition-delay: 0.20s; }
+    .cw-pill.collapsed > *:nth-last-child(7) { transition-delay: 0.24s; }
+    .cw-pill.collapsed > *:nth-last-child(8) { transition-delay: 0.28s; }
+    .cw-pill.collapsed > *:nth-last-child(9) { transition-delay: 0.32s; }
 
     /* --- CASCATA DE ENTRADA (CIMA PARA BAIXO) --- */
-    /* Quando .collapsed é removido, delays normais (somados ao delay base de 0.4s da abertura) */
-    
-    .cw-pill:not(.collapsed) > *:nth-child(1) { transition-delay: 0.40s; } /* Grip */
-    .cw-pill:not(.collapsed) > *:nth-child(2) { transition-delay: 0.45s; }
-    .cw-pill:not(.collapsed) > *:nth-child(3) { transition-delay: 0.50s; }
-    .cw-pill:not(.collapsed) > *:nth-child(4) { transition-delay: 0.55s; }
-    .cw-pill:not(.collapsed) > *:nth-child(5) { transition-delay: 0.60s; }
-    .cw-pill:not(.collapsed) > *:nth-child(6) { transition-delay: 0.65s; }
-    .cw-pill:not(.collapsed) > *:nth-child(7) { transition-delay: 0.70s; }
-    .cw-pill:not(.collapsed) > *:nth-child(8) { transition-delay: 0.75s; }
-    .cw-pill:not(.collapsed) > *:nth-child(9) { transition-delay: 0.80s; }
+    /* Soma-se ao delay base de 0.3s da abertura */
+    .cw-pill:not(.collapsed) > *:nth-child(1) { transition-delay: 0.30s; }
+    .cw-pill:not(.collapsed) > *:nth-child(2) { transition-delay: 0.35s; }
+    .cw-pill:not(.collapsed) > *:nth-child(3) { transition-delay: 0.40s; }
+    .cw-pill:not(.collapsed) > *:nth-child(4) { transition-delay: 0.45s; }
+    .cw-pill:not(.collapsed) > *:nth-child(5) { transition-delay: 0.50s; }
+    .cw-pill:not(.collapsed) > *:nth-child(6) { transition-delay: 0.55s; }
+    .cw-pill:not(.collapsed) > *:nth-child(7) { transition-delay: 0.60s; }
+    .cw-pill:not(.collapsed) > *:nth-child(8) { transition-delay: 0.65s; }
+    .cw-pill:not(.collapsed) > *:nth-child(9) { transition-delay: 0.70s; }
 
-    /* --- ESTILOS VISUAIS (Mantidos e limpos) --- */
+    /* --- ESTILOS VISUAIS (Mantidos) --- */
     .cw-btn {
         width: 40px; height: 40px; 
         border-radius: 50%; border: none; background: transparent;
@@ -202,14 +203,7 @@ style.innerHTML = `
     .cw-btn.broadcast.active { color: ${COLORS.orange} !important; background: rgba(249, 171, 0, 0.15); }
     .cw-btn.timezone.active { color: ${COLORS.teal} !important; background: rgba(0, 191, 165, 0.15); }
 
-    .cw-btn.notes:hover { color: ${COLORS.blue}; filter: drop-shadow(0 0 5px rgba(138, 180, 248, 0.5)); }
-    .cw-btn.email:hover { color: ${COLORS.red}; filter: drop-shadow(0 0 5px rgba(242, 139, 130, 0.5)); }
-    .cw-btn.script:hover { color: ${COLORS.purple}; filter: drop-shadow(0 0 5px rgba(197, 138, 249, 0.5)); }
-    .cw-btn.links:hover { color: ${COLORS.green}; filter: drop-shadow(0 0 5px rgba(129, 201, 149, 0.5)); }
-    .cw-btn.broadcast:hover { color: ${COLORS.orange}; filter: drop-shadow(0 0 5px rgba(249, 171, 0, 0.5)); }
-    .cw-btn.timezone:hover { color: ${COLORS.teal}; filter: drop-shadow(0 0 5px rgba(0, 191, 165, 0.5)); }
-
-    /* LED e Tooltips (Com Visibility Fix) */
+    /* LED e Tooltips (Hidden fix) */
     .cw-btn::before {
         content: ''; position: absolute; bottom: 2px; left: 50%; width: 4px; height: 4px; border-radius: 50%;
         background-color: currentColor; box-shadow: 0 0 6px currentColor;
@@ -233,18 +227,20 @@ style.innerHTML = `
     .cw-pill.side-right .cw-btn::after { right: 55px; transform-origin: right center; }
     .cw-pill.side-left .cw-btn::after { left: 55px; transform-origin: left center; }
 
-    .cw-badge { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background-color: #d93025; border-radius: 50%; border: 1px solid #fff; pointer-events: none; box-shadow: 0 1px 2px rgba(0,0,0,0.2); z-index: 10; animation: popIn 0.3s; }
+    .cw-badge { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background: #d93025; border-radius: 50%; border: 1px solid #fff; pointer-events: none; box-shadow: 0 1px 2px rgba(0,0,0,0.2); z-index: 10; animation: popIn 0.3s; }
     @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
 
     .cw-sep { width: 20px; height: 1px; background: rgba(255,255,255,0.2); margin: 4px 0; }
+    .cw-sep.visible { opacity: 1; }
+    .cw-pill.collapsed .cw-sep { opacity: 0; transition: opacity 0.1s ease 0s; }
+
     .cw-grip { width: 100%; height: 24px; display: flex; align-items: center; justify-content: center; cursor: grab; margin-bottom: 2px; }
     .cw-grip-bar { width: 24px; height: 4px; background-color: ${COLORS.iconIdle}; border-radius: 4px; opacity: 0.4; transition: all 0.3s; }
     .cw-grip:hover .cw-grip-bar { opacity: 1; background-color: #FFFFFF; transform: scaleY(1.2); }
-    .cw-grip:active { cursor: grabbing; }
     .cw-pill.dragging .cw-grip-bar { background-color: ${COLORS.blue}; width: 16px; opacity: 1; }
 
-    /* Processing Styles */
-    .cw-pill.processing-center { top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; width: 320px !important; height: 110px !important; border-radius: 28px !important; background: #202124 !important; padding: 0 !important; box-shadow: 0 40px 80px rgba(0,0,0,0.5) !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; }
+    /* Processing */
+    .cw-pill.processing-center { top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; width: 320px !important; height: 110px !important; border-radius: 28px !important; background: #202124 !important; padding: 0 !important; box-shadow: 0 40px 80px rgba(0,0,0,0.5) !important; display: flex !important; flex-direction: column !important; justify-content: center !important; }
     .cw-pill.processing-center.collapsed { background: #202124 !important; overflow: visible !important; }
     .cw-pill.processing-center .cw-main-logo { display: none !important; }
     .cw-pill.processing-center > *:not(.cw-center-stage) { display: none !important; }
@@ -260,47 +256,10 @@ style.innerHTML = `
     .cw-abort-btn { position: absolute; bottom: -32px; font-size: 10px; color: rgba(255, 255, 255, 0.2); cursor: pointer; text-transform: uppercase; font-weight: 600; transition: all 0.3s; }
     .cw-abort-btn:hover { color: #F28B82; opacity: 1; }
     @keyframes fadeIn { to { opacity: 1; } }
+    @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     @keyframes googleBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
     @keyframes textSlideUp { to { opacity: 1; transform: translateY(0); } }
 `;
-    document.head.appendChild(style);
-  }
-
-  // 2. CONSTRUÇÃO DO DOM
-  const ICONS = {
-    check: `<svg viewBox="0 0 24 24" fill="none" stroke="#81C995" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
-    notes: `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`,
-    email: `<svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>`,
-    script: `<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`,
-    links: `<svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>`,
-    broadcast: `<svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`,
-    main: `<svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>`,
-    timezone: `<svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>`,
-  };
-
-  const pill = document.createElement("div");
-  // Começa Fechado (Collapsed)
-  pill.className = "cw-pill side-right collapsed";
-  
-  pill.innerHTML = `
-        <div class="cw-main-logo">${ICONS.main}</div>
-
-        <div class="cw-grip" title="Arrastar">
-            <div class="cw-grip-bar"></div>
-        </div>
-        <button class="cw-btn notes" id="cw-btn-notes" data-label="Case Notes">${ICONS.notes}</button>
-        <button class="cw-btn email" id="cw-btn-email" data-label="Quick Email">${ICONS.email}</button>
-        <button class="cw-btn script" id="cw-btn-script" data-label="Call Script">${ICONS.script}</button>
-        <button class="cw-btn links" id="cw-btn-links" data-label="Links">${ICONS.links}</button>
-
-<button class="cw-btn timezone" id="cw-btn-timezone" data-label="Time Zones">${ICONS.timezone}</button>
-        <div class="cw-sep"></div>
-        <button class="cw-btn broadcast" id="cw-btn-broadcast" data-label="Avisos">${ICONS.broadcast}</button>
-        <div class="cw-status-container">
-            <div class="cw-dots" id="cw-loader"><span></span><span></span><span></span></div>
-            <div class="cw-check" id="cw-success" style="display:none;">${ICONS.check}</div>
-        </div>
-    `;
 
     const overlay = document.createElement('div');
     overlay.className = 'cw-focus-backdrop';
