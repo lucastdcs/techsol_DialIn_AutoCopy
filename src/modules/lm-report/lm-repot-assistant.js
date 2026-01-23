@@ -159,7 +159,7 @@ function getHistory() {
 }
 
 export function initFeedbackAssistant() {
-  const CURRENT_VERSION = "v4.6 (Colorful UI)";
+  const CURRENT_VERSION = "v4.6";
   let searchTerm = "";
   let visible = false;
   let activeCategoryKey = null;

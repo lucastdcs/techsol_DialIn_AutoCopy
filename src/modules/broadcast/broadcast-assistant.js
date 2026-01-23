@@ -23,7 +23,7 @@ window._cwIsAdmin = false;
 window._cwCurrentUser = null;
 
 export function initBroadcastAssistant() {
-  const CURRENT_VERSION = "v4.9 (High Contrast UI)";
+  const CURRENT_VERSION = "v4.9";
   let visible = false;
   let pollInterval = null;
   let currentEditingId = null;

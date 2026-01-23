@@ -38,7 +38,7 @@ import { createStepTasksComponent } from "./components/step-tasks.js";
 import { createSplitTransferComponent } from "./components/split-transfer.js"; 
 
 export function initCaseNotesAssistant() {
-  const CURRENT_VERSION = "v3.7.0 (S&T Mode)";
+  const CURRENT_VERSION = "v3.8.0";
 
   let currentCaseType = "bau";
   let currentLang = "pt";
