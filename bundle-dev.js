@@ -570,12 +570,14 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
         /* ABRIR: Slide-in com delay (0.3s) */
         transition: 
             opacity 0.4s ease 0.3s, 
+            display 0.5s ease 1s,
             transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s;
     }
 
     /* --- EFEITO PUFF-OUT (SA\xCDDA IMEDIATA) --- */
     .cw-pill.collapsed > *:not(.cw-main-logo) {
         opacity: 0; 
+        display: none;
         pointer-events: none; 
         
         /* Puff-Out: Aumenta e Desfoca */
@@ -588,6 +590,7 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
             opacity 0.3s ease 0s, 
             transform 0.3s ease 0s,
             filter 0.3s ease 0s;
+            display 0.5s ease 1s
     }
 
     /* --- CASCATA DE SA\xCDDA (BAIXO PARA CIMA) --- */
