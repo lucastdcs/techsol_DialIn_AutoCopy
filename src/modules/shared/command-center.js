@@ -44,7 +44,7 @@ style.innerHTML = `
 
     /* --- PILL PRINCIPAL --- */
     .cw-pill {
-        position: fixed; top: 90%; right: 24px;
+        position: fixed; top: 30%; right: 24px;
         display: flex; flex-direction: column; align-items: center; gap: 12px;
         padding: 16px 8px;
         
@@ -56,16 +56,17 @@ style.innerHTML = `
         opacity: 0; 
         min-width: 50px; 
         
-        overflow: visible;
+        overflow: visible; /* Permite tooltips */
 
-        /* ABRIR: Efeito "Elástico" */
+        /* ABRIR: A pílula expande IMEDIATAMENTE (Delay 0s) */
+        /* Usamos a curva elástica para dar o "pop" */
         transition: 
-            width 0.6s cubic-bezier(0.47, 1.64, 0.41, 0.8), 
-            height 0.6s cubic-bezier(0.47, 1.64, 0.41, 0.8),
-            padding 0.5s cubic-bezier(0.47, 1.64, 0.41, 0.8),
-            border-radius 0.5s ease,
-            opacity 0.3s ease,
-            transform 0.6s cubic-bezier(0.47, 1.64, 0.41, 0.8);
+            width 0.6s cubic-bezier(0.47, 1.64, 0.41, 0.8) 0s, 
+            height 0.6s cubic-bezier(0.47, 1.64, 0.41, 0.8) 0s,
+            padding 0.5s cubic-bezier(0.47, 1.64, 0.41, 0.8) 0s,
+            border-radius 0.5s ease 0s,
+            opacity 0.3s ease 0s,
+            transform 0.6s cubic-bezier(0.47, 1.64, 0.41, 0.8) 0s;
     }
     .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
@@ -78,67 +79,68 @@ style.innerHTML = `
         gap: 0;
         cursor: pointer;
         
-        overflow: hidden !important;
+        overflow: hidden !important; /* Corta tudo na bolinha */
 
-        /* FECHAR: Efeito "Back-in" */
+        /* FECHAR: AQUI ESTÁ A CORREÇÃO CRÍTICA */
+        /* Delay de 0.25s: A pílula fica IMÓVEL enquanto os ícones somem */
         transition: 
-            width 0.5s cubic-bezier(0.36, 0, 0.66, -0.56),
-            height 0.5s cubic-bezier(0.36, 0, 0.66, -0.56),
-            padding 0.4s ease,
-            border-radius 0.4s ease,
-            opacity 0.3s ease,
-            transform 0.5s cubic-bezier(0.36, 0, 0.66, -0.56) !important;
+            width 0.5s cubic-bezier(0.36, 0, 0.66, -0.56) 0.25s,
+            height 0.5s cubic-bezier(0.36, 0, 0.66, -0.56) 0.25s,
+            padding 0.4s ease 0.25s,
+            border-radius 0.4s ease 0.25s,
+            opacity 0.3s ease 0s,
+            transform 0.5s cubic-bezier(0.36, 0, 0.66, -0.56) 0.25s !important;
     }
     
-    /* --- LOGO DA BOLINHA (COM GRADIENTE GOOGLE) --- */
+    /* --- LOGO DA BOLINHA --- */
     .cw-main-logo {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         display: flex; align-items: center; justify-content: center;
         opacity: 0; pointer-events: none; 
         transform: scale(2) rotate(180deg);
-        transition: all 0.3s ease;
+        transition: all 0.3s ease; /* Some rápido ao abrir */
 
-        /* TRUQUE DO GRADIENTE: Usamos o ícone como MÁSCARA */
-        background-color: #fff; /* Cor padrão branca */
+        /* Gradiente Mask */
+        background-color: #fff;
         -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center/35% no-repeat;
         mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center/35% no-repeat;
     }
-    
-    /* Esconde o SVG original filho pois o DIV pai já virou o ícone via máscara */
     .cw-main-logo svg { opacity: 0; }
     
     .cw-pill.collapsed .cw-main-logo { 
         opacity: 1; 
         transform: scale(1) rotate(0deg);
-        transition: all 0.5s cubic-bezier(0.47, 1.64, 0.41, 0.8) 0.2s;
+        /* Entra só no finalzinho, quando a pílula já virou bola */
+        transition: all 0.5s cubic-bezier(0.47, 1.64, 0.41, 0.8) 0.4s;
     }
-
-    /* --- HOVER NO ÍCONE PRINCIPAL (O GRADIENTE) --- */
+    
     .cw-pill.collapsed:hover .cw-main-logo {
-        /* Gradiente Google: Azul, Vermelho, Amarelo, Verde */
         background-image: linear-gradient(135deg, #4285F4 0%, #EA4335 33%, #FBBC05 66%, #34A853 100%);
-        transform: scale(1.15) rotate(0deg); /* Leve pop */
+        transform: scale(1.15) rotate(0deg);
     }
 
     /* --- CONTEÚDO INTERNO --- */
     .cw-pill > *:not(.cw-main-logo) {
         opacity: 1;
         transform: scale(1);
+        /* ABRIR: Espera a pílula crescer (0.2s delay) para aparecer */
         transition: 
-            opacity 0.4s ease 0.2s, 
+            opacity 0.3s ease 0.2s, 
             transform 0.5s cubic-bezier(0.47, 1.64, 0.41, 0.8) 0.2s;
     }
 
     .cw-pill.collapsed > *:not(.cw-main-logo) {
         opacity: 0; 
         pointer-events: none; 
+        /* FECHAR: Some IMEDIATAMENTE (0s delay) */
+        /* Isso limpa a área antes da pílula começar a encolher aos 0.25s */
         transform: scale(0); 
         transition: 
-            opacity 0.25s ease 0s, 
+            opacity 0.2s ease 0s, 
             transform 0.3s cubic-bezier(0.36, 0, 0.66, -0.56) 0s;
     }
 
-    /* --- BOTÕES E TOOLTIPS --- */
+    /* --- BOTÕES E RESTO (Mantido igual) --- */
     .cw-btn {
         width: 40px; height: 40px; 
         border-radius: 50%; border: none; background: transparent;
@@ -148,7 +150,6 @@ style.innerHTML = `
     }
     .cw-btn:hover { background: ${COLORS.glassHighlight}; color: ${COLORS.iconActive}; transform: scale(1.1) !important; }
 
-    /* Cores dos Botões */
     .cw-btn.notes.active { color: ${COLORS.blue} !important; background: rgba(138, 180, 248, 0.15); }
     .cw-btn.email.active { color: ${COLORS.red} !important; background: rgba(242, 139, 130, 0.15); }
     .cw-btn.script.active { color: ${COLORS.purple} !important; background: rgba(197, 138, 249, 0.15); }
@@ -163,7 +164,6 @@ style.innerHTML = `
     .cw-btn.broadcast:hover { color: ${COLORS.orange}; filter: drop-shadow(0 0 5px rgba(249, 171, 0, 0.5)); }
     .cw-btn.timezone:hover { color: ${COLORS.teal}; filter: drop-shadow(0 0 5px rgba(0, 191, 165, 0.5)); }
 
-    /* LED Indicador */
     .cw-btn::before {
         content: ''; position: absolute; bottom: 2px; left: 50%; 
         width: 4px; height: 4px; border-radius: 50%;
@@ -274,44 +274,6 @@ style.innerHTML = `
     @keyframes googleBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
     @keyframes textSlideUp { to { opacity: 1; transform: translateY(0); } }
 `;
-    document.head.appendChild(style);
-  }
-
-  // 2. CONSTRUÇÃO DO DOM
-  const ICONS = {
-    check: `<svg viewBox="0 0 24 24" fill="none" stroke="#81C995" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`,
-    notes: `<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>`,
-    email: `<svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>`,
-    script: `<svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>`,
-    links: `<svg viewBox="0 0 24 24"><path d="M3.9 12c0-1.71 1.39-3.1 3.1-3.1h4V7H7c-2.76 0-5 2.24-5 5s2.24 5 5 5h4v-1.9H7c-1.71 0-3.1-1.39-3.1-3.1zM8 13h8v-2H8v2zm9-6h-4v1.9h4c1.71 0 3.1 1.39 3.1 3.1s-1.39 3.1-3.1 3.1h-4V17h4c2.76 0 5-2.24 5-5s-2.24-5-5-5z"/></svg>`,
-    broadcast: `<svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`,
-    main: `<svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>`,
-    timezone: `<svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>`,
-  };
-
-  const pill = document.createElement("div");
-  // Começa Fechado (Collapsed)
-  pill.className = "cw-pill side-right collapsed";
-  
-  pill.innerHTML = `
-        <div class="cw-main-logo">${ICONS.main}</div>
-
-        <div class="cw-grip" title="Arrastar">
-            <div class="cw-grip-bar"></div>
-        </div>
-        <button class="cw-btn notes" id="cw-btn-notes" data-label="Case Notes">${ICONS.notes}</button>
-        <button class="cw-btn email" id="cw-btn-email" data-label="Quick Email">${ICONS.email}</button>
-        <button class="cw-btn script" id="cw-btn-script" data-label="Call Script">${ICONS.script}</button>
-        <button class="cw-btn links" id="cw-btn-links" data-label="Links">${ICONS.links}</button>
-
-<button class="cw-btn timezone" id="cw-btn-timezone" data-label="Time Zones">${ICONS.timezone}</button>
-        <div class="cw-sep"></div>
-        <button class="cw-btn broadcast" id="cw-btn-broadcast" data-label="Avisos">${ICONS.broadcast}</button>
-        <div class="cw-status-container">
-            <div class="cw-dots" id="cw-loader"><span></span><span></span><span></span></div>
-            <div class="cw-check" id="cw-success" style="display:none;">${ICONS.check}</div>
-        </div>
-    `;
 
     const overlay = document.createElement('div');
     overlay.className = 'cw-focus-backdrop';
