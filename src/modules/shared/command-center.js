@@ -54,18 +54,19 @@ style.innerHTML = `
         box-shadow: 0 12px 32px rgba(0,0,0,0.25); z-index: 2147483647;
         
         opacity: 0; 
-        min-width: 50px; 
+        min-width: 50px;
         
-        overflow: visible; /* Necessário para Tooltips */
+        /* Tooltips visíveis quando aberto */
+        overflow: visible;
 
-        /* ABRIR: Efeito Elástico */
+        /* ABRIR: Expansão Imediata (Delay 0s) */
         transition: 
-            width 0.6s cubic-bezier(0.47, 1.64, 0.41, 0.8), 
-            height 0.6s cubic-bezier(0.47, 1.64, 0.41, 0.8),
-            padding 0.5s cubic-bezier(0.47, 1.64, 0.41, 0.8),
-            border-radius 0.5s ease,
-            opacity 0.3s ease,
-            transform 0.6s cubic-bezier(0.47, 1.64, 0.41, 0.8);
+            width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s, 
+            height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s,
+            padding 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s,
+            border-radius 0.5s ease 0s,
+            opacity 0.3s ease 0s,
+            transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s;
     }
     .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
@@ -78,64 +79,113 @@ style.innerHTML = `
         gap: 0;
         cursor: pointer;
         
-        overflow: hidden !important; /* Corta tudo quando fechado */
+        /* Corta os "fantasmas" dos ícones ao fechar */
+        overflow: hidden !important; 
 
-        /* FECHAR: Efeito Back-in */
+        /* FECHAR: AQUI ESTÁ O SEGREDO DO "UÉ?" */
+        /* Delay de 0.45s: Espera todos os ícones fazerem "Puff-Out" antes de encolher */
         transition: 
-            width 0.5s cubic-bezier(0.36, 0, 0.66, -0.56),
-            height 0.5s cubic-bezier(0.36, 0, 0.66, -0.56),
-            padding 0.4s ease,
-            border-radius 0.4s ease,
-            opacity 0.3s ease,
-            transform 0.5s cubic-bezier(0.36, 0, 0.66, -0.56) !important;
+            width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s,
+            height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s,
+            padding 0.5s ease 0.45s,
+            border-radius 0.5s ease 0.45s,
+            opacity 0.3s ease 0s,
+            transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.45s !important;
     }
     
-    /* --- LOGO DA BOLINHA --- */
+    /* --- LOGO DA BOLINHA (A REVELAÇÃO) --- */
     .cw-main-logo {
         position: absolute; top: 0; left: 0; width: 100%; height: 100%;
         display: flex; align-items: center; justify-content: center;
         opacity: 0; pointer-events: none; 
-        transform: scale(2) rotate(180deg);
-        color: #fff;
-        transition: all 0.3s ease;
         
-        /* Mask para Gradiente */
+        /* Começa rodado e pequeno */
+        transform: rotate(-180deg) scale(0.5);
+        color: #fff;
+        
+        /* Ao ABRIR: Some muito rápido para não atrapalhar */
+        transition: all 0.2s ease 0s;
+
+        /* Gradiente Mask */
         background-color: #fff;
         -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center/35% no-repeat;
         mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/%3E%3C/svg%3E") center/35% no-repeat;
     }
-    .cw-main-logo svg { opacity: 0; }
     
     .cw-pill.collapsed .cw-main-logo { 
         opacity: 1; 
-        transform: scale(1) rotate(0deg);
-        transition: all 0.5s cubic-bezier(0.47, 1.64, 0.41, 0.8) 0.2s;
+        /* Efeito Rotate-In Center */
+        transform: rotate(0) scale(1);
+        
+        /* DELAY DRAMÁTICO: */
+        /* 0.45s (ícones saindo) + 0.5s (pill fechando) + 0.2s (pausa dramática) = ~1.15s */
+        transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1.15s;
     }
     
     .cw-pill.collapsed:hover .cw-main-logo {
         background-image: linear-gradient(135deg, #4285F4 0%, #EA4335 33%, #FBBC05 66%, #34A853 100%);
-        transform: scale(1.15) rotate(0deg);
+        transform: scale(1.15);
+        transition-delay: 0s; /* Hover responde na hora */
     }
 
-    /* --- CONTEÚDO INTERNO --- */
+    /* --- CONTEÚDO (BOTÕES) --- */
     .cw-pill > *:not(.cw-main-logo) {
         opacity: 1;
-        transform: scale(1);
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+        
+        /* ABRIR: Slide-In Blurred Top */
+        /* Espera a pílula abrir (0.4s) antes de começar a entrar */
         transition: 
-            opacity 0.4s ease 0.2s, 
-            transform 0.5s cubic-bezier(0.47, 1.64, 0.41, 0.8) 0.2s;
+            opacity 0.4s ease 0.4s, 
+            transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.4s,
+            filter 0.4s ease 0.4s;
     }
 
+    /* --- EFEITO PUFF-OUT (SAÍDA) --- */
     .cw-pill.collapsed > *:not(.cw-main-logo) {
         opacity: 0; 
         pointer-events: none; 
-        transform: scale(0); 
+        
+        /* Puff-Out Center: Escala aumenta (explode) e desfoca */
+        transform: scale(1.5); 
+        filter: blur(4px);
+        
+        /* A saída é rápida (0.3s) */
         transition: 
-            opacity 0.25s ease 0s, 
-            transform 0.3s cubic-bezier(0.36, 0, 0.66, -0.56) 0s;
+            opacity 0.3s ease, 
+            transform 0.3s ease,
+            filter 0.3s ease;
     }
 
-    /* --- BOTÕES --- */
+    /* --- CASCATA DE SAÍDA (BAIXO PARA CIMA) --- */
+    /* Quando .collapsed é adicionado, os delays disparam nesta ordem inversa */
+    /* Total da sequência: ~0.4s */
+
+    .cw-pill.collapsed > *:nth-last-child(1) { transition-delay: 0.00s; } /* Footer/Status */
+    .cw-pill.collapsed > *:nth-last-child(2) { transition-delay: 0.05s; } /* Broadcast */
+    .cw-pill.collapsed > *:nth-last-child(3) { transition-delay: 0.10s; } /* Sep */
+    .cw-pill.collapsed > *:nth-last-child(4) { transition-delay: 0.15s; } /* Timezone */
+    .cw-pill.collapsed > *:nth-last-child(5) { transition-delay: 0.20s; } /* Links */
+    .cw-pill.collapsed > *:nth-last-child(6) { transition-delay: 0.25s; } /* Script */
+    .cw-pill.collapsed > *:nth-last-child(7) { transition-delay: 0.30s; } /* Email */
+    .cw-pill.collapsed > *:nth-last-child(8) { transition-delay: 0.35s; } /* Notes */
+    .cw-pill.collapsed > *:nth-last-child(9) { transition-delay: 0.40s; } /* Grip */
+
+    /* --- CASCATA DE ENTRADA (CIMA PARA BAIXO) --- */
+    /* Quando .collapsed é removido, delays normais (somados ao delay base de 0.4s da abertura) */
+    
+    .cw-pill:not(.collapsed) > *:nth-child(1) { transition-delay: 0.40s; } /* Grip */
+    .cw-pill:not(.collapsed) > *:nth-child(2) { transition-delay: 0.45s; }
+    .cw-pill:not(.collapsed) > *:nth-child(3) { transition-delay: 0.50s; }
+    .cw-pill:not(.collapsed) > *:nth-child(4) { transition-delay: 0.55s; }
+    .cw-pill:not(.collapsed) > *:nth-child(5) { transition-delay: 0.60s; }
+    .cw-pill:not(.collapsed) > *:nth-child(6) { transition-delay: 0.65s; }
+    .cw-pill:not(.collapsed) > *:nth-child(7) { transition-delay: 0.70s; }
+    .cw-pill:not(.collapsed) > *:nth-child(8) { transition-delay: 0.75s; }
+    .cw-pill:not(.collapsed) > *:nth-child(9) { transition-delay: 0.80s; }
+
+    /* --- ESTILOS VISUAIS (Mantidos e limpos) --- */
     .cw-btn {
         width: 40px; height: 40px; 
         border-radius: 50%; border: none; background: transparent;
@@ -145,7 +195,6 @@ style.innerHTML = `
     }
     .cw-btn:hover { background: ${COLORS.glassHighlight}; color: ${COLORS.iconActive}; transform: scale(1.1) !important; }
 
-    /* Cores Ativas */
     .cw-btn.notes.active { color: ${COLORS.blue} !important; background: rgba(138, 180, 248, 0.15); }
     .cw-btn.email.active { color: ${COLORS.red} !important; background: rgba(242, 139, 130, 0.15); }
     .cw-btn.script.active { color: ${COLORS.purple} !important; background: rgba(197, 138, 249, 0.15); }
@@ -153,7 +202,6 @@ style.innerHTML = `
     .cw-btn.broadcast.active { color: ${COLORS.orange} !important; background: rgba(249, 171, 0, 0.15); }
     .cw-btn.timezone.active { color: ${COLORS.teal} !important; background: rgba(0, 191, 165, 0.15); }
 
-    /* Cores Hover */
     .cw-btn.notes:hover { color: ${COLORS.blue}; filter: drop-shadow(0 0 5px rgba(138, 180, 248, 0.5)); }
     .cw-btn.email:hover { color: ${COLORS.red}; filter: drop-shadow(0 0 5px rgba(242, 139, 130, 0.5)); }
     .cw-btn.script:hover { color: ${COLORS.purple}; filter: drop-shadow(0 0 5px rgba(197, 138, 249, 0.5)); }
@@ -161,138 +209,57 @@ style.innerHTML = `
     .cw-btn.broadcast:hover { color: ${COLORS.orange}; filter: drop-shadow(0 0 5px rgba(249, 171, 0, 0.5)); }
     .cw-btn.timezone:hover { color: ${COLORS.teal}; filter: drop-shadow(0 0 5px rgba(0, 191, 165, 0.5)); }
 
-    /* LED INDICADOR (Correção do "Dot") */
+    /* LED e Tooltips (Com Visibility Fix) */
     .cw-btn::before {
-        content: ''; position: absolute; bottom: 2px; left: 50%; 
-        width: 4px; height: 4px; border-radius: 50%;
+        content: ''; position: absolute; bottom: 2px; left: 50%; width: 4px; height: 4px; border-radius: 50%;
         background-color: currentColor; box-shadow: 0 0 6px currentColor;
         transform: translateX(-50%) scale(0);
-        
-        /* CORREÇÃO: Opacidade 0 e Visibilidade Hidden para não aparecer fantasma */
-        opacity: 0; 
-        visibility: hidden;
-        
-        transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease; 
-        pointer-events: none;
+        opacity: 0; visibility: hidden;
+        transition: transform 0.3s, opacity 0.2s; pointer-events: none;
     }
-    
-    /* Só mostra o LED quando ativo */
-    .cw-btn.active::before { 
-        transform: translateX(-50%) scale(1); 
-        opacity: 1; 
-        visibility: visible;
-    }
+    .cw-btn.active::before { transform: translateX(-50%) scale(1); opacity: 1; visibility: visible; }
     
     .cw-btn svg { width: 22px; height: 22px; fill: currentColor; pointer-events: none; }
 
-    /* TOOLTIP (Correção do "Dot" lateral) */
     .cw-btn::after { 
         content: attr(data-label); position: absolute; top: 50%; transform: translateY(-50%) scale(0.9); 
-        padding: 6px 12px; border-radius: 6px; 
-        background: #202124; color: #fff; 
+        padding: 6px 12px; border-radius: 6px; background: #202124; color: #fff; 
         font-family: 'Google Sans', sans-serif; font-size: 12px; font-weight: 500; 
-        
-        /* CORREÇÃO: Visibilidade e Opacidade travadas */
-        opacity: 0; 
-        visibility: hidden;
-        pointer-events: none; 
-        
-        transition: all 0.2s cubic-bezier(0.4, 0.0, 0.2, 1); 
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: nowrap; 
-        border: 1px solid rgba(255,255,255,0.15);
-        z-index: 2147483648; 
+        opacity: 0; visibility: hidden; pointer-events: none; 
+        transition: all 0.2s; box-shadow: 0 4px 12px rgba(0,0,0,0.3); white-space: nowrap; 
+        border: 1px solid rgba(255,255,255,0.15); z-index: 2147483648; 
     }
-    
-    /* Tooltip só aparece no hover */
-    .cw-btn:hover::after { 
-        opacity: 1; 
-        visibility: visible;
-        transform: translateY(-50%) scale(1); 
-    }
-
+    .cw-btn:hover::after { opacity: 1; visibility: visible; transform: translateY(-50%) scale(1); }
     .cw-pill.side-right .cw-btn::after { right: 55px; transform-origin: right center; }
     .cw-pill.side-left .cw-btn::after { left: 55px; transform-origin: left center; }
 
-    /* Outros */
-    .cw-badge {
-        position: absolute; top: 8px; right: 8px;
-        width: 8px; height: 8px;
-        background-color: #d93025; border-radius: 50%;
-        border: 1px solid #fff; pointer-events: none;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-        z-index: 10;
-        animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
+    .cw-badge { position: absolute; top: 8px; right: 8px; width: 8px; height: 8px; background-color: #d93025; border-radius: 50%; border: 1px solid #fff; pointer-events: none; box-shadow: 0 1px 2px rgba(0,0,0,0.2); z-index: 10; animation: popIn 0.3s; }
     @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
 
-    .cw-sep {
-        width: 20px; height: 1px; background: rgba(255,255,255,0.2);
-        transition: opacity 0.3s ease 0.3s;
-        margin: 4px 0;
-    }
-    .cw-sep.visible { opacity: 1; }
-    .cw-pill.collapsed .cw-sep { opacity: 0; transition: opacity 0.1s ease 0s; }
-
-    .cw-grip {
-        width: 100%; height: 24px; display: flex; align-items: center; justify-content: center; 
-        cursor: grab; margin-bottom: 2px; 
-    }
-    .cw-grip-bar { 
-        width: 24px; height: 4px; background-color: ${COLORS.iconIdle}; border-radius: 4px; 
-        opacity: 0.4; transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1); 
-    }
+    .cw-sep { width: 20px; height: 1px; background: rgba(255,255,255,0.2); margin: 4px 0; }
+    .cw-grip { width: 100%; height: 24px; display: flex; align-items: center; justify-content: center; cursor: grab; margin-bottom: 2px; }
+    .cw-grip-bar { width: 24px; height: 4px; background-color: ${COLORS.iconIdle}; border-radius: 4px; opacity: 0.4; transition: all 0.3s; }
     .cw-grip:hover .cw-grip-bar { opacity: 1; background-color: #FFFFFF; transform: scaleY(1.2); }
     .cw-grip:active { cursor: grabbing; }
     .cw-pill.dragging .cw-grip-bar { background-color: ${COLORS.blue}; width: 16px; opacity: 1; }
 
-    @keyframes successPop {
-        0% { box-shadow: 0 0 0 transparent; transform: scale(1); }
-        50% { box-shadow: 0 0 15px #81C995; transform: scale(1.05); border-color: #81C995; }
-        100% { box-shadow: 0 0 0 transparent; transform: scale(1); }
-    }
-    .cw-pill.system-check { animation: successPop 0.6s ease-out; }
-
-    /* Processing */
-    .cw-pill.processing-center {
-        top: 50% !important; left: 50% !important;
-        transform: translate(-50%, -50%) !important;
-        width: 320px !important; height: 110px !important;
-        border-radius: 28px !important;
-        background: #202124 !important;
-        padding: 0 !important;
-        box-shadow: 0 40px 80px rgba(0,0,0,0.5) !important;
-        display: flex !important; flex-direction: column !important;
-        justify-content: center !important; align-items: center !important;
-    }
+    /* Processing Styles */
+    .cw-pill.processing-center { top: 50% !important; left: 50% !important; transform: translate(-50%, -50%) !important; width: 320px !important; height: 110px !important; border-radius: 28px !important; background: #202124 !important; padding: 0 !important; box-shadow: 0 40px 80px rgba(0,0,0,0.5) !important; display: flex !important; flex-direction: column !important; justify-content: center !important; align-items: center !important; }
     .cw-pill.processing-center.collapsed { background: #202124 !important; overflow: visible !important; }
     .cw-pill.processing-center .cw-main-logo { display: none !important; }
     .cw-pill.processing-center > *:not(.cw-center-stage) { display: none !important; }
-    .cw-center-stage {
-        display: flex; flex-direction: column; align-items: center; gap: 14px;
-        width: 100%; opacity: 0; animation: fadeIn 0.4s ease forwards 0.1s;
-        position: relative;
-    }
+    .cw-center-stage { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; opacity: 0; animation: fadeIn 0.4s ease forwards 0.1s; position: relative; }
     .cw-center-dots { display: flex; gap: 8px; }
     .cw-center-dots span { width: 8px; height: 8px; border-radius: 50%; animation: googleBounce 1.4s infinite ease-in-out both; }
     .cw-center-dots span:nth-child(1) { background-color: ${COLORS.blue}; animation-delay: -0.32s; }
     .cw-center-dots span:nth-child(2) { background-color: ${COLORS.red}; animation-delay: -0.16s; }
     .cw-center-dots span:nth-child(3) { background-color: ${COLORS.green}; }
-    .cw-center-text {
-        font-size: 13px; color: #E8EAED; text-align: center; max-width: 90%;
-        font-weight: 500; line-height: 1.4; opacity: 0; transform: translateY(10px);
-        animation: textSlideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; animation-delay: 0.2s;
-    }
+    .cw-center-text { font-size: 13px; color: #E8EAED; text-align: center; max-width: 90%; font-weight: 500; line-height: 1.4; opacity: 0; transform: translateY(10px); animation: textSlideUp 0.5s forwards 0.2s; }
     .cw-center-success { display: none; color: ${COLORS.green}; }
-    .cw-center-success svg { width: 40px; height: 40px; }
-    .cw-center-success.show { display: block; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-    .cw-abort-btn {
-        position: absolute; bottom: -32px; font-size: 10px; color: rgba(255, 255, 255, 0.2);
-        cursor: pointer; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; 
-        transition: all 0.3s ease; user-select: none; margin-bottom: 8px;
-    }
+    .cw-center-success.show { display: block; animation: popIn 0.4s; }
+    .cw-abort-btn { position: absolute; bottom: -32px; font-size: 10px; color: rgba(255, 255, 255, 0.2); cursor: pointer; text-transform: uppercase; font-weight: 600; transition: all 0.3s; }
     .cw-abort-btn:hover { color: #F28B82; opacity: 1; }
     @keyframes fadeIn { to { opacity: 1; } }
-    @keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     @keyframes googleBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
     @keyframes textSlideUp { to { opacity: 1; transform: translateY(0); } }
 `;
