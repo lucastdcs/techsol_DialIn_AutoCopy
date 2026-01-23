@@ -590,7 +590,7 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
             opacity 0.3s ease 0s, 
             transform 0.3s ease 0s,
             filter 0.3s ease 0s;
-            display 0.5s ease 1s
+            display 0.8s ease 0.8s
     }
 
     /* --- CASCATA DE SA\xCDDA (BAIXO PARA CIMA) --- */
