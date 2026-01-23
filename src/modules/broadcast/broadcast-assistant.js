@@ -15,7 +15,7 @@ import { DataService } from "../shared/data-service.js";
 import { getAgentEmail } from "../shared/page-data.js"; 
 
 // --- CONFIGURAÇÃO ---
-const ADMINS = ["lucaste"]; // Seu LDAP
+const ADMINS = ["lucaste", "ricardogi"]; 
 const POLL_TIME_MS = 60 * 1000; 
 
 // Inicializa estado global
@@ -23,7 +23,7 @@ window._cwIsAdmin = false;
 window._cwCurrentUser = null;
 
 export function initBroadcastAssistant() {
-  const CURRENT_VERSION = "v4.9 (High Contrast UI)";
+  const CURRENT_VERSION = "v4.9";
   let visible = false;
   let pollInterval = null;
   let currentEditingId = null;

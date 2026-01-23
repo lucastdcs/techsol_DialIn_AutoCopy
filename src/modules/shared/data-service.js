@@ -1,14 +1,16 @@
 // src/modules/shared/data-service.js
 
-// MANTENHA A URL QUE VOCÊ JÁ TEM (A VERSÃO /a/macros/... É IMPORTANTE AGORA)
-const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbysAGOgn40LEQ1uJIppENtTGNSRscLRQkGA96UPYTDDbA0c_KhVUwDQ-Do8ZQ7lQizo/exec";
+import { getAgentEmail } from './page-data.js'; 
+
+// URL da API atualizada
+const API_URL = "https://script.google.com/a/macros/google.com/s/AKfycbxFxh1cVk6r0t_JTA2TBfHBLJe_mOBQFsidwL1jwsUDcBtQYk3afu25SN-FR3vafJChHw/exec";
 
 const CACHE_KEY_BROADCAST = "cw_data_broadcast";
 const CACHE_KEY_TIPS = "cw_data_tips";
 
 const FALLBACK_TIPS = ["Processando...", "Mantenha o foco!", "Aguarde..."];
 
-// --- Helper JSONP Poderoso (Aceita dados) ---
+// --- Helper JSONP Poderoso (Core do Sistema) ---
 function jsonpFetch(operation, params = {}) {
     return new Promise((resolve, reject) => {
         const callbackName = 'cw_cb_' + Math.round(100000 * Math.random());
@@ -20,12 +22,12 @@ function jsonpFetch(operation, params = {}) {
             resolve(data);
         };
 
-        // Converte objeto params em string query (ex: &title=Oi&text=TudoBem)
+        // Converte objeto params em string query
         const queryString = Object.keys(params)
             .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
             .join('&');
 
-        // Monta URL
+        // Monta URL com Cache Buster (t=...)
         const finalUrl = `${API_URL}?op=${operation}&callback=${callbackName}&t=${Date.now()}&${queryString}`;
         
         script.src = finalUrl;
@@ -33,8 +35,8 @@ function jsonpFetch(operation, params = {}) {
         script.onerror = () => {
             if (document.body.contains(script)) document.body.removeChild(script);
             delete window[callbackName];
-            // Em scripts corporativos, as vezes o onerror dispara mesmo com sucesso se o mimetype variar,
-            // mas geralmente é bloqueio.
+            // Em scripts corporativos, as vezes o onerror dispara mesmo com sucesso 
+            // se o mimetype variar, mas geralmente é bloqueio.
             reject(new Error("JSONP Error (Check Corp Login)"));
         };
 
@@ -78,7 +80,6 @@ export const DataService = {
             date: new Date().toISOString(),
             id: Date.now().toString() 
         };
-        // Chama jsonpFetch com op='new_broadcast'
         return await DataService._performOp('new_broadcast', fullPayload);
     },
 
@@ -93,7 +94,7 @@ export const DataService = {
         return await DataService._performOp('delete_broadcast', { id });
     },
 
-    // Helper genérico para não repetir código
+    // Helper genérico para Broadcast
     _performOp: async (op, params) => {
         try {
             console.log(`📤 Executando ${op}...`, params);
@@ -110,5 +111,37 @@ export const DataService = {
         }
     },
     
-    logUsage: () => {} // Logs desabilitados temporariamente para evitar complexidade
+    // --- ANALYTICS VIA JSONP (A Correção) ---
+    logEvent: (category, action, label = "", value = null) => {
+        try {
+            let user = "anon";
+            try {
+                const email = getAgentEmail(); 
+                if (email) user = email.split('@')[0].toLowerCase();
+            } catch(e){}
+
+            // Prepara o payload
+            const payload = {
+                timestamp: new Date().toISOString(),
+                user: user,
+                version: "v4.5.1",
+                category: category,
+                action: action,
+                label: label,
+                value: value || ''
+            };
+
+            // USA O JSONP FETCH (Canal Seguro)
+            // Não usamos await porque é "fire and forget" (não queremos travar a UI)
+            jsonpFetch('log', payload).catch(e => {
+                // Silencioso no console para não assustar o usuário, mas útil para debug
+                // console.warn("Analytics não enviado:", e); 
+            });
+
+        } catch (err) {
+            console.warn("Analytics error", err);
+        }
+    },
+
+    logUsage: () => {} 
 };
