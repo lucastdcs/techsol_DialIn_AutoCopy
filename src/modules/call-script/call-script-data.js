@@ -10,13 +10,20 @@ export const csaChecklistData = {
             "(Opcional) Validar autenticação da conta via link",
             "Confirmação da Task e do AM",
             "Informar tempo da ligação (30-45 min)",
-            "Pedir para fechar conteúdo sensível (antes de compartilhar)",
+            "Pedir para fechar conteúdo sensível",
             "Validar Backup e Acessos Admin"
+        ],
+        meio: [
+            "Ofertar Implementação via Tag Support (Acesso Temporário)",
+            "Enviar e orientar aceite do email 'Consentimento e autorização...'",
+            "Confirmar recebimento do acesso",
+            "Iniciar Configuração (Aviso de silêncio ~10min)",
+            "[Caso Recuse] Seguir com Compartilhamento de Tela"
         ],
         fim: [
             "Resumo da chamada (o que foi feito e como funciona)",
             "Oferecer ajuda adicional / Abrir para dúvidas",
-            "Pedir para fechar compartilhamento de tela",
+            "Pedir para fechar compartilhamento de tela (se houver)",
             "Próximos passos (Acompanhamento por XX dias)",
             "Pedir consentimento para teste de QA",
             "Alinhar escopo (Técnico vs. Gerente de Contas)",
@@ -27,40 +34,45 @@ export const csaChecklistData = {
     "PT LT": {
         color: "#004f67",
         inicio: [
-            "Olá [...], eu sou o [...], e faço parte da Equipe de Soluções Técnicas do Google. Tudo bem?",
-            "Nossa ligação poderá ser gravada para fins de treinamento, qualidade e melhorias dos serviços do Google, de acordo com a nossa Política de Privacidade.",
-            "Por questão de segurança preciso que você me informe o seu email e CID (ou número) da conta do Ads, por favor",
+            "Apresentação (Nome, Time e Motivo)",
+            "Aviso de Gravação e Privacidade",
+            "Confirmar: Email, CID, Telefone e Site",
             "Confirmação da Task e do AM",
-            "A consultoria tem uma duração média de 30 a 45 minutos.",
-            "Peço para que compartilhe a tela usando a opção “Tela Inteira”",
-            "Por favor, feche todo e qualquer conteúdo confidencial e sensível (conversas, dados pessoais importantes, etc).",
-            "Possui o backup do seu site e todos os acessos às ferramentas do Google?",
-            "Confirmar email de acesso ao GTM/GA4"
+            "Informar duração (30-45 min)",
+            "Pedir para fechar conteúdo sensível",
+            "Validar Backup e Acessos Admin"
+        ],
+        meio: [
+            "Ofertar Implementação via Tag Support (Acesso Temporário)",
+            "Enviar e orientar aceite do email 'Consentimento e autorização...'",
+            "Confirmar recebimento do acesso",
+            "Iniciar Configuração (Aviso de silêncio ~10min)",
+            "[Caso Recuse] Seguir com Compartilhamento de Tela"
         ],
         fim: [
-            "Resumo da chamada (o que foi feito e como funciona)",
-            "Oferecer ajuda adicional / Abrir para dúvidas",
-            "Pedir para fechar compartilhamento de tela",
-            "Próximos passos (Acompanhamento por XX dias)",
-            "Durante esse tempo, nossa equipe de qualidade poderá realizar um teste de conversão para validar a implementação. Você concorda com esse teste para garantirmos a efetividade da implementação?",
-            "Alinhar escopo (Técnico vs. Gerente de Contas)",
-            "Pesquisa de Satisfação (e confirmar email para envio)",
+            "Resumo da chamada",
+            "Oferecer ajuda adicional",
+            "Encerrar compartilhamento (se houver)",
+            "Próximos passos e Monitoramento",
+            "Consentimento para teste de QA",
+            "Alinhamento de Escopo",
+            "Pesquisa de Satisfação",
             "Despedida"
         ]
     },
     "ES BAU": {
         color: "#00bbff",
-        inicio: ["Introducción (Nombre y  Equipo).", "La llamada pode ser grabada con fines de entrenamiento y calidad de acuerdo com nuestra política de privacidad.", "Informar sitio web registrado en el caso.", "Confirmación: Solicitar al Anunciante que confirme los 10 dígitos del CID el email del anunciante.", "Confirmaciones: Tarea, AM", "Informar el tiempo que va a durar la reunião.", "Confirmación: Copia de seguridad y acceso de ADM", "Cerrar conteúdo sensível antes de compartir la pantalla.", ],
-        fim: ["Resumen de la llamada.", "Ayuda adicional.", "Cerrar la pantalla compartida.", "Próximos passos (¿Cuánto tempo seguirá el caso?)", "Encuesta de Satisfação.", "Estaré monitoreando su caso durante XX dias para asegurarme de que todo esté funcionando corretamente. Durante este tiempo, nuestro equipo de qualidade podría realizar una prueba de conversión para validar la implementación. ¿Estás de acuerdo con esta prueba para garantizar la efectividad de la implementación? Perfecto, ¡gracias!", ]
+        inicio: ["Introducción (Nombre y  Equipo).", "La llamada pode ser grabada...", "Informar sitio web registrado.", "Confirmación: CID y Email.", "Confirmaciones: Tarea, AM", "Informar tiempo de reunión.", "Confirmación: Backup y Acceso Admin", "Cerrar conteúdo sensível." ],
+        fim: ["Resumen de la llamada.", "Ayuda adicional.", "Cerrar pantalla compartida.", "Próximos passos.", "Encuesta de Satisfação.", "Consentimiento para prueba de QA.", "Despedida."]
     },
     "ES LT": {
         color: "#f269ff",
-        inicio: ["Presentación (Nombre y equipo).", "Informar al cliente sobre la llamada grabada.", "Tiempo de duración de la llamada.", "Solicitar al anunciante que confirme lo siguiente: \n A) 10 dígitos de la conta \n B) Correo electrónico \n C) Número de teléfono y \n D) Nombre del sitio web.", "autenticar la cuenta del anunciante en el cases, si corresponde.", "Términos y condições.", "Informar las Task solicitadas y AM.", "Cerrar contenido sensible.", "Confirmación de copia de seguridad y acceso de administrador a las ferramentas.", "Resumen de llamada."],
-        fim: ["Ofrecer ayuda adicional.", "Dejar de compartir la pantalla.", "Pasos siguientes  (Si se le hará seguimiento al caso).", "Encuesta de Satisfação.", "Informar al cliente que el equipo de QA irá a realizar pruebas en los siguientes dias."]
+        inicio: ["Presentación.", "Aviso de grabación.", "Duración de llamada.", "Confirmar: CID, Email, Teléfono, Site.", "Autenticación (se aplica).", "Términos y condiciones.", "Confirmar Task y AM.", "Cerrar contenido sensible.", "Backup y Accesos."],
+        fim: ["Ayuda adicional.", "Dejar de compartir pantalla.", "Pasos siguientes.", "Encuesta de Satisfação.", "Aviso sobre pruebas de QA."]
     },
     "EN BAU": {
         color: "#ff0011",
-        inicio: ["Example 1", "Example 2"],
-        fim: ["Example 3", "Example 4"]
+        inicio: ["Introduction", "Recording Disclosure"],
+        fim: ["Summary", "Next Steps"]
     }
 };

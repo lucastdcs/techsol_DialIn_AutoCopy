@@ -301,13 +301,13 @@ const csaPopup = document.createElement("div");
 
     const activeColor = data.color || "#1a73e8";
 
-    // 1. Calcula Progresso
+ // 1. Calcula Progresso (Adicione 'meio' na conta)
     let totalItems = 0;
     let completedItems = 0;
-    ["inicio", "fim"].forEach(k => { if (data[k]) totalItems += data[k].length; });
+    ["inicio", "meio", "fim"].forEach(k => { if (data[k]) totalItems += data[k].length; });
 
-    // 2. Renderiza Cards
-    ["inicio", "fim"].forEach((groupKey, groupIndex) => {
+    // 2. Renderiza Cards (Adicione 'meio' no loop)
+    ["inicio", "meio", "fim"].forEach((groupKey, groupIndex) => {
       const items = data[groupKey];
       if (!items || items.length === 0) return;
 
@@ -318,9 +318,24 @@ const csaPopup = document.createElement("div");
       const cardTitle = document.createElement("div");
       Object.assign(cardTitle.style, styles.cardTitle);
 
-      let titleText = groupKey === "inicio" ? "Abertura" : "Fechamento";
-      if (csaCurrentLang.includes("ES")) titleText = groupKey === "inicio" ? "Apertura" : "Cierre";
-      if (csaCurrentLang.includes("EN")) titleText = groupKey === "inicio" ? "Opening" : "Closing";
+      let titleText = "";
+      
+      // Lógica de Títulos Atualizada
+      if (groupKey === "inicio") {
+          if (csaCurrentLang.includes("ES")) titleText = "Apertura";
+          else if (csaCurrentLang.includes("EN")) titleText = "Opening";
+          else titleText = "Abertura";
+      } 
+      else if (groupKey === "meio") {
+          if (csaCurrentLang.includes("ES")) titleText = "Implementación";
+          else if (csaCurrentLang.includes("EN")) titleText = "Implementation";
+          else titleText = "Implementação (Tag Support)";
+      }
+      else if (groupKey === "fim") {
+          if (csaCurrentLang.includes("ES")) titleText = "Cierre";
+          else if (csaCurrentLang.includes("EN")) titleText = "Closing";
+          else titleText = "Fechamento";
+      }
 
       cardTitle.textContent = titleText;
 
@@ -444,7 +459,7 @@ const csaPopup = document.createElement("div");
     let total = 0;
     let completed = 0;
 
-    ["inicio", "fim"].forEach(groupKey => {
+    ["inicio", "meio", "fim"].forEach(groupKey => {
       const items = data[groupKey] || [];
       total += items.length;
 
