@@ -18,7 +18,7 @@ import { toggleGenieAnimation } from "../shared/animations.js";
 import { csaChecklistData } from "./call-script-data.js";
 
 export function initCallScriptAssistant() {
-  const CURRENT_VERSION = "v2.1 (Apple Motion)";
+  const CURRENT_VERSION = "v2.5 (Tag Support)";
 
 
   const styles = {
