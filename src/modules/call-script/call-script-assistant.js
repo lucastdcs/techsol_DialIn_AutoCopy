@@ -13,13 +13,12 @@ import { SoundManager } from "../shared/sound-manager.js";
 
 import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from "../shared/animations.js";
-
+import { getPageData } from "../shared/page-data.js"; // <--- Importe isso!
 
 import { csaChecklistData } from "./call-script-data.js";
 
 export function initCallScriptAssistant() {
   const CURRENT_VERSION = "v2.5 (Tag Support)";
-
 
   const styles = {
     // Barra de Progresso "Líquida"
@@ -122,17 +121,27 @@ export function initCallScriptAssistant() {
       display: "flex",
       alignItems: "center",
       gap: "4px"
+    },
+    // Novos Estilos Banner de Contexto
+    contextBanner: {
+        padding: "12px 16px",
+        background: "#FFFFFF",
+        borderBottom: "1px solid #E5E7EB",
+        display: "flex",
+        flexDirection: "column",
+        gap: "8px",
+        boxShadow: "0 2px 6px rgba(0,0,0,0.02)",
+        position: "relative",
+        zIndex: "5"
     }
   };
-
 
   const csaCompletedTasks = {};
   let csaCurrentLang = "PT";
   let csaCurrentType = "BAU";
   let csaVisible = false;
 
-
-const csaPopup = document.createElement("div");
+  const csaPopup = document.createElement("div");
   csaPopup.id = "call-script-popup";
 
   // 1. Conecta ao animations.js
@@ -151,11 +160,52 @@ const csaPopup = document.createElement("div");
 
   const animRefs = { popup: csaPopup, googleLine: null };
 
+  // --- LOGICA DE MONITORAMENTO ---
+  let monitorInterval = null;
+
+  function updateContextData() {
+      // Se o popup estiver fechado, não gasta processamento
+      if (!csaVisible) return;
+
+      getPageData().then(data => {
+          const elName = csaPopup.querySelector('#cw-ctx-name');
+          const elCid = csaPopup.querySelector('#cw-ctx-cid');
+          const elEmail = csaPopup.querySelector('#cw-ctx-email');
+          const elDot = csaPopup.querySelector('#cw-live-indicator');
+
+          // Atualiza textos
+          if(elName) elName.textContent = data.advertiserName || "Cliente Desconhecido";
+          if(elCid) elCid.textContent = data.cid || "---";
+          if(elEmail) {
+              elEmail.textContent = data.clientEmail || "Não encontrado";
+              elEmail.title = data.clientEmail || ""; // Tooltip nativo para emails longos
+          }
+
+          // Efeito de "Pulso" no ponto verde para mostrar que está vivo
+          if(elDot) {
+              elDot.style.opacity = "0.5";
+              setTimeout(() => elDot.style.opacity = "1", 300);
+          }
+      });
+  }
+
   function toggleVisibility() {
     csaVisible = !csaVisible;
     toggleGenieAnimation(csaVisible, csaPopup, 'cw-btn-script');
+    
+    // Gerenciamento Inteligente do Intervalo
+    if (csaVisible) {
+        updateContextData(); // Chama um de imediato
+        if (!monitorInterval) {
+            monitorInterval = setInterval(updateContextData, 3000); // Atualiza a cada 3s
+        }
+    } else {
+        if (monitorInterval) {
+            clearInterval(monitorInterval);
+            monitorInterval = null;
+        }
+    }
   }
-
 
   const csaHeader = createStandardHeader(
     csaPopup,
@@ -166,6 +216,31 @@ const csaPopup = document.createElement("div");
     () => { toggleVisibility(); }
   );
   csaPopup.appendChild(csaHeader);
+
+  // === NOVO: BANNER DE CONTEXTO ===
+  const contextBanner = document.createElement("div");
+  Object.assign(contextBanner.style, styles.contextBanner);
+  
+  contextBanner.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+              <span id="cw-live-indicator" style="width:8px; height:8px; border-radius:50%; background:#10B981; display:inline-block;"></span>
+              <span id="cw-ctx-name" style="font-size:15px; font-weight:700; color:#202124;">Carregando...</span>
+          </div>
+      </div>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+              <div style="font-size:10px; font-weight:700; color:#5f6368; text-transform:uppercase; margin-bottom:2px;">CID</div>
+              <div id="cw-ctx-cid" style="font-family:'Roboto Mono'; font-size:13px; color:#1a73e8; background:#e8f0fe; padding:4px 8px; border-radius:4px; display:inline-block;">---</div>
+          </div>
+          <div style="overflow:hidden;">
+              <div style="font-size:10px; font-weight:700; color:#5f6368; text-transform:uppercase; margin-bottom:2px;">Email</div>
+              <div id="cw-ctx-email" style="font-size:13px; color:#3c4043; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="Email do Anunciante">---</div>
+          </div>
+      </div>
+  `;
+  csaPopup.appendChild(contextBanner);
 
   // 2. PROGRESS BAR
   const progressContainer = document.createElement("div");
@@ -301,7 +376,7 @@ const csaPopup = document.createElement("div");
 
     const activeColor = data.color || "#1a73e8";
 
- // 1. Calcula Progresso (Adicione 'meio' na conta)
+    // 1. Calcula Progresso (Adicione 'meio' na conta)
     let totalItems = 0;
     let completedItems = 0;
     ["inicio", "meio", "fim"].forEach(k => { if (data[k]) totalItems += data[k].length; });
