@@ -34,7 +34,8 @@ export const csaChecklistData = {
             "A consultoria tem uma duração média de 30 a 45 minutos.",
             "Peço para que compartilhe a tela usando a opção “Tela Inteira”",
             "Por favor, feche todo e qualquer conteúdo confidencial e sensível (conversas, dados pessoais importantes, etc).",
-            "Possui o backup do seu site e todos os acessos às ferramentas do Google?"
+            "Possui o backup do seu site e todos os acessos às ferramentas do Google?",
+            "Confirmar email de acesso ao GTM/GA4"
         ],
         fim: [
             "Resumo da chamada (o que foi feito e como funciona)",
