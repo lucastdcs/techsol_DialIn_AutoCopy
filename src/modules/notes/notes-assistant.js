@@ -73,137 +73,7 @@ export function initCaseNotesAssistant() {
     }
   });
 
-  async function collectCurrentState() {
-        const pageData = await getPageData();
-        
-        // 1. Inputs e Textareas
-        const formData = {};
-        const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
-        inputs.forEach(el => formData[el.id] = el.value);
 
-        // 2. Tasks Selecionadas
-        // (Precisamos saber quais checkboxes estão marcados no componente stepTasks)
-        const activeTasks = stepTasks.getCheckedElements().map(c => ({ 
-            key: c.value, 
-            count: parseInt(c.closest('.cw-task-item').querySelector('.cw-step-val')?.textContent || 1) 
-        }));
-
-        // 3. Tag Support
-        // Precisamos saber o estado dos radios. Faremos um seletor manual pois o módulo não expôs getter de estado puro.
-        const tagSupportContainer = document.getElementById("tag-support-container");
-        let tagSupportState = null;
-        if(tagSupportContainer) {
-             const checkedRadio = tagSupportContainer.querySelector('input[type="radio"]:checked');
-             const reasonInput = tagSupportContainer.querySelector('input[type="text"]');
-             tagSupportState = {
-                 choice: checkedRadio ? checkedRadio.value : 'Não',
-                 reason: reasonInput ? reasonInput.value : ''
-             };
-        }
-
-        return {
-            clientName: pageData.advertiserName,
-            cid: pageData.cid,
-            status: mainStatusSelect.value,
-            subStatus: subStatusSelect.value,
-            caseType: currentCaseType,
-            lang: currentLang,
-            formData,
-            activeTasks,
-            tagSupportState
-        };
-    }
-
-    function restoreState(draftData) {
-        // 1. Restaurar Configs Globais
-        if (draftData.lang) setLanguage(draftData.lang);
-        if (draftData.caseType) setCaseType(draftData.caseType);
-
-        // 2. Restaurar Status (Dispara a recriação do form)
-        if (draftData.status) {
-            mainStatusSelect.value = draftData.status;
-            mainStatusSelect.dispatchEvent(new Event('change'));
-        }
-        
-        setTimeout(() => {
-            if (draftData.subStatus) {
-                subStatusSelect.value = draftData.subStatus;
-                subStatusSelect.dispatchEvent(new Event('change'));
-            }
-
-            // Pequeno delay para garantir que o DOM foi montado pelo substatus change
-            setTimeout(() => {
-                // 3. Restaurar Campos de Texto
-                if (draftData.formData) {
-                    Object.entries(draftData.formData).forEach(([id, val]) => {
-                        const el = document.getElementById(id);
-                        if(el) el.value = val;
-                    });
-                }
-
-                // 4. Restaurar Tasks
-                // Resetamos primeiro
-                stepTasks.reset();
-                if (draftData.activeTasks && Array.isArray(draftData.activeTasks)) {
-                    draftData.activeTasks.forEach(task => {
-                        // Simula clicks para reativar (gambiarra robusta)
-                        // Ou usa o método público toggleTask
-                         for(let i=0; i<task.count; i++) {
-                             stepTasks.toggleTask(task.key, true);
-                         }
-                    });
-                }
-
-                // 5. Restaurar Tag Support
-                if (draftData.tagSupportState) {
-                    const container = document.getElementById("tag-support-container");
-                    if (container) {
-                        const radio = container.querySelector(`input[value="${draftData.tagSupportState.choice}"]`);
-                        if(radio) {
-                            radio.checked = true;
-                            radio.dispatchEvent(new Event('change'));
-                        }
-                        if (draftData.tagSupportState.choice === 'Não' && draftData.tagSupportState.reason) {
-                            const input = container.querySelector('input[type="text"]');
-                            if(input) input.value = draftData.tagSupportState.reason;
-                        }
-                    }
-                }
-                
-            }, 100);
-        }, 50);
-    }
-
-    // --- INICIALIZAÇÃO DO GERENCIADOR DE RASCUNHOS ---
-    const draftsManager = createDraftsManager({
-        onSaveCurrent: async () => {
-            const state = await collectCurrentState();
-            const saved = DraftService.save(state); // (Importe DraftService no topo tbm se precisar direto, mas o UI já faz)
-            // Aqui você deve importar o DraftService também no notes-assistant ou passar a função save pro UI
-            // Vamos assumir que o UI cuida do save chamando o service interno dele, 
-            // e nós apenas retornamos o objeto de estado aqui.
-            
-            // Ops, o draft-ui espera que a gente SALVE ou retorne os DADOS?
-            // No design que fiz acima: "await onSaveCurrent();" -> O UI chama essa função.
-            // Então vamos ajustar o UI para RECEBER os dados e salvar ele mesmo.
-            return state; 
-        },
-        onLoadDraft: (draft) => {
-            restoreState(draft);
-        }
-    });
-
-    // Injeta os elementos na UI
-    // 1. Botão de Histórico no Header
-    const headerActions = header.querySelector('.cw-header-actions') || header.lastElementChild;
-    headerActions.insertBefore(draftsManager.historyBtnWrapper, headerActions.firstChild);
-
-    // 2. Botão Estacionar no Footer (buttonContainer)
-    // Insere antes do botão Copiar
-    buttonContainer.insertBefore(draftsManager.parkButton, buttonContainer.firstChild);
-
-    // 3. Drawer no Popup
-    popup.appendChild(draftsManager.drawer);
 
   // --- POPUP SETUP ---
   const popup = document.createElement("div");
@@ -672,6 +542,138 @@ export function initCaseNotesAssistant() {
   generateButton.textContent = "Preencher";
   buttonContainer.appendChild(copyButton);
   buttonContainer.appendChild(generateButton);
+
+    async function collectCurrentState() {
+        const pageData = await getPageData();
+        
+        // 1. Inputs e Textareas
+        const formData = {};
+        const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
+        inputs.forEach(el => formData[el.id] = el.value);
+
+        // 2. Tasks Selecionadas
+        // (Precisamos saber quais checkboxes estão marcados no componente stepTasks)
+        const activeTasks = stepTasks.getCheckedElements().map(c => ({ 
+            key: c.value, 
+            count: parseInt(c.closest('.cw-task-item').querySelector('.cw-step-val')?.textContent || 1) 
+        }));
+
+        // 3. Tag Support
+        // Precisamos saber o estado dos radios. Faremos um seletor manual pois o módulo não expôs getter de estado puro.
+        const tagSupportContainer = document.getElementById("tag-support-container");
+        let tagSupportState = null;
+        if(tagSupportContainer) {
+             const checkedRadio = tagSupportContainer.querySelector('input[type="radio"]:checked');
+             const reasonInput = tagSupportContainer.querySelector('input[type="text"]');
+             tagSupportState = {
+                 choice: checkedRadio ? checkedRadio.value : 'Não',
+                 reason: reasonInput ? reasonInput.value : ''
+             };
+        }
+
+        return {
+            clientName: pageData.advertiserName,
+            cid: pageData.cid,
+            status: mainStatusSelect.value,
+            subStatus: subStatusSelect.value,
+            caseType: currentCaseType,
+            lang: currentLang,
+            formData,
+            activeTasks,
+            tagSupportState
+        };
+    }
+
+    function restoreState(draftData) {
+        // 1. Restaurar Configs Globais
+        if (draftData.lang) setLanguage(draftData.lang);
+        if (draftData.caseType) setCaseType(draftData.caseType);
+
+        // 2. Restaurar Status (Dispara a recriação do form)
+        if (draftData.status) {
+            mainStatusSelect.value = draftData.status;
+            mainStatusSelect.dispatchEvent(new Event('change'));
+        }
+        
+        setTimeout(() => {
+            if (draftData.subStatus) {
+                subStatusSelect.value = draftData.subStatus;
+                subStatusSelect.dispatchEvent(new Event('change'));
+            }
+
+            // Pequeno delay para garantir que o DOM foi montado pelo substatus change
+            setTimeout(() => {
+                // 3. Restaurar Campos de Texto
+                if (draftData.formData) {
+                    Object.entries(draftData.formData).forEach(([id, val]) => {
+                        const el = document.getElementById(id);
+                        if(el) el.value = val;
+                    });
+                }
+
+                // 4. Restaurar Tasks
+                // Resetamos primeiro
+                stepTasks.reset();
+                if (draftData.activeTasks && Array.isArray(draftData.activeTasks)) {
+                    draftData.activeTasks.forEach(task => {
+                        // Simula clicks para reativar (gambiarra robusta)
+                        // Ou usa o método público toggleTask
+                         for(let i=0; i<task.count; i++) {
+                             stepTasks.toggleTask(task.key, true);
+                         }
+                    });
+                }
+
+                // 5. Restaurar Tag Support
+                if (draftData.tagSupportState) {
+                    const container = document.getElementById("tag-support-container");
+                    if (container) {
+                        const radio = container.querySelector(`input[value="${draftData.tagSupportState.choice}"]`);
+                        if(radio) {
+                            radio.checked = true;
+                            radio.dispatchEvent(new Event('change'));
+                        }
+                        if (draftData.tagSupportState.choice === 'Não' && draftData.tagSupportState.reason) {
+                            const input = container.querySelector('input[type="text"]');
+                            if(input) input.value = draftData.tagSupportState.reason;
+                        }
+                    }
+                }
+                
+            }, 100);
+        }, 50);
+    }
+
+    // --- INICIALIZAÇÃO DO GERENCIADOR DE RASCUNHOS ---
+    const draftsManager = createDraftsManager({
+        onSaveCurrent: async () => {
+            const state = await collectCurrentState();
+            const saved = DraftService.save(state); // (Importe DraftService no topo tbm se precisar direto, mas o UI já faz)
+            // Aqui você deve importar o DraftService também no notes-assistant ou passar a função save pro UI
+            // Vamos assumir que o UI cuida do save chamando o service interno dele, 
+            // e nós apenas retornamos o objeto de estado aqui.
+            
+            // Ops, o draft-ui espera que a gente SALVE ou retorne os DADOS?
+            // No design que fiz acima: "await onSaveCurrent();" -> O UI chama essa função.
+            // Então vamos ajustar o UI para RECEBER os dados e salvar ele mesmo.
+            return state; 
+        },
+        onLoadDraft: (draft) => {
+            restoreState(draft);
+        }
+    });
+
+    // Injeta os elementos na UI
+    // 1. Botão de Histórico no Header
+    const headerActions = header.querySelector('.cw-header-actions') || header.lastElementChild;
+    headerActions.insertBefore(draftsManager.historyBtnWrapper, headerActions.firstChild);
+
+    // 2. Botão Estacionar no Footer (buttonContainer)
+    // Insere antes do botão Copiar
+    buttonContainer.insertBefore(draftsManager.parkButton, buttonContainer.firstChild);
+
+    // 3. Drawer no Popup
+    popup.appendChild(draftsManager.drawer);
 
   // --- RESIZE HANDLE (A Nova Alça) ---
   const resizeHandle = document.createElement('div');
