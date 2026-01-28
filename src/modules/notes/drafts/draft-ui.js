@@ -23,7 +23,7 @@ export function createDraftsManager(callbacks) {
         background: #FFFFFF; 
         color: #5F6368; 
         border: 1px solid #DADCE0; 
-        border-radius: 20px; /* Pílula completa */
+        border-radius: 8px;
         font-size: 13px; 
         font-weight: 600; 
         cursor: pointer;
@@ -32,7 +32,8 @@ export function createDraftsManager(callbacks) {
         gap: 8px;
         transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
         box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        margin-right: auto; /* Empurra os outros botões para a direita */
+        margin-right: auto; 
+        margin-top: 16px;
     `;
 
     // Micro-interações (Hover/Active)
