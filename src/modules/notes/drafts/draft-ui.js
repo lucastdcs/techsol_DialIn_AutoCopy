@@ -77,7 +77,7 @@ export function createDraftsManager(callbacks) {
     drawerHeader.style.cssText = "padding: 16px 24px; border-bottom: 1px solid #F1F3F4; display: flex; justify-content: space-between; align-items: center; background: #fff;";
     drawerHeader.innerHTML = `<span style="font-size:16px; font-weight:700; color:#202124;">Casos Estacionados</span>`;
     
-    const closeDrawerBtn = document.createElement("button");
+    const closeBtn = document.createElement("button");
     closeBtn.innerHTML = "✕";
     closeBtn.style.cssText = "background:none; border:none; font-size:18px; color:#5f6368; cursor:pointer;";
     closeBtn.onclick = () => toggleDrawer(false);
