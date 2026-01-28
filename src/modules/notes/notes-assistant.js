@@ -543,23 +543,22 @@ export function initCaseNotesAssistant() {
   buttonContainer.appendChild(copyButton);
   buttonContainer.appendChild(generateButton);
 
-    async function collectCurrentState() {
+// Função 1: Captura tudo o que está na tela agora
+  async function collectCurrentState() {
         const pageData = await getPageData();
         
-        // 1. Inputs e Textareas
+        // 1. Inputs e Textareas do Formulário
         const formData = {};
         const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
         inputs.forEach(el => formData[el.id] = el.value);
 
-        // 2. Tasks Selecionadas
-        // (Precisamos saber quais checkboxes estão marcados no componente stepTasks)
+        // 2. Tasks Selecionadas (Checkboxes)
         const activeTasks = stepTasks.getCheckedElements().map(c => ({ 
             key: c.value, 
             count: parseInt(c.closest('.cw-task-item').querySelector('.cw-step-val')?.textContent || 1) 
         }));
 
-        // 3. Tag Support
-        // Precisamos saber o estado dos radios. Faremos um seletor manual pois o módulo não expôs getter de estado puro.
+        // 3. Tag Support (Radios e Input de Motivo)
         const tagSupportContainer = document.getElementById("tag-support-container");
         let tagSupportState = null;
         if(tagSupportContainer) {
@@ -584,6 +583,7 @@ export function initCaseNotesAssistant() {
         };
     }
 
+    // Função 2: Reconstrói a tela a partir dos dados salvos
     function restoreState(draftData) {
         // 1. Restaurar Configs Globais
         if (draftData.lang) setLanguage(draftData.lang);
@@ -595,13 +595,14 @@ export function initCaseNotesAssistant() {
             mainStatusSelect.dispatchEvent(new Event('change'));
         }
         
+        // Timeout para dar tempo do DOM ser criado pelo 'change' acima
         setTimeout(() => {
             if (draftData.subStatus) {
                 subStatusSelect.value = draftData.subStatus;
                 subStatusSelect.dispatchEvent(new Event('change'));
             }
 
-            // Pequeno delay para garantir que o DOM foi montado pelo substatus change
+            // Segundo Timeout para garantir que os campos do substatus renderizaram
             setTimeout(() => {
                 // 3. Restaurar Campos de Texto
                 if (draftData.formData) {
@@ -612,12 +613,10 @@ export function initCaseNotesAssistant() {
                 }
 
                 // 4. Restaurar Tasks
-                // Resetamos primeiro
-                stepTasks.reset();
+                stepTasks.reset(); // Limpa antes
                 if (draftData.activeTasks && Array.isArray(draftData.activeTasks)) {
                     draftData.activeTasks.forEach(task => {
-                        // Simula clicks para reativar (gambiarra robusta)
-                        // Ou usa o método público toggleTask
+                         // Reativa a task X vezes
                          for(let i=0; i<task.count; i++) {
                              stepTasks.toggleTask(task.key, true);
                          }
@@ -631,7 +630,7 @@ export function initCaseNotesAssistant() {
                         const radio = container.querySelector(`input[value="${draftData.tagSupportState.choice}"]`);
                         if(radio) {
                             radio.checked = true;
-                            radio.dispatchEvent(new Event('change'));
+                            radio.dispatchEvent(new Event('change')); // Dispara lógica de mostrar/esconder motivo
                         }
                         if (draftData.tagSupportState.choice === 'Não' && draftData.tagSupportState.reason) {
                             const input = container.querySelector('input[type="text"]');
@@ -644,35 +643,38 @@ export function initCaseNotesAssistant() {
         }, 50);
     }
 
-    // --- INICIALIZAÇÃO DO GERENCIADOR DE RASCUNHOS ---
+    // -----------------------------------------------------------------------
+    // [NOVO] INICIALIZAÇÃO E INJEÇÃO DO DRAFT MANAGER
+    // -----------------------------------------------------------------------
+    
     const draftsManager = createDraftsManager({
+        // Callback de Salvar: Retorna o estado atual para o UI salvar
         onSaveCurrent: async () => {
             const state = await collectCurrentState();
-            const saved = DraftService.save(state); // (Importe DraftService no topo tbm se precisar direto, mas o UI já faz)
-            // Aqui você deve importar o DraftService também no notes-assistant ou passar a função save pro UI
-            // Vamos assumir que o UI cuida do save chamando o service interno dele, 
-            // e nós apenas retornamos o objeto de estado aqui.
             
-            // Ops, o draft-ui espera que a gente SALVE ou retorne os DADOS?
-            // No design que fiz acima: "await onSaveCurrent();" -> O UI chama essa função.
-            // Então vamos ajustar o UI para RECEBER os dados e salvar ele mesmo.
+            // Opcional: Resetar a tela após estacionar
+            resetSteps(1.5);
+            mainStatusSelect.value = "";
+            
             return state; 
         },
+        // Callback de Carregar: Recebe o draft e restaura a tela
         onLoadDraft: (draft) => {
             restoreState(draft);
         }
     });
 
-    // Injeta os elementos na UI
-    // 1. Botão de Histórico no Header
-    const headerActions = header.querySelector('.cw-header-actions') || header.lastElementChild;
-    headerActions.insertBefore(draftsManager.historyBtnWrapper, headerActions.firstChild);
+    // Injeta o botão de Histórico (Reloginho) no Header
+    // O header.lastElementChild é o container da direita (botoes de janela)
+    const headerActions = header.lastElementChild; 
+    if (headerActions) {
+        headerActions.insertBefore(draftsManager.historyBtnWrapper, headerActions.firstChild);
+    }
 
-    // 2. Botão Estacionar no Footer (buttonContainer)
-    // Insere antes do botão Copiar
+    // Injeta o botão "Estacionar" no Footer (ao lado de Copiar/Preencher)
     buttonContainer.insertBefore(draftsManager.parkButton, buttonContainer.firstChild);
 
-    // 3. Drawer no Popup
+    // Injeta a Gaveta (Drawer) dentro do Popup principal
     popup.appendChild(draftsManager.drawer);
 
   // --- RESIZE HANDLE (A Nova Alça) ---
