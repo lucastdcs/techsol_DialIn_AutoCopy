@@ -1,7 +1,7 @@
 // src/modules/notes/drafts/draft-ui.js
 
 import { DraftService } from "./draft-service.js";
-import { showToast, stylePopup } from "../../shared/utils.js"; // Reuso de estilos
+import { showToast } from "../../shared/utils.js"; 
 import { SoundManager } from "../../shared/sound-manager.js";
 
 export function createDraftsManager(callbacks) {
@@ -26,11 +26,17 @@ export function createDraftsManager(callbacks) {
     
     parkButton.onclick = async () => {
         if(confirm("Deseja estacionar o caso atual e limpar a tela?")) {
-            await onSaveCurrent(); // Chama o Notes Assistant para pegar os dados
+            const state = await onSaveCurrent(); // Pega os dados
+            DraftService.save(state); // Salva
+            
             renderDrawerList();
             updateBadge();
             SoundManager.playSuccess();
             showToast("Caso estacionado com sucesso.");
+            
+            // Opcional: Recarregar a página ou limpar inputs manuais poderia ser feito aqui
+            // Mas como o onSaveCurrent retorna o estado, assumimos que quem chamou pode lidar com o reset se necessário.
+            // Para garantir, podemos forçar um refresh visual do drawer.
         }
     };
 
@@ -77,11 +83,13 @@ export function createDraftsManager(callbacks) {
     drawerHeader.style.cssText = "padding: 16px 24px; border-bottom: 1px solid #F1F3F4; display: flex; justify-content: space-between; align-items: center; background: #fff;";
     drawerHeader.innerHTML = `<span style="font-size:16px; font-weight:700; color:#202124;">Casos Estacionados</span>`;
     
+    // --- CORREÇÃO AQUI ---
     const closeDrawerBtn = document.createElement("button");
-    closeBtn.innerHTML = "✕";
-    closeBtn.style.cssText = "background:none; border:none; font-size:18px; color:#5f6368; cursor:pointer;";
-    closeBtn.onclick = () => toggleDrawer(false);
-    drawerHeader.appendChild(closeBtn);
+    closeDrawerBtn.innerHTML = "✕";
+    closeDrawerBtn.style.cssText = "background:none; border:none; font-size:18px; color:#5f6368; cursor:pointer;";
+    closeDrawerBtn.onclick = () => toggleDrawer(false);
+    drawerHeader.appendChild(closeDrawerBtn);
+    // ---------------------
 
     const drawerList = document.createElement("div");
     drawerList.style.cssText = "flex: 1; overflow-y: auto; padding: 16px; background: #F8F9FA; display: flex; flex-direction: column; gap: 12px;";
@@ -127,7 +135,7 @@ export function createDraftsManager(callbacks) {
                 </div>
                 <div style="font-size:12px; color:#5F6368; margin-bottom:12px;">
                     CID: ${draft.cid || 'N/A'}<br>
-                    Status: <b>${draft.status || 'N/A'}</b>
+                    Status: <b>${draft.subStatus || draft.status || 'N/A'}</b>
                 </div>
                 <div style="display:flex; gap:8px;">
                     <button class="cw-resume-btn" style="flex:1; padding:8px; background:#E8F0FE; color:#1967D2; border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer;">▶ Retomar</button>
