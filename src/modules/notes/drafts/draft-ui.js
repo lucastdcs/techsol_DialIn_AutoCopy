@@ -187,16 +187,23 @@ export function createDraftsManager(callbacks) {
             // Data formatada
             const date = new Date(draft.timestamp);
             const timeStr = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            const dateStr = date.toLocaleDateString([], {day: '2-digit', month: '2-digit'});
+            
+            // Títulos Inteligentes (Tags)
+            let tagsHtml = "";
+            if (draft.summaryTags && draft.summaryTags.length > 0) {
+                const tagsStr = draft.summaryTags.slice(0, 3).join(", ") + (draft.summaryTags.length > 3 ? "..." : "");
+                tagsHtml = `<div style="font-size:11px; color:#1A73E8; background:#E8F0FE; display:inline-block; padding:2px 6px; border-radius:4px; margin-top:4px;">🏷️ ${tagsStr}</div>`;
+            }
 
             card.innerHTML = `
-                <div style="display:flex; justify-content:space-between; margin-bottom:8px; align-items:flex-start;">
+                <div style="display:flex; justify-content:space-between; margin-bottom:6px; align-items:flex-start;">
                     <div style="font-weight:700; color:#202124; font-size:14px; line-height:1.4;">${draft.clientName || 'Cliente Sem Nome'}</div>
-                    <div style="font-size:11px; color:#1A73E8; font-weight:600; background:#E8F0FE; padding:2px 6px; border-radius:4px;">${timeStr}</div>
+                    <div style="font-size:11px; color:#9AA0A6;">${timeStr}</div>
                 </div>
                 <div style="font-size:12px; color:#5F6368; margin-bottom:12px; line-height:1.5;">
-                    <span style="display:block; margin-bottom:2px;">🆔 ${draft.cid || '---'}</span>
+                    <span style="display:block;">🆔 ${draft.cid || '---'}</span>
                     <span style="display:block; color:${draft.status === 'NI' ? '#E37400' : '#1E8E3E'}">● ${draft.subStatus || draft.status || 'Sem Status'}</span>
+                    ${tagsHtml}
                 </div>
                 <div style="display:flex; gap:8px;">
                     <button class="cw-resume-btn" style="flex:1; padding:8px; background:#1A73E8; color:#FFF; border:none; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; box-shadow:0 1px 2px rgba(26,115,232,0.3); transition:all 0.2s;">
@@ -207,16 +214,13 @@ export function createDraftsManager(callbacks) {
                     </button>
                 </div>
             `;
-
-            // Ações do Card
-            const btnResume = card.querySelector(".cw-resume-btn");
-            btnResume.onmouseover = () => btnResume.style.background = "#1557B0";
-            btnResume.onmouseout = () => btnResume.style.background = "#1A73E8";
             
+            // ... (Listeners de clique do card continuam iguais) ...
+            const btnResume = card.querySelector(".cw-resume-btn");
             btnResume.onclick = () => {
                 if(confirm("Retomar este rascunho? O formulário atual será substituído.")) {
                     onLoadDraft(draft);
-                    DraftService.delete(draft.id); // Remove da lista
+                    DraftService.delete(draft.id); 
                     renderDrawerList();
                     updateBadge();
                     toggleDrawer(false);
@@ -224,13 +228,9 @@ export function createDraftsManager(callbacks) {
                     showToast("Rascunho carregado.");
                 }
             };
-
             const btnDel = card.querySelector(".cw-del-btn");
-            btnDel.onmouseover = () => { btnDel.style.borderColor = "#D93025"; btnDel.style.color = "#D93025"; btnDel.style.background = "#FCE8E6"; };
-            btnDel.onmouseout = () => { btnDel.style.borderColor = "#DADCE0"; btnDel.style.color = "#5F6368"; btnDel.style.background = "#FFF"; };
-            
             btnDel.onclick = () => {
-                if(confirm("Excluir este rascunho permanentemente?")) {
+                if(confirm("Excluir este rascunho?")) {
                     DraftService.delete(draft.id);
                     renderDrawerList();
                     updateBadge();

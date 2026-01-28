@@ -249,6 +249,20 @@ export function initCommandCenter(actions) {
                 animation: textSlideUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; 
                 animation-delay: 0.2s; 
             }
+
+            /* ... estilos existentes do .cw-badge ... */
+            
+            /* INDICADOR DE TRABALHO EM PROGRESSO (DIRTY STATE) */
+            .cw-dot-dirty {
+                position: absolute; top: 8px; right: 8px;
+                width: 6px; height: 6px;
+                background-color: #F9AB00; /* Laranja Google */
+                border-radius: 50%;
+                border: 1px solid #3c4043; /* Contraste com fundo escuro */
+                pointer-events: none;
+                z-index: 11;
+                animation: popIn 0.3s;
+            }
             
             .cw-center-success { display: none; color: ${COLORS.green}; margin-bottom: 10px; }
             .cw-center-success svg { width: 48px; height: 48px; }

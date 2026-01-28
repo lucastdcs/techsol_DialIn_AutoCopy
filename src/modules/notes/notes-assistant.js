@@ -548,6 +548,16 @@ export function initCaseNotesAssistant() {
                  reason: reasonInput ? reasonInput.value : ''
              };
         }
+        const summaryTags = [];
+  stepTasks.getCheckedElements().forEach(c => {
+      // Tenta achar o nome legível no banco de dados
+      const key = c.value;
+      if (TASKS_DB[key]) {
+          summaryTags.push(TASKS_DB[key].name);
+      } else {
+          summaryTags.push(key);
+      }
+  });
 
         return {
             clientName: pageData.advertiserName,
@@ -558,7 +568,8 @@ export function initCaseNotesAssistant() {
             lang: currentLang,
             formData,
             activeTasks,
-            tagSupportState
+            tagSupportState,
+            summaryTags
         };
     }
 
@@ -1506,6 +1517,106 @@ function resetSteps(startFrom = 1.5) {
       emailAutomationDiv.style.display = "none";
     }
   }
+
+  // =========================================================================
+  // AUTOMATION: AIRBAG & DIRTY STATE
+  // =========================================================================
+
+  let autoSaveInterval = null;
+  let lastSavedJSON = ""; // Para evitar salvar se nada mudou
+
+  function updateDirtyIndicator(isDirty) {
+      // Encontra o botão de Notes na Pílula principal
+      const notesBtn = document.getElementById('cw-btn-notes');
+      if (!notesBtn) return;
+
+      const existingDot = notesBtn.querySelector('.cw-dot-dirty');
+      
+      if (isDirty) {
+          if (!existingDot) {
+              const dot = document.createElement('div');
+              dot.className = 'cw-dot-dirty';
+              notesBtn.appendChild(dot);
+          }
+      } else {
+          if (existingDot) existingDot.remove();
+      }
+  }
+
+  async function checkAndAutoSave() {
+      // Se a janela não estiver visível, talvez não precisemos salvar com tanta frequência, 
+      // mas para "Estacionar" automático, é bom verificar.
+      
+      const state = await collectCurrentState();
+      
+      // Lógica de "Dirty": Se tem Tasks OU texto digitado nos campos chave
+      let hasData = state.activeTasks.length > 0;
+      if (!hasData) {
+          // Verifica se algum campo de texto tem conteúdo relevante
+          const keys = Object.keys(state.formData);
+          for (const k of keys) {
+              const val = state.formData[k];
+              if (val && val.trim().length > 3 && val !== "• ") { // Ignora bullet vazio
+                  hasData = true;
+                  break;
+              }
+          }
+      }
+
+      updateDirtyIndicator(hasData);
+
+      // Lógica do Airbag (Salvar apenas se mudou)
+      if (hasData) {
+          const currentJSON = JSON.stringify(state);
+          if (currentJSON !== lastSavedJSON) {
+              DraftService.saveEmergency(state);
+              lastSavedJSON = currentJSON;
+              // console.log("🎒 Airbag inflado (Auto-saved)");
+          }
+      } else {
+          // Se limpou tudo, limpa o airbag
+          if (lastSavedJSON !== "") {
+              DraftService.clearEmergency();
+              lastSavedJSON = "";
+          }
+      }
+  }
+
+  // Inicia o Loop (A cada 5 segundos)
+  autoSaveInterval = setInterval(checkAndAutoSave, 5000);
+
+  // --- VERIFICAÇÃO DE CRASH AO INICIAR ---
+  setTimeout(() => {
+      const emergencyData = DraftService.getEmergency();
+      if (emergencyData) {
+          // Exibe um aviso não intrusivo (Toast com ação)
+          // Como o Toast padrão some, vamos criar um pequeno banner dentro do popup se ele for aberto
+          // Ou melhor: Usar um confirm() simples é muito intrusivo.
+          // Vamos usar o sistema de Toast com uma callback se você tiver (o seu utils.js atual é simples).
+          
+          // Solução Elegante: Adicionar um botão "Recuperar" temporário no header ou rodapé
+          const btnRecover = document.createElement('button');
+          btnRecover.innerHTML = "⚠️ Recuperar trabalho não salvo";
+          btnRecover.style.cssText = "width:100%; background:#FFF3E0; color:#B06000; border:none; padding:8px; font-size:12px; cursor:pointer; font-weight:600; border-bottom:1px solid #FFE0B2;";
+          
+          btnRecover.onclick = () => {
+              restoreState(emergencyData);
+              btnRecover.remove();
+              showToast("Trabalho recuperado!");
+              SoundManager.playSuccess();
+          };
+
+          // Insere no topo do conteúdo
+          popupContent.insertBefore(btnRecover, popupContent.firstChild);
+          
+          // Abre o popup para mostrar (opcional, pode ser agressivo demais)
+          // toggleVisibility(); 
+          
+          // Em vez de abrir, coloca um badge no botão do menu?
+          updateDirtyIndicator(true); 
+      }
+  }, 1000);
+  
 function toggleVisibility() {
     visible = !visible;
     
