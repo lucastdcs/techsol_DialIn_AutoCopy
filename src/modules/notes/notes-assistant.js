@@ -92,28 +92,7 @@ export function initCaseNotesAssistant() {
   );
   popup.appendChild(header);
 
-  if (headerActions) {
-      const toggleBtn = document.createElement("div");
-      // Ícone de Setas de Transferência
-      toggleBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>`;
-      
-      Object.assign(toggleBtn.style, {
-          width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          borderRadius: '50%', cursor: 'pointer', color: '#9AA0A6', transition: 'all 0.2s ease', marginLeft: '4px'
-      });
-      toggleBtn.title = "Alternar para Split & Transfer";
-      
-      toggleBtn.onmouseenter = () => { toggleBtn.style.background = 'rgba(255,255,255,0.1)'; toggleBtn.style.color = '#FFF'; };
-      toggleBtn.onmouseleave = () => { if(!isSplitView) { toggleBtn.style.background = 'transparent'; toggleBtn.style.color = '#9AA0A6'; } };
-      
-      toggleBtn.onclick = (e) => {
-          e.stopPropagation();
-          toggleSplitView(toggleBtn);
-      };
-      
-      // Insere antes do botão de ajuda
-      headerActions.insertBefore(toggleBtn, headerActions.firstChild);
-  }
+
 
   // CONTAINER PRINCIPAL (Notes Padrão)
   const popupContent = document.createElement("div");
@@ -670,6 +649,29 @@ export function initCaseNotesAssistant() {
     if (headerActions) {
         headerActions.insertBefore(draftsManager.historyBtnWrapper, headerActions.firstChild);
     }
+
+    if (headerActions) {
+      const toggleBtn = document.createElement("div");
+      // Ícone de Setas de Transferência
+      toggleBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>`;
+      
+      Object.assign(toggleBtn.style, {
+          width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          borderRadius: '50%', cursor: 'pointer', color: '#9AA0A6', transition: 'all 0.2s ease', marginLeft: '4px'
+      });
+      toggleBtn.title = "Alternar para Split & Transfer";
+      
+      toggleBtn.onmouseenter = () => { toggleBtn.style.background = 'rgba(255,255,255,0.1)'; toggleBtn.style.color = '#FFF'; };
+      toggleBtn.onmouseleave = () => { if(!isSplitView) { toggleBtn.style.background = 'transparent'; toggleBtn.style.color = '#9AA0A6'; } };
+      
+      toggleBtn.onclick = (e) => {
+          e.stopPropagation();
+          toggleSplitView(toggleBtn);
+      };
+      
+      // Insere antes do botão de ajuda
+      headerActions.insertBefore(toggleBtn, headerActions.firstChild);
+  }
 
     // Injeta o botão "Estacionar" no Footer (ao lado de Copiar/Preencher)
     buttonContainer.insertBefore(draftsManager.parkButton, buttonContainer.firstChild);
