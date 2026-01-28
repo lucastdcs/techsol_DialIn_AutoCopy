@@ -1138,7 +1138,7 @@ ${z("checks")}
         background: #FFFFFF; 
         color: #5F6368; 
         border: 1px solid #DADCE0; 
-        border-radius: 20px; /* P\xEDlula completa */
+        border-radius: 8px;
         font-size: 13px; 
         font-weight: 600; 
         cursor: pointer;
@@ -1147,7 +1147,8 @@ ${z("checks")}
         gap: 8px;
         transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
         box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        margin-right: auto; /* Empurra os outros bot\xF5es para a direita */
+        margin-right: auto; 
+        margin-top: 16px;
     `,o.onmouseenter=()=>{o.style.backgroundColor="#F8F9FA",o.style.borderColor="#202124",o.style.color="#202124",o.style.boxShadow="0 2px 4px rgba(0,0,0,0.1)",o.style.transform="translateY(-1px)"},o.onmouseleave=()=>{o.style.backgroundColor="#FFFFFF",o.style.borderColor="#DADCE0",o.style.color="#5F6368",o.style.boxShadow="0 1px 2px rgba(0,0,0,0.05)",o.style.transform="translateY(0)"},o.onmousedown=()=>o.style.transform="scale(0.96)",o.onmouseup=()=>o.style.transform="scale(1) translateY(-1px)",o.onclick=async()=>{if(confirm("Deseja guardar o rascunho atual e limpar os campos?"))try{let x=await t();x?(Pe.save(x),b(),a(),Q.playSuccess(),U("Rascunho salvo com sucesso!")):U("Erro: N\xE3o foi poss\xEDvel ler os dados.",{error:!0})}catch(x){console.error("Erro ao salvar rascunho:",x),U("Erro ao salvar.",{error:!0})}};let i=document.createElement("div");i.title="Meus Rascunhos",i.style.cssText="position: relative; cursor: pointer; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 50%; transition: background 0.2s; margin-right: 8px;",i.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:#5f6368"><path d="M3 3v5h5"></path><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"></path><path d="M12 7v5l4 2"></path></svg>';let s=document.createElement("div");s.style.cssText="position: absolute; top: -2px; right: -2px; background: #D93025; color: white; font-size: 10px; font-weight: 700; padding: 2px 5px; border-radius: 10px; display: none; border: 2px solid white; box-shadow: 0 1px 2px rgba(0,0,0,0.2); pointer-events: none;",i.appendChild(s),i.onmouseenter=()=>i.style.background="rgba(0,0,0,0.05)",i.onmouseleave=()=>i.style.background="transparent",i.onclick=x=>{x.stopPropagation(),c()};function a(){let x=Pe.getCount();x>0?(s.style.display="block",s.textContent=x,s.animate([{transform:"scale(1)"},{transform:"scale(1.5)"},{transform:"scale(1)"}],{duration:200})):s.style.display="none"}let r=document.createElement("div");r.style.cssText=`
         position: absolute; bottom: 0; left: 0; width: 100%; height: 90%;
         background: #FFFFFF; z-index: 100;
