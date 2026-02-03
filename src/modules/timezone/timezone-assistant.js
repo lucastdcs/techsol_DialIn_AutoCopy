@@ -36,7 +36,7 @@ const HUBS = [
 ];
 
 export function initTimezoneAssistant() {
-    const CURRENT_VERSION = "v2.0 Pro";
+    const CURRENT_VERSION = "v2.1 "; // Bump version
     let visible = false;
     let updateInterval = null;
     
@@ -44,85 +44,108 @@ export function initTimezoneAssistant() {
     let selectedHubId = 'mx'; 
     let pinnedHubs = JSON.parse(localStorage.getItem(PINNED_STORAGE_KEY) || "[]");
     
-    // Data Base para o Planejador (Começa hoje meio-dia)
+    // Data Base para o Planejador (Começa hoje 14h)
     let plannerDate = new Date();
     plannerDate.setHours(14, 0, 0, 0);
 
-    // --- DESIGN SYSTEM (CSS IN-JS) ---
+    // --- DESIGN SYSTEM (GOOGLE COLORS & APPLE FEEL) ---
     const COLORS = {
-        bg: "#F8F9FA",
+        bg: "#F8F9FA",           // Google Grey 50
         surface: "#FFFFFF",
-        primary: "#1A73E8",
-        primaryBg: "#E8F0FE",
-        text: "#202124",
-        textSub: "#5F6368",
-        border: "#DADCE0",
-        success: "#1E8E3E",
-        warning: "#E37400",
-        error: "#D93025",
-        night: "#1F2937", // Azul noturno escuro
-        day: "#FFF7ED"    // Laranja solar suave
+        primary: "#1A73E8",      // Google Blue 600
+        primaryBg: "#E8F0FE",    // Google Blue 50
+        text: "#202124",         // Google Grey 900
+        textSub: "#5F6368",      // Google Grey 700
+        border: "#DADCE0",       // Google Grey 300
+        success: "#1E8E3E",      // Google Green 700
+        successBg: "#E6F4EA",    // Google Green 50
+        warning: "#E37400",      // Google Yellow 800
+        warningBg: "#FEF7E0",    // Google Yellow 50
+        error: "#D93025",        // Google Red 600
+        errorBg: "#FCE8E6",      // Google Red 50
+        night: "#1F2937",        // Azul noturno
+        day: "#FFF7ED"           // Laranja solar
     };
 
     const styles = {
         // Layout
-        container: { display: 'flex', flexDirection: 'column', height: '100%', background: COLORS.bg },
-        
-        // Tabs
-        tabHeader: { display: 'flex', background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: '0 4px' },
-        tabBtn: { 
-            flex: 1, padding: '14px', textAlign: 'center', cursor: 'pointer', 
-            fontSize: '13px', fontWeight: '500', color: COLORS.textSub, 
-            borderBottom: '3px solid transparent', transition: 'all 0.2s ease'
+        container: { 
+            display: 'flex', flexDirection: 'column', height: '100%', 
+            background: COLORS.bg, fontFamily: "'Google Sans', Roboto, sans-serif" 
         },
-        tabActive: { color: COLORS.primary, borderBottomColor: COLORS.primary, fontWeight: '600' },
+        
+        // Tabs (Estilo Segmented Control do iOS)
+        tabHeader: { 
+            display: 'flex', background: COLORS.surface, 
+            borderBottom: `1px solid ${COLORS.border}`, padding: '8px 16px' 
+        },
+        tabBtn: { 
+            flex: 1, padding: '10px', textAlign: 'center', cursor: 'pointer', 
+            fontSize: '13px', fontWeight: '500', color: COLORS.textSub, 
+            borderRadius: '8px', transition: 'all 0.2s ease',
+            background: 'transparent', userSelect: 'none'
+        },
+        tabActive: { 
+            color: COLORS.primary, background: COLORS.primaryBg, fontWeight: '600' 
+        },
 
-        // Live View (Lista)
-        listContainer: { padding: '16px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' },
+        // Live View (Lista Limpa)
+        listContainer: { 
+            padding: '16px', overflowY: 'auto', flex: 1, 
+            display: 'flex', flexDirection: 'column', gap: '12px',
+            scrollbarWidth: 'none' // Firefox
+        },
         hubCard: { 
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-            padding: '14px 18px', background: COLORS.surface, borderRadius: '12px', 
-            border: `1px solid ${COLORS.border}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-            transition: 'transform 0.2s, box-shadow 0.2s'
+            padding: '16px 20px', background: COLORS.surface, borderRadius: '16px', 
+            border: `1px solid transparent`, // Borda transparente para transição suave
+            boxShadow: '0 2px 6px rgba(60,64,67,0.05)', // Sombra Google suave
+            transition: 'transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s ease, border-color 0.2s',
+            cursor: 'pointer', position: 'relative', overflow: 'hidden'
         },
-        hubCardPinned: { borderLeft: `4px solid ${COLORS.primary}` },
+        hubCardPinned: { 
+            borderLeft: `4px solid ${COLORS.primary}`, // Indicador visual claro
+            paddingLeft: '16px' 
+        },
         
         // Planner View
-        plannerWrapper: { padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', flex: 1, overflowY: 'auto' },
+        plannerWrapper: { 
+            padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', 
+            flex: 1, overflowY: 'auto' 
+        },
         
-        // Time Cards (Planejador)
-        timeComparisonRow: { display: 'flex', gap: '12px', alignItems: 'stretch' },
+        // Time Cards (Cards Grandes e Claros)
+        timeComparisonRow: { display: 'flex', gap: '16px', alignItems: 'stretch' },
         timeCard: { 
-            flex: 1, padding: '16px', borderRadius: '16px', background: COLORS.surface, 
+            flex: 1, padding: '20px', borderRadius: '20px', background: COLORS.surface, 
             border: `1px solid ${COLORS.border}`, display: 'flex', flexDirection: 'column', 
-            alignItems: 'center', gap: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-            position: 'relative', overflow: 'hidden'
+            alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(60,64,67,0.05)',
+            transition: 'transform 0.2s'
         },
         
-        // Timeline Slider
-        timelineContainer: { position: 'relative', height: '48px', marginTop: '8px' },
+        // Timeline Slider (Estilo iOS Slider)
+        timelineContainer: { position: 'relative', height: '60px', marginTop: '16px', userSelect: 'none' },
         timelineTrack: { 
-            position: 'absolute', top: '20px', left: '0', right: '0', height: '8px', 
-            borderRadius: '4px', background: '#E5E7EB', overflow: 'hidden' 
+            position: 'absolute', top: '26px', left: '0', right: '0', height: '6px', 
+            borderRadius: '3px', background: '#E0E0E0', overflow: 'hidden' 
         },
-        // O "Daylight" na timeline
         dayZone: { 
-            position: 'absolute', top: '0', bottom: '0', left: '37.5%', width: '37.5%', // 09h as 18h (aprox)
-            background: 'rgba(52, 168, 83, 0.2)', pointerEvents: 'none' 
+            position: 'absolute', top: '0', bottom: '0', left: '37.5%', width: '37.5%', 
+            background: 'rgba(52, 168, 83, 0.3)', pointerEvents: 'none' // Verde Google
         },
         
-        // Inputs
+        // Inputs & Displays
         hdInput: {
-            fontSize: '24px', fontWeight: '700', color: COLORS.primary, border: 'none', 
+            fontSize: '28px', fontWeight: '700', color: COLORS.text, border: 'none', 
             background: 'transparent', width: '100%', textAlign: 'center', outline: 'none',
-            fontFamily: 'monospace', cursor: 'pointer'
+            fontFamily: "'Google Sans', sans-serif", cursor: 'text'
         },
         
-        // Status Badge
+        // Status Badge (Pílula Informativa)
         statusBadge: {
-            padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600',
-            display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '12px',
-            alignSelf: 'center'
+            padding: '8px 16px', borderRadius: '50px', fontSize: '13px', fontWeight: '600',
+            display: 'inline-flex', alignItems: 'center', gap: '8px', marginTop: '16px',
+            alignSelf: 'center', transition: 'background-color 0.3s'
         }
     };
 
@@ -131,7 +154,8 @@ export function initTimezoneAssistant() {
     popup.id = "timezone-popup";
     popup.classList.add("cw-module-window");
     Object.assign(popup.style, stylePopup, { 
-        right: "100px", width: "440px", height: "700px", overflow: "hidden" 
+        right: "100px", width: "450px", height: "720px", overflow: "hidden", 
+        borderRadius: "24px" // Mais arredondado (Apple style)
     });
 
     const animRefs = { popup };
@@ -155,7 +179,7 @@ export function initTimezoneAssistant() {
     Object.assign(btnLive.style, styles.tabBtn, styles.tabActive);
     
     const btnPlan = document.createElement("div");
-    btnPlan.textContent = "Planejador de Chamada";
+    btnPlan.textContent = "Planejador";
     Object.assign(btnPlan.style, styles.tabBtn);
 
     tabContainer.appendChild(btnLive);
@@ -165,6 +189,11 @@ export function initTimezoneAssistant() {
     // --- VIEWS ---
     const viewLive = document.createElement("div");
     Object.assign(viewLive.style, styles.listContainer);
+    // Esconde scrollbar nativa
+    viewLive.style.cssText += `
+        &::-webkit-scrollbar { display: none; }
+        -ms-overflow-style: none;
+    `;
     
     const viewPlan = document.createElement("div");
     Object.assign(viewPlan.style, styles.plannerWrapper, { display: 'none' });
@@ -181,14 +210,12 @@ export function initTimezoneAssistant() {
         if (tab === 'live') {
             Object.assign(btnLive.style, styles.tabActive);
             Object.assign(btnPlan.style, styles.tabBtn);
-            btnPlan.style.borderBottomColor = 'transparent';
             viewLive.style.display = 'flex';
             viewPlan.style.display = 'none';
             startClock();
         } else {
             Object.assign(btnPlan.style, styles.tabActive);
             Object.assign(btnLive.style, styles.tabBtn);
-            btnLive.style.borderBottomColor = 'transparent';
             viewPlan.style.display = 'flex';
             viewLive.style.display = 'none';
             stopClock(); // Economia de recursos
@@ -201,11 +228,11 @@ export function initTimezoneAssistant() {
     // ============================================================
     
     function getBusinessStatus(hours) {
-        // Lógica de "Semáforo"
-        if (hours >= 9 && hours < 17) return { color: COLORS.success, label: 'Aberto', icon: '🟢' };
-        if (hours >= 8 && hours < 9) return { color: COLORS.warning, label: 'Abrindo', icon: '🟡' };
-        if (hours >= 17 && hours < 19) return { color: COLORS.warning, label: 'Fechando', icon: '🟡' };
-        return { color: COLORS.error, label: 'Fechado', icon: '🔴' };
+        // Cores Google Material Design
+        if (hours >= 9 && hours < 17) return { color: COLORS.success, bg: COLORS.successBg, label: 'Aberto', icon: '🟢' };
+        if (hours >= 8 && hours < 9) return { color: COLORS.warning, bg: COLORS.warningBg, label: 'Abrindo', icon: '🟡' };
+        if (hours >= 17 && hours < 19) return { color: COLORS.warning, bg: COLORS.warningBg, label: 'Fechando', icon: '🟡' };
+        return { color: COLORS.textSub, bg: '#F1F3F4', label: 'Fechado', icon: '🔴' }; // Fechado mais neutro
     }
 
     function togglePin(hubId) {
@@ -245,33 +272,41 @@ export function initTimezoneAssistant() {
 
             // Ícone de Pin (Estrela)
             const pinIcon = isPinned ? '★' : '☆';
-            const pinColor = isPinned ? '#F9AB00' : '#BDC1C6';
+            const pinColor = isPinned ? '#F9AB00' : '#DADCE0'; // Amarelo Google
 
             card.innerHTML = `
                 <div style="display:flex; alignItems:center; gap:16px;">
-                    <div class="cw-pin-btn" style="cursor:pointer; font-size:18px; color:${pinColor}; width:24px; text-align:center;">${pinIcon}</div>
-                    <div style="font-size:28px;">${hub.flag}</div>
+                    <div class="cw-pin-btn" style="cursor:pointer; font-size:20px; color:${pinColor}; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:background 0.2s;">${pinIcon}</div>
+                    <div style="font-size:32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">${hub.flag}</div>
                     <div>
-                        <div style="font-size:14px; font-weight:700; color:${COLORS.text};">${hub.name}</div>
-                        <div style="font-size:12px; color:${COLORS.textSub}; display:flex; align-items:center; gap:4px;">
+                        <div style="font-size:15px; font-weight:600; color:${COLORS.text}; letter-spacing:-0.2px;">${hub.name}</div>
+                        <div style="font-size:12px; color:${COLORS.textSub}; display:flex; align-items:center; gap:4px; margin-top:2px;">
                             ${isNight ? '🌙' : '☀️'} ${hub.label}
                         </div>
                     </div>
                 </div>
                 <div style="text-align:right;">
-                    <div style="font-size:22px; font-weight:700; color:${COLORS.text}; font-family:'Roboto Mono', monospace;">${timeString}</div>
-                    <div style="font-size:11px; font-weight:600; color:${status.color}; display:flex; align-items:center; justify-content:flex-end; gap:4px;">
-                        ${status.label} ${status.icon}
+                    <div style="font-size:24px; font-weight:700; color:${COLORS.text}; font-family:'Google Sans', sans-serif;">${timeString}</div>
+                    <div style="font-size:11px; font-weight:600; color:${status.color}; background:${status.bg}; padding:2px 8px; border-radius:12px; display:inline-flex; align-items:center; gap:4px; margin-top:4px;">
+                        ${status.label}
                     </div>
                 </div>
             `;
 
             // Hover effect
-            card.onmouseenter = () => { card.style.backgroundColor = "#F8F9FA"; };
-            card.onmouseleave = () => { card.style.backgroundColor = COLORS.surface; };
+            card.onmouseenter = () => { 
+                card.style.transform = "translateY(-2px)";
+                card.style.boxShadow = "0 6px 12px rgba(60,64,67,0.1)";
+            };
+            card.onmouseleave = () => { 
+                card.style.transform = "translateY(0)";
+                card.style.boxShadow = "0 2px 6px rgba(60,64,67,0.05)";
+            };
 
             // Pin Action
             const btnPin = card.querySelector('.cw-pin-btn');
+            btnPin.onmouseenter = () => { btnPin.style.backgroundColor = "#F1F3F4"; };
+            btnPin.onmouseleave = () => { btnPin.style.backgroundColor = "transparent"; };
             btnPin.onclick = (e) => {
                 e.stopPropagation();
                 togglePin(hub.id);
@@ -297,11 +332,12 @@ export function initTimezoneAssistant() {
         // 1. Selector de País Alvo
         const selectContainer = document.createElement("div");
         const selectLabel = document.createElement("label");
-        selectLabel.textContent = "Planejar com:";
-        selectLabel.style.cssText = "display:block; font-size:12px; font-weight:700; color:#5F6368; margin-bottom:8px; text-transform:uppercase;";
+        selectLabel.textContent = "Onde está o cliente?";
+        selectLabel.style.cssText = "display:block; font-size:12px; font-weight:700; color:#5F6368; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;";
         
         const select = document.createElement("select");
         Object.assign(select.style, styleSelect);
+        select.style.padding = "14px"; // Mais touch-friendly
         
         HUBS.forEach(hub => {
             const opt = document.createElement("option");
@@ -314,6 +350,7 @@ export function initTimezoneAssistant() {
         select.onchange = (e) => {
             selectedHubId = e.target.value;
             updatePlannerUI();
+            SoundManager.playClick();
         };
 
         selectContainer.appendChild(selectLabel);
@@ -327,21 +364,27 @@ export function initTimezoneAssistant() {
         // MEU HORÁRIO
         const myCard = document.createElement("div");
         Object.assign(myCard.style, styles.timeCard);
+        // Fundo sutilmente azul para "Meu Lado"
+        myCard.style.backgroundColor = "#F8FAFF"; 
+        myCard.style.borderColor = "#E8F0FE";
+        
         myCard.innerHTML = `
-            <div style="font-size:11px; font-weight:700; color:#1A73E8; text-transform:uppercase;">🇧🇷 Seu Horário</div>
-            <input type="time" id="cw-time-input-br" style="${objectToCss(styles.hdInput)}">
-            <div style="font-size:11px; color:#5F6368;">Horário de Brasília</div>
+            <div style="font-size:11px; font-weight:700; color:#1A73E8; text-transform:uppercase; letter-spacing:0.5px;">🇧🇷 Você</div>
+            <input type="time" id="cw-time-input-br" style="${objectToCss(styles.hdInput)} color:#1A73E8;">
+            <div style="font-size:12px; color:#5F6368;">Brasília (GMT-3)</div>
         `;
         
         // HORÁRIO CLIENTE
         const clientCard = document.createElement("div");
         Object.assign(clientCard.style, styles.timeCard);
-        // Fundo sutilmente diferente para diferenciar
-        clientCard.style.backgroundColor = "#F8F9FA"; 
+        // Fundo sutilmente laranja para "Lado Cliente"
+        clientCard.style.backgroundColor = "#FFF8E1"; 
+        clientCard.style.borderColor = "#FEF7E0";
+
         clientCard.innerHTML = `
-            <div style="font-size:11px; font-weight:700; color:#E37400; text-transform:uppercase;">Cliente</div>
-            <div id="cw-time-display-client" style="${objectToCss(styles.hdInput)}; color:#202124;">--:--</div>
-            <div id="cw-client-label" style="font-size:11px; color:#5F6368;">...</div>
+            <div style="font-size:11px; font-weight:700; color:#E37400; text-transform:uppercase; letter-spacing:0.5px;">Cliente</div>
+            <div id="cw-time-display-client" style="${objectToCss(styles.hdInput)}; color:#E37400;">--:--</div>
+            <div id="cw-client-label" style="font-size:12px; color:#5F6368;">...</div>
         `;
 
         clockRow.appendChild(myCard);
@@ -356,11 +399,11 @@ export function initTimezoneAssistant() {
 
         // 4. Timeline Slider (A Experiência Visual)
         const timelineWrapper = document.createElement("div");
-        Object.assign(timelineWrapper.style, { padding: '0 8px' });
+        Object.assign(timelineWrapper.style, { padding: '0 4px', marginTop: '12px' });
         
         const rangeLabel = document.createElement("div");
         rangeLabel.textContent = "Arraste para simular o horário:";
-        rangeLabel.style.cssText = "font-size:12px; color:#5F6368; text-align:center; margin-bottom:8px;";
+        rangeLabel.style.cssText = "font-size:12px; color:#5F6368; text-align:center; margin-bottom:12px;";
         
         const sliderContainer = document.createElement("div");
         Object.assign(sliderContainer.style, styles.timelineContainer);
@@ -369,18 +412,23 @@ export function initTimezoneAssistant() {
         const track = document.createElement("div");
         Object.assign(track.style, styles.timelineTrack);
         
+        // Day Zone (Visualização das horas úteis)
+        const dayZone = document.createElement("div");
+        Object.assign(dayZone.style, styles.dayZone);
+        track.appendChild(dayZone);
+
         // O slider real (invisível mas clicável por cima)
         const slider = document.createElement("input");
         slider.type = "range";
         slider.min = "0";
         slider.max = "1439"; // Minutos do dia
         slider.step = "15";  // Steps de 15 min
-        slider.style.cssText = "position:absolute; top:14px; left:0; width:100%; -webkit-appearance:none; background:transparent; z-index:2; cursor:pointer;";
+        slider.style.cssText = "position:absolute; top:20px; left:0; width:100%; -webkit-appearance:none; background:transparent; z-index:2; cursor:pointer;";
         
         // Marcadores de hora (00, 06, 12, 18, 24)
         const markers = document.createElement("div");
-        markers.style.cssText = "position:absolute; top:32px; width:100%; display:flex; justify-content:space-between; font-size:10px; color:#9AA0A6; padding:0 2px;";
-        markers.innerHTML = `<span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>23h</span>`;
+        markers.style.cssText = "position:absolute; top:36px; width:100%; display:flex; justify-content:space-between; font-size:10px; font-weight:600; color:#9AA0A6; padding:0 2px;";
+        markers.innerHTML = `<span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>24h</span>`;
 
         sliderContainer.appendChild(track);
         sliderContainer.appendChild(slider);
@@ -418,19 +466,19 @@ export function initTimezoneAssistant() {
             // Lógica de "Bom para Ligar"
             if (clientHour >= 9 && clientHour < 17) {
                 // Excelente
-                statusBadge.style.background = "#E6F4EA";
-                statusBadge.style.color = "#137333";
-                statusBadge.innerHTML = `✅ Horário Comercial Ideal`;
+                statusBadge.style.background = COLORS.successBg;
+                statusBadge.style.color = COLORS.success;
+                statusBadge.innerHTML = `<span style="font-size:16px">✅</span> Horário Comercial Ideal`;
             } else if ((clientHour >= 8 && clientHour < 9) || (clientHour >= 17 && clientHour < 19)) {
                 // Risco
-                statusBadge.style.background = "#FEF7E0";
-                statusBadge.style.color = "#B06000";
-                statusBadge.innerHTML = `⚠️ Horário Limite (Atenção)`;
+                statusBadge.style.background = COLORS.warningBg;
+                statusBadge.style.color = COLORS.warning;
+                statusBadge.innerHTML = `<span style="font-size:16px">⚠️</span> Horário Limite (Atenção)`;
             } else {
                 // Ruim
-                statusBadge.style.background = "#FCE8E6";
-                statusBadge.style.color = "#C5221F";
-                statusBadge.innerHTML = `⛔ Fora de Horário (Noite/Fechado)`;
+                statusBadge.style.background = COLORS.errorBg;
+                statusBadge.style.color = COLORS.error;
+                statusBadge.innerHTML = `<span style="font-size:16px">⛔</span> Fora de Horário`;
             }
         }
 
