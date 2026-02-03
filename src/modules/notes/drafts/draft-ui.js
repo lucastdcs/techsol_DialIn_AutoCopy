@@ -10,30 +10,32 @@ export function createDraftsManager(callbacks) {
     // --- 1. BOTÃO "GUARDAR" (Redesenhado) ---
     const parkButton = document.createElement("button");
     
-    // Ícone de disquete + Texto claro
+    // Ícone + Texto
     parkButton.innerHTML = `
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-top:-1px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-top:-1px"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
         Guardar
     `;
 
-    // Estilo "Outlined Button" (Material Design)
+    // Estilo Geométrico igual ao 'buttonBase' + Visual 'Outlined'
     parkButton.style.cssText = `
-        flex: 0 0 auto; 
-        padding: 8px 16px; 
+        flex: 1 1 0;           /* Ocupa o mesmo espaço (33%) */
+        padding: 10px 0;       /* Mesma altura */
+        margin-top: 16px;      /* Mesmo espaçamento superior */
+        border-radius: 8px;    /* Mesma curva */
+        font-size: 14px;       /* Mesma fonte */
+        font-weight: 500;      /* Mesmo peso */
+        
+        /* Estilo Visual (Secundário/Branco) */
         background: #FFFFFF; 
         color: #5F6368; 
         border: 1px solid #DADCE0; 
-        border-radius: 8px;
-        font-size: 13px; 
-        font-weight: 600; 
         cursor: pointer;
         display: flex; 
         align-items: center; 
+        justify-content: center; /* Centralizado */
         gap: 8px;
         transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
         box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        margin-right: auto; 
-        margin-top: 16px;
     `;
 
     // Micro-interações (Hover/Active)
@@ -56,22 +58,16 @@ export function createDraftsManager(callbacks) {
     parkButton.onmousedown = () => parkButton.style.transform = "scale(0.96)";
     parkButton.onmouseup = () => parkButton.style.transform = "scale(1) translateY(-1px)";
 
-    // LÓGICA DE SALVAR CORRIGIDA
+    // LÓGICA DE SALVAR
     parkButton.onclick = async () => {
+        // ... (Mantenha a lógica de click igual à anterior) ...
         if(confirm("Deseja guardar o rascunho atual e limpar os campos?")) {
             try {
-                // 1. Coleta os dados (Retorna o objeto de estado)
                 const stateData = await onSaveCurrent();
-                
                 if (stateData) {
-                    // 2. SALVA NO LOCALSTORAGE (O passo que faltava!)
                     DraftService.save(stateData);
-                    
-                    // 3. Atualiza a UI
                     renderDrawerList();
                     updateBadge();
-                    
-                    // 4. Feedback
                     SoundManager.playSuccess();
                     showToast("Rascunho salvo com sucesso!");
                 } else {
