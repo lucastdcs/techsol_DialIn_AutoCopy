@@ -524,13 +524,20 @@ export function initBroadcastAssistant() {
           const lines = (bauMessage.text || "").split('\n');
           const dateRegex = /\d{1,2}\/\d{1,2}/;
           
-          lines.forEach(line => {
+        lines.forEach(line => {
              const dateMatch = line.match(dateRegex);
              if (dateMatch) {
                  const date = dateMatch[0];
                  let flag = "📅"; 
-                 if (/🇧🇷|🇵🇹|PT|BR/i.test(line)) flag = "🇧🇷";
-                 else if (/🇪🇸|🇲🇽|ES|LATAM/i.test(line)) flag = "🇪🇸";
+                 
+
+                 const isBR_PT = /🇧🇷|🇵🇹|PT|BR|BRASIL|BRAZIL|PORTUGAL|LISBOA|SAO PAULO|SÃO PAULO/i.test(line);
+                 const isES_LATAM = /🇪🇸|🇲🇽|ES|LATAM|ESPANHA|SPAIN|MEXICO|MÉXICO|MADRID|BARCELONA/i.test(line);
+
+                 if (isBR_PT) flag = "🇧🇷";
+                 else if (isES_LATAM) flag = "🇪🇸";
+                 
+                 // Evita duplicatas (mesma data e flag)
                  const exists = extractedSlots.some(s => s.flag === flag && s.date === date);
                  if (!exists) extractedSlots.push({ flag, date });
              }
