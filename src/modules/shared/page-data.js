@@ -67,6 +67,7 @@ export function getAgentName() {
 export function getAgentEmail() {
     return cachedAgentEmail || null;
 }
+
 // --- 3. ENGINE DE SAUDAÇÃO ---
 export function getSmartGreeting(name) {
     const now = new Date();
@@ -183,7 +184,43 @@ export function captureInternalEmail() {
     return null;
 }
 
-// --- 6. COMPILADOR DE DADOS DA PÁGINA ---
+// --- 6. CAPTURA DE CID (NOVO) ---
+export function captureCID() {
+    try {
+        // Estratégia 1: Busca pelo Label Específico (Alta Precisão)
+        // Busca labels que contenham "Google Ads External Customer ID"
+        const labels = Array.from(document.querySelectorAll('.data-pair-label'));
+        const cidLabel = labels.find(el => el.textContent.includes('Google Ads External Customer ID') || el.textContent.includes('Customer ID'));
+        
+        if (cidLabel) {
+            // Tenta achar o container pai <home-data-item> ou similar
+            const parent = cidLabel.closest('home-data-item') || cidLabel.parentElement;
+            if (parent) {
+                const content = parent.querySelector('.data-pair-content');
+                if (content) {
+                    // Limpa quebras de linha e espaços, formata para XXX-XXX-XXXX
+                    return content.textContent.replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+                }
+            }
+        }
+
+        // Estratégia 2: Regex Global (Fallback)
+        // Procura padrão XXX-XXX-XXXX ou XXXXXXXXXX (10 dígitos) no corpo da página
+        const bodyText = document.body.innerText;
+        const cidMatch = bodyText.match(/\b\d{3}[-]?\d{3}[-]?\d{4}\b/);
+        
+        if (cidMatch) {
+             // Formata para garantir o padrão visual (123-456-7890)
+             return cidMatch[0].replace(/\D/g, '').replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+        }
+
+    } catch (e) {
+        console.warn("Erro ao capturar CID:", e);
+    }
+    return "---";
+}
+
+// --- 7. COMPILADOR DE DADOS DA PÁGINA ---
 export async function getPageData() {
     let advertiserName = "Cliente";
     let websiteUrl = "[INSERIR URL]";
@@ -210,15 +247,19 @@ export async function getPageData() {
         }
     } catch (e) { console.warn("Falha URL:", e); }
 
-    // Captura EMAILS (Novos Campos)
+    // Captura EMAILS
     const clientEmail = await captureClientEmail();
     const internalEmail = captureInternalEmail();
+    
+    // Captura CID
+    const cid = captureCID();
 
     return {
         advertiserName: advertiserName,
         websiteUrl: websiteUrl,
         clientEmail: clientEmail,     // Pode ser null
         internalEmail: internalEmail, // Pode ser null
+        cid: cid,                     // Novo campo
         agentName: getAgentName()
     };
 }

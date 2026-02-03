@@ -1,45 +1,42 @@
+
+
 // src/modules/changelog/changelog-data.js
 
 export const RELEASE_NOTES = {
-    version: "v5.0", 
+    version: "v5.1", 
     
-    title: "Atualização: v5.0 🚀",
+    title: "Atualização: v5.1 - Produtividade Blindada 🛡️",
     
     slides: [
         {
-            icon: "🌍",
-            title: "Time Zone Traveler",
-            text: "Nunca mais erre o horário! Novo módulo visual para monitorar fusos da LATAM & Ibéria, com planejador de chamadas gráfico e sistema de favoritos."
+            icon: "🅿️",
+            title: "Estacionamento de Casos",
+            text: "Interrupção urgente? Agora você pode 'Estacionar' seu atendimento atual (Notas + Tasks) com um clique e retomar depois exatamente de onde parou."
         },
         {
-            icon: "📢",
-            title: "Broadcast: Poder para Liderança",
-            text: "Agora TLs e Overheads podem enviar comunicados urgentes e avisos de BAU diretamente pela ferramenta. Comunicação instantânea e centralizada."
+            icon: "🛟",
+            title: "Sistema 'Airbag'",
+            text: "Caiu a internet? Fechou a aba sem querer? O TechSol agora possui Auto-Save de emergência a cada 5 segundos. Seu texto está salvo, sempre."
         },
         {
-            icon: "🤝",
-            title: "Split & Transfer 2.0",
-            text: "Módulo de transferência reconstruído! Agora com validação de campos, 'Magic Fill' para dados técnicos e um fluxo à prova de erros."
+            icon: "🟠",
+            title: "Indicador de Progresso",
+            text: "Nunca mais esqueça uma nota aberta. Um indicador laranja ('Dirty State') avisa na Pílula principal se há trabalho não salvo/estacionado."
         },
         {
-            icon: "✨",
-            title: "Nova 'Fluid UI'",
-            text: "A interface agora respira. A 'Pílula' tem física realista, fecha suavemente para não atrapalhar e os menus flutuam com efeito Glassmorphism."
+            icon: "🔍",
+            title: "Time Zone Pro",
+            text: "O módulo de fusos horários ganhou superpoderes: nova barra de pesquisa global, filtros rápidos por região e correção de visualização."
         },
         {
-            icon: "📝",
-            title: "Cenários Inteligentes",
-            text: "O módulo de Notas ganhou novos cenários pré-configurados. Selecione o que aconteceu e a ferramenta escreve o texto técnico para você."
+            icon: "🤖",
+            title: "Leitura de BAU Aprimorada",
+            text: "O sistema de Broadcast agora é mais inteligente ao ler avisos de disponibilidade, detectando datas e bandeiras mesmo quando quebradas em várias linhas."
         },
         {
-            icon: "🔗",
-            title: "Links Redesenhados",
-            text: "A Central de Links está mais visual e organizada. Encontre suas ferramentas e dashboards em segundos com a nova busca rápida."
-        },
-        {
-            icon: "🐛",
-            title: "Sua Voz Importa",
-            text: "Adicionamos um atalho especial na aba 'Links' para você reportar bugs ou sugerir novas funcionalidades diretamente para nós."
+            icon: "🎨",
+            title: "Refinamento Visual",
+            text: "Botões padronizados, sombras suavizadas e micro-interações táteis em todo o sistema para uma experiência mais fluida e profissional."
         }
     ]
 };

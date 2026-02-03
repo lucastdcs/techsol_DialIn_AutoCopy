@@ -7,123 +7,174 @@ import { SoundManager } from "../shared/sound-manager.js";
 
 const PINNED_STORAGE_KEY = "cw_timezone_pinned";
 
+// Adicionei a propriedade 'region' para os filtros
 const HUBS = [
-    // --- EUROPA (Foco Ibérico) ---
-    { id: 'pt', name: 'Portugal', flag: '🇵🇹', zone: 'Europe/Lisbon', label: 'Lisboa' },
-    { id: 'es', name: 'Espanha', flag: '🇪🇸', zone: 'Europe/Madrid', label: 'Madrid' },
+    // --- EUROPA ---
+    { id: 'pt', name: 'Portugal', flag: '🇵🇹', zone: 'Europe/Lisbon', label: 'Lisboa', region: 'eu' },
+    { id: 'es', name: 'Espanha', flag: '🇪🇸', zone: 'Europe/Madrid', label: 'Madrid', region: 'eu' },
 
     // --- AMÉRICA DO SUL ---
-    { id: 'ar', name: 'Argentina', flag: '🇦🇷', zone: 'America/Argentina/Buenos_Aires', label: 'Buenos Aires' },
-    { id: 'bo', name: 'Bolívia', flag: '🇧🇴', zone: 'America/La_Paz', label: 'La Paz' },
-    { id: 'cl', name: 'Chile', flag: '🇨🇱', zone: 'America/Santiago', label: 'Santiago' },
-    { id: 'co', name: 'Colômbia', flag: '🇨🇴', zone: 'America/Bogota', label: 'Bogotá' },
-    { id: 'ec', name: 'Equador', flag: '🇪🇨', zone: 'America/Guayaquil', label: 'Guayaquil' },
-    { id: 'py', name: 'Paraguai', flag: '🇵🇾', zone: 'America/Asuncion', label: 'Assunção' },
-    { id: 'pe', name: 'Peru', flag: '🇵🇪', zone: 'America/Lima', label: 'Lima' },
-    { id: 'uy', name: 'Uruguai', flag: '🇺🇾', zone: 'America/Montevideo', label: 'Montevidéu' },
-    { id: 've', name: 'Venezuela', flag: '🇻🇪', zone: 'America/Caracas', label: 'Caracas' },
+    { id: 'ar', name: 'Argentina', flag: '🇦🇷', zone: 'America/Argentina/Buenos_Aires', label: 'Buenos Aires', region: 'sa' },
+    { id: 'bo', name: 'Bolívia', flag: '🇧🇴', zone: 'America/La_Paz', label: 'La Paz', region: 'sa' },
+    { id: 'cl', name: 'Chile', flag: '🇨🇱', zone: 'America/Santiago', label: 'Santiago', region: 'sa' },
+    { id: 'co', name: 'Colômbia', flag: '🇨🇴', zone: 'America/Bogota', label: 'Bogotá', region: 'sa' },
+    { id: 'ec', name: 'Equador', flag: '🇪🇨', zone: 'America/Guayaquil', label: 'Guayaquil', region: 'sa' },
+    { id: 'py', name: 'Paraguai', flag: '🇵🇾', zone: 'America/Asuncion', label: 'Assunção', region: 'sa' },
+    { id: 'pe', name: 'Peru', flag: '🇵🇪', zone: 'America/Lima', label: 'Lima', region: 'sa' },
+    { id: 'uy', name: 'Uruguai', flag: '🇺🇾', zone: 'America/Montevideo', label: 'Montevidéu', region: 'sa' },
+    { id: 've', name: 'Venezuela', flag: '🇻🇪', zone: 'America/Caracas', label: 'Caracas', region: 'sa' },
 
     // --- AMÉRICA DO NORTE & CENTRAL ---
-    { id: 'mx', name: 'México', flag: '🇲🇽', zone: 'America/Mexico_City', label: 'CDMX' },
-    { id: 'cr', name: 'Costa Rica', flag: '🇨🇷', zone: 'America/Costa_Rica', label: 'San José' },
-    { id: 'sv', name: 'El Salvador', flag: '🇸🇻', zone: 'America/El_Salvador', label: 'San Salvador' },
-    { id: 'gt', name: 'Guatemala', flag: '🇬🇹', zone: 'America/Guatemala', label: 'C. da Guatemala' },
-    { id: 'hn', name: 'Honduras', flag: '🇭🇳', zone: 'America/Tegucigalpa', label: 'Tegucigalpa' },
-    { id: 'ni', name: 'Nicarágua', flag: '🇳🇮', zone: 'America/Managua', label: 'Manágua' },
-    { id: 'pa', name: 'Panamá', flag: '🇵🇦', zone: 'America/Panama', label: 'C. do Panamá' },
-    { id: 'do', name: 'Rep. Dominicana', flag: '🇩🇴', zone: 'America/Santo_Domingo', label: 'Santo Domingo' },
-    { id: 'pr', name: 'Porto Rico', flag: '🇵🇷', zone: 'America/Puerto_Rico', label: 'San Juan' }
+    { id: 'mx', name: 'México', flag: '🇲🇽', zone: 'America/Mexico_City', label: 'CDMX', region: 'na' },
+    { id: 'cr', name: 'Costa Rica', flag: '🇨🇷', zone: 'America/Costa_Rica', label: 'San José', region: 'na' },
+    { id: 'sv', name: 'El Salvador', flag: '🇸🇻', zone: 'America/El_Salvador', label: 'San Salvador', region: 'na' },
+    { id: 'gt', name: 'Guatemala', flag: '🇬🇹', zone: 'America/Guatemala', label: 'C. da Guatemala', region: 'na' },
+    { id: 'hn', name: 'Honduras', flag: '🇭🇳', zone: 'America/Tegucigalpa', label: 'Tegucigalpa', region: 'na' },
+    { id: 'ni', name: 'Nicarágua', flag: '🇳🇮', zone: 'America/Managua', label: 'Manágua', region: 'na' },
+    { id: 'pa', name: 'Panamá', flag: '🇵🇦', zone: 'America/Panama', label: 'C. do Panamá', region: 'na' },
+    { id: 'do', name: 'Rep. Dominicana', flag: '🇩🇴', zone: 'America/Santo_Domingo', label: 'Santo Domingo', region: 'na' },
+    { id: 'pr', name: 'Porto Rico', flag: '🇵🇷', zone: 'America/Puerto_Rico', label: 'San Juan', region: 'na' }
+];
+
+const FILTERS = [
+    { id: 'all', label: 'Todos' },
+    { id: 'sa', label: 'América do Sul' },
+    { id: 'na', label: 'Norte & Central' },
+    { id: 'eu', label: 'Europa' }
 ];
 
 export function initTimezoneAssistant() {
-    const CURRENT_VERSION = "v2.0 Pro";
+    const CURRENT_VERSION = "v2.2 Pro"; 
     let visible = false;
     let updateInterval = null;
     
     // Estado
     let selectedHubId = 'mx'; 
     let pinnedHubs = JSON.parse(localStorage.getItem(PINNED_STORAGE_KEY) || "[]");
+    let searchTerm = "";
+    let activeFilter = "all";
     
-    // Data Base para o Planejador (Começa hoje meio-dia)
+    // Data Base para o Planejador
     let plannerDate = new Date();
     plannerDate.setHours(14, 0, 0, 0);
 
-    // --- DESIGN SYSTEM (CSS IN-JS) ---
+    // --- DESIGN SYSTEM ---
     const COLORS = {
-        bg: "#F8F9FA",
+        bg: "#F8F9FA",           
         surface: "#FFFFFF",
-        primary: "#1A73E8",
-        primaryBg: "#E8F0FE",
-        text: "#202124",
-        textSub: "#5F6368",
-        border: "#DADCE0",
-        success: "#1E8E3E",
-        warning: "#E37400",
-        error: "#D93025",
-        night: "#1F2937", // Azul noturno escuro
-        day: "#FFF7ED"    // Laranja solar suave
+        primary: "#1A73E8",      
+        primaryBg: "#E8F0FE",    
+        text: "#202124",         
+        textSub: "#5F6368",      
+        border: "#DADCE0",       
+        success: "#1E8E3E",      
+        successBg: "#E6F4EA",    
+        warning: "#E37400",      
+        warningBg: "#FEF7E0",    
+        error: "#D93025",        
+        errorBg: "#FCE8E6",      
     };
 
     const styles = {
-        // Layout
-        container: { display: 'flex', flexDirection: 'column', height: '100%', background: COLORS.bg },
+        container: { 
+            display: 'flex', flexDirection: 'column', height: '100%', 
+            background: COLORS.bg, fontFamily: "'Google Sans', Roboto, sans-serif" 
+        },
         
         // Tabs
-        tabHeader: { display: 'flex', background: COLORS.surface, borderBottom: `1px solid ${COLORS.border}`, padding: '0 4px' },
-        tabBtn: { 
-            flex: 1, padding: '14px', textAlign: 'center', cursor: 'pointer', 
-            fontSize: '13px', fontWeight: '500', color: COLORS.textSub, 
-            borderBottom: '3px solid transparent', transition: 'all 0.2s ease'
+        tabHeader: { 
+            display: 'flex', background: COLORS.surface, 
+            borderBottom: `1px solid ${COLORS.border}`, padding: '8px 16px 0 16px' 
         },
-        tabActive: { color: COLORS.primary, borderBottomColor: COLORS.primary, fontWeight: '600' },
+        tabBtn: { 
+            flex: 1, padding: '12px', textAlign: 'center', cursor: 'pointer', 
+            fontSize: '13px', fontWeight: '500', color: COLORS.textSub, 
+            borderBottom: '3px solid transparent', transition: 'all 0.2s ease',
+            userSelect: 'none'
+        },
+        tabActive: { 
+            color: COLORS.primary, borderBottomColor: COLORS.primary, fontWeight: '600' 
+        },
+
+        // Toolbar (Search + Chips)
+        toolbar: {
+            padding: '12px 16px 8px 16px',
+            background: COLORS.bg,
+            display: 'flex', flexDirection: 'column', gap: '12px',
+            borderBottom: '1px solid rgba(0,0,0,0.03)'
+        },
+        
+        // Search Input Estilo iOS/Google
+        searchInputWrapper: {
+            position: 'relative', width: '100%',
+        },
+        searchInput: {
+            width: '100%', boxSizing: 'border-box',
+            padding: '10px 12px 10px 38px',
+            borderRadius: '10px', border: '1px solid transparent',
+            background: '#FFFFFF',
+            fontSize: '14px', color: COLORS.text, outline: 'none',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+            transition: 'all 0.2s',
+            fontFamily: "'Google Sans', Roboto, sans-serif"
+        },
+        searchIcon: {
+            position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
+            width: '16px', height: '16px', color: '#9AA0A6', pointerEvents: 'none'
+        },
+
+        // Chips
+        chipsRow: {
+            display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px',
+            scrollbarWidth: 'none', msOverflowStyle: 'none'
+        },
+        chip: {
+            whiteSpace: 'nowrap', padding: '6px 12px', borderRadius: '16px',
+            fontSize: '12px', fontWeight: '500', cursor: 'pointer',
+            border: `1px solid ${COLORS.border}`, background: COLORS.surface,
+            color: COLORS.textSub, transition: 'all 0.2s'
+        },
+        chipActive: {
+            background: COLORS.primaryBg, color: COLORS.primary, borderColor: COLORS.primaryBg, fontWeight: '600'
+        },
 
         // Live View (Lista)
-        listContainer: { padding: '16px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' },
+        listContainer: { 
+            padding: '16px 16px 40px 16px', // Padding bottom extra para o último card
+            overflowY: 'auto', flex: 1, 
+            display: 'flex', flexDirection: 'column', gap: '12px',
+            scrollbarWidth: 'none' 
+        },
         hubCard: { 
             display: 'flex', alignItems: 'center', justifyContent: 'space-between', 
-            padding: '14px 18px', background: COLORS.surface, borderRadius: '12px', 
-            border: `1px solid ${COLORS.border}`, boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-            transition: 'transform 0.2s, box-shadow 0.2s'
+            padding: '16px 20px', background: COLORS.surface, borderRadius: '16px', 
+            border: `1px solid transparent`, 
+            boxShadow: '0 2px 6px rgba(60,64,67,0.05)',
+            transition: 'transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s ease',
+            cursor: 'pointer', position: 'relative',
         },
-        hubCardPinned: { borderLeft: `4px solid ${COLORS.primary}` },
+        hubCardPinned: { 
+            borderLeft: `4px solid ${COLORS.primary}`, 
+            paddingLeft: '16px' 
+        },
         
-        // Planner View
-        plannerWrapper: { padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', flex: 1, overflowY: 'auto' },
-        
-        // Time Cards (Planejador)
-        timeComparisonRow: { display: 'flex', gap: '12px', alignItems: 'stretch' },
+        // Planner
+        plannerWrapper: { 
+            padding: '24px', display: 'flex', flexDirection: 'column', gap: '24px', 
+            flex: 1, overflowY: 'auto' 
+        },
+        timeComparisonRow: { display: 'flex', gap: '16px', alignItems: 'stretch' },
         timeCard: { 
-            flex: 1, padding: '16px', borderRadius: '16px', background: COLORS.surface, 
+            flex: 1, padding: '20px', borderRadius: '20px', background: COLORS.surface, 
             border: `1px solid ${COLORS.border}`, display: 'flex', flexDirection: 'column', 
-            alignItems: 'center', gap: '4px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-            position: 'relative', overflow: 'hidden'
+            alignItems: 'center', gap: '8px', boxShadow: '0 4px 12px rgba(60,64,67,0.05)',
         },
         
-        // Timeline Slider
-        timelineContainer: { position: 'relative', height: '48px', marginTop: '8px' },
-        timelineTrack: { 
-            position: 'absolute', top: '20px', left: '0', right: '0', height: '8px', 
-            borderRadius: '4px', background: '#E5E7EB', overflow: 'hidden' 
-        },
-        // O "Daylight" na timeline
-        dayZone: { 
-            position: 'absolute', top: '0', bottom: '0', left: '37.5%', width: '37.5%', // 09h as 18h (aprox)
-            background: 'rgba(52, 168, 83, 0.2)', pointerEvents: 'none' 
-        },
-        
-        // Inputs
-        hdInput: {
-            fontSize: '24px', fontWeight: '700', color: COLORS.primary, border: 'none', 
-            background: 'transparent', width: '100%', textAlign: 'center', outline: 'none',
-            fontFamily: 'monospace', cursor: 'pointer'
-        },
-        
-        // Status Badge
-        statusBadge: {
-            padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '600',
-            display: 'inline-flex', alignItems: 'center', gap: '6px', marginTop: '12px',
-            alignSelf: 'center'
-        }
+        timelineContainer: { position: 'relative', height: '60px', marginTop: '16px', userSelect: 'none' },
+        timelineTrack: { position: 'absolute', top: '26px', left: '0', right: '0', height: '6px', borderRadius: '3px', background: '#E0E0E0', overflow: 'hidden' },
+        dayZone: { position: 'absolute', top: '0', bottom: '0', left: '37.5%', width: '37.5%', background: 'rgba(52, 168, 83, 0.3)', pointerEvents: 'none' },
+        hdInput: { fontSize: '28px', fontWeight: '700', color: COLORS.text, border: 'none', background: 'transparent', width: '100%', textAlign: 'center', outline: 'none', fontFamily: "'Google Sans', sans-serif", cursor: 'text' },
+        statusBadge: { padding: '8px 16px', borderRadius: '50px', fontSize: '13px', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '8px', marginTop: '16px', alignSelf: 'center', transition: 'background-color 0.3s' }
     };
 
     // --- POPUP ---
@@ -131,7 +182,8 @@ export function initTimezoneAssistant() {
     popup.id = "timezone-popup";
     popup.classList.add("cw-module-window");
     Object.assign(popup.style, stylePopup, { 
-        right: "100px", width: "440px", height: "700px", overflow: "hidden" 
+        right: "100px", width: "450px", height: "720px", overflow: "hidden", 
+        borderRadius: "24px"
     });
 
     const animRefs = { popup };
@@ -155,16 +207,80 @@ export function initTimezoneAssistant() {
     Object.assign(btnLive.style, styles.tabBtn, styles.tabActive);
     
     const btnPlan = document.createElement("div");
-    btnPlan.textContent = "Planejador de Chamada";
+    btnPlan.textContent = "Planejador";
     Object.assign(btnPlan.style, styles.tabBtn);
 
     tabContainer.appendChild(btnLive);
     tabContainer.appendChild(btnPlan);
     container.appendChild(tabContainer);
 
+    // --- TOOLBAR (PESQUISA + FILTROS) ---
+    const toolbar = document.createElement("div");
+    Object.assign(toolbar.style, styles.toolbar);
+    
+    // Search
+    const searchWrapper = document.createElement("div");
+    Object.assign(searchWrapper.style, styles.searchInputWrapper);
+    
+    const icon = document.createElement("div");
+    icon.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`;
+    Object.assign(icon.style, styles.searchIcon);
+    
+    const input = document.createElement("input");
+    input.placeholder = "Buscar cidade ou país...";
+    Object.assign(input.style, styles.searchInput);
+    
+    input.onfocus = () => { input.style.boxShadow = "0 2px 8px rgba(26,115,232,0.15)"; input.style.borderColor = "rgba(26,115,232,0.3)"; };
+    input.onblur = () => { input.style.boxShadow = "0 1px 3px rgba(0,0,0,0.05)"; input.style.borderColor = "transparent"; };
+    
+    input.oninput = (e) => {
+        searchTerm = e.target.value.toLowerCase();
+        renderLive();
+    };
+
+    searchWrapper.appendChild(icon);
+    searchWrapper.appendChild(input);
+    toolbar.appendChild(searchWrapper);
+
+    // Chips
+    const chipsRow = document.createElement("div");
+    Object.assign(chipsRow.style, styles.chipsRow);
+    
+    FILTERS.forEach(f => {
+        const chip = document.createElement("div");
+        chip.textContent = f.label;
+        chip.id = `tz-filter-${f.id}`;
+        Object.assign(chip.style, styles.chip);
+        
+        if (f.id === activeFilter) Object.assign(chip.style, styles.chipActive);
+
+        chip.onclick = () => {
+            SoundManager.playClick();
+            activeFilter = f.id;
+            
+            // Atualiza visual dos chips
+            Array.from(chipsRow.children).forEach(c => {
+                Object.assign(c.style, styles.chip);
+            });
+            Object.assign(chip.style, styles.chipActive);
+            
+            renderLive();
+        };
+
+        chipsRow.appendChild(chip);
+    });
+
+    toolbar.appendChild(chipsRow);
+    container.appendChild(toolbar);
+
+
     // --- VIEWS ---
     const viewLive = document.createElement("div");
     Object.assign(viewLive.style, styles.listContainer);
+    // Remove scrollbar nativa para visual clean
+    const styleTag = document.createElement('style');
+    styleTag.textContent = `#timezone-popup ::-webkit-scrollbar { display: none; }`;
+    container.appendChild(styleTag);
     
     const viewPlan = document.createElement("div");
     Object.assign(viewPlan.style, styles.plannerWrapper, { display: 'none' });
@@ -182,16 +298,22 @@ export function initTimezoneAssistant() {
             Object.assign(btnLive.style, styles.tabActive);
             Object.assign(btnPlan.style, styles.tabBtn);
             btnPlan.style.borderBottomColor = 'transparent';
+            
             viewLive.style.display = 'flex';
+            toolbar.style.display = 'flex'; // Mostra toolbar
             viewPlan.style.display = 'none';
+            
             startClock();
         } else {
             Object.assign(btnPlan.style, styles.tabActive);
             Object.assign(btnLive.style, styles.tabBtn);
             btnLive.style.borderBottomColor = 'transparent';
+            
             viewPlan.style.display = 'flex';
             viewLive.style.display = 'none';
-            stopClock(); // Economia de recursos
+            toolbar.style.display = 'none'; // Esconde toolbar
+            
+            stopClock(); 
             renderPlanner();
         }
     }
@@ -201,11 +323,10 @@ export function initTimezoneAssistant() {
     // ============================================================
     
     function getBusinessStatus(hours) {
-        // Lógica de "Semáforo"
-        if (hours >= 9 && hours < 17) return { color: COLORS.success, label: 'Aberto', icon: '🟢' };
-        if (hours >= 8 && hours < 9) return { color: COLORS.warning, label: 'Abrindo', icon: '🟡' };
-        if (hours >= 17 && hours < 19) return { color: COLORS.warning, label: 'Fechando', icon: '🟡' };
-        return { color: COLORS.error, label: 'Fechado', icon: '🔴' };
+        if (hours >= 9 && hours < 17) return { color: COLORS.success, bg: COLORS.successBg, label: 'Aberto', icon: '🟢' };
+        if (hours >= 8 && hours < 9) return { color: COLORS.warning, bg: COLORS.warningBg, label: 'Abrindo', icon: '🟡' };
+        if (hours >= 17 && hours < 19) return { color: COLORS.warning, bg: COLORS.warningBg, label: 'Fechando', icon: '🟡' };
+        return { color: COLORS.textSub, bg: '#F1F3F4', label: 'Fechado', icon: '🔴' };
     }
 
     function togglePin(hubId) {
@@ -215,7 +336,7 @@ export function initTimezoneAssistant() {
             pinnedHubs.push(hubId);
         }
         localStorage.setItem(PINNED_STORAGE_KEY, JSON.stringify(pinnedHubs));
-        renderLive(); // Re-renderiza para ordenar
+        renderLive();
         SoundManager.playClick();
     }
 
@@ -223,8 +344,15 @@ export function initTimezoneAssistant() {
         viewLive.innerHTML = "";
         const now = new Date();
 
-        // Ordena: Pinados primeiro, depois ordem alfabética
-        const sortedHubs = [...HUBS].sort((a, b) => {
+        // 1. Filtra
+        let filteredHubs = HUBS.filter(h => {
+            const matchesSearch = h.name.toLowerCase().includes(searchTerm) || h.label.toLowerCase().includes(searchTerm);
+            const matchesRegion = activeFilter === 'all' || h.region === activeFilter;
+            return matchesSearch && matchesRegion;
+        });
+
+        // 2. Ordena (Pinados primeiro)
+        filteredHubs.sort((a, b) => {
             const aPinned = pinnedHubs.includes(a.id);
             const bPinned = pinnedHubs.includes(b.id);
             if (aPinned && !bPinned) return -1;
@@ -232,7 +360,17 @@ export function initTimezoneAssistant() {
             return a.name.localeCompare(b.name);
         });
 
-        sortedHubs.forEach(hub => {
+        if (filteredHubs.length === 0) {
+            viewLive.innerHTML = `
+                <div style="text-align:center; padding:40px; color:#BDC1C6; display:flex; flex-direction:column; align-items:center; gap:8px;">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    <div style="font-size:14px; font-weight:500;">Nenhum local encontrado</div>
+                </div>
+            `;
+            return;
+        }
+
+        filteredHubs.forEach(hub => {
             const isPinned = pinnedHubs.includes(hub.id);
             const timeString = now.toLocaleTimeString('pt-BR', { timeZone: hub.zone, hour: '2-digit', minute: '2-digit' });
             const hour = parseInt(timeString.split(':')[0]);
@@ -243,41 +381,45 @@ export function initTimezoneAssistant() {
             Object.assign(card.style, styles.hubCard);
             if (isPinned) Object.assign(card.style, styles.hubCardPinned);
 
-            // Ícone de Pin (Estrela)
             const pinIcon = isPinned ? '★' : '☆';
-            const pinColor = isPinned ? '#F9AB00' : '#BDC1C6';
+            const pinColor = isPinned ? '#F9AB00' : '#DADCE0';
 
             card.innerHTML = `
                 <div style="display:flex; alignItems:center; gap:16px;">
-                    <div class="cw-pin-btn" style="cursor:pointer; font-size:18px; color:${pinColor}; width:24px; text-align:center;">${pinIcon}</div>
-                    <div style="font-size:28px;">${hub.flag}</div>
+                    <div class="cw-pin-btn" style="cursor:pointer; font-size:22px; color:${pinColor}; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border-radius:50%; transition:background 0.2s;">${pinIcon}</div>
+                    <div style="font-size:32px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">${hub.flag}</div>
                     <div>
-                        <div style="font-size:14px; font-weight:700; color:${COLORS.text};">${hub.name}</div>
-                        <div style="font-size:12px; color:${COLORS.textSub}; display:flex; align-items:center; gap:4px;">
+                        <div style="font-size:15px; font-weight:600; color:${COLORS.text}; letter-spacing:-0.2px;">${hub.name}</div>
+                        <div style="font-size:12px; color:${COLORS.textSub}; display:flex; align-items:center; gap:4px; margin-top:2px;">
                             ${isNight ? '🌙' : '☀️'} ${hub.label}
                         </div>
                     </div>
                 </div>
                 <div style="text-align:right;">
-                    <div style="font-size:22px; font-weight:700; color:${COLORS.text}; font-family:'Roboto Mono', monospace;">${timeString}</div>
-                    <div style="font-size:11px; font-weight:600; color:${status.color}; display:flex; align-items:center; justify-content:flex-end; gap:4px;">
-                        ${status.label} ${status.icon}
+                    <div style="font-size:24px; font-weight:700; color:${COLORS.text}; font-family:'Google Sans', sans-serif;">${timeString}</div>
+                    <div style="font-size:11px; font-weight:600; color:${status.color}; background:${status.bg}; padding:2px 8px; border-radius:12px; display:inline-flex; align-items:center; gap:4px; margin-top:4px;">
+                        ${status.label}
                     </div>
                 </div>
             `;
 
-            // Hover effect
-            card.onmouseenter = () => { card.style.backgroundColor = "#F8F9FA"; };
-            card.onmouseleave = () => { card.style.backgroundColor = COLORS.surface; };
+            card.onmouseenter = () => { 
+                card.style.transform = "translateY(-2px)";
+                card.style.boxShadow = "0 6px 12px rgba(60,64,67,0.1)";
+            };
+            card.onmouseleave = () => { 
+                card.style.transform = "translateY(0)";
+                card.style.boxShadow = "0 2px 6px rgba(60,64,67,0.05)";
+            };
 
-            // Pin Action
             const btnPin = card.querySelector('.cw-pin-btn');
+            btnPin.onmouseenter = () => { btnPin.style.backgroundColor = "#F1F3F4"; };
+            btnPin.onmouseleave = () => { btnPin.style.backgroundColor = "transparent"; };
             btnPin.onclick = (e) => {
                 e.stopPropagation();
                 togglePin(hub.id);
             };
 
-            // Quick Jump to Planner
             card.onclick = () => {
                 selectedHubId = hub.id;
                 switchTab('plan');
@@ -285,25 +427,34 @@ export function initTimezoneAssistant() {
 
             viewLive.appendChild(card);
         });
+
+        // Espaçador final para garantir que o último card não seja cortado
+        const spacer = document.createElement('div');
+        spacer.style.height = "20px";
+        spacer.style.width = "100%";
+        viewLive.appendChild(spacer);
     }
 
     // ============================================================
-    //  VIEW 2: PLANEJADOR (CALCULADORA REVERSA)
+    //  VIEW 2: PLANEJADOR
     // ============================================================
     
     function renderPlanner() {
         viewPlan.innerHTML = "";
 
-        // 1. Selector de País Alvo
         const selectContainer = document.createElement("div");
         const selectLabel = document.createElement("label");
-        selectLabel.textContent = "Planejar com:";
-        selectLabel.style.cssText = "display:block; font-size:12px; font-weight:700; color:#5F6368; margin-bottom:8px; text-transform:uppercase;";
+        selectLabel.textContent = "Onde está o cliente?";
+        selectLabel.style.cssText = "display:block; font-size:12px; font-weight:700; color:#5F6368; margin-bottom:8px; text-transform:uppercase; letter-spacing:0.5px;";
         
         const select = document.createElement("select");
         Object.assign(select.style, styleSelect);
+        select.style.padding = "14px"; 
         
-        HUBS.forEach(hub => {
+        // Ordena select alfabeticamente
+        const sortedForSelect = [...HUBS].sort((a,b) => a.name.localeCompare(b.name));
+
+        sortedForSelect.forEach(hub => {
             const opt = document.createElement("option");
             opt.value = hub.id;
             opt.textContent = `${hub.flag} ${hub.name} (${hub.zone})`;
@@ -314,73 +465,77 @@ export function initTimezoneAssistant() {
         select.onchange = (e) => {
             selectedHubId = e.target.value;
             updatePlannerUI();
+            SoundManager.playClick();
         };
 
         selectContainer.appendChild(selectLabel);
         selectContainer.appendChild(select);
         viewPlan.appendChild(selectContainer);
 
-        // 2. Os Relógios (Cards Lado a Lado)
+        // Clocks
         const clockRow = document.createElement("div");
         Object.assign(clockRow.style, styles.timeComparisonRow);
 
-        // MEU HORÁRIO
         const myCard = document.createElement("div");
         Object.assign(myCard.style, styles.timeCard);
+        myCard.style.backgroundColor = "#F8FAFF"; 
+        myCard.style.borderColor = "#E8F0FE";
+        
         myCard.innerHTML = `
-            <div style="font-size:11px; font-weight:700; color:#1A73E8; text-transform:uppercase;">🇧🇷 Seu Horário</div>
-            <input type="time" id="cw-time-input-br" style="${objectToCss(styles.hdInput)}">
-            <div style="font-size:11px; color:#5F6368;">Horário de Brasília</div>
+            <div style="font-size:11px; font-weight:700; color:#1A73E8; text-transform:uppercase; letter-spacing:0.5px;">🇧🇷 Você</div>
+            <input type="time" id="cw-time-input-br" style="font-size:28px; font-weight:700; color:#1A73E8; border:none; background:transparent; width:100%; text-align:center; outline:none; font-family:'Google Sans'; cursor:pointer;">
+            <div style="font-size:12px; color:#5F6368;">Brasília (GMT-3)</div>
         `;
         
-        // HORÁRIO CLIENTE
         const clientCard = document.createElement("div");
         Object.assign(clientCard.style, styles.timeCard);
-        // Fundo sutilmente diferente para diferenciar
-        clientCard.style.backgroundColor = "#F8F9FA"; 
+        clientCard.style.backgroundColor = "#FFF8E1"; 
+        clientCard.style.borderColor = "#FEF7E0";
+
         clientCard.innerHTML = `
-            <div style="font-size:11px; font-weight:700; color:#E37400; text-transform:uppercase;">Cliente</div>
-            <div id="cw-time-display-client" style="${objectToCss(styles.hdInput)}; color:#202124;">--:--</div>
-            <div id="cw-client-label" style="font-size:11px; color:#5F6368;">...</div>
+            <div style="font-size:11px; font-weight:700; color:#E37400; text-transform:uppercase; letter-spacing:0.5px;">Cliente</div>
+            <div id="cw-time-display-client" style="font-size:28px; font-weight:700; color:#E37400; border:none; background:transparent; width:100%; text-align:center; font-family:'Google Sans';">--:--</div>
+            <div id="cw-client-label" style="font-size:12px; color:#5F6368;">...</div>
         `;
 
         clockRow.appendChild(myCard);
         clockRow.appendChild(clientCard);
         viewPlan.appendChild(clockRow);
 
-        // 3. Status Badge (Bom/Ruim para ligar)
+        // Status
         const statusBadge = document.createElement("div");
         statusBadge.id = "cw-planner-status";
         Object.assign(statusBadge.style, styles.statusBadge);
         viewPlan.appendChild(statusBadge);
 
-        // 4. Timeline Slider (A Experiência Visual)
+        // Timeline
         const timelineWrapper = document.createElement("div");
-        Object.assign(timelineWrapper.style, { padding: '0 8px' });
+        Object.assign(timelineWrapper.style, { padding: '0 4px', marginTop: '12px' });
         
         const rangeLabel = document.createElement("div");
         rangeLabel.textContent = "Arraste para simular o horário:";
-        rangeLabel.style.cssText = "font-size:12px; color:#5F6368; text-align:center; margin-bottom:8px;";
+        rangeLabel.style.cssText = "font-size:12px; color:#5F6368; text-align:center; margin-bottom:12px;";
         
         const sliderContainer = document.createElement("div");
         Object.assign(sliderContainer.style, styles.timelineContainer);
 
-        // Fundo Visual (Track com marcação de dia/noite)
         const track = document.createElement("div");
         Object.assign(track.style, styles.timelineTrack);
         
-        // O slider real (invisível mas clicável por cima)
+        const dayZone = document.createElement("div");
+        Object.assign(dayZone.style, styles.dayZone);
+        track.appendChild(dayZone);
+
         const slider = document.createElement("input");
         slider.type = "range";
         slider.min = "0";
-        slider.max = "1439"; // Minutos do dia
-        slider.step = "15";  // Steps de 15 min
-        slider.style.cssText = "position:absolute; top:14px; left:0; width:100%; -webkit-appearance:none; background:transparent; z-index:2; cursor:pointer;";
+        slider.max = "1439"; 
+        slider.step = "15"; 
+        slider.style.cssText = "position:absolute; top:20px; left:0; width:100%; -webkit-appearance:none; background:transparent; z-index:2; cursor:pointer;";
         
-        // Marcadores de hora (00, 06, 12, 18, 24)
         const markers = document.createElement("div");
-        markers.style.cssText = "position:absolute; top:32px; width:100%; display:flex; justify-content:space-between; font-size:10px; color:#9AA0A6; padding:0 2px;";
-        markers.innerHTML = `<span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>23h</span>`;
+        markers.style.cssText = "position:absolute; top:36px; width:100%; display:flex; justify-content:space-between; font-size:10px; font-weight:600; color:#9AA0A6; padding:0 2px;";
+        markers.innerHTML = `<span>00h</span><span>06h</span><span>12h</span><span>18h</span><span>24h</span>`;
 
         sliderContainer.appendChild(track);
         sliderContainer.appendChild(slider);
@@ -389,7 +544,7 @@ export function initTimezoneAssistant() {
         timelineWrapper.appendChild(sliderContainer);
         viewPlan.appendChild(timelineWrapper);
 
-        // --- LÓGICA DO PLANEJADOR ---
+        // Logic
         const timeInputBR = myCard.querySelector('#cw-time-input-br');
         const clientDisplay = clientCard.querySelector('#cw-time-display-client');
         const clientLabel = clientCard.querySelector('#cw-client-label');
@@ -398,7 +553,6 @@ export function initTimezoneAssistant() {
             const hub = HUBS.find(h => h.id === selectedHubId);
             clientLabel.textContent = `${hub.flag} ${hub.label} (${hub.zone})`;
 
-            // Sincroniza inputs
             const hours = plannerDate.getHours();
             const minutes = plannerDate.getMinutes();
             const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
@@ -406,35 +560,28 @@ export function initTimezoneAssistant() {
             timeInputBR.value = timeStr;
             slider.value = (hours * 60) + minutes;
 
-            // Calcula hora do cliente
             const clientTimeString = plannerDate.toLocaleTimeString('pt-BR', { 
                 timeZone: hub.zone, hour: '2-digit', minute: '2-digit' 
             });
             clientDisplay.textContent = clientTimeString;
 
-            // Verifica status comercial do cliente
             const clientHour = parseInt(clientTimeString.split(':')[0]);
             
-            // Lógica de "Bom para Ligar"
             if (clientHour >= 9 && clientHour < 17) {
-                // Excelente
-                statusBadge.style.background = "#E6F4EA";
-                statusBadge.style.color = "#137333";
-                statusBadge.innerHTML = `✅ Horário Comercial Ideal`;
+                statusBadge.style.background = COLORS.successBg;
+                statusBadge.style.color = COLORS.success;
+                statusBadge.innerHTML = `<span style="font-size:16px">✅</span> Horário Comercial Ideal`;
             } else if ((clientHour >= 8 && clientHour < 9) || (clientHour >= 17 && clientHour < 19)) {
-                // Risco
-                statusBadge.style.background = "#FEF7E0";
-                statusBadge.style.color = "#B06000";
-                statusBadge.innerHTML = `⚠️ Horário Limite (Atenção)`;
+                statusBadge.style.background = COLORS.warningBg;
+                statusBadge.style.color = COLORS.warning;
+                statusBadge.innerHTML = `<span style="font-size:16px">⚠️</span> Horário Limite (Atenção)`;
             } else {
-                // Ruim
-                statusBadge.style.background = "#FCE8E6";
-                statusBadge.style.color = "#C5221F";
-                statusBadge.innerHTML = `⛔ Fora de Horário (Noite/Fechado)`;
+                statusBadge.style.background = COLORS.errorBg;
+                statusBadge.style.color = COLORS.error;
+                statusBadge.innerHTML = `<span style="font-size:16px">⛔</span> Fora de Horário`;
             }
         }
 
-        // Listeners
         slider.oninput = (e) => {
             const totalMins = parseInt(e.target.value);
             plannerDate.setHours(Math.floor(totalMins / 60));
@@ -451,11 +598,10 @@ export function initTimezoneAssistant() {
             }
         };
 
-        // Inicializa
         updatePlannerUI();
     }
 
-    // --- CONTROLES GERAIS ---
+    // --- CONTROLES ---
     function startClock() {
         renderLive();
         if (!updateInterval) updateInterval = setInterval(renderLive, 60000);
@@ -468,24 +614,17 @@ export function initTimezoneAssistant() {
         }
     }
 
-    // Helper CSS
-    function objectToCss(obj) {
-        return Object.entries(obj).map(([k, v]) => `${k.replace(/[A-Z]/g, m => "-" + m.toLowerCase())}:${v}`).join(';');
-    }
-
     function toggleVisibility() {
         visible = !visible;
         toggleGenieAnimation(visible, popup, 'cw-btn-timezone'); 
         
         if (visible) {
-            // Default: abre no Live
             switchTab('live');
         } else {
             stopClock();
         }
     }
 
-    // Mount
     document.body.appendChild(popup);
     return toggleVisibility;
 }

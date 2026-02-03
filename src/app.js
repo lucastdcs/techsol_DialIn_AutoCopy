@@ -28,7 +28,7 @@ function initApp() {
     }
     window.techSolInitialized = true;
 
-    const APP_VERSION = "v5.0"; 
+    const APP_VERSION = "v5.1"; 
 
     console.log(`🚀 TechSol Suite Initializing (${APP_VERSION})...`);
 

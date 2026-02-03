@@ -36,6 +36,8 @@ import { createTagSupportModule } from "./tag-support.js";
 import { createStepTasksComponent } from "./components/step-tasks.js";
 // NOVO IMPORT
 import { createSplitTransferComponent } from "./components/split-transfer.js"; 
+import { createDraftsManager } from "./drafts/draft-ui.js";
+import { getPageData } from "../shared/page-data.js";
 
 export function initCaseNotesAssistant() {
   const CURRENT_VERSION = "v3.8.0";
@@ -71,6 +73,8 @@ export function initCaseNotesAssistant() {
     }
   });
 
+
+
   // --- POPUP SETUP ---
   const popup = document.createElement("div");
   popup.id = "autofill-popup";
@@ -88,30 +92,7 @@ export function initCaseNotesAssistant() {
   );
   popup.appendChild(header);
 
-  // --- NOVO: BOTÃO TOGGLE S&T NO HEADER ---
-  const headerActions = header.lastElementChild; // O container da direita no header
-  if (headerActions) {
-      const toggleBtn = document.createElement("div");
-      // Ícone de Setas de Transferência
-      toggleBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>`;
-      
-      Object.assign(toggleBtn.style, {
-          width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-          borderRadius: '50%', cursor: 'pointer', color: '#9AA0A6', transition: 'all 0.2s ease', marginLeft: '4px'
-      });
-      toggleBtn.title = "Alternar para Split & Transfer";
-      
-      toggleBtn.onmouseenter = () => { toggleBtn.style.background = 'rgba(255,255,255,0.1)'; toggleBtn.style.color = '#FFF'; };
-      toggleBtn.onmouseleave = () => { if(!isSplitView) { toggleBtn.style.background = 'transparent'; toggleBtn.style.color = '#9AA0A6'; } };
-      
-      toggleBtn.onclick = (e) => {
-          e.stopPropagation();
-          toggleSplitView(toggleBtn);
-      };
-      
-      // Insere antes do botão de ajuda
-      headerActions.insertBefore(toggleBtn, headerActions.firstChild);
-  }
+
 
   // CONTAINER PRINCIPAL (Notes Padrão)
   const popupContent = document.createElement("div");
@@ -156,6 +137,8 @@ export function initCaseNotesAssistant() {
           }
       }
   }
+
+  
 
   const credit = document.createElement("div");
   credit.textContent = "created by lucaste@";
@@ -538,6 +521,174 @@ export function initCaseNotesAssistant() {
   generateButton.textContent = "Preencher";
   buttonContainer.appendChild(copyButton);
   buttonContainer.appendChild(generateButton);
+
+// Função 1: Captura tudo o que está na tela agora
+  async function collectCurrentState() {
+        const pageData = await getPageData();
+        
+        // 1. Inputs e Textareas do Formulário
+        const formData = {};
+        const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
+        inputs.forEach(el => formData[el.id] = el.value);
+
+        // 2. Tasks Selecionadas (Checkboxes)
+        const activeTasks = stepTasks.getCheckedElements().map(c => ({ 
+            key: c.value, 
+            count: parseInt(c.closest('.cw-task-item').querySelector('.cw-step-val')?.textContent || 1) 
+        }));
+
+        // 3. Tag Support (Radios e Input de Motivo)
+        const tagSupportContainer = document.getElementById("tag-support-container");
+        let tagSupportState = null;
+        if(tagSupportContainer) {
+             const checkedRadio = tagSupportContainer.querySelector('input[type="radio"]:checked');
+             const reasonInput = tagSupportContainer.querySelector('input[type="text"]');
+             tagSupportState = {
+                 choice: checkedRadio ? checkedRadio.value : 'Não',
+                 reason: reasonInput ? reasonInput.value : ''
+             };
+        }
+        const summaryTags = [];
+  stepTasks.getCheckedElements().forEach(c => {
+      // Tenta achar o nome legível no banco de dados
+      const key = c.value;
+      if (TASKS_DB[key]) {
+          summaryTags.push(TASKS_DB[key].name);
+      } else {
+          summaryTags.push(key);
+      }
+  });
+
+        return {
+            clientName: pageData.advertiserName,
+            cid: pageData.cid,
+            status: mainStatusSelect.value,
+            subStatus: subStatusSelect.value,
+            caseType: currentCaseType,
+            lang: currentLang,
+            formData,
+            activeTasks,
+            tagSupportState,
+            summaryTags
+        };
+    }
+
+    // Função 2: Reconstrói a tela a partir dos dados salvos
+    function restoreState(draftData) {
+        // 1. Restaurar Configs Globais
+        if (draftData.lang) setLanguage(draftData.lang);
+        if (draftData.caseType) setCaseType(draftData.caseType);
+
+        // 2. Restaurar Status (Dispara a recriação do form)
+        if (draftData.status) {
+            mainStatusSelect.value = draftData.status;
+            mainStatusSelect.dispatchEvent(new Event('change'));
+        }
+        
+        // Timeout para dar tempo do DOM ser criado pelo 'change' acima
+        setTimeout(() => {
+            if (draftData.subStatus) {
+                subStatusSelect.value = draftData.subStatus;
+                subStatusSelect.dispatchEvent(new Event('change'));
+            }
+
+            // Segundo Timeout para garantir que os campos do substatus renderizaram
+            setTimeout(() => {
+                // 3. Restaurar Campos de Texto
+                if (draftData.formData) {
+                    Object.entries(draftData.formData).forEach(([id, val]) => {
+                        const el = document.getElementById(id);
+                        if(el) el.value = val;
+                    });
+                }
+
+                // 4. Restaurar Tasks
+                stepTasks.reset(); // Limpa antes
+                if (draftData.activeTasks && Array.isArray(draftData.activeTasks)) {
+                    draftData.activeTasks.forEach(task => {
+                         // Reativa a task X vezes
+                         for(let i=0; i<task.count; i++) {
+                             stepTasks.toggleTask(task.key, true);
+                         }
+                    });
+                }
+
+                // 5. Restaurar Tag Support
+                if (draftData.tagSupportState) {
+                    const container = document.getElementById("tag-support-container");
+                    if (container) {
+                        const radio = container.querySelector(`input[value="${draftData.tagSupportState.choice}"]`);
+                        if(radio) {
+                            radio.checked = true;
+                            radio.dispatchEvent(new Event('change')); // Dispara lógica de mostrar/esconder motivo
+                        }
+                        if (draftData.tagSupportState.choice === 'Não' && draftData.tagSupportState.reason) {
+                            const input = container.querySelector('input[type="text"]');
+                            if(input) input.value = draftData.tagSupportState.reason;
+                        }
+                    }
+                }
+                
+            }, 100);
+        }, 50);
+    }
+
+    // -----------------------------------------------------------------------
+    // [NOVO] INICIALIZAÇÃO E INJEÇÃO DO DRAFT MANAGER
+    // -----------------------------------------------------------------------
+    
+    const draftsManager = createDraftsManager({
+        // Callback de Salvar: Retorna o estado atual para o UI salvar
+        onSaveCurrent: async () => {
+            const state = await collectCurrentState();
+            
+            // Opcional: Resetar a tela após estacionar
+            resetSteps(1.5);
+            mainStatusSelect.value = "";
+            
+            return state; 
+        },
+        // Callback de Carregar: Recebe o draft e restaura a tela
+        onLoadDraft: (draft) => {
+            restoreState(draft);
+        }
+    });
+
+    // Injeta o botão de Histórico (Reloginho) no Header
+    // O header.lastElementChild é o container da direita (botoes de janela)
+    const headerActions = header.lastElementChild; 
+    if (headerActions) {
+        headerActions.insertBefore(draftsManager.historyBtnWrapper, headerActions.firstChild);
+    }
+
+    if (headerActions) {
+      const toggleBtn = document.createElement("div");
+      // Ícone de Setas de Transferência
+      toggleBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>`;
+      
+      Object.assign(toggleBtn.style, {
+          width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          borderRadius: '50%', cursor: 'pointer', color: '#9AA0A6', transition: 'all 0.2s ease', marginLeft: '4px'
+      });
+      toggleBtn.title = "Alternar para Split & Transfer";
+      
+      toggleBtn.onmouseenter = () => { toggleBtn.style.background = 'rgba(255,255,255,0.1)'; toggleBtn.style.color = '#FFF'; };
+      toggleBtn.onmouseleave = () => { if(!isSplitView) { toggleBtn.style.background = 'transparent'; toggleBtn.style.color = '#9AA0A6'; } };
+      
+      toggleBtn.onclick = (e) => {
+          e.stopPropagation();
+          toggleSplitView(toggleBtn);
+      };
+      
+      // Insere antes do botão de ajuda
+      headerActions.insertBefore(toggleBtn, headerActions.firstChild);
+  }
+
+    // Injeta o botão "Estacionar" no Footer (ao lado de Copiar/Preencher)
+    buttonContainer.insertBefore(draftsManager.parkButton, buttonContainer.firstChild);
+
+    // Injeta a Gaveta (Drawer) dentro do Popup principal
+    popup.appendChild(draftsManager.drawer);
 
   // --- RESIZE HANDLE (A Nova Alça) ---
   const resizeHandle = document.createElement('div');
@@ -1366,6 +1517,106 @@ function resetSteps(startFrom = 1.5) {
       emailAutomationDiv.style.display = "none";
     }
   }
+
+  // =========================================================================
+  // AUTOMATION: AIRBAG & DIRTY STATE
+  // =========================================================================
+
+  let autoSaveInterval = null;
+  let lastSavedJSON = ""; // Para evitar salvar se nada mudou
+
+  function updateDirtyIndicator(isDirty) {
+      // Encontra o botão de Notes na Pílula principal
+      const notesBtn = document.getElementById('cw-btn-notes');
+      if (!notesBtn) return;
+
+      const existingDot = notesBtn.querySelector('.cw-dot-dirty');
+      
+      if (isDirty) {
+          if (!existingDot) {
+              const dot = document.createElement('div');
+              dot.className = 'cw-dot-dirty';
+              notesBtn.appendChild(dot);
+          }
+      } else {
+          if (existingDot) existingDot.remove();
+      }
+  }
+
+  async function checkAndAutoSave() {
+      // Se a janela não estiver visível, talvez não precisemos salvar com tanta frequência, 
+      // mas para "Estacionar" automático, é bom verificar.
+      
+      const state = await collectCurrentState();
+      
+      // Lógica de "Dirty": Se tem Tasks OU texto digitado nos campos chave
+      let hasData = state.activeTasks.length > 0;
+      if (!hasData) {
+          // Verifica se algum campo de texto tem conteúdo relevante
+          const keys = Object.keys(state.formData);
+          for (const k of keys) {
+              const val = state.formData[k];
+              if (val && val.trim().length > 3 && val !== "• ") { // Ignora bullet vazio
+                  hasData = true;
+                  break;
+              }
+          }
+      }
+
+      updateDirtyIndicator(hasData);
+
+      // Lógica do Airbag (Salvar apenas se mudou)
+      if (hasData) {
+          const currentJSON = JSON.stringify(state);
+          if (currentJSON !== lastSavedJSON) {
+              DraftService.saveEmergency(state);
+              lastSavedJSON = currentJSON;
+              // console.log("🎒 Airbag inflado (Auto-saved)");
+          }
+      } else {
+          // Se limpou tudo, limpa o airbag
+          if (lastSavedJSON !== "") {
+              DraftService.clearEmergency();
+              lastSavedJSON = "";
+          }
+      }
+  }
+
+  // Inicia o Loop (A cada 5 segundos)
+  autoSaveInterval = setInterval(checkAndAutoSave, 5000);
+
+  // --- VERIFICAÇÃO DE CRASH AO INICIAR ---
+  setTimeout(() => {
+      const emergencyData = DraftService.getEmergency();
+      if (emergencyData) {
+          // Exibe um aviso não intrusivo (Toast com ação)
+          // Como o Toast padrão some, vamos criar um pequeno banner dentro do popup se ele for aberto
+          // Ou melhor: Usar um confirm() simples é muito intrusivo.
+          // Vamos usar o sistema de Toast com uma callback se você tiver (o seu utils.js atual é simples).
+          
+          // Solução Elegante: Adicionar um botão "Recuperar" temporário no header ou rodapé
+          const btnRecover = document.createElement('button');
+          btnRecover.innerHTML = "⚠️ Recuperar trabalho não salvo";
+          btnRecover.style.cssText = "width:100%; background:#FFF3E0; color:#B06000; border:none; padding:8px; font-size:12px; cursor:pointer; font-weight:600; border-bottom:1px solid #FFE0B2;";
+          
+          btnRecover.onclick = () => {
+              restoreState(emergencyData);
+              btnRecover.remove();
+              showToast("Trabalho recuperado!");
+              SoundManager.playSuccess();
+          };
+
+          // Insere no topo do conteúdo
+          popupContent.insertBefore(btnRecover, popupContent.firstChild);
+          
+          // Abre o popup para mostrar (opcional, pode ser agressivo demais)
+          // toggleVisibility(); 
+          
+          // Em vez de abrir, coloca um badge no botão do menu?
+          updateDirtyIndicator(true); 
+      }
+  }, 1000);
+  
 function toggleVisibility() {
     visible = !visible;
     

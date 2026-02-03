@@ -13,6 +13,13 @@ export const csaChecklistData = {
             "Pedir para fechar conteúdo sensível (antes de compartilhar)",
             "Validar Backup e Acessos Admin"
         ],
+        meio: [
+            "Ofertar Implementação via Tag Support (Acesso Temporário)",
+            "Enviar e orientar aceite do email 'Consentimento e autorização...'",
+            "Confirmar recebimento do acesso",
+            "Iniciar Configuração (Aviso de silêncio ~10min)",
+            "[Caso Recuse] Seguir com Compartilhamento de Tela"
+        ],
         fim: [
             "Resumo da chamada (o que foi feito e como funciona)",
             "Oferecer ajuda adicional / Abrir para dúvidas",
@@ -35,6 +42,13 @@ export const csaChecklistData = {
             "Peço para que compartilhe a tela usando a opção “Tela Inteira”",
             "Por favor, feche todo e qualquer conteúdo confidencial e sensível (conversas, dados pessoais importantes, etc).",
             "Possui o backup do seu site e todos os acessos às ferramentas do Google?"
+        ],
+        meio: [
+            "Ofertar Implementação via Tag Support (Acesso Temporário)",
+            "Enviar e orientar aceite do email 'Consentimento e autorização...'",
+            "Confirmar recebimento do acesso",
+            "Iniciar Configuração (Aviso de silêncio ~10min)",
+            "[Caso Recuse] Seguir com Compartilhamento de Tela"
         ],
         fim: [
             "Resumo da chamada (o que foi feito e como funciona)",
