@@ -524,22 +524,34 @@ export function initBroadcastAssistant() {
           const lines = (bauMessage.text || "").split('\n');
           const dateRegex = /\d{1,2}\/\d{1,2}/;
           
-        lines.forEach(line => {
+          // Variável de "Memória" (Estado atual)
+          let currentContextFlag = "📅"; 
+
+          lines.forEach(line => {
+             // 1. Tenta detectar o contexto (Região/País) na linha, mesmo sem data
+             // Roda antes de checar a data para atualizar o "cabeçalho" atual
+             if (/🇧🇷|🇵🇹|PT|BR|BRASIL|BRAZIL|PORTUGAL|LISBOA/i.test(line)) {
+                 currentContextFlag = "🇧🇷";
+             } else if (/🇪🇸|🇲🇽|ES|LATAM|ESPANHA|SPAIN|MEXICO|MÉXICO/i.test(line)) {
+                 currentContextFlag = "🇪🇸";
+             }
+
+             // 2. Procura a data
              const dateMatch = line.match(dateRegex);
+             
              if (dateMatch) {
                  const date = dateMatch[0];
-                 let flag = "📅"; 
                  
-
-                 const isBR_PT = /🇧🇷|🇵🇹|PT|BR|BRASIL|BRAZIL|PORTUGAL|LISBOA|SAO PAULO|SÃO PAULO/i.test(line);
-                 const isES_LATAM = /🇪🇸|🇲🇽|ES|LATAM|ESPANHA|SPAIN|MEXICO|MÉXICO|MADRID|BARCELONA/i.test(line);
-
-                 if (isBR_PT) flag = "🇧🇷";
-                 else if (isES_LATAM) flag = "🇪🇸";
+                 // Se na PRÓPRIA linha da data tiver uma bandeira específica, ela vence.
+                 // Se não, usa a bandeira que estava na memória (do cabeçalho anterior).
+                 let lineFlag = currentContextFlag;
                  
-                 // Evita duplicatas (mesma data e flag)
-                 const exists = extractedSlots.some(s => s.flag === flag && s.date === date);
-                 if (!exists) extractedSlots.push({ flag, date });
+                 // (Opcional) Reforço: Se a linha atual tiver explicitamente outra flag, atualiza
+                 if (/🇧🇷|🇵🇹|PT|BR/i.test(line)) lineFlag = "🇧🇷";
+                 else if (/🇪🇸|🇲🇽|ES|LATAM/i.test(line)) lineFlag = "🇪🇸";
+
+                 const exists = extractedSlots.some(s => s.flag === lineFlag && s.date === date);
+                 if (!exists) extractedSlots.push({ flag: lineFlag, date });
              }
           });
 
