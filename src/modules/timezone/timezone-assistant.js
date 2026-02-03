@@ -101,7 +101,7 @@ export function initTimezoneAssistant() {
             border: `1px solid transparent`, // Borda transparente para transição suave
             boxShadow: '0 2px 6px rgba(60,64,67,0.05)', // Sombra Google suave
             transition: 'transform 0.2s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.2s ease, border-color 0.2s',
-            cursor: 'pointer', position: 'relative', overflow: 'hidden'
+            cursor: 'pointer', position: 'relative',
         },
         hubCardPinned: { 
             borderLeft: `4px solid ${COLORS.primary}`, // Indicador visual claro
