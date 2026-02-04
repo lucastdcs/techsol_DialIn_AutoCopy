@@ -88,7 +88,7 @@ function createFloatingWarning(targetElement, message) {
         popup.style.transform = 'translateY(0)';
     });
     
-    // Auto-remove após 25s (aumentei um pouco para dar tempo de clicar no link)
+    // Auto-remove após 25s
     setTimeout(() => { if(document.body.contains(popup)) closeBtn.click(); }, 25000);
 }
 
@@ -268,7 +268,7 @@ export async function runEmailAutomation(cannedResponseText) {
     const pageData = await getPageData(); 
 
     // ============================================================
-    // 🟢 NOVA LÓGICA DE DESTINATÁRIOS (Igual ao QuickEmail)
+    // 🟢 LÓGICA DE DESTINATÁRIOS
     // ============================================================
     log("📧 Processando destinatários para CR...", 'info');
 
@@ -289,27 +289,18 @@ export async function runEmailAutomation(cannedResponseText) {
         }
     }
 
-    // C. Preencher BCC (Interno) + Aviso com Link
+    // C. Preencher BCC (Interno) + Aviso
     if (pageData.internalEmail) {
         const bccInput = document.querySelector('input[aria-label="Enter Bcc email address"]');
         if (bccInput) {
             await fillField(bccInput, pageData.internalEmail);
-            
-            const linkUrl = "https://mail.google.com/mail/u/0?ui=2&ik=ed23fb3167&attid=0.1&permmsgid=msg-f:1843445102914241244&th=19953b8dda2302dc&view=fimg&fur=ip&permmsgid=msg-f:1843445102914241244&sz=s0-l75-ft&attbid=ANGjdJ9m7O33cM36sxBYohVD6Qsapyux4PNr8qmTBlZ8zkp_LR79suGZhnxFJtBoFDeyMFygsH_tvCts5fnX0WV4rdClw9YqqR7guLnaXU9UzmZRRMRXEoC7T_MPbwo&disp=emb&realattid=ii_mfmv7wjm1&zw";
-            const warningMsg = `
-                <strong>Atenção:</strong> Verifique se o e-mail do AM deve estar em cópia.
-                <div style="margin-top:4px;">
-                    <a href="${linkUrl}" target="_blank" style="color:#1a73e8;text-decoration:none;font-weight:500;display:inline-flex;align-items:center;">
-                        Consultar Regra <span style="font-size:14px;margin-left:2px;">↗</span>
-                    </a>
-                </div>
-            `;
+            const warningMsg = `<strong>Atenção:</strong> Verifique se o e-mail do AM deve estar em cópia.`;
             createFloatingWarning(bccInput, warningMsg);
         }
     }
     // ============================================================
 
-    await esperar(500); // Pequena pausa antes de interagir com o botão CR
+    await esperar(500); 
 
     // 3. Aplicação da Canned Response
     const btnCanned = document.querySelector('material-button[debug-id="canned_response_button"]');
@@ -327,7 +318,7 @@ export async function runEmailAutomation(cannedResponseText) {
             
             log("⏳ Buscando resultado da Canned Response...", 'info');
             
-            // 🟢 LÓGICA DE ESPERA DINÂMICA (Loop até 15s)
+            // Lógica de Espera Dinâmica
             let primeiraOpcao = null;
             let tempoDecorrido = 0;
             const TEMPO_MAXIMO = 15000;
@@ -344,31 +335,57 @@ export async function runEmailAutomation(cannedResponseText) {
                 simularCliqueReal(primeiraOpcao);
                 await esperar(1500);
 
-                // Substituição de Variáveis no Corpo (Ex: Advertiser Name)
                 const editorVisivel = getVisibleEditor();
                 if (editorVisivel) {
+                    
+                    // ===========================================================
+                    // 1. MANIPULAÇÃO DE DOM (Tabelas e Estruturas Complexas)
+                    // ===========================================================
+                    
+                    // Identifica se temos o placeholder {Requested Task Type} em spans
+                    const spans = Array.from(editorVisivel.querySelectorAll('span.field'));
+                    const ecw4Spans = spans.filter(s => s.innerText.includes('{Requested Task Type}'));
+                    
+                    if (ecw4Spans.length > 0) {
+                        // Encontra as linhas (TR) que contêm esses spans
+                        const rows = ecw4Spans.map(s => s.closest('tr')).filter(tr => tr !== null);
+                        const uniqueRows = [...new Set(rows)];
+                        
+                        if (uniqueRows.length > 0) {
+                            const firstRow = uniqueRows[0];
+                            // Tenta achar a célula de conteúdo (geralmente a segunda, ou width=100%)
+                            const targetCell = firstRow.querySelector('td[width="100%"]');
+                            
+                            if (targetCell) {
+                                // Substitui o conteúdo da primeira linha
+                                targetCell.innerHTML = '<span class="field" style="color:rgb(60, 64, 67)">Enhanced Conversions - Aguardando Validação - Dentro de 7 dias</span>';
+                            }
+                            
+                            // Remove as linhas extras (duplicadas)
+                            for (let i = 1; i < uniqueRows.length; i++) {
+                                uniqueRows[i].remove();
+                            }
+                        }
+                    }
+
+                    // ===========================================================
+                    // 2. SUBSTITUIÇÃO DE STRING (Variáveis Simples)
+                    // ===========================================================
+                    
+                    // Pega o HTML atualizado (já com as linhas removidas)
                     let html = editorVisivel.innerHTML;
                     
-                    // 1. Substituição Genérica do Nome
+                    // Substituição Genérica do Nome
                     if (pageData.advertiserName && html.includes('{%ADVERTISER_NAME%}')) {
                         html = html.replace(/{%ADVERTISER_NAME%}/g, pageData.advertiserName);
                     }
 
-                    // 2. [NOVO] Substituição do ID estranho do site
+                    // Substituição do ID estranho do site
                     if (html.includes('{%^79285%}')) {
                         html = html.replace(/{%\^79285%}/g, pageData.websiteUrl || "seu site");
                     }
 
-                    // 3. [NOVO] Substituição em bloco do "Requested Task Type" (ECW4)
-                    // Regex busca 1 ou mais repetições do padrão, separadas por quebras de linha ou divs
-                    const regexTaskBlock = /(•\s*\{Requested Task Type\}.*?\{Reason \(if applicable\)\}(\s*<br>|\s*<div>|\s*<\/div>|\s|&nbsp;)*){1,3}/gi;
-                    
-                    if (regexTaskBlock.test(html)) {
-                        const targetTask = "• Enhanced Conversions - Aguardando Validação - Em 7 dias";
-                        html = html.replace(regexTaskBlock, targetTask + "<br>");
-                    }
-
-                    // Aplica as mudanças no editor
+                    // Aplica de volta ao editor
                     editorVisivel.innerHTML = html;
                 }
                 
@@ -396,12 +413,7 @@ export async function runQuickEmail(template) {
 
     await esperar(600); 
 
-    // ============================================================
-    // FASE 4: PREENCHIMENTO DE DESTINATÁRIOS (To/BCC)
-    // ============================================================
-    log("📧 Processando destinatários...");
-
-    // A. Expandir Cabeçalho (CC/BCC)
+    // FASE 4: PREENCHIMENTO DE DESTINATÁRIOS (Igual acima)
     const expandBtn = document.querySelector('material-icon[aria-label="Show CC and BCC fields"]') || 
                       document.querySelector('material-icon[debug-id="expand-button"][aria-pressed="false"]');
     if (expandBtn) {
@@ -409,7 +421,6 @@ export async function runQuickEmail(template) {
         await esperar(600);
     }
 
-    // B. Preencher TO (Cliente)
     if (pageData.clientEmail && pageData.clientEmail !== "N/A" && pageData.clientEmail !== "N/A (Bloqueado)") {
         const toInput = document.querySelector('input[aria-label="Enter To email address"]');
         if (toInput) {
@@ -418,32 +429,16 @@ export async function runQuickEmail(template) {
         }
     }
 
-    // C. Preencher BCC (Interno) - COM LINK DE AJUDA
     if (pageData.internalEmail) {
         const bccInput = document.querySelector('input[aria-label="Enter Bcc email address"]');
         if (bccInput) {
             await fillField(bccInput, pageData.internalEmail);
-            
-            // Link de consulta
-            const linkUrl = "https://mail.google.com/mail/u/0?ui=2&ik=ed23fb3167&attid=0.1&permmsgid=msg-f:1843445102914241244&th=19953b8dda2302dc&view=fimg&fur=ip&permmsgid=msg-f:1843445102914241244&sz=s0-l75-ft&attbid=ANGjdJ9m7O33cM36sxBYohVD6Qsapyux4PNr8qmTBlZ8zkp_LR79suGZhnxFJtBoFDeyMFygsH_tvCts5fnX0WV4rdClw9YqqR7guLnaXU9UzmZRRMRXEoC7T_MPbwo&disp=emb&realattid=ii_mfmv7wjm1&zw";
-            
-            const warningMsg = `
-                <strong>Atenção:</strong> Verifique se o e-mail do AM deve estar em cópia.
-                <div style="margin-top:4px;">
-                    <a href="${linkUrl}" target="_blank" style="color:#1a73e8;text-decoration:none;font-weight:500;display:inline-flex;align-items:center;">
-                        Consultar Regra <span style="font-size:14px;margin-left:2px;">↗</span>
-                    </a>
-                </div>
-            `;
-            
+            const warningMsg = `<strong>Atenção:</strong> Verifique se o e-mail do AM deve estar em cópia.`;
             createFloatingWarning(bccInput, warningMsg);
         }
     }
 
-    // ============================================================
     // FASE 5: ASSUNTO E CORPO
-    // ============================================================
-
     const subjectInput = document.querySelector('input[aria-label="Subject"]');
     if (subjectInput && template.subject) {
         subjectInput.focus();
