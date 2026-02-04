@@ -346,12 +346,32 @@ export async function runEmailAutomation(cannedResponseText) {
 
                 // Substituição de Variáveis no Corpo (Ex: Advertiser Name)
                 const editorVisivel = getVisibleEditor();
-                if (editorVisivel && pageData.advertiserName) {
-                    const html = editorVisivel.innerHTML;
-                    if (html.includes('{%ADVERTISER_NAME%}')) {
-                        editorVisivel.innerHTML = html.replace(/{%ADVERTISER_NAME%}/g, pageData.advertiserName);
+                if (editorVisivel) {
+                    let html = editorVisivel.innerHTML;
+                    
+                    // 1. Substituição Genérica do Nome
+                    if (pageData.advertiserName && html.includes('{%ADVERTISER_NAME%}')) {
+                        html = html.replace(/{%ADVERTISER_NAME%}/g, pageData.advertiserName);
                     }
+
+                    // 2. [NOVO] Substituição do ID estranho do site
+                    if (html.includes('{%^79285%}')) {
+                        html = html.replace(/{%\^79285%}/g, pageData.websiteUrl || "seu site");
+                    }
+
+                    // 3. [NOVO] Substituição em bloco do "Requested Task Type" (ECW4)
+                    // Regex busca 1 ou mais repetições do padrão, separadas por quebras de linha ou divs
+                    const regexTaskBlock = /(•\s*\{Requested Task Type\}.*?\{Reason \(if applicable\)\}(\s*<br>|\s*<div>|\s*<\/div>|\s|&nbsp;)*){1,3}/gi;
+                    
+                    if (regexTaskBlock.test(html)) {
+                        const targetTask = "• Enhanced Conversions - Aguardando Validação - Em 7 dias";
+                        html = html.replace(regexTaskBlock, targetTask + "<br>");
+                    }
+
+                    // Aplica as mudanças no editor
+                    editorVisivel.innerHTML = html;
                 }
+                
                 showToast("Canned Response aplicada!");
             } else {
                 log(`❌ Timeout: Resultado '${cannedResponseText}' não apareceu após 15s.`, 'error');
