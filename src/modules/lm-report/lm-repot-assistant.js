@@ -108,7 +108,9 @@ const LINKS_DB = {
       { name: "Fale Conosco Merchant", url: "https://support.google.com/merchants/gethelp", desc: "Chat/Email Shopping" },
       { name: "Fale Conosco GMB", url: "https://support.google.com/business/gethelp", desc: "Perfil da Empresa" },
       { name: "Suporte API", url: "https://support.google.com/googleapi", desc: "Console API" },
-      { name: "Telefones Suporte", url: "https://www.adwordsrobot.com/en/list-of-google-adwords-support-phone-numbers", desc: "Lista de números" }
+      { name: "Telefones Suporte", url: "https://www.adwordsrobot.com/en/list-of-google-adwords-support-phone-numbers", desc: "Lista de números" },
+      { name: "Skill Shop", url: "https://skillshop.withgoogle.com/intl/pt-BR_ALL/", desc: "Cursos" }
+
     ]
   }
 };
