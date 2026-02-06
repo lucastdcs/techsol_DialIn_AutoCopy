@@ -37,6 +37,7 @@ import { createStepTasksComponent } from "./components/step-tasks.js";
 // NOVO IMPORT
 import { createSplitTransferComponent } from "./components/split-transfer.js"; 
 import { createDraftsManager } from "./drafts/draft-ui.js";
+import { DraftService } from "./drafts/draft-service.js";
 import { getPageData } from "../shared/page-data.js";
 
 export function initCaseNotesAssistant() {
