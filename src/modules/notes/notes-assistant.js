@@ -522,116 +522,134 @@ export function initCaseNotesAssistant() {
   buttonContainer.appendChild(copyButton);
   buttonContainer.appendChild(generateButton);
 
-// Função 1: Captura tudo o que está na tela agora
+// src/modules/notes/notes-assistant.js
+
+  // =========================================================================
+  // LÓGICA DE RASCUNHOS (DRAFTS) - VERSÃO CORRIGIDA
+  // =========================================================================
+
+  // 1. Captura o estado atual da tela
   async function collectCurrentState() {
-        const pageData = await getPageData();
-        
-        // 1. Inputs e Textareas do Formulário
-        const formData = {};
-        const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
-        inputs.forEach(el => formData[el.id] = el.value);
+      const pageData = await getPageData();
+      
+      // a. Inputs de Texto do Formulário Principal
+      const formData = {};
+      const inputs = dynamicFormFieldsContainer.querySelectorAll('input, textarea');
+      inputs.forEach(el => formData[el.id] = el.value);
 
-        // 2. Tasks Selecionadas (Checkboxes)
-        const activeTasks = stepTasks.getCheckedElements().map(c => ({ 
-            key: c.value, 
-            count: parseInt(c.closest('.cw-task-item').querySelector('.cw-step-val')?.textContent || 1) 
-        }));
+      // b. Tasks Selecionadas e Quantidades
+      const activeTasks = stepTasks.getCheckedElements().map(c => ({ 
+          key: c.value, 
+          // Lê a quantidade real do contador visual
+          count: parseInt(c.closest('.cw-task-item').querySelector('.cw-step-val')?.textContent || 1) 
+      }));
 
-        // 3. Tag Support (Radios e Input de Motivo)
-        const tagSupportContainer = document.getElementById("tag-support-container");
-        let tagSupportState = null;
-        if(tagSupportContainer) {
-             const checkedRadio = tagSupportContainer.querySelector('input[type="radio"]:checked');
-             const reasonInput = tagSupportContainer.querySelector('input[type="text"]');
-             tagSupportState = {
-                 choice: checkedRadio ? checkedRadio.value : 'Não',
-                 reason: reasonInput ? reasonInput.value : ''
-             };
-        }
-        const summaryTags = [];
-  stepTasks.getCheckedElements().forEach(c => {
-      // Tenta achar o nome legível no banco de dados
-      const key = c.value;
-      if (TASKS_DB[key]) {
-          summaryTags.push(TASKS_DB[key].name);
-      } else {
-          summaryTags.push(key);
+      // c. [NOVO] Screenshots e Nomes Personalizados das Tasks
+      const screenshotsData = {};
+      // Varre container de screenshots procurando inputs preenchidos
+      const screenInputs = stepTasks.screenshotsElement.querySelectorAll('input');
+      screenInputs.forEach(input => {
+          if (input.value.trim() !== "") {
+              screenshotsData[input.id] = input.value;
+          }
+      });
+
+      // d. Tag Support
+      const tagContainer = document.getElementById("tag-support-container");
+      let tagSupportState = null;
+      if(tagContainer) {
+           const checkedRadio = tagContainer.querySelector('input[type="radio"]:checked');
+           const reasonInput = tagContainer.querySelector('input[type="text"]');
+           tagSupportState = {
+               choice: checkedRadio ? checkedRadio.value : 'Não',
+               reason: reasonInput ? reasonInput.value : ''
+           };
       }
-  });
 
-        return {
-            clientName: pageData.advertiserName,
-            cid: pageData.cid,
-            status: mainStatusSelect.value,
-            subStatus: subStatusSelect.value,
-            caseType: currentCaseType,
-            lang: currentLang,
-            formData,
-            activeTasks,
-            tagSupportState,
-            summaryTags
-        };
-    }
+      return {
+          clientName: pageData.advertiserName,
+          cid: pageData.cid,
+          status: mainStatusSelect.value,
+          subStatus: subStatusSelect.value,
+          caseType: currentCaseType,
+          lang: currentLang,
+          formData,
+          activeTasks,
+          screenshotsData, // Salvando os prints
+          tagSupportState,
+          // Salva tags resumidas para o título do card de rascunho
+          summaryTags: activeTasks.map(t => TASKS_DB[t.key] ? TASKS_DB[t.key].name : t.key) 
+      };
+  }
 
-    // Função 2: Reconstrói a tela a partir dos dados salvos
-    function restoreState(draftData) {
-        // 1. Restaurar Configs Globais
-        if (draftData.lang) setLanguage(draftData.lang);
-        if (draftData.caseType) setCaseType(draftData.caseType);
+  // 2. Restaura o estado na tela
+  function restoreState(draftData) {
+      if (draftData.lang) setLanguage(draftData.lang);
+      if (draftData.caseType) setCaseType(draftData.caseType);
 
-        // 2. Restaurar Status (Dispara a recriação do form)
-        if (draftData.status) {
-            mainStatusSelect.value = draftData.status;
-            mainStatusSelect.dispatchEvent(new Event('change'));
-        }
-        
-        // Timeout para dar tempo do DOM ser criado pelo 'change' acima
-        setTimeout(() => {
-            if (draftData.subStatus) {
-                subStatusSelect.value = draftData.subStatus;
-                subStatusSelect.dispatchEvent(new Event('change'));
-            }
+      // Status (Dispara o change para recriar o formulário base)
+      if (draftData.status) {
+          mainStatusSelect.value = draftData.status;
+          mainStatusSelect.dispatchEvent(new Event('change'));
+      }
+      
+      // Delay necessário para o DOM ser criado
+      setTimeout(() => {
+          if (draftData.subStatus) {
+              subStatusSelect.value = draftData.subStatus;
+              subStatusSelect.dispatchEvent(new Event('change'));
+          }
 
-            // Segundo Timeout para garantir que os campos do substatus renderizaram
-            setTimeout(() => {
-                // 3. Restaurar Campos de Texto
-                if (draftData.formData) {
-                    Object.entries(draftData.formData).forEach(([id, val]) => {
-                        const el = document.getElementById(id);
-                        if(el) el.value = val;
-                    });
-                }
+          // Delay secundário para garantir que tudo renderizou
+          setTimeout(() => {
+              // A. Restaurar Campos de Texto (Formulário)
+              if (draftData.formData) {
+                  Object.entries(draftData.formData).forEach(([id, val]) => {
+                      const el = document.getElementById(id);
+                      if(el) el.value = val;
+                  });
+              }
 
-                // 4. Restaurar Tasks
-                stepTasks.reset(); // Limpa antes
-                if (draftData.activeTasks && Array.isArray(draftData.activeTasks)) {
-                    draftData.activeTasks.forEach(task => {
-                         // Reativa a task X vezes
-                         for(let i=0; i<task.count; i++) {
-                             stepTasks.toggleTask(task.key, true);
-                         }
-                    });
-                }
+              // B. Restaurar Tasks (Com Quantidade Correta)
+              stepTasks.reset(); // Limpa estado anterior
+              if (draftData.activeTasks && Array.isArray(draftData.activeTasks)) {
+                  draftData.activeTasks.forEach(task => {
+                       // Usa o novo método que aceita quantidade direta
+                       stepTasks.setTaskCount(task.key, task.count);
+                  });
+              }
 
-                // 5. Restaurar Tag Support
-                if (draftData.tagSupportState) {
-                    const container = document.getElementById("tag-support-container");
-                    if (container) {
-                        const radio = container.querySelector(`input[value="${draftData.tagSupportState.choice}"]`);
-                        if(radio) {
-                            radio.checked = true;
-                            radio.dispatchEvent(new Event('change')); // Dispara lógica de mostrar/esconder motivo
-                        }
-                        if (draftData.tagSupportState.choice === 'Não' && draftData.tagSupportState.reason) {
-                            const input = container.querySelector('input[type="text"]');
-                            if(input) input.value = draftData.tagSupportState.reason;
-                        }
-                    }
-                }
-                
-            }, 100);
-        }, 50);
-    }
+              // C. [NOVO] Restaurar Screenshots
+              // Como as tasks foram restauradas acima, os inputs de screenshot já existem no DOM agora.
+              if (draftData.screenshotsData) {
+                  Object.entries(draftData.screenshotsData).forEach(([id, val]) => {
+                      const el = document.getElementById(id);
+                      if (el) {
+                          el.value = val;
+                          // Dispara evento para ativar validações visuais (check verde, etc)
+                          el.dispatchEvent(new Event('input')); 
+                      }
+                  });
+              }
+
+              // D. Restaurar Tag Support
+              if (draftData.tagSupportState) {
+                  const tContainer = document.getElementById("tag-support-container");
+                  if (tContainer) {
+                      const radio = tContainer.querySelector(`input[value="${draftData.tagSupportState.choice}"]`);
+                      if(radio) {
+                          radio.checked = true;
+                          radio.dispatchEvent(new Event('change'));
+                      }
+                      if (draftData.tagSupportState.choice === 'Não' && draftData.tagSupportState.reason) {
+                          const input = tContainer.querySelector('input[type="text"]');
+                          if(input) input.value = draftData.tagSupportState.reason;
+                      }
+                  }
+              }
+          }, 150); // Aumentei um pouco o delay para segurança
+      }, 50);
+  }
 
     // -----------------------------------------------------------------------
     // [NOVO] INICIALIZAÇÃO E INJEÇÃO DO DRAFT MANAGER

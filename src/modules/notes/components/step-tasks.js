@@ -827,37 +827,45 @@ screenList.innerHTML = "";
     selectionElement: container,
     screenshotsElement: screenshotsContainer,
     updateSubStatus: () => renderScreenshots(),
+    
+    // Helper para ler o estado atual (Usado no Save)
     getCheckedElements: () => {
       return Object.keys(selection).map((key) => ({
         value: key,
+        // Simula o DOM para manter compatibilidade com o código antigo de leitura
         closest: () => ({
           querySelector: () => ({ textContent: selection[key].count }),
         }),
       }));
     },
 
-    toggleTask: (key, forceState = true) => {
+    // [CORREÇÃO] Novo método para definir quantidade direta (Usado no Restore)
+    setTaskCount: (key, count) => {
+        // Se já existe, reseta para zero antes de setar o novo
+        if (selection[key]) delete selection[key];
+        // Adiciona a quantidade correta de uma vez
+        if (count > 0 && TASKS_DB[key]) {
+            updateTask(key, count, TASKS_DB[key]);
+        }
+    },
 
+    toggleTask: (key, forceState = true) => {
       const current = selection[key];
       if (forceState && !current) {
-
         updateTask(key, 1, TASKS_DB[key]);
       } else if (!forceState && current) {
-
         updateTask(key, -current.count, TASKS_DB[key]);
       }
     },
+    
     setMode: (mode) => {
-        // mode deve ser 'implementation' ou 'education'
         currentMode = mode;
         renderScreenshots(); 
     },
-    // ---------------------------
+    
     reset: () => {
       for (const key in selection) delete selection[key];
-
       searchInput.value = "";
-
       accContainer.style.display = "block";
       resultsContainer.style.display = "none";
       updateUI();

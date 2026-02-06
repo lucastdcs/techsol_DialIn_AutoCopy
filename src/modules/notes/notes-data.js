@@ -570,7 +570,7 @@ export const scenarioSnippets = {
         type: 'bau',
         'field-REASON_COMMENTS': "Sem resposta ao 2 Day Rule.",
         'field-ON_CALL': "N/A", 
-        'field-COMENTARIOS': "• O caso foi gerado e entrei na chamada no horário agendado.\n• O anunciante não compareceu à reunião.\n• Segui o protocolo de espera (BAU): realizei duas tentativas de ligação, aguardei os 10 minutos, e fiz uma terceira tentativa, sem sucesso.\n• Nenhuma das ligações foi atendida (ex: Caixa Postal).\n• Caso inativado após 2 Day Rule.",
+        'field-COMENTARIOS': "• O caso foi gerado e entrei na chamada no horário agendado.\n• O anunciante não compareceu à reunião.\n• Segui o protocolo de espera (BAU): realizei duas tentativas de ligação, sem sucesso.\n• Nenhuma das ligações foi atendida (ex: Caixa Postal).\n• Caso inativado após 2 Day Rule.",
         'field-SCREENSHOTS': "• Tentativa 1 - \n• Tentativa 2  - \n• Tentativa 3 - ",
         'field-GTM_GA4_VERIFICADO': "N/A"
     },
