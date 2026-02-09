@@ -1,7 +1,7 @@
+// src/modules/shared/command-center.js
+
 import { DataService } from './data-service.js'; 
 import { showToast } from './utils.js';
-
-// src/modules/shared/command-center.js
 
 // --- 1. CONFIGURAÇÃO VISUAL ---
 const COLORS = {
@@ -19,6 +19,7 @@ const COLORS = {
   green: "#81C995",  
   orange: "#F9AB00", 
   teal: "#00BFA5",
+  pink: "#F48FB1", // [NOVO] Cor para a Biblioteca
 };
 
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -127,17 +128,17 @@ export function initCommandCenter(actions) {
                 transition: opacity 0.2s ease 0s, transform 0.2s ease 0s, filter 0.2s ease 0s, visibility 0s linear 0.2s; 
             }
 
-            /* --- CASCATAS --- */
-            .cw-pill.collapsed > *:nth-last-child(n) { transition-delay: 0s; }
-            .cw-pill:not(.collapsed) > *:nth-child(1) { transition-delay: 0.30s; }
-            .cw-pill:not(.collapsed) > *:nth-child(2) { transition-delay: 0.34s; }
-            .cw-pill:not(.collapsed) > *:nth-child(3) { transition-delay: 0.38s; }
-            .cw-pill:not(.collapsed) > *:nth-child(4) { transition-delay: 0.42s; }
-            .cw-pill:not(.collapsed) > *:nth-child(5) { transition-delay: 0.46s; }
-            .cw-pill:not(.collapsed) > *:nth-child(6) { transition-delay: 0.50s; }
-            .cw-pill:not(.collapsed) > *:nth-child(7) { transition-delay: 0.54s; }
-            .cw-pill:not(.collapsed) > *:nth-child(8) { transition-delay: 0.58s; }
-            .cw-pill:not(.collapsed) > *:nth-child(9) { transition-delay: 0.62s; }
+            /* --- CASCATAS DE ENTRADA (Ajustado para +1 botão) --- */
+            .cw-pill:not(.collapsed) > *:nth-child(1) { transition-delay: 0.30s; } /* Logo */
+            .cw-pill:not(.collapsed) > *:nth-child(2) { transition-delay: 0.34s; } /* Grip */
+            .cw-pill:not(.collapsed) > *:nth-child(3) { transition-delay: 0.38s; } /* Notes */
+            .cw-pill:not(.collapsed) > *:nth-child(4) { transition-delay: 0.42s; } /* Email */
+            .cw-pill:not(.collapsed) > *:nth-child(5) { transition-delay: 0.46s; } /* Script */
+            .cw-pill:not(.collapsed) > *:nth-child(6) { transition-delay: 0.50s; } /* Links */
+            .cw-pill:not(.collapsed) > *:nth-child(7) { transition-delay: 0.54s; } /* Library (NOVO) */
+            .cw-pill:not(.collapsed) > *:nth-child(8) { transition-delay: 0.58s; } /* Timezone */
+            .cw-pill:not(.collapsed) > *:nth-child(9) { transition-delay: 0.62s; } /* Sep */
+            .cw-pill:not(.collapsed) > *:nth-child(10) { transition-delay: 0.66s; } /* Broadcast */
 
             /* --- ESTILOS DOS BOTÕES --- */
             .cw-btn {
@@ -153,6 +154,7 @@ export function initCommandCenter(actions) {
             .cw-btn.email.active { color: ${COLORS.red} !important; background: rgba(242, 139, 130, 0.15); }
             .cw-btn.script.active { color: ${COLORS.purple} !important; background: rgba(197, 138, 249, 0.15); }
             .cw-btn.links.active { color: ${COLORS.green} !important; background: rgba(129, 201, 149, 0.15); }
+            .cw-btn.library.active { color: ${COLORS.pink} !important; background: rgba(244, 143, 177, 0.15); } /* [NOVO] */
             .cw-btn.broadcast.active { color: ${COLORS.orange} !important; background: rgba(249, 171, 0, 0.15); }
             .cw-btn.timezone.active { color: ${COLORS.teal} !important; background: rgba(0, 191, 165, 0.15); }
 
@@ -160,6 +162,7 @@ export function initCommandCenter(actions) {
             .cw-btn.email:hover { color: ${COLORS.red}; filter: drop-shadow(0 0 5px rgba(242, 139, 130, 0.5)); }
             .cw-btn.script:hover { color: ${COLORS.purple}; filter: drop-shadow(0 0 5px rgba(197, 138, 249, 0.5)); }
             .cw-btn.links:hover { color: ${COLORS.green}; filter: drop-shadow(0 0 5px rgba(129, 201, 149, 0.5)); }
+            .cw-btn.library:hover { color: ${COLORS.pink}; filter: drop-shadow(0 0 5px rgba(244, 143, 177, 0.5)); } /* [NOVO] */
             .cw-btn.broadcast:hover { color: ${COLORS.orange}; filter: drop-shadow(0 0 5px rgba(249, 171, 0, 0.5)); }
             .cw-btn.timezone:hover { color: ${COLORS.teal}; filter: drop-shadow(0 0 5px rgba(0, 191, 165, 0.5)); }
 
@@ -198,14 +201,12 @@ export function initCommandCenter(actions) {
             .cw-pill.dragging .cw-grip-bar { background-color: ${COLORS.blue}; width: 16px; opacity: 1; }
 
             /* ============================================================
-               NOVO ESTILO DO PROCESSING CENTER (Revisado & Corrigido)
+               PROCESSING CENTER
                ============================================================ */
             .cw-pill.processing-center {
                 top: 50% !important; left: 50% !important;
                 transform: translate(-50%, -50%) !important;
-                /* Largura um pouco maior para acomodar texto melhor */
                 width: 340px !important; 
-                /* Altura automática com mínimo, para não cortar conteúdo */
                 height: auto !important; 
                 min-height: 160px !important; 
                 border-radius: 24px !important; 
@@ -223,7 +224,7 @@ export function initCommandCenter(actions) {
             
             .cw-center-stage { 
                 display: flex; flex-direction: column; align-items: center; 
-                gap: 20px; /* Espaço uniforme entre elementos */
+                gap: 20px;
                 width: 100%; opacity: 0; 
                 animation: fadeIn 0.4s ease forwards 0.1s; 
                 position: relative; 
@@ -237,8 +238,8 @@ export function initCommandCenter(actions) {
             
             .cw-center-text { 
                 font-family: 'Google Sans', Roboto, sans-serif;
-                font-size: 15px; /* Fonte maior */
-                color: #E8EAED; /* Branco suave */
+                font-size: 15px;
+                color: #E8EAED;
                 text-align: center; 
                 max-width: 100%; 
                 font-weight: 500; 
@@ -250,15 +251,12 @@ export function initCommandCenter(actions) {
                 animation-delay: 0.2s; 
             }
 
-            /* ... estilos existentes do .cw-badge ... */
-            
-            /* INDICADOR DE TRABALHO EM PROGRESSO (DIRTY STATE) */
             .cw-dot-dirty {
                 position: absolute; top: 8px; right: 8px;
                 width: 6px; height: 6px;
-                background-color: #F9AB00; /* Laranja Google */
+                background-color: #F9AB00;
                 border-radius: 50%;
-                border: 1px solid #3c4043; /* Contraste com fundo escuro */
+                border: 1px solid #3c4043;
                 pointer-events: none;
                 z-index: 11;
                 animation: popIn 0.3s;
@@ -268,7 +266,6 @@ export function initCommandCenter(actions) {
             .cw-center-success svg { width: 48px; height: 48px; }
             .cw-center-success.show { display: block; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
             
-            /* Botão Cancelar Corrigido (Dentro do fluxo) */
             .cw-abort-btn { 
                 position: relative; 
                 bottom: auto; margin-top: 8px; 
@@ -303,6 +300,7 @@ export function initCommandCenter(actions) {
     broadcast: `<svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`,
     main: `<svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>`,
     timezone: `<svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>`,
+    library: `<svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>`, // [NOVO]
   };
 
   const pill = document.createElement("div");
@@ -318,8 +316,7 @@ export function initCommandCenter(actions) {
         <button class="cw-btn email" id="cw-btn-email" data-label="Quick Email">${ICONS.email}</button>
         <button class="cw-btn script" id="cw-btn-script" data-label="Call Script">${ICONS.script}</button>
         <button class="cw-btn links" id="cw-btn-links" data-label="Links">${ICONS.links}</button>
-
-<button class="cw-btn timezone" id="cw-btn-timezone" data-label="Time Zones">${ICONS.timezone}</button>
+        <button class="cw-btn library" id="cw-btn-library" data-label="My Library">${ICONS.library}</button> <button class="cw-btn timezone" id="cw-btn-timezone" data-label="Time Zones">${ICONS.timezone}</button>
         <div class="cw-sep"></div>
         <button class="cw-btn broadcast" id="cw-btn-broadcast" data-label="Avisos">${ICONS.broadcast}</button>
         <div class="cw-status-container">
@@ -347,6 +344,7 @@ export function initCommandCenter(actions) {
   pill.querySelector(".email").onclick = (e) => { e.stopPropagation(); toggleModule('email', actions.toggleEmail); };
   pill.querySelector(".script").onclick = (e) => { e.stopPropagation(); toggleModule('script', actions.toggleScript); };
   pill.querySelector(".links").onclick = (e) => { e.stopPropagation(); toggleModule('links', actions.toggleLinks); };
+  pill.querySelector(".library").onclick = (e) => { e.stopPropagation(); toggleModule('library', actions.toggleLibrary); }; // [NOVO]
   pill.querySelector(".timezone").onclick = (e) => { e.stopPropagation(); toggleModule('timezone', actions.toggleTimezone); };
 
   pill.querySelector(".broadcast").onclick = (e) => {

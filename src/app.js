@@ -9,6 +9,7 @@ import { initBroadcastAssistant } from './modules/broadcast/broadcast-assistant.
 import { initOnboarding } from './modules/onboarding/onboarding-wizard.js';
 import { checkAndShowChangelog } from './modules/changelog/changelog-wizard.js';
 import { initTimezoneAssistant } from './modules/timezone/timezone-assistant.js';
+import { initPersonalLibrary } from './modules/personal-library/personal-library-assistant.js'; // [NOVO]
 
 // Importação do Serviço de Dados
 import { DataService } from './modules/shared/data-service.js';
@@ -28,7 +29,7 @@ function initApp() {
     }
     window.techSolInitialized = true;
 
-    const APP_VERSION = "v5.1"; 
+    const APP_VERSION = "v5.2"; 
 
     console.log(`🚀 TechSol Suite Initializing (${APP_VERSION})...`);
 
@@ -56,6 +57,7 @@ function initApp() {
         const toggleScript = initCallScriptAssistant();
         const toggleLinks = initFeedbackAssistant();
         const toggleTimezone = initTimezoneAssistant();
+        const toggleLibrary = initPersonalLibrary(); // [NOVO] Inicializa a Biblioteca
         
         const broadcastControl = initBroadcastAssistant(); 
 
@@ -66,6 +68,7 @@ function initApp() {
             toggleScript,
             toggleLinks,
             toggleTimezone,
+            toggleLibrary, // [NOVO] Passa o controle para a pílula
             broadcastControl
         });
 
