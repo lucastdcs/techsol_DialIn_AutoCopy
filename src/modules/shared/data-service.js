@@ -143,5 +143,30 @@ export const DataService = {
         }
     },
 
-    logUsage: () => {} 
+    logUsage: () => {} ,
+
+    // Ler todos (GET)
+    getUserSnippets: async (userEmail) => {
+        try {
+            return await jsonpFetch('get_user_snippets', { user: userEmail });
+        } catch (e) {
+            console.warn("Erro ao buscar snippets:", e);
+            return null;
+        }
+    },
+
+    // Salvar/Editar (CREATE/UPDATE)
+    saveSnippet: async (snippet, userEmail) => {
+        const payload = { 
+            ...snippet, 
+            user: userEmail 
+        };
+        // O ID é gerado/validado no backend se não vier
+        return await DataService._performOp('save_snippet', payload);
+    },
+
+    // Deletar (DELETE)
+    deleteSnippet: async (id, userEmail) => {
+        return await DataService._performOp('delete_snippet', { id, user: userEmail });
+    },
 };
