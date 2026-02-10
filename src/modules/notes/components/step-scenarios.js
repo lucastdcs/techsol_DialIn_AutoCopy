@@ -3,7 +3,7 @@
 import { scenarioSnippets } from "../notes-data.js";
 import { SoundManager } from "../../shared/sound-manager.js";
 
-export function createScenariosComponent(onSelectCallback) {
+export function createScenariosComponent(onSelectCallback, extraSnippets = {}) {
 
   const container = document.createElement("div");
   container.className = "cw-step-scenarios";
@@ -38,7 +38,9 @@ export function createScenariosComponent(onSelectCallback) {
   // Estado interno
   let activeValue = null;
 
-  Object.entries(scenarioSnippets).forEach(([label, textValue]) => {
+  const allSnippets = { ...scenarioSnippets, ...extraSnippets };
+
+  Object.entries(allSnippets).forEach(([label, textValue]) => {
     const chip = document.createElement("div");
     chip.textContent = label; 
     
@@ -111,7 +113,7 @@ export function createScenariosComponent(onSelectCallback) {
   function updateVisuals() {
     Array.from(grid.children).forEach(child => {
 
-        const chipText = scenarioSnippets[child.textContent];
+        const chipText = allSnippets[child.textContent];
         
         if (chipText === activeValue) {
             // Ativo

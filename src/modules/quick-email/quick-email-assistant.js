@@ -10,6 +10,7 @@ import { QUICK_EMAILS } from "./quick-email-data.js";
 import { triggerProcessingAnimation } from "../shared/command-center.js";
 import { SUBSTATUS_SHORTCODES } from '../notes/notes-data.js';
 import { runQuickEmail, runEmailAutomation } from "../email/email-automation.js";
+import { SnippetService } from "../personal-library/snippet-service.js";
 
 export function initQuickEmailAssistant() {
     const CURRENT_VERSION = "v4.2.0 CR-Hybrid"; 
@@ -332,6 +333,7 @@ export function initQuickEmailAssistant() {
     function renderTabs() {
         tabsContainer.innerHTML = "";
         tabsContainer.appendChild(createChip("Smart CRs", CR_CATEGORY_KEY, "⚡"));
+        tabsContainer.appendChild(createChip("Pessoal", "PERSONAL_LIBRARY", "👤"));
         Object.keys(QUICK_EMAILS).forEach((catKey) => {
             tabsContainer.appendChild(createChip(QUICK_EMAILS[catKey].title, catKey));
         });
@@ -351,6 +353,17 @@ export function initQuickEmailAssistant() {
                     }
                 });
             });
+
+            // Busca na Biblioteca Pessoal
+            SnippetService.getSnippets('email').forEach(s => {
+                if (s.title.toLowerCase().includes(term) || (s.subject && s.subject.toLowerCase().includes(term))) {
+                    itemsToRender.push({
+                        type: 'email',
+                        data: { name: s.title, subject: s.subject || "Sem Assunto", body: s.content }
+                    });
+                }
+            });
+
             Object.entries(SUBSTATUS_SHORTCODES).forEach(([key, code]) => {
                 if (!code) return;
                 const cleanName = key.replace(/_/g, ' ');
@@ -363,6 +376,13 @@ export function initQuickEmailAssistant() {
                 Object.entries(SUBSTATUS_SHORTCODES).forEach(([key, code]) => {
                     if (!code) return;
                     itemsToRender.push({ type: 'cr', key: key, code: code });
+                });
+            } else if (activeCategory === 'PERSONAL_LIBRARY') {
+                SnippetService.getSnippets('email').forEach(s => {
+                    itemsToRender.push({
+                        type: 'email',
+                        data: { name: s.title, subject: s.subject || "Sem Assunto", body: s.content }
+                    });
                 });
             } else if (QUICK_EMAILS[activeCategory]) {
                 QUICK_EMAILS[activeCategory].emails.forEach(email => {

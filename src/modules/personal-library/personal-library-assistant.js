@@ -233,12 +233,31 @@ export function initPersonalLibrary() {
             const card = document.createElement("div");
             Object.assign(card.style, styles.card);
 
+            if (item.isCode) {
+                card.style.borderLeft = `4px solid ${COLORS.primary}`;
+                card.style.background = "#F8F9FA";
+            }
+
+            // Sanitização básica ou processamento para preview
+            let previewContent = item.content;
+            if (item.isRich) {
+                // Remove tags para o preview, exceto imagens que mostramos um placeholder ou pequeno ícone
+                const temp = document.createElement('div');
+                temp.innerHTML = item.content;
+                const hasImages = temp.querySelector('img');
+                previewContent = temp.innerText.substring(0, 150) + (temp.innerText.length > 150 ? '...' : '');
+                if (hasImages) previewContent = "🖼️ [Contém Imagens] " + previewContent;
+            }
+
             card.innerHTML = `
                 <div style="${objectToCss(styles.cardHeader)}">
                     <div style="${objectToCss(styles.cardTitle)}">${item.title}</div>
-                    ${currentTab === 'email' ? '<span style="font-size:10px; background:#E8F0FE; color:#1967D2; padding:2px 6px; border-radius:4px;">TEMPLATE</span>' : ''}
+                    <div style="display:flex; gap:4px;">
+                        ${item.isCode ? '<span style="font-size:10px; background:#F1F3F4; color:#5F6368; padding:2px 6px; border-radius:4px; font-family:monospace;">CODE</span>' : ''}
+                        ${currentTab === 'email' ? '<span style="font-size:10px; background:#E8F0FE; color:#1967D2; padding:2px 6px; border-radius:4px;">TEMPLATE</span>' : ''}
+                    </div>
                 </div>
-                <div style="${objectToCss(styles.cardPreview)}">${item.content}</div>
+                <div style="${objectToCss(styles.cardPreview)}; ${item.isCode ? "font-family:'Roboto Mono', monospace; font-size:11px;" : ""}">${previewContent}</div>
                 <div style="${objectToCss(styles.cardActions)}">
                     <button class="cw-act-copy" style="${objectToCss(styles.actionBtn)}; color:#1967D2;">Copiar</button>
                     <button class="cw-act-edit" style="${objectToCss(styles.actionBtn)}; color:#5F6368;">Editar</button>
@@ -259,7 +278,18 @@ export function initPersonalLibrary() {
             card.querySelector('.cw-act-copy').onclick = (e) => {
                 e.stopPropagation();
                 SoundManager.playClick();
-                navigator.clipboard.writeText(item.content);
+
+                if (item.isRich) {
+                    const blob = new Blob([item.content], { type: 'text/html' });
+                    const plainText = document.createElement('div');
+                    plainText.innerHTML = item.content;
+                    const blobText = new Blob([plainText.innerText], { type: 'text/plain' });
+                    const data = [new ClipboardItem({ 'text/html': blob, 'text/plain': blobText })];
+                    navigator.clipboard.write(data);
+                } else {
+                    navigator.clipboard.writeText(item.content);
+                }
+
                 showToast("Copiado!");
             };
 
@@ -300,7 +330,10 @@ export function initPersonalLibrary() {
         if (currentTab === 'email') contentLabel = "Corpo do Email (HTML)";
         if (currentTab === 'note') contentLabel = "Texto da Nota (Reason)";
         
-        edBody.appendChild(createInputBlock("content", contentLabel, item ? item.content : "", true));
+        edBody.appendChild(createInputBlock("content", contentLabel, item ? item.content : "", {
+            isRich: true,
+            isCode: item ? item.isCode : false
+        }));
 
         // Feedback visual da abertura
         edHead.querySelector("span").textContent = item ? "Editar Item" : "Novo Item";
@@ -319,10 +352,15 @@ export function initPersonalLibrary() {
     }
 
     async function handleSave() {
-        const title = edBody.querySelector("#cw-inp-title").value.trim();
-        const content = edBody.querySelector("#cw-inp-content").value.trim();
+        const titleInput = edBody.querySelector("#cw-inp-title");
+        const contentInput = edBody.querySelector("#cw-inp-content");
         
-        if (!title || !content) {
+        const title = titleInput.value.trim();
+        // Se for contenteditable, pegamos o innerHTML
+        const content = contentInput.contentEditable === "true" ? contentInput.innerHTML : contentInput.value.trim();
+        const isCode = contentInput.getAttribute('data-is-code') === 'true';
+
+        if (!title || (!content || content === '<br>')) {
             showToast("Preencha título e conteúdo.", { error: true });
             return;
         }
@@ -331,7 +369,9 @@ export function initPersonalLibrary() {
             id: currentEditingId, // Se null, cria novo
             type: currentTab,
             title: title,
-            content: content
+            content: content,
+            isCode: isCode,
+            isRich: contentInput.contentEditable === "true"
         };
 
         if (currentTab === 'email') {
@@ -354,7 +394,7 @@ export function initPersonalLibrary() {
     }
 
     // --- HELPER DE UI ---
-    function createInputBlock(id, labelText, value, isTextarea = false) {
+    function createInputBlock(id, labelText, value, options = {}) {
         const div = document.createElement("div");
         Object.assign(div.style, styles.inputGroup);
         
@@ -363,23 +403,87 @@ export function initPersonalLibrary() {
         Object.assign(label.style, styles.label);
         
         let input;
-        if (isTextarea) {
-            input = document.createElement("textarea");
-            Object.assign(input.style, styles.input, { minHeight: '120px', resize: 'vertical', lineHeight: '1.5' });
+        if (options.isRich) {
+            const toolbar = document.createElement("div");
+            toolbar.style.cssText = "display:flex; gap:8px; margin-bottom:8px; background:#f1f3f4; padding:6px; border-radius:8px; border:1px solid #dadce0;";
+
+            const btnStyle = "padding:4px 10px; font-size:11px; cursor:pointer; background:white; border:1px solid #dadce0; border-radius:6px; font-weight:600; color:#5f6368; transition:all 0.2s;";
+
+            toolbar.innerHTML = `
+                <button type="button" class="cw-tb-bold" title="Negrito" style="${btnStyle}"><b>B</b></button>
+                <button type="button" class="cw-tb-italic" title="Itálico" style="${btnStyle}"><i>I</i></button>
+                <button type="button" class="cw-tb-code" title="Formato Código" style="${btnStyle} font-family:monospace;">&lt;/&gt;</button>
+                <button type="button" class="cw-tb-img" title="Inserir Imagem" style="${btnStyle}">🖼️</button>
+            `;
+
+            input = document.createElement("div");
+            input.contentEditable = "true";
+            Object.assign(input.style, styles.input, {
+                minHeight: '180px', maxHeight: '350px', overflowY: 'auto',
+                whiteSpace: 'pre-wrap', lineHeight: '1.6', outline: 'none'
+            });
+            input.innerHTML = value || "";
+
+            if (options.isCode) {
+                input.style.fontFamily = "'Roboto Mono', monospace";
+                input.style.backgroundColor = "#F8F9FA";
+                input.setAttribute('data-is-code', 'true');
+            }
+
+            toolbar.querySelector('.cw-tb-bold').onclick = () => { document.execCommand('bold'); input.focus(); };
+            toolbar.querySelector('.cw-tb-italic').onclick = () => { document.execCommand('italic'); input.focus(); };
+            toolbar.querySelector('.cw-tb-code').onclick = (e) => {
+                 const isCode = input.getAttribute('data-is-code') === 'true';
+                 const newState = !isCode;
+                 input.setAttribute('data-is-code', newState);
+                 input.style.fontFamily = newState ? "'Roboto Mono', monospace" : "inherit";
+                 input.style.backgroundColor = newState ? "#F8F9FA" : COLORS.surface;
+                 e.currentTarget.style.background = newState ? COLORS.primaryBg : "white";
+                 e.currentTarget.style.color = newState ? COLORS.primary : "#5f6368";
+                 input.focus();
+            };
+
+            toolbar.querySelector('.cw-tb-img').onclick = () => {
+                const url = prompt("Cole a URL da imagem:");
+                if(url) {
+                    document.execCommand('insertImage', false, url);
+                    const imgs = input.querySelectorAll('img');
+                    imgs.forEach(img => { img.style.maxWidth = '100%'; img.style.borderRadius = '8px'; });
+                }
+            };
+
+            input.onpaste = (e) => {
+                const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                for (const item of items) {
+                    if (item.kind === 'file' && item.type.startsWith('image/')) {
+                        e.preventDefault();
+                        const blob = item.getAsFile();
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const img = `<img src="${event.target.result}" style="max-width:100%; border-radius:8px; margin:8px 0; display:block;">`;
+                            document.execCommand('insertHTML', false, img);
+                        };
+                        reader.readAsDataURL(blob);
+                    }
+                }
+            };
+
+            div.appendChild(label);
+            div.appendChild(toolbar);
         } else {
             input = document.createElement("input");
             input.type = "text";
             Object.assign(input.style, styles.input);
+            input.value = value || "";
+            div.appendChild(label);
         }
         
         input.id = `cw-inp-${id}`;
-        input.value = value || "";
         
         // Efeito focus
         input.onfocus = () => { input.style.borderColor = COLORS.primary; input.style.boxShadow = `0 0 0 2px ${COLORS.primaryBg}`; };
         input.onblur = () => { input.style.borderColor = COLORS.border; input.style.boxShadow = "none"; };
 
-        div.appendChild(label);
         div.appendChild(input);
         return div;
     }
