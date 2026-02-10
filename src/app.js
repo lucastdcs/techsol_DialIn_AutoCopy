@@ -4,7 +4,7 @@
 import { initCaseNotesAssistant } from './modules/notes/notes-assistant.js';
 import { initQuickEmailAssistant } from './modules/quick-email/quick-email-assistant.js';
 import { initCallScriptAssistant } from './modules/call-script/call-script-assistant.js';
-import { initFeedbackAssistant } from './modules/lm-report/lm-repot-assistant.js'; 
+import { initFeedbackAssistant } from './modules/lm-report/lm-report-assistant.js';
 import { initBroadcastAssistant } from './modules/broadcast/broadcast-assistant.js'; 
 import { initOnboarding } from './modules/onboarding/onboarding-wizard.js';
 import { checkAndShowChangelog } from './modules/changelog/changelog-wizard.js';

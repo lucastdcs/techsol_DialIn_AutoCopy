@@ -1,4 +1,4 @@
-// src/modules/lm-report/lm-repot-assistant.js
+// src/modules/lm-report/lm-report-assistant.js
 
 import { stylePopup, showToast } from "../shared/utils.js";
 import { createStandardHeader } from "../shared/header-factory.js";
