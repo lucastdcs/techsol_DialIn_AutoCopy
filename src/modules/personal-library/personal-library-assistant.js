@@ -1,6 +1,6 @@
 // src/modules/personal-library/personal-library-assistant.js
 
-import { stylePopup, styleResizeHandle, makeResizable, showToast, confirmDialog } from "../shared/utils.js";
+import { stylePopup, styleResizeHandle, makeResizable, showToast, confirmDialog, promptDialog } from "../shared/utils.js";
 import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from "../shared/animations.js";
 import { SoundManager } from "../shared/sound-manager.js";
@@ -488,8 +488,8 @@ export function initPersonalLibrary() {
                  input.focus();
             };
 
-            toolbar.querySelector('.cw-tb-img').onclick = () => {
-                const url = prompt("Cole a URL da imagem:");
+            toolbar.querySelector('.cw-tb-img').onclick = async () => {
+                const url = await promptDialog("Cole a URL da imagem:");
                 if(url) {
                     document.execCommand('insertImage', false, url);
                     const imgs = input.querySelectorAll('img');

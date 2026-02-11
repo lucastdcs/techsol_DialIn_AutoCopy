@@ -11,7 +11,6 @@ export const GeminiService = {
 
   setKey(key) {
     if (!key || key.length < 30) {
-      alert("Chave API inválida. Tente novamente.");
       return false;
     }
     localStorage.setItem(this.STORAGE_KEY, key.trim());

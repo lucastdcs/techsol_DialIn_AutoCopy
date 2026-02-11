@@ -1,7 +1,7 @@
 // src/modules/notes/drafts/draft-ui.js
 
 import { DraftService } from "./draft-service.js";
-import { showToast } from "../../shared/utils.js";
+import { showToast, confirmDialog } from "../../shared/utils.js";
 import { SoundManager } from "../../shared/sound-manager.js";
 
 export function createDraftsManager(callbacks) {
@@ -60,8 +60,8 @@ export function createDraftsManager(callbacks) {
 
     // LÓGICA DE SALVAR
     parkButton.onclick = async () => {
-        // ... (Mantenha a lógica de click igual à anterior) ...
-        if(confirm("Deseja guardar o rascunho atual e limpar os campos?")) {
+        const confirmed = await confirmDialog("Deseja guardar o rascunho atual e limpar os campos?");
+        if(confirmed) {
             try {
                 const stateData = await onSaveCurrent();
                 if (stateData) {
@@ -213,8 +213,9 @@ export function createDraftsManager(callbacks) {
             
             // ... (Listeners de clique do card continuam iguais) ...
             const btnResume = card.querySelector(".cw-resume-btn");
-            btnResume.onclick = () => {
-                if(confirm("Retomar este rascunho? O formulário atual será substituído.")) {
+            btnResume.onclick = async () => {
+                const confirmed = await confirmDialog("Retomar este rascunho? O formulário atual será substituído.");
+                if(confirmed) {
                     onLoadDraft(draft);
                     DraftService.delete(draft.id); 
                     renderDrawerList();
@@ -225,8 +226,9 @@ export function createDraftsManager(callbacks) {
                 }
             };
             const btnDel = card.querySelector(".cw-del-btn");
-            btnDel.onclick = () => {
-                if(confirm("Excluir este rascunho?")) {
+            btnDel.onclick = async () => {
+                const confirmed = await confirmDialog("Excluir este rascunho?", { danger: true });
+                if(confirmed) {
                     DraftService.delete(draft.id);
                     renderDrawerList();
                     updateBadge();

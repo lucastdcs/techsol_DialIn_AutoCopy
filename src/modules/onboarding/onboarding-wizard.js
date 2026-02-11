@@ -1,6 +1,6 @@
 // src/modules/onboarding/onboarding-wizard.js
 
-import { stylePopup, showToast } from "../shared/utils.js";
+import { stylePopup, showToast, confirmDialog } from "../shared/utils.js";
 import { SoundManager } from "../shared/sound-manager.js";
 
 export function initOnboarding() {
@@ -170,8 +170,9 @@ export function initOnboarding() {
         }
     };
 
-    btnSkip.onclick = () => {
-        if(confirm("Pular o tutorial?")) closeWizard();
+    btnSkip.onclick = async () => {
+        const confirmed = await confirmDialog("Pular o tutorial?");
+        if(confirmed) closeWizard();
     };
 
     // Iniciar Animação de Entrada
