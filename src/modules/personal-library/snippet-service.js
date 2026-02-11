@@ -42,6 +42,7 @@ export const SnippetService = {
             type: snippet.type || 'general',
             title: snippet.title || 'Sem título',
             content: snippet.content || '',
+            subject: snippet.subject || '',
             isCode: snippet.isCode || false,
             isRich: snippet.isRich || false,
             updated: now
