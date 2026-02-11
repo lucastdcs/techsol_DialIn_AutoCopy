@@ -282,6 +282,7 @@ export function initPersonalLibrary() {
                 if (item.isRich) {
                     const blob = new Blob([item.content], { type: 'text/html' });
                     const plainText = document.createElement('div');
+                    plainText.style.whiteSpace = 'pre-wrap'; // Mantém formatação de código
                     plainText.innerHTML = item.content;
                     const blobText = new Blob([plainText.innerText], { type: 'text/plain' });
                     const data = [new ClipboardItem({ 'text/html': blob, 'text/plain': blobText })];
