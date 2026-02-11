@@ -1,5 +1,6 @@
 import { GeminiService } from "./gemini-service.js";
-import { SoundManager } from "../shared/sound-manager.js"; // Certifique-se que o SoundManager tem o método playKey()
+import { SoundManager } from "../shared/sound-manager.js";
+import { alertDialog, promptDialog } from "../shared/utils.js";
 
 export function initMagicWand() {
   let currentTarget = null;
@@ -105,9 +106,15 @@ export function initMagicWand() {
       const item = document.createElement("div");
       item.className = "cw-wand-item";
       item.innerHTML = "🔑 <b>Configurar API Key</b>";
-      item.onclick = () => {
-        const key = prompt("Cole sua Google Gemini API Key aqui:");
-        if (GeminiService.setKey(key)) alert("Chave salva! Tente novamente.");
+      item.onclick = async () => {
+        const key = await promptDialog("Cole sua Google Gemini API Key aqui:");
+        if (key) {
+            if (GeminiService.setKey(key)) {
+                await alertDialog("Chave salva! Tente novamente.");
+            } else {
+                await alertDialog("Chave inválida. Tente novamente.");
+            }
+        }
         hideUI();
       };
       wandMenu.appendChild(item);
@@ -140,7 +147,7 @@ export function initMagicWand() {
 
     const originalText = currentTarget.value;
     if (!originalText || originalText.trim().length === 0) {
-      alert("Escreva algo no campo para a IA processar.");
+      await alertDialog("Escreva algo no campo para a IA processar.");
       wandBtn.classList.remove("thinking");
       return;
     }
@@ -156,8 +163,8 @@ export function initMagicWand() {
     } catch (error) {
       wandBtn.classList.remove("thinking");
       console.error(error);
-      if (error.message === "INVALID_KEY") alert("Chave API inválida ou expirada.");
-      else alert("Erro na IA: " + error.message);
+      if (error.message === "INVALID_KEY") await alertDialog("Chave API inválida ou expirada.");
+      else await alertDialog("Erro na IA: " + error.message);
     }
   }
 

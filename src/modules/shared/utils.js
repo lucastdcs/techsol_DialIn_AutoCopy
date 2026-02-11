@@ -1019,29 +1019,75 @@ export function parseEmojiCodes(text) {
         return ""; 
     });
 }
-export function confirmDialog(message) {
-    return new Promise((resolve) => {
-        const overlay = document.createElement('div');
-        Object.assign(overlay.style, {
-            position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-            background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            zIndex: 2147483647, opacity: 0, transition: 'opacity 0.3s ease'
-        });
+/**
+ * DNA Apple Dialog System
+ * Substitui alerts, confirms e prompts nativos por modais profissionais.
+ */
 
-        const dialog = document.createElement('div');
-        Object.assign(dialog.style, {
-            background: 'white', padding: '24px', borderRadius: '16px',
-            boxShadow: '0 24px 48px rgba(0,0,0,0.2)', width: '320px',
-            textAlign: 'center', transform: 'scale(0.9)', transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
-            fontFamily: "'Google Sans', Roboto, sans-serif"
-        });
+function createBaseOverlay() {
+    const overlay = document.createElement('div');
+    Object.assign(overlay.style, {
+        position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+        background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        zIndex: 2147483647, opacity: 0, transition: 'opacity 0.3s ease'
+    });
+    return overlay;
+}
+
+function createBaseDialog() {
+    const dialog = document.createElement('div');
+    Object.assign(dialog.style, {
+        background: 'rgba(255, 255, 255, 0.95)', padding: '24px', borderRadius: '20px',
+        boxShadow: '0 24px 60px rgba(0,0,0,0.3)', width: '340px',
+        textAlign: 'center', transform: 'scale(0.85)', transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        fontFamily: "'Google Sans', Roboto, sans-serif", border: '1px solid rgba(255,255,255,0.4)'
+    });
+    return dialog;
+}
+
+export function alertDialog(message) {
+    return new Promise((resolve) => {
+        const overlay = createBaseOverlay();
+        const dialog = createBaseDialog();
 
         dialog.innerHTML = `
-            <div style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #202124;">${message}</div>
-            <div style="display: flex; gap: 12px; justify-content: center;">
-                <button id="cw-conf-cancel" style="padding: 10px 20px; border-radius: 8px; border: 1px solid #DADCE0; background: white; cursor: pointer; font-weight: 500; font-family: inherit;">Cancelar</button>
-                <button id="cw-conf-ok" style="padding: 10px 20px; border-radius: 8px; border: none; background: #FF3B30; color: white; cursor: pointer; font-weight: 500; font-family: inherit;">Excluir</button>
+            <div style="font-size: 16px; font-weight: 600; margin-bottom: 20px; color: #202124; line-height: 1.4;">${message}</div>
+            <button id="cw-alert-ok" style="width: 100%; padding: 12px; border-radius: 12px; border: none; background: #007AFF; color: white; cursor: pointer; font-weight: 600; font-family: inherit; font-size: 14px; transition: all 0.2s;">OK</button>
+        `;
+
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        requestAnimationFrame(() => {
+            overlay.style.opacity = 1;
+            dialog.style.transform = 'scale(1)';
+        });
+
+        const btn = dialog.querySelector('#cw-alert-ok');
+        btn.onmouseenter = () => SoundManager.playHover();
+        btn.onclick = () => {
+            SoundManager.playClick();
+            overlay.style.opacity = 0;
+            dialog.style.transform = 'scale(0.9)';
+            setTimeout(() => { overlay.remove(); resolve(); }, 300);
+        };
+    });
+}
+
+export function confirmDialog(message, opts = {}) {
+    return new Promise((resolve) => {
+        const overlay = createBaseOverlay();
+        const dialog = createBaseDialog();
+
+        const confirmColor = opts.danger ? '#FF3B30' : '#007AFF';
+        const confirmText = opts.confirmText || (opts.danger ? 'Excluir' : 'Confirmar');
+
+        dialog.innerHTML = `
+            <div style="font-size: 16px; font-weight: 600; margin-bottom: 20px; color: #202124; line-height: 1.4;">${message}</div>
+            <div style="display: flex; gap: 10px;">
+                <button id="cw-conf-cancel" style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #DADCE0; background: white; cursor: pointer; font-weight: 600; font-family: inherit; font-size: 14px; color: #5F6368;">Cancelar</button>
+                <button id="cw-conf-ok" style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: ${confirmColor}; color: white; cursor: pointer; font-weight: 600; font-family: inherit; font-size: 14px;">${confirmText}</button>
             </div>
         `;
 
@@ -1056,13 +1102,59 @@ export function confirmDialog(message) {
         const close = (result) => {
             overlay.style.opacity = 0;
             dialog.style.transform = 'scale(0.9)';
-            setTimeout(() => {
-                overlay.remove();
-                resolve(result);
-            }, 300);
+            setTimeout(() => { overlay.remove(); resolve(result); }, 300);
         };
 
-        overlay.querySelector('#cw-conf-cancel').onclick = () => { SoundManager.playClick(); close(false); };
-        overlay.querySelector('#cw-conf-ok').onclick = () => { SoundManager.playClick(); close(true); };
+        const cancelBtn = dialog.querySelector('#cw-conf-cancel');
+        const okBtn = dialog.querySelector('#cw-conf-ok');
+
+        [cancelBtn, okBtn].forEach(b => b.onmouseenter = () => SoundManager.playHover());
+        cancelBtn.onclick = () => { SoundManager.playClick(); close(false); };
+        okBtn.onclick = () => { SoundManager.playClick(); close(true); };
+    });
+}
+
+export function promptDialog(message, defaultValue = "") {
+    return new Promise((resolve) => {
+        const overlay = createBaseOverlay();
+        const dialog = createBaseDialog();
+
+        dialog.innerHTML = `
+            <div style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #202124; text-align: left;">${message}</div>
+            <input type="text" id="cw-prompt-input" value="${defaultValue}" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #DADCE0; margin-bottom: 20px; box-sizing: border-box; font-family: inherit; font-size: 14px; outline: none;">
+            <div style="display: flex; gap: 10px;">
+                <button id="cw-prompt-cancel" style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #DADCE0; background: white; cursor: pointer; font-weight: 600; font-family: inherit; font-size: 14px; color: #5F6368;">Cancelar</button>
+                <button id="cw-prompt-ok" style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: #007AFF; color: white; cursor: pointer; font-weight: 600; font-family: inherit; font-size: 14px;">OK</button>
+            </div>
+        `;
+
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        const input = dialog.querySelector('#cw-prompt-input');
+
+        requestAnimationFrame(() => {
+            overlay.style.opacity = 1;
+            dialog.style.transform = 'scale(1)';
+            setTimeout(() => input.focus(), 100);
+        });
+
+        const close = (val) => {
+            overlay.style.opacity = 0;
+            dialog.style.transform = 'scale(0.9)';
+            setTimeout(() => { overlay.remove(); resolve(val); }, 300);
+        };
+
+        const cancelBtn = dialog.querySelector('#cw-prompt-cancel');
+        const okBtn = dialog.querySelector('#cw-prompt-ok');
+
+        [cancelBtn, okBtn].forEach(b => b.onmouseenter = () => SoundManager.playHover());
+        cancelBtn.onclick = () => { SoundManager.playClick(); close(null); };
+        okBtn.onclick = () => { SoundManager.playClick(); close(input.value); };
+
+        input.onkeydown = (e) => {
+            if (e.key === 'Enter') { okBtn.click(); }
+            if (e.key === 'Escape') { cancelBtn.click(); }
+        };
     });
 }

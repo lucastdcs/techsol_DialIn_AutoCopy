@@ -5,7 +5,8 @@ import {
   styleResizeHandle,
   makeResizable,
   showToast,
-  parseEmojiCodes
+  parseEmojiCodes,
+  confirmDialog
 } from "../shared/utils.js";
 import { SoundManager } from "../shared/sound-manager.js";
 import { createStandardHeader } from "../shared/header-factory.js";
@@ -431,7 +432,8 @@ export function initBroadcastAssistant() {
   }
 
   async function handleDelete(id) {
-      if(confirm("Confirma a exclusão deste aviso?")) {
+      const confirmed = await confirmDialog("Confirma a exclusão deste aviso?", { danger: true });
+      if(confirmed) {
           const success = await DataService.deleteBroadcast(id);
           if(success) {
               showToast("Aviso removido.");
