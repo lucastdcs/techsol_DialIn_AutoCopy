@@ -55,26 +55,25 @@ export function initCommandCenter(actions) {
                 box-shadow: 0 12px 32px rgba(0,0,0,0.25); z-index: 2147483647;
                 
                 opacity: 0; 
-                min-width: 50px; 
+                width: 56px;
+                max-height: 600px;
                 
                 overflow: visible;
 
-                /* ABRIR: A pílula expande (0.5s) com mola Apple */
+                /* ABRIR: A pílula expande PRIMEIRO */
                 transition: 
-                    width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
-                    height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
-                    padding 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
-                    gap 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-                    border-radius 0.5s ease,
+                    width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                    max-height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+                    padding 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
                     opacity 0.3s ease,
-                    transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
             .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
             /* --- ESTADO COLAPSADO (FECHANDO) --- */
             .cw-pill.collapsed {
                 width: 50px !important; 
-                height: 50px !important;
+                max-height: 50px !important;
                 padding: 0 !important;
                 gap: 0 !important;
                 border-radius: 50% !important;
@@ -82,15 +81,14 @@ export function initCommandCenter(actions) {
                 
                 overflow: hidden !important; 
 
-                /* FECHAR: Mais fluido e rápido, com delay para os ícones saírem */
+                /* FECHAR: A pílula colapsa DEPOIS dos ícones (delay 0.3s) */
                 transition: 
-                    width 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.2s,
-                    height 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.2s,
-                    padding 0.4s ease 0.2s,
-                    gap 0.4s ease 0.2s,
-                    border-radius 0.4s ease 0.2s,
+                    width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s,
+                    max-height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s,
+                    padding 0.5s ease 0.3s,
+                    border-radius 0.5s ease 0.3s,
                     opacity 0.3s ease 0s,
-                    transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.2s !important;
+                    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s !important;
             }
             
             /* --- LOGO DA BOLINHA --- */
@@ -101,7 +99,7 @@ export function initCommandCenter(actions) {
                 opacity: 0;
                 transform: rotate(-180deg) scale(0.5);
                 color: #fff;
-                transition: opacity 0.05s linear 0s, transform 0.2s ease 0s;
+                transition: opacity 0.2s ease 0s, transform 0.2s ease 0s;
             }
             .cw-main-logo svg { fill: #fff; width: 24px; height: 24px; transition: fill 0.3s; }
             
@@ -113,6 +111,7 @@ export function initCommandCenter(actions) {
             .cw-pill.collapsed .cw-main-logo { 
                 opacity: 1; 
                 transform: rotate(0) scale(1);
+                /* Aparece depois que a pílula colapsou */
                 transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s;
             }
             .cw-pill.collapsed:hover .cw-main-logo {
@@ -127,15 +126,17 @@ export function initCommandCenter(actions) {
             /* --- CONTEÚDO INTERNO --- */
             .cw-pill > *:not(.cw-main-logo) {
                 opacity: 1; transform: scale(1) translateY(0); visibility: visible;
+                /* Aparece depois que a pílula expandiu */
                 transition:
-                    opacity 0.4s ease 0.3s,
-                    transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s,
-                    visibility 0s linear 0.3s,
-                    filter 0.3s ease 0.3s;
+                    opacity 0.3s ease 0.4s,
+                    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s,
+                    visibility 0s linear 0.4s,
+                    filter 0.3s ease 0.4s;
             }
             .cw-pill.collapsed > *:not(.cw-main-logo) {
                 opacity: 0; pointer-events: none; visibility: hidden;
-                transform: scale(0.8) translateY(10px); filter: blur(8px);
+                transform: scale(0.5); filter: blur(8px);
+                /* Desaparece imediatamente */
                 transition:
                     opacity 0.2s ease 0s,
                     transform 0.2s ease 0s,
@@ -144,17 +145,16 @@ export function initCommandCenter(actions) {
             }
 
             /* --- CASCATAS DE ENTRADA --- */
-            .cw-pill:not(.collapsed) > *:nth-child(1) { transition-delay: 0.30s; } /* Logo */
-            .cw-pill:not(.collapsed) > *:nth-child(2) { transition-delay: 0.34s; } /* Grip */
-            .cw-pill:not(.collapsed) > *:nth-child(3) { transition-delay: 0.38s; } /* Notes */
-            .cw-pill:not(.collapsed) > *:nth-child(4) { transition-delay: 0.42s; } /* Email */
-            .cw-pill:not(.collapsed) > *:nth-child(5) { transition-delay: 0.46s; } /* Script */
-            .cw-pill:not(.collapsed) > *:nth-child(6) { transition-delay: 0.50s; } /* Links */
-            .cw-pill:not(.collapsed) > *:nth-child(7) { transition-delay: 0.54s; } /* Library */
+            .cw-pill:not(.collapsed) > *:nth-child(2) { transition-delay: 0.40s; } /* Grip */
+            .cw-pill:not(.collapsed) > *:nth-child(3) { transition-delay: 0.43s; } /* Notes */
+            .cw-pill:not(.collapsed) > *:nth-child(4) { transition-delay: 0.46s; } /* Email */
+            .cw-pill:not(.collapsed) > *:nth-child(5) { transition-delay: 0.49s; } /* Script */
+            .cw-pill:not(.collapsed) > *:nth-child(6) { transition-delay: 0.52s; } /* Links */
+            .cw-pill:not(.collapsed) > *:nth-child(7) { transition-delay: 0.55s; } /* Library */
             .cw-pill:not(.collapsed) > *:nth-child(8) { transition-delay: 0.58s; } /* Timezone */
-            .cw-pill:not(.collapsed) > *:nth-child(9) { transition-delay: 0.62s; } /* Configs */
-            .cw-pill:not(.collapsed) > *:nth-child(10) { transition-delay: 0.66s; } /* Sep */
-            .cw-pill:not(.collapsed) > *:nth-child(11) { transition-delay: 0.70s; } /* Broadcast */
+            .cw-pill:not(.collapsed) > *:nth-child(9) { transition-delay: 0.61s; } /* Configs */
+            .cw-pill:not(.collapsed) > *:nth-child(10) { transition-delay: 0.64s; } /* Sep */
+            .cw-pill:not(.collapsed) > *:nth-child(11) { transition-delay: 0.67s; } /* Broadcast */
 
             /* --- ESTILOS DOS BOTÕES --- */
             .cw-btn {
@@ -513,7 +513,7 @@ export function initCommandCenter(actions) {
       } else {
         if (!isAnyActive && !isBtnClick) {
           pill.classList.add('collapsed');
-          SoundManager.playSwoosh();
+          SoundManager.playGenieOpen();
         }
       }
 
