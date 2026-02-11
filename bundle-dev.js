@@ -480,26 +480,25 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
                 box-shadow: 0 12px 32px rgba(0,0,0,0.25); z-index: 2147483647;
                 
                 opacity: 0; 
-                min-width: 50px; 
+                width: 56px;
+                max-height: 600px;
                 
                 overflow: visible;
 
-                /* ABRIR: A p\xEDlula expande (0.5s) com mola Apple */
+                /* ABRIR: A p\xEDlula expande PRIMEIRO */
                 transition: 
-                    width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
-                    height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
-                    padding 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
-                    gap 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
-                    border-radius 0.5s ease,
+                    width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                    max-height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+                    padding 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
                     opacity 0.3s ease,
-                    transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+                    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
             .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
             /* --- ESTADO COLAPSADO (FECHANDO) --- */
             .cw-pill.collapsed {
                 width: 50px !important; 
-                height: 50px !important;
+                max-height: 50px !important;
                 padding: 0 !important;
                 gap: 0 !important;
                 border-radius: 50% !important;
@@ -507,15 +506,14 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
                 
                 overflow: hidden !important; 
 
-                /* FECHAR: Mais fluido e r\xE1pido, com delay para os \xEDcones sa\xEDrem */
+                /* FECHAR: A p\xEDlula colapsa DEPOIS dos \xEDcones (delay 0.3s) */
                 transition: 
-                    width 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.2s,
-                    height 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.2s,
-                    padding 0.4s ease 0.2s,
-                    gap 0.4s ease 0.2s,
-                    border-radius 0.4s ease 0.2s,
+                    width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s,
+                    max-height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s,
+                    padding 0.5s ease 0.3s,
+                    border-radius 0.5s ease 0.3s,
                     opacity 0.3s ease 0s,
-                    transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.2s !important;
+                    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s !important;
             }
             
             /* --- LOGO DA BOLINHA --- */
@@ -526,7 +524,7 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
                 opacity: 0;
                 transform: rotate(-180deg) scale(0.5);
                 color: #fff;
-                transition: opacity 0.05s linear 0s, transform 0.2s ease 0s;
+                transition: opacity 0.2s ease 0s, transform 0.2s ease 0s;
             }
             .cw-main-logo svg { fill: #fff; width: 24px; height: 24px; transition: fill 0.3s; }
             
@@ -538,6 +536,7 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
             .cw-pill.collapsed .cw-main-logo { 
                 opacity: 1; 
                 transform: rotate(0) scale(1);
+                /* Aparece depois que a p\xEDlula colapsou */
                 transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s;
             }
             .cw-pill.collapsed:hover .cw-main-logo {
@@ -552,15 +551,17 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
             /* --- CONTE\xDADO INTERNO --- */
             .cw-pill > *:not(.cw-main-logo) {
                 opacity: 1; transform: scale(1) translateY(0); visibility: visible;
+                /* Aparece depois que a p\xEDlula expandiu */
                 transition:
-                    opacity 0.4s ease 0.3s,
-                    transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s,
-                    visibility 0s linear 0.3s,
-                    filter 0.3s ease 0.3s;
+                    opacity 0.3s ease 0.4s,
+                    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s,
+                    visibility 0s linear 0.4s,
+                    filter 0.3s ease 0.4s;
             }
             .cw-pill.collapsed > *:not(.cw-main-logo) {
                 opacity: 0; pointer-events: none; visibility: hidden;
-                transform: scale(0.8) translateY(10px); filter: blur(8px);
+                transform: scale(0.5); filter: blur(8px);
+                /* Desaparece imediatamente */
                 transition:
                     opacity 0.2s ease 0s,
                     transform 0.2s ease 0s,
@@ -569,17 +570,16 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
             }
 
             /* --- CASCATAS DE ENTRADA --- */
-            .cw-pill:not(.collapsed) > *:nth-child(1) { transition-delay: 0.30s; } /* Logo */
-            .cw-pill:not(.collapsed) > *:nth-child(2) { transition-delay: 0.34s; } /* Grip */
-            .cw-pill:not(.collapsed) > *:nth-child(3) { transition-delay: 0.38s; } /* Notes */
-            .cw-pill:not(.collapsed) > *:nth-child(4) { transition-delay: 0.42s; } /* Email */
-            .cw-pill:not(.collapsed) > *:nth-child(5) { transition-delay: 0.46s; } /* Script */
-            .cw-pill:not(.collapsed) > *:nth-child(6) { transition-delay: 0.50s; } /* Links */
-            .cw-pill:not(.collapsed) > *:nth-child(7) { transition-delay: 0.54s; } /* Library */
+            .cw-pill:not(.collapsed) > *:nth-child(2) { transition-delay: 0.40s; } /* Grip */
+            .cw-pill:not(.collapsed) > *:nth-child(3) { transition-delay: 0.43s; } /* Notes */
+            .cw-pill:not(.collapsed) > *:nth-child(4) { transition-delay: 0.46s; } /* Email */
+            .cw-pill:not(.collapsed) > *:nth-child(5) { transition-delay: 0.49s; } /* Script */
+            .cw-pill:not(.collapsed) > *:nth-child(6) { transition-delay: 0.52s; } /* Links */
+            .cw-pill:not(.collapsed) > *:nth-child(7) { transition-delay: 0.55s; } /* Library */
             .cw-pill:not(.collapsed) > *:nth-child(8) { transition-delay: 0.58s; } /* Timezone */
-            .cw-pill:not(.collapsed) > *:nth-child(9) { transition-delay: 0.62s; } /* Configs */
-            .cw-pill:not(.collapsed) > *:nth-child(10) { transition-delay: 0.66s; } /* Sep */
-            .cw-pill:not(.collapsed) > *:nth-child(11) { transition-delay: 0.70s; } /* Broadcast */
+            .cw-pill:not(.collapsed) > *:nth-child(9) { transition-delay: 0.61s; } /* Configs */
+            .cw-pill:not(.collapsed) > *:nth-child(10) { transition-delay: 0.64s; } /* Sep */
+            .cw-pill:not(.collapsed) > *:nth-child(11) { transition-delay: 0.67s; } /* Broadcast */
 
             /* --- ESTILOS DOS BOT\xD5ES --- */
             .cw-btn {
@@ -753,7 +753,7 @@ Irei abrir caso em BAU para o dia solicitado e pedir descarte do mesmo, levando 
             <div class="cw-dots" id="cw-loader"><span></span><span></span><span></span></div>
             <div class="cw-check" id="cw-success" style="display:none;">${n.check}</div>
         </div>
-    `;let i=document.createElement("div");i.className="cw-focus-backdrop",document.body.appendChild(i),document.body.appendChild(o);let s=(b,T)=>{$.playClick();let A=o.querySelector(`.${b}`);o.querySelectorAll(".cw-btn").forEach(V=>{V!==A&&V.classList.remove("active")}),A.classList.toggle("active"),T()};if(o.querySelector(".notes").onclick=b=>{b.stopPropagation(),s("notes",e.toggleNotes)},o.querySelector(".email").onclick=b=>{b.stopPropagation(),s("email",e.toggleEmail)},o.querySelector(".script").onclick=b=>{b.stopPropagation(),s("script",e.toggleScript)},o.querySelector(".links").onclick=b=>{b.stopPropagation(),s("links",e.toggleLinks)},o.querySelector(".library").onclick=b=>{b.stopPropagation(),s("library",e.toggleLibrary)},o.querySelector(".timezone").onclick=b=>{b.stopPropagation(),s("timezone",e.toggleTimezone)},o.querySelector(".configs").onclick=b=>{b.stopPropagation(),s("configs",e.toggleConfigs)},o.querySelector(".broadcast").onclick=b=>{b.stopPropagation(),s("broadcast",()=>{let T=b.currentTarget.querySelector(".cw-badge");T&&T.remove(),e.broadcastControl&&e.broadcastControl.toggle()})},o.querySelectorAll(".cw-btn").forEach(b=>{b.addEventListener("mouseenter",()=>$.playHover())}),e.broadcastControl&&e.broadcastControl.hasUnread){let b=document.createElement("div");b.className="cw-badge",o.querySelector(".broadcast").appendChild(b)}let a=null;o.onmouseleave=()=>{o.querySelector(".cw-btn.active")||o.classList.contains("processing-center")||(a=setTimeout(()=>{o.classList.add("collapsed")},3e3))},o.onmouseenter=()=>{a&&clearTimeout(a)},(async function(){await Lt(2800),o.classList.add("docked"),await Lt(300);let T=o.querySelectorAll(".cw-btn");o.querySelectorAll(".cw-sep").forEach(A=>A.classList.add("visible"));for(let A=0;A<T.length;A++)T[A].classList.add("popped"),await Lt(90);await Lt(200),o.classList.add("system-check")})();let r=!1,c,l,d,g,x=3;o.onmousedown=b=>{if(b.target.closest("button"))return;b.preventDefault(),c=b.clientX,l=b.clientY;let T=o.getBoundingClientRect();d=T.left,g=T.top,document.addEventListener("mousemove",h),document.addEventListener("mouseup",f)};function h(b){let T=b.clientX-c,A=b.clientY-l;!r&&Math.sqrt(T*T+A*A)>x&&(r=!0,o.style.transition="none",a&&clearTimeout(a)),r&&(o.style.left=`${d+T}px`,o.style.top=`${g+A}px`,o.style.right="auto",o.style.bottom="auto",o.style.transform="none")}function f(b){if(document.removeEventListener("mousemove",h),document.removeEventListener("mouseup",f),r){r=!1;let T=window.innerWidth,A=window.innerHeight,V=o.getBoundingClientRect(),H=V.left+V.width/2,B;H<T/2?(B=24,o.classList.remove("side-right"),o.classList.add("side-left")):(B=T-V.width-24,o.classList.remove("side-left"),o.classList.add("side-right"));let w=Math.max(24,Math.min(V.top,A-V.height-24));setTimeout(()=>{o.style.setProperty("transition","left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)","important"),o.style.left=`${B}px`,o.style.top=`${w}px`,o.style.bottom="auto",o.style.transform=""},10),setTimeout(()=>{o.style.transition="",o.style.removeProperty("transition")},700)}else{let T=o.querySelector(".cw-btn.active"),A=b.target.closest("button");if(o.classList.contains("collapsed")){let V=o.getBoundingClientRect(),H=window.innerHeight,B=V.top>H/2;if(o.style.setProperty("transition","none","important"),B){let w=H-V.bottom;o.style.top="auto",o.style.bottom=`${w}px`}else o.style.bottom="auto",o.style.top=`${V.top}px`;o.offsetWidth,o.style.removeProperty("transition"),o.classList.remove("collapsed"),$.playGenieOpen()}else!T&&!A&&(o.classList.add("collapsed"),$.playSwoosh());A&&(A.style.transform="scale(0.9)",setTimeout(()=>A.style.transform="",150))}}}function Mt(){let e=document.querySelector(".cw-pill"),t=document.querySelector(".cw-focus-backdrop");if(!e)return()=>{};e.classList.remove("collapsed"),window._CW_ABORT_PROCESS=!1;let n=document.createElement("div");n.className="cw-center-stage",n.innerHTML=`
+    `;let i=document.createElement("div");i.className="cw-focus-backdrop",document.body.appendChild(i),document.body.appendChild(o);let s=(b,T)=>{$.playClick();let A=o.querySelector(`.${b}`);o.querySelectorAll(".cw-btn").forEach(V=>{V!==A&&V.classList.remove("active")}),A.classList.toggle("active"),T()};if(o.querySelector(".notes").onclick=b=>{b.stopPropagation(),s("notes",e.toggleNotes)},o.querySelector(".email").onclick=b=>{b.stopPropagation(),s("email",e.toggleEmail)},o.querySelector(".script").onclick=b=>{b.stopPropagation(),s("script",e.toggleScript)},o.querySelector(".links").onclick=b=>{b.stopPropagation(),s("links",e.toggleLinks)},o.querySelector(".library").onclick=b=>{b.stopPropagation(),s("library",e.toggleLibrary)},o.querySelector(".timezone").onclick=b=>{b.stopPropagation(),s("timezone",e.toggleTimezone)},o.querySelector(".configs").onclick=b=>{b.stopPropagation(),s("configs",e.toggleConfigs)},o.querySelector(".broadcast").onclick=b=>{b.stopPropagation(),s("broadcast",()=>{let T=b.currentTarget.querySelector(".cw-badge");T&&T.remove(),e.broadcastControl&&e.broadcastControl.toggle()})},o.querySelectorAll(".cw-btn").forEach(b=>{b.addEventListener("mouseenter",()=>$.playHover())}),e.broadcastControl&&e.broadcastControl.hasUnread){let b=document.createElement("div");b.className="cw-badge",o.querySelector(".broadcast").appendChild(b)}let a=null;o.onmouseleave=()=>{o.querySelector(".cw-btn.active")||o.classList.contains("processing-center")||(a=setTimeout(()=>{o.classList.add("collapsed")},3e3))},o.onmouseenter=()=>{a&&clearTimeout(a)},(async function(){await Lt(2800),o.classList.add("docked"),await Lt(300);let T=o.querySelectorAll(".cw-btn");o.querySelectorAll(".cw-sep").forEach(A=>A.classList.add("visible"));for(let A=0;A<T.length;A++)T[A].classList.add("popped"),await Lt(90);await Lt(200),o.classList.add("system-check")})();let r=!1,c,l,d,g,x=3;o.onmousedown=b=>{if(b.target.closest("button"))return;b.preventDefault(),c=b.clientX,l=b.clientY;let T=o.getBoundingClientRect();d=T.left,g=T.top,document.addEventListener("mousemove",h),document.addEventListener("mouseup",f)};function h(b){let T=b.clientX-c,A=b.clientY-l;!r&&Math.sqrt(T*T+A*A)>x&&(r=!0,o.style.transition="none",a&&clearTimeout(a)),r&&(o.style.left=`${d+T}px`,o.style.top=`${g+A}px`,o.style.right="auto",o.style.bottom="auto",o.style.transform="none")}function f(b){if(document.removeEventListener("mousemove",h),document.removeEventListener("mouseup",f),r){r=!1;let T=window.innerWidth,A=window.innerHeight,V=o.getBoundingClientRect(),H=V.left+V.width/2,B;H<T/2?(B=24,o.classList.remove("side-right"),o.classList.add("side-left")):(B=T-V.width-24,o.classList.remove("side-left"),o.classList.add("side-right"));let w=Math.max(24,Math.min(V.top,A-V.height-24));setTimeout(()=>{o.style.setProperty("transition","left 0.6s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)","important"),o.style.left=`${B}px`,o.style.top=`${w}px`,o.style.bottom="auto",o.style.transform=""},10),setTimeout(()=>{o.style.transition="",o.style.removeProperty("transition")},700)}else{let T=o.querySelector(".cw-btn.active"),A=b.target.closest("button");if(o.classList.contains("collapsed")){let V=o.getBoundingClientRect(),H=window.innerHeight,B=V.top>H/2;if(o.style.setProperty("transition","none","important"),B){let w=H-V.bottom;o.style.top="auto",o.style.bottom=`${w}px`}else o.style.bottom="auto",o.style.top=`${V.top}px`;o.offsetWidth,o.style.removeProperty("transition"),o.classList.remove("collapsed"),$.playGenieOpen()}else!T&&!A&&(o.classList.add("collapsed"),$.playGenieOpen());A&&(A.style.transform="scale(0.9)",setTimeout(()=>A.style.transform="",150))}}}function Mt(){let e=document.querySelector(".cw-pill"),t=document.querySelector(".cw-focus-backdrop");if(!e)return()=>{};e.classList.remove("collapsed"),window._CW_ABORT_PROCESS=!1;let n=document.createElement("div");n.className="cw-center-stage",n.innerHTML=`
       <div class="cw-center-dots"><span></span><span></span><span></span></div>
       <div class="cw-center-text">${xe.getRandomTip()}</div>
       <div class="cw-center-success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
@@ -1781,7 +1781,7 @@ ${H("checks")}
             }
             .cw-configs-section { display: flex; flex-direction: column; gap: 12px; }
             .cw-configs-section-title {
-                fontSize: 12px; font-weight: 700; color: ${n.textSub};
+                font-size: 12px; font-weight: 700; color: ${n.textSub};
                 text-transform: uppercase; letter-spacing: 0.8px;
             }
             .cw-configs-card {
