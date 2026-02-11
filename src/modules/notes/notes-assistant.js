@@ -34,6 +34,7 @@ import {
 
 import { createTagSupportModule } from "./tag-support.js";
 import { createStepTasksComponent } from "./components/step-tasks.js";
+import { SnippetService } from "../personal-library/snippet-service.js";
 // NOVO IMPORT
 import { createSplitTransferComponent } from "./components/split-transfer.js"; 
 import { createDraftsManager } from "./drafts/draft-ui.js";
@@ -368,16 +369,26 @@ export function initCaseNotesAssistant() {
 
   // --- AQUI A MÁGICA ACONTECE ---
   // Chamamos o componente visual (Chips + Preview)
+  const personalNoteSnippets = SnippetService.getSnippets('note').reduce((acc, s) => {
+      acc[`⭐ ${s.title}`] = s.content;
+      return acc;
+  }, {});
+
   const snippetContainer = createScenariosComponent((selectedText) => {
       // Callback: O que fazer quando o usuário clica num chip?
       
       // Tenta achar o textarea principal (ajuste o seletor conforme sua necessidade)
       // Se seu textarea tiver um ID específico, use-o aqui.
-      const target = document.querySelector('textarea'); 
+      const target = document.querySelector('.bullet-textarea') || document.querySelector('textarea');
       
       if (target) {
           // Injeta o texto
-          target.value = selectedText;
+          // Se for HTML (rico), convertemos para texto plano para o textarea
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = selectedText;
+          const cleanText = tempDiv.innerText;
+
+          target.value = cleanText;
           
           // Dispara evento para o React/DOM saber que mudou
           target.dispatchEvent(new Event('input'));
@@ -387,10 +398,18 @@ export function initCaseNotesAssistant() {
           target.style.backgroundColor = "#e8f0fe";
           setTimeout(() => target.style.backgroundColor = "#fff", 300);
       }
-  });
+  }, personalNoteSnippets);
 
   // Mantemos o ID antigo no container wrapper caso alguma lógica externa precise
   snippetContainer.id = "snippet-container";
+
+  // Se houver snippets pessoais, adiciona uma pílula visual ou apenas os chips já aparecerão
+  if (Object.keys(personalNoteSnippets).length > 0) {
+      const badge = document.createElement("span");
+      badge.textContent = " + Seus Snippets";
+      badge.style.cssText = "font-size:10px; color:#1a73e8; font-weight:700; margin-left:8px;";
+      stepSnippetsTitle.appendChild(badge);
+  }
 
   stepSnippetsDiv.appendChild(stepSnippetsTitle);
   stepSnippetsDiv.appendChild(snippetContainer);
