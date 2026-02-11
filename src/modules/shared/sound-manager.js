@@ -8,6 +8,8 @@ let noiseBufferCache = null;
 const MASTER_GAIN = 0.3; 
 const STARTUP_SOUND = "data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTYXdmZ29vZCBjbGljawBUTkMyAAAAIQAAA1MvdW5kZWZpbmVkIC0gU21hbGwgQnV0dG9uIENsaWNrAP/7kGQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABYaW5nAAAADwAAAAoAAAAzAazFxsfIyMnKysvLzM3Nzs/P0NHT1NbW19jZ2tvc3d7e3+Dh4uPk5ebm6Onp6uzt7u/w8fLz9PT19vf3+Pj5+vv7/Pz9/f7+/v///wAAADxMYW1lMy4xMDCqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr/+5JkAAALOAAVAAAAAAjqACgAAAAAxtYwAAAAACNoAKAAAAABqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//uSZCAACzoAFQAAAAAI6gAoAAAAAMbWMAAAAAAjaACgAAAAAaqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqr/+5JkTAALOgAVAAAAAAjqACgAAAAAxtYwAAAAACNoAKAAAAABqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqv/7kmRgAAs6ABUAAAAACOoAKAAAAADG1jAAAAAAI2gAoAAAAAGqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq";
 
+let muted = localStorage.getItem('cw_sounds_muted') === 'true';
+
 function getContext() {
     if (!audioCtx) {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -36,11 +38,19 @@ function getNoiseBuffer(ctx) {
 }
 
 export const SoundManager = {
+
+    setMuted: (isMuted) => {
+        muted = isMuted;
+        localStorage.setItem('cw_sounds_muted', isMuted);
+    },
+
+    isMuted: () => muted,
     
     // 1. CLICK (Micro-interação)
     // Ref: Teclado da Apple ou Trackpad tátil. 
     // Não é um "bipe", é um estalo seco de alta frequência.
     playClick: () => {
+        if (muted) return;
         const ctx = getContext();
         if (!ctx) return;
         const t = ctx.currentTime;
@@ -70,6 +80,7 @@ export const SoundManager = {
     // Ref: Nintendo Switch UI / Linear App.
     // Quase inaudível. Apenas um "sopro" minúsculo.
     playHover: () => {
+        if (muted) return;
         // Se quiser usar, adicione no mouseenter. 
         // É tão sutil que não irrita.
         const ctx = getContext();
@@ -95,6 +106,7 @@ export const SoundManager = {
     // Ref: Pagamento Apple Pay.
     // Um acorde "Glassy" mas com ataque suave. Não é festa, é confirmação.
     playSuccess: () => {
+        if (muted) return;
         const ctx = getContext();
         if (!ctx) return;
         const t = ctx.currentTime;
@@ -125,6 +137,7 @@ export const SoundManager = {
     // Ref: iOS abrindo pasta.
     // Som de ar, não de laser.
     playGenieOpen: () => {
+        if (muted) return;
         const ctx = getContext();
         if (!ctx) return;
         const t = ctx.currentTime;
@@ -155,6 +168,7 @@ export const SoundManager = {
     // Ref: macOS "Funk" sound (mas mais sutil).
     // Um "tump" grave. Não diz "ERRO!", diz "Não dá pra passar aqui".
     playError: () => {
+        if (muted) return;
         const ctx = getContext();
         if (!ctx) return;
         const t = ctx.currentTime;
@@ -178,7 +192,7 @@ export const SoundManager = {
     
 
   playStartup: () => {
-
+        if (muted) return;
         const ctx = getContext();
         if (!ctx) return;
         const t = ctx.currentTime;
@@ -280,6 +294,7 @@ export const SoundManager = {
         });
     },
     playNotification: () => {
+        if (muted) return;
         const ctx = getContext();
         if (!ctx) return;
         const t = ctx.currentTime;

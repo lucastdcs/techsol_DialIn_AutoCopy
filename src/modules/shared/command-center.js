@@ -2,6 +2,7 @@
 
 import { DataService } from './data-service.js'; 
 import { showToast } from './utils.js';
+import { SoundManager } from './sound-manager.js';
 
 // --- 1. CONFIGURAÇÃO VISUAL ---
 const COLORS = {
@@ -20,6 +21,7 @@ const COLORS = {
   orange: "#F9AB00", 
   teal: "#00BFA5",
   pink: "#F48FB1", // [NOVO] Cor para a Biblioteca
+  gray: "#9AA0A6", // [NOVO] Cor para Configurações
 };
 
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -57,15 +59,15 @@ export function initCommandCenter(actions) {
                 
                 overflow: visible;
 
-                /* ABRIR: A pílula expande (0.5s) */
+                /* ABRIR: A pílula expande (0.5s) com mola Apple */
                 transition: 
-                    width 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s, 
-                    height 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s,
-                    padding 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s,
-                    gap 0.5s ease 0s,
-                    border-radius 0.5s ease 0s,
-                    opacity 0.3s ease 0s,
-                    transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0s;
+                    width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+                    height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+                    padding 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
+                    gap 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                    border-radius 0.5s ease,
+                    opacity 0.3s ease,
+                    transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
             .cw-pill.docked { opacity: 1; transform: translateX(0) scale(1); }
 
@@ -80,15 +82,15 @@ export function initCommandCenter(actions) {
                 
                 overflow: hidden !important; 
 
-                /* FECHAR: Delay de 0.3s */
+                /* FECHAR: Mais fluido e rápido, com delay para os ícones saírem */
                 transition: 
-                    width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s,
-                    height 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s,
-                    padding 0.5s ease 0.3s,
-                    gap 0.5s ease 0.3s,
-                    border-radius 0.5s ease 0.3s,
+                    width 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.2s,
+                    height 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.2s,
+                    padding 0.4s ease 0.2s,
+                    gap 0.4s ease 0.2s,
+                    border-radius 0.4s ease 0.2s,
                     opacity 0.3s ease 0s,
-                    transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.3s !important;
+                    transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) 0.2s !important;
             }
             
             /* --- LOGO DA BOLINHA --- */
@@ -103,10 +105,15 @@ export function initCommandCenter(actions) {
             }
             .cw-main-logo svg { fill: #fff; width: 24px; height: 24px; transition: fill 0.3s; }
             
+            .cw-pill:not(.collapsed) .cw-main-logo {
+                transform: rotate(360deg) scale(0);
+                opacity: 0;
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            }
             .cw-pill.collapsed .cw-main-logo { 
                 opacity: 1; 
                 transform: rotate(0) scale(1);
-                transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.7s;
+                transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.6s;
             }
             .cw-pill.collapsed:hover .cw-main-logo {
                 background-image: linear-gradient(135deg, #4285F4 0%, #EA4335 33%, #FBBC05 66%, #34A853 100%);
@@ -119,26 +126,35 @@ export function initCommandCenter(actions) {
 
             /* --- CONTEÚDO INTERNO --- */
             .cw-pill > *:not(.cw-main-logo) {
-                opacity: 1; transform: scale(1); visibility: visible;
-                transition: opacity 0.4s ease 0.3s, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s, visibility 0s linear 0.3s;
+                opacity: 1; transform: scale(1) translateY(0); visibility: visible;
+                transition:
+                    opacity 0.4s ease 0.3s,
+                    transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s,
+                    visibility 0s linear 0.3s,
+                    filter 0.3s ease 0.3s;
             }
             .cw-pill.collapsed > *:not(.cw-main-logo) {
                 opacity: 0; pointer-events: none; visibility: hidden;
-                transform: scale(1.3); filter: blur(5px);
-                transition: opacity 0.2s ease 0s, transform 0.2s ease 0s, filter 0.2s ease 0s, visibility 0s linear 0.2s; 
+                transform: scale(0.8) translateY(10px); filter: blur(8px);
+                transition:
+                    opacity 0.2s ease 0s,
+                    transform 0.2s ease 0s,
+                    filter 0.2s ease 0s,
+                    visibility 0s linear 0.2s;
             }
 
-            /* --- CASCATAS DE ENTRADA (Ajustado para +1 botão) --- */
+            /* --- CASCATAS DE ENTRADA --- */
             .cw-pill:not(.collapsed) > *:nth-child(1) { transition-delay: 0.30s; } /* Logo */
             .cw-pill:not(.collapsed) > *:nth-child(2) { transition-delay: 0.34s; } /* Grip */
             .cw-pill:not(.collapsed) > *:nth-child(3) { transition-delay: 0.38s; } /* Notes */
             .cw-pill:not(.collapsed) > *:nth-child(4) { transition-delay: 0.42s; } /* Email */
             .cw-pill:not(.collapsed) > *:nth-child(5) { transition-delay: 0.46s; } /* Script */
             .cw-pill:not(.collapsed) > *:nth-child(6) { transition-delay: 0.50s; } /* Links */
-            .cw-pill:not(.collapsed) > *:nth-child(7) { transition-delay: 0.54s; } /* Library (NOVO) */
+            .cw-pill:not(.collapsed) > *:nth-child(7) { transition-delay: 0.54s; } /* Library */
             .cw-pill:not(.collapsed) > *:nth-child(8) { transition-delay: 0.58s; } /* Timezone */
-            .cw-pill:not(.collapsed) > *:nth-child(9) { transition-delay: 0.62s; } /* Sep */
-            .cw-pill:not(.collapsed) > *:nth-child(10) { transition-delay: 0.66s; } /* Broadcast */
+            .cw-pill:not(.collapsed) > *:nth-child(9) { transition-delay: 0.62s; } /* Configs */
+            .cw-pill:not(.collapsed) > *:nth-child(10) { transition-delay: 0.66s; } /* Sep */
+            .cw-pill:not(.collapsed) > *:nth-child(11) { transition-delay: 0.70s; } /* Broadcast */
 
             /* --- ESTILOS DOS BOTÕES --- */
             .cw-btn {
@@ -147,8 +163,13 @@ export function initCommandCenter(actions) {
                 display: flex; align-items: center; justify-content: center; 
                 cursor: pointer; position: relative; color: ${COLORS.iconIdle};
                 flex-shrink: 0;
+                transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             }
-            .cw-btn:hover { background: ${COLORS.glassHighlight}; color: ${COLORS.iconActive}; transform: scale(1.1) !important; }
+            .cw-btn:hover {
+                background: ${COLORS.glassHighlight};
+                color: ${COLORS.iconActive};
+                transform: scale(1.18) translateY(-2px) !important;
+            }
 
             .cw-btn.notes.active { color: ${COLORS.blue} !important; background: rgba(138, 180, 248, 0.15); }
             .cw-btn.email.active { color: ${COLORS.red} !important; background: rgba(242, 139, 130, 0.15); }
@@ -157,14 +178,16 @@ export function initCommandCenter(actions) {
             .cw-btn.library.active { color: ${COLORS.pink} !important; background: rgba(244, 143, 177, 0.15); } /* [NOVO] */
             .cw-btn.broadcast.active { color: ${COLORS.orange} !important; background: rgba(249, 171, 0, 0.15); }
             .cw-btn.timezone.active { color: ${COLORS.teal} !important; background: rgba(0, 191, 165, 0.15); }
+            .cw-btn.configs.active { color: ${COLORS.gray} !important; background: rgba(154, 160, 166, 0.15); }
 
-            .cw-btn.notes:hover { color: ${COLORS.blue}; filter: drop-shadow(0 0 5px rgba(138, 180, 248, 0.5)); }
-            .cw-btn.email:hover { color: ${COLORS.red}; filter: drop-shadow(0 0 5px rgba(242, 139, 130, 0.5)); }
-            .cw-btn.script:hover { color: ${COLORS.purple}; filter: drop-shadow(0 0 5px rgba(197, 138, 249, 0.5)); }
-            .cw-btn.links:hover { color: ${COLORS.green}; filter: drop-shadow(0 0 5px rgba(129, 201, 149, 0.5)); }
-            .cw-btn.library:hover { color: ${COLORS.pink}; filter: drop-shadow(0 0 5px rgba(244, 143, 177, 0.5)); } /* [NOVO] */
-            .cw-btn.broadcast:hover { color: ${COLORS.orange}; filter: drop-shadow(0 0 5px rgba(249, 171, 0, 0.5)); }
-            .cw-btn.timezone:hover { color: ${COLORS.teal}; filter: drop-shadow(0 0 5px rgba(0, 191, 165, 0.5)); }
+            .cw-btn.notes:hover { color: ${COLORS.blue}; filter: drop-shadow(0 0 8px rgba(138, 180, 248, 0.6)); }
+            .cw-btn.email:hover { color: ${COLORS.red}; filter: drop-shadow(0 0 8px rgba(242, 139, 130, 0.6)); }
+            .cw-btn.script:hover { color: ${COLORS.purple}; filter: drop-shadow(0 0 8px rgba(197, 138, 249, 0.6)); }
+            .cw-btn.links:hover { color: ${COLORS.green}; filter: drop-shadow(0 0 8px rgba(129, 201, 149, 0.6)); }
+            .cw-btn.library:hover { color: ${COLORS.pink}; filter: drop-shadow(0 0 8px rgba(244, 143, 177, 0.6)); }
+            .cw-btn.broadcast:hover { color: ${COLORS.orange}; filter: drop-shadow(0 0 8px rgba(249, 171, 0, 0.6)); }
+            .cw-btn.timezone:hover { color: ${COLORS.teal}; filter: drop-shadow(0 0 8px rgba(0, 191, 165, 0.6)); }
+            .cw-btn.configs:hover { color: ${COLORS.gray}; filter: drop-shadow(0 0 8px rgba(154, 160, 166, 0.6)); }
 
             .cw-btn::before {
                 content: ''; position: absolute; bottom: 2px; left: 50%; width: 4px; height: 4px; border-radius: 50%;
@@ -301,6 +324,7 @@ export function initCommandCenter(actions) {
     main: `<svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>`,
     timezone: `<svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>`,
     library: `<svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>`, // [NOVO]
+    configs: `<svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>`,
   };
 
   const pill = document.createElement("div");
@@ -316,7 +340,9 @@ export function initCommandCenter(actions) {
         <button class="cw-btn email" id="cw-btn-email" data-label="Quick Email">${ICONS.email}</button>
         <button class="cw-btn script" id="cw-btn-script" data-label="Call Script">${ICONS.script}</button>
         <button class="cw-btn links" id="cw-btn-links" data-label="Links">${ICONS.links}</button>
-        <button class="cw-btn library" id="cw-btn-library" data-label="My Library">${ICONS.library}</button> <button class="cw-btn timezone" id="cw-btn-timezone" data-label="Time Zones">${ICONS.timezone}</button>
+        <button class="cw-btn library" id="cw-btn-library" data-label="My Library">${ICONS.library}</button>
+        <button class="cw-btn timezone" id="cw-btn-timezone" data-label="Time Zones">${ICONS.timezone}</button>
+        <button class="cw-btn configs" id="cw-btn-configs" data-label="Configurações">${ICONS.configs}</button>
         <div class="cw-sep"></div>
         <button class="cw-btn broadcast" id="cw-btn-broadcast" data-label="Avisos">${ICONS.broadcast}</button>
         <div class="cw-status-container">
@@ -332,6 +358,7 @@ export function initCommandCenter(actions) {
 
   // 3. LISTENERS
   const toggleModule = (btnClass, actionFn) => {
+    SoundManager.playClick();
     const btn = pill.querySelector(`.${btnClass}`);
     pill.querySelectorAll('.cw-btn').forEach(b => {
       if (b !== btn) b.classList.remove('active');
@@ -346,6 +373,7 @@ export function initCommandCenter(actions) {
   pill.querySelector(".links").onclick = (e) => { e.stopPropagation(); toggleModule('links', actions.toggleLinks); };
   pill.querySelector(".library").onclick = (e) => { e.stopPropagation(); toggleModule('library', actions.toggleLibrary); }; // [NOVO]
   pill.querySelector(".timezone").onclick = (e) => { e.stopPropagation(); toggleModule('timezone', actions.toggleTimezone); };
+  pill.querySelector(".configs").onclick = (e) => { e.stopPropagation(); toggleModule('configs', actions.toggleConfigs); };
 
   pill.querySelector(".broadcast").onclick = (e) => {
     e.stopPropagation();
@@ -355,6 +383,11 @@ export function initCommandCenter(actions) {
       if (actions.broadcastControl) actions.broadcastControl.toggle();
     });
   };
+
+  // Hover sounds for all buttons
+  pill.querySelectorAll('.cw-btn').forEach(btn => {
+    btn.addEventListener('mouseenter', () => SoundManager.playHover());
+  });
 
   if (actions.broadcastControl && actions.broadcastControl.hasUnread) {
     const badge = document.createElement('div');
@@ -475,9 +508,13 @@ export function initCommandCenter(actions) {
         void pill.offsetWidth;
         pill.style.removeProperty('transition');
         pill.classList.remove('collapsed');
+        SoundManager.playGenieOpen();
 
       } else {
-        if (!isAnyActive && !isBtnClick) pill.classList.add('collapsed');
+        if (!isAnyActive && !isBtnClick) {
+          pill.classList.add('collapsed');
+          SoundManager.playSwoosh();
+        }
       }
 
       if (isBtnClick) {

@@ -10,6 +10,7 @@ import { initOnboarding } from './modules/onboarding/onboarding-wizard.js';
 import { checkAndShowChangelog } from './modules/changelog/changelog-wizard.js';
 import { initTimezoneAssistant } from './modules/timezone/timezone-assistant.js';
 import { initPersonalLibrary } from './modules/personal-library/personal-library-assistant.js'; // [NOVO]
+import { initConfigsAssistant } from './modules/configs/configs-assistant.js';
 
 // Importação do Serviço de Dados
 import { DataService } from './modules/shared/data-service.js';
@@ -58,6 +59,7 @@ function initApp() {
         const toggleLinks = initFeedbackAssistant();
         const toggleTimezone = initTimezoneAssistant();
         const toggleLibrary = initPersonalLibrary(); // [NOVO] Inicializa a Biblioteca
+        const toggleConfigs = initConfigsAssistant();
         
         const broadcastControl = initBroadcastAssistant(); 
 
@@ -69,6 +71,7 @@ function initApp() {
             toggleLinks,
             toggleTimezone,
             toggleLibrary, // [NOVO] Passa o controle para a pílula
+            toggleConfigs,
             broadcastControl
         });
 
