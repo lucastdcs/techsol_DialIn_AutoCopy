@@ -56,7 +56,7 @@ export function initCommandCenter(actions) {
                 
                 opacity: 0; 
                 width: 56px;
-                max-height: 600px;
+                max-height: 480px;
                 
                 overflow: visible;
 
@@ -223,6 +223,15 @@ export function initCommandCenter(actions) {
             .cw-grip:hover .cw-grip-bar { opacity: 1; background-color: #FFFFFF; transform: scaleY(1.2); }
             .cw-pill.dragging .cw-grip-bar { background-color: ${COLORS.blue}; width: 16px; opacity: 1; }
 
+            .cw-pill.dragging {
+                box-shadow:
+                    0 8px 32px rgba(0,0,0,0.3),
+                    0 0 20px rgba(138, 180, 248, 0.4);
+                filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
+                transform: scale(1.02) !important;
+                transition: box-shadow 0.2s ease, filter 0.2s ease, transform 0.2s ease !important;
+            }
+
             /* ============================================================
                PROCESSING CENTER
                ============================================================ */
@@ -360,9 +369,6 @@ export function initCommandCenter(actions) {
   const toggleModule = (btnClass, actionFn) => {
     SoundManager.playClick();
     const btn = pill.querySelector(`.${btnClass}`);
-    pill.querySelectorAll('.cw-btn').forEach(b => {
-      if (b !== btn) b.classList.remove('active');
-    });
     btn.classList.toggle('active');
     actionFn();
   };
@@ -441,6 +447,7 @@ export function initCommandCenter(actions) {
     const dy = e.clientY - startY;
     if (!isDragging && Math.sqrt(dx * dx + dy * dy) > DRAG_THRESHOLD) {
       isDragging = true;
+      pill.classList.add('dragging');
       pill.style.transition = "none";
       if (closeTimer) clearTimeout(closeTimer);
     }
@@ -457,6 +464,7 @@ export function initCommandCenter(actions) {
 
     if (isDragging) {
       isDragging = false;
+      pill.classList.remove('dragging');
       const screenW = window.innerWidth;
       const screenH = window.innerHeight;
       const rect = pill.getBoundingClientRect();
