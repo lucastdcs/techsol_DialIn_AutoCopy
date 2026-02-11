@@ -32,7 +32,7 @@ export function initConfigsAssistant() {
             }
             .cw-configs-section { display: flex; flex-direction: column; gap: 12px; }
             .cw-configs-section-title {
-                fontSize: 12px; font-weight: 700; color: ${COLORS.textSub};
+                font-size: 12px; font-weight: 700; color: ${COLORS.textSub};
                 text-transform: uppercase; letter-spacing: 0.8px;
             }
             .cw-configs-card {
