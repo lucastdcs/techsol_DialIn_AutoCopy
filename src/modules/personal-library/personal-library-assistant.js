@@ -7,22 +7,38 @@ import { SoundManager } from "../shared/sound-manager.js";
 import { SnippetService } from "./snippet-service.js";
 
 export function initPersonalLibrary() {
-    const CURRENT_VERSION = "v1.0";
+    const CURRENT_VERSION = "v1.1";
     let visible = false;
     let currentTab = 'general'; // general, note, email
     let editorOverlay = null;
     let currentEditingId = null;
 
+    // --- INJEÇÃO DE ESTILOS GLOBAIS (DNA APPLE/GOOGLE) ---
+    if (!document.getElementById('cw-lib-styles')) {
+        const style = document.createElement('style');
+        style.id = 'cw-lib-styles';
+        style.innerHTML = `
+            .cw-lib-card { transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) !important; }
+            .cw-lib-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.12) !important; border-color: rgba(0, 122, 255, 0.3) !important; }
+            .cw-tactile { transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1); }
+            .cw-tactile:active { transform: scale(0.92) !important; }
+            .cw-toolbar-btn { display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; border: 1px solid transparent; background: transparent; cursor: pointer; transition: all 0.2s; color: #5F6368; }
+            .cw-toolbar-btn:hover { background: #F1F3F4; color: #007AFF; border-color: #DADCE0; }
+            .cw-toolbar-btn.active { background: #E8F0FE; color: #007AFF; border-color: #007AFF; }
+        `;
+        document.head.appendChild(style);
+    }
+
     // --- DESIGN SYSTEM ---
     const COLORS = {
-        bg: "#F8F9FA",
+        bg: "#F0F2F5",
         surface: "#FFFFFF",
-        primary: "#1A73E8",
-        primaryBg: "#E8F0FE",
-        text: "#202124",
-        textSub: "#5F6368",
-        border: "#DADCE0",
-        danger: "#D93025"
+        primary: "#007AFF",
+        primaryBg: "rgba(0, 122, 255, 0.1)",
+        text: "#1C1C1E",
+        textSub: "#8E8E93",
+        border: "rgba(0, 0, 0, 0.08)",
+        danger: "#FF3B30"
     };
 
     const styles = {
@@ -33,7 +49,7 @@ export function initPersonalLibrary() {
         tabBtn: { 
             flex: 1, padding: '12px', textAlign: 'center', cursor: 'pointer', 
             fontSize: '13px', fontWeight: '500', color: COLORS.textSub, 
-            borderBottom: '3px solid transparent', transition: 'all 0.2s', userSelect: 'none'
+            borderBottom: '3px solid transparent', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', userSelect: 'none'
         },
         tabActive: { color: COLORS.primary, borderBottomColor: COLORS.primary, fontWeight: '600' },
 
@@ -43,9 +59,9 @@ export function initPersonalLibrary() {
 
         // Card
         card: {
-            background: COLORS.surface, borderRadius: '12px', padding: '16px',
-            border: `1px solid ${COLORS.border}`, boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-            transition: 'all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1)', cursor: 'default',
+            background: COLORS.surface, borderRadius: '16px', padding: '16px',
+            border: `1px solid ${COLORS.border}`, boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+            transition: 'all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1)', cursor: 'default',
             position: 'relative', overflow: 'hidden'
         },
         cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' },
@@ -75,8 +91,10 @@ export function initPersonalLibrary() {
         // Editor Overlay
         editorOverlay: {
             position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-            background: COLORS.bg, zIndex: 20,
-            transform: 'translateY(100%)', transition: 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
+            background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(25px) saturate(180%)',
+            webkitBackdropFilter: 'blur(25px) saturate(180%)',
+            zIndex: 20, transform: 'translateY(100%)',
+            transition: 'transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
             display: 'flex', flexDirection: 'column'
         },
         editorHeader: {
@@ -133,6 +151,7 @@ export function initPersonalLibrary() {
         Object.assign(btn.style, styles.tabBtn);
         if(t.id === currentTab) Object.assign(btn.style, styles.tabActive);
         
+        btn.onmouseenter = () => SoundManager.playHover();
         btn.onclick = () => switchTab(t.id);
         tabHeader.appendChild(btn);
     });
@@ -145,6 +164,7 @@ export function initPersonalLibrary() {
 
     // --- FAB (Add Button) ---
     const fab = document.createElement("div");
+    fab.className = "cw-fab cw-tactile";
     Object.assign(fab.style, styles.fab);
     fab.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>`;
     fab.onmouseenter = () => fab.style.transform = "scale(1.1)";
@@ -231,11 +251,12 @@ export function initPersonalLibrary() {
 
         items.forEach(item => {
             const card = document.createElement("div");
+            card.className = "cw-lib-card";
             Object.assign(card.style, styles.card);
 
             if (item.isCode) {
                 card.style.borderLeft = `4px solid ${COLORS.primary}`;
-                card.style.background = "#F8F9FA";
+                card.style.background = "rgba(0, 122, 255, 0.02)";
             }
 
             // Sanitização básica ou processamento para preview
@@ -259,20 +280,25 @@ export function initPersonalLibrary() {
                 </div>
                 <div style="${objectToCss(styles.cardPreview)}; ${item.isCode ? "font-family:'Roboto Mono', monospace; font-size:11px;" : ""}">${previewContent}</div>
                 <div style="${objectToCss(styles.cardActions)}">
-                    <button class="cw-act-copy" style="${objectToCss(styles.actionBtn)}; color:#1967D2;">Copiar</button>
-                    <button class="cw-act-edit" style="${objectToCss(styles.actionBtn)}; color:#5F6368;">Editar</button>
-                    <button class="cw-act-del" style="${objectToCss(styles.actionBtn)}; color:#D93025;">Excluir</button>
+                    <button class="cw-act-copy cw-tactile" title="Copiar" style="${objectToCss(styles.actionBtn)}; color:#007AFF; display:flex; align-items:center; gap:4px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        <span>Copiar</span>
+                    </button>
+                    <button class="cw-act-edit cw-tactile" title="Editar" style="${objectToCss(styles.actionBtn)}; color:#8E8E93; display:flex; align-items:center; gap:4px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                        <span>Editar</span>
+                    </button>
+                    <button class="cw-act-del cw-tactile" title="Excluir" style="${objectToCss(styles.actionBtn)}; color:#FF3B30; display:flex; align-items:center; gap:4px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        <span>Excluir</span>
+                    </button>
                 </div>
             `;
 
             // Listeners
             card.onmouseenter = () => { 
-                card.style.transform = "translateY(-2px)";
-                card.style.boxShadow = "0 4px 12px rgba(0,0,0,0.08)";
-            };
-            card.onmouseleave = () => { 
-                card.style.transform = "translateY(0)";
-                card.style.boxShadow = "0 1px 3px rgba(0,0,0,0.05)";
+                SoundManager.playHover();
+                // O efeito de lift agora é via classe CSS cw-lib-card
             };
 
             card.querySelector('.cw-act-copy').onclick = (e) => {
@@ -296,12 +322,15 @@ export function initPersonalLibrary() {
 
             card.querySelector('.cw-act-edit').onclick = (e) => {
                 e.stopPropagation();
+                SoundManager.playClick();
                 openEditor(item);
             };
 
-            card.querySelector('.cw-act-del').onclick = (e) => {
+            card.querySelector('.cw-act-del').onclick = async (e) => {
                 e.stopPropagation();
-                if(confirm("Excluir este item?")) {
+                SoundManager.playClick();
+                const confirmed = await confirmDialog("Excluir este item?");
+                if(confirmed) {
                     SnippetService.delete(item.id);
                     renderList();
                     showToast("Item excluído.");
@@ -406,15 +435,21 @@ export function initPersonalLibrary() {
         let input;
         if (options.isRich) {
             const toolbar = document.createElement("div");
-            toolbar.style.cssText = "display:flex; gap:8px; margin-bottom:8px; background:#f1f3f4; padding:6px; border-radius:8px; border:1px solid #dadce0;";
-
-            const btnStyle = "padding:4px 10px; font-size:11px; cursor:pointer; background:white; border:1px solid #dadce0; border-radius:6px; font-weight:600; color:#5f6368; transition:all 0.2s;";
+            toolbar.style.cssText = "display:flex; gap:6px; margin-bottom:12px; background:rgba(241, 243, 244, 0.8); padding:6px; border-radius:12px; border:1px solid #DADCE0; backdrop-filter: blur(10px);";
 
             toolbar.innerHTML = `
-                <button type="button" class="cw-tb-bold" title="Negrito" style="${btnStyle}"><b>B</b></button>
-                <button type="button" class="cw-tb-italic" title="Itálico" style="${btnStyle}"><i>I</i></button>
-                <button type="button" class="cw-tb-code" title="Formato Código" style="${btnStyle} font-family:monospace;">&lt;/&gt;</button>
-                <button type="button" class="cw-tb-img" title="Inserir Imagem" style="${btnStyle}">🖼️</button>
+                <button type="button" class="cw-toolbar-btn cw-tb-bold cw-tactile" title="Negrito">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path><path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z"></path></svg>
+                </button>
+                <button type="button" class="cw-toolbar-btn cw-tb-italic cw-tactile" title="Itálico">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="4" x2="10" y2="4"></line><line x1="14" y1="20" x2="5" y2="20"></line><line x1="15" y1="4" x2="9" y2="20"></line></svg>
+                </button>
+                <button type="button" class="cw-toolbar-btn cw-tb-code cw-tactile" title="Formato Código">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                </button>
+                <button type="button" class="cw-toolbar-btn cw-tb-img cw-tactile" title="Inserir Imagem">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                </button>
             `;
 
             input = document.createElement("div");
@@ -431,6 +466,11 @@ export function initPersonalLibrary() {
                 input.setAttribute('data-is-code', 'true');
             }
 
+            toolbar.querySelectorAll('.cw-toolbar-btn').forEach(btn => {
+                btn.onmouseenter = () => SoundManager.playHover();
+                btn.onmousedown = () => SoundManager.playClick();
+            });
+
             toolbar.querySelector('.cw-tb-bold').onclick = () => { document.execCommand('bold'); input.focus(); };
             toolbar.querySelector('.cw-tb-italic').onclick = () => { document.execCommand('italic'); input.focus(); };
             toolbar.querySelector('.cw-tb-code').onclick = (e) => {
@@ -438,9 +478,13 @@ export function initPersonalLibrary() {
                  const newState = !isCode;
                  input.setAttribute('data-is-code', newState);
                  input.style.fontFamily = newState ? "'Roboto Mono', monospace" : "inherit";
-                 input.style.backgroundColor = newState ? "#F8F9FA" : COLORS.surface;
-                 e.currentTarget.style.background = newState ? COLORS.primaryBg : "white";
-                 e.currentTarget.style.color = newState ? COLORS.primary : "#5f6368";
+                 input.style.backgroundColor = newState ? "rgba(0, 122, 255, 0.03)" : COLORS.surface;
+
+                 if (newState) {
+                     e.currentTarget.classList.add('active');
+                 } else {
+                     e.currentTarget.classList.remove('active');
+                 }
                  input.focus();
             };
 

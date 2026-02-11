@@ -1019,3 +1019,50 @@ export function parseEmojiCodes(text) {
         return ""; 
     });
 }
+export function confirmDialog(message) {
+    return new Promise((resolve) => {
+        const overlay = document.createElement('div');
+        Object.assign(overlay.style, {
+            position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+            background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 2147483647, opacity: 0, transition: 'opacity 0.3s ease'
+        });
+
+        const dialog = document.createElement('div');
+        Object.assign(dialog.style, {
+            background: 'white', padding: '24px', borderRadius: '16px',
+            boxShadow: '0 24px 48px rgba(0,0,0,0.2)', width: '320px',
+            textAlign: 'center', transform: 'scale(0.9)', transition: 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            fontFamily: "'Google Sans', Roboto, sans-serif"
+        });
+
+        dialog.innerHTML = `
+            <div style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #202124;">${message}</div>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button id="cw-conf-cancel" style="padding: 10px 20px; border-radius: 8px; border: 1px solid #DADCE0; background: white; cursor: pointer; font-weight: 500; font-family: inherit;">Cancelar</button>
+                <button id="cw-conf-ok" style="padding: 10px 20px; border-radius: 8px; border: none; background: #FF3B30; color: white; cursor: pointer; font-weight: 500; font-family: inherit;">Excluir</button>
+            </div>
+        `;
+
+        overlay.appendChild(dialog);
+        document.body.appendChild(overlay);
+
+        requestAnimationFrame(() => {
+            overlay.style.opacity = 1;
+            dialog.style.transform = 'scale(1)';
+        });
+
+        const close = (result) => {
+            overlay.style.opacity = 0;
+            dialog.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                overlay.remove();
+                resolve(result);
+            }, 300);
+        };
+
+        overlay.querySelector('#cw-conf-cancel').onclick = () => { SoundManager.playClick(); close(false); };
+        overlay.querySelector('#cw-conf-ok').onclick = () => { SoundManager.playClick(); close(true); };
+    });
+}
