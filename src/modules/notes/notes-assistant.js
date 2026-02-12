@@ -17,7 +17,8 @@ import {
     SUBSTATUS_TEMPLATES,
     SUBSTATUS_SHORTCODES,
     translations,
-    scenarioSnippets
+    scenarioSnippets,
+    textareaListFields
 } from "./data/notes-data.js";
 import {
     copyHtmlToClipboard,
@@ -32,7 +33,7 @@ export function initCaseNotesAssistant() {
     const CURRENT_VERSION = "v4.0.0";
 
     // 1. Initialize UI
-    const { popup, content, header, animRefs } = createNotesPopup(CURRENT_VERSION, toggleVisibility);
+    const { popup, content, header, animRefs, credit } = createNotesPopup(CURRENT_VERSION, toggleVisibility);
 
     // 2. Initialize Sub-modules
     const tagSupport = createTagSupportModule();
@@ -51,7 +52,7 @@ export function initCaseNotesAssistant() {
     // 3. Drafts Manager (Needs to be initialized before actions)
     const draftsManager = createDraftsManager({
         onSaveCurrent: async () => {
-            const state = collectFullState();
+            const state = await collectFullState();
             resetModule();
             return state;
         },
@@ -75,6 +76,17 @@ export function initCaseNotesAssistant() {
     stepTasks.selectionElement.style.display = "none";
     stepTasks.screenshotsElement.style.display = "none";
 
+    // Manual Task Toggle Button (Dotted)
+    const manualTaskBtn = document.createElement("button");
+    manualTaskBtn.id = "manual-task-toggle";
+    manualTaskBtn.textContent = "Gostaria de adicionar uma task";
+    manualTaskBtn.style.cssText = "display: none; width: 100%; padding: 10px; border: 1px dashed #dadce0; background: transparent; color: #5f6368; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 500; margin-top: 8px;";
+    manualTaskBtn.onclick = () => {
+        stepTasks.selectionElement.style.display = "block";
+        manualTaskBtn.style.display = "none";
+    };
+    content.appendChild(manualTaskBtn);
+
     content.appendChild(stepTasks.selectionElement);
     content.appendChild(tagSupport.element);
     content.appendChild(stepTasks.screenshotsElement);
@@ -83,9 +95,13 @@ export function initCaseNotesAssistant() {
     // 5. Split View Integration
     const splitContent = document.createElement("div");
     splitContent.style.display = "none";
+    splitContent.style.flexGrow = "1";
+    splitContent.style.minHeight = "0";
+    splitContent.style.overflow = "hidden";
     const splitComponent = createSplitTransferComponent(() => toggleSplitView());
+    splitComponent.style.height = "100%";
     splitContent.appendChild(splitComponent);
-    popup.appendChild(splitContent);
+    popup.insertBefore(splitContent, credit);
 
     // 6. Header Integration
     const headerActions = header.lastElementChild;
@@ -111,7 +127,8 @@ export function initCaseNotesAssistant() {
         notesState.isSplitView = !notesState.isSplitView;
         if (notesState.isSplitView) {
             content.style.display = 'none';
-            splitContent.style.display = 'block';
+            splitContent.style.display = 'flex';
+            splitContent.style.flexDirection = 'column';
             if(animRefs.googleLine) animRefs.googleLine.style.background = "linear-gradient(to right, #8e24aa, #7b1fa2)";
         } else {
             content.style.display = 'flex';
@@ -223,6 +240,7 @@ export function initCaseNotesAssistant() {
         if (!subStatusKey) {
             scenariosContainer.style.display = "none";
             dynamicFormContainer.style.display = "none";
+            document.getElementById("manual-task-toggle").style.display = "none";
             return;
         }
 
@@ -235,12 +253,17 @@ export function initCaseNotesAssistant() {
 
         // 3. Update Tasks focus
         const templateData = SUBSTATUS_TEMPLATES[subStatusKey];
-        if (templateData.requiresTasks) {
+        const isSo = subStatusKey.startsWith("SO_");
+        const isAv = subStatusKey === "NI_Awaiting_Validation";
+        const manualTaskBtn = document.getElementById("manual-task-toggle");
+
+        if (isSo || isAv) {
             stepTasks.selectionElement.style.display = "block";
-            // screenshotsElement display is managed by stepTasks.updateSubStatus() / renderScreenshots()
+            manualTaskBtn.style.display = "none";
         } else {
             stepTasks.selectionElement.style.display = "none";
             stepTasks.screenshotsElement.style.display = "none";
+            manualTaskBtn.style.display = "block";
         }
 
         stepTasks.updateSubStatus(subStatusKey);
