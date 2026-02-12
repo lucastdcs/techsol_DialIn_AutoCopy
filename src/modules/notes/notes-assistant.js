@@ -163,8 +163,9 @@ export function initCaseNotesAssistant() {
     function createStatusSection() {
         const div = document.createElement("div");
         div.className = "cw-status-section";
+        div.style.cssText = "display: flex; flex-direction: column; gap: 8px;";
         div.innerHTML = `
-            <div class="cw-section-title">${t('status_principal')}</div>
+            <div class="cw-section-title" style="margin-top: 8px;">${t('status_principal')}</div>
             <select id="main-status-select" class="cw-select">
                 <option value="" disabled selected>${t('select_status')}</option>
                 <option value="NI">NI - Need Info</option>
@@ -173,7 +174,7 @@ export function initCaseNotesAssistant() {
                 <option value="AS">AS - Assigned</option>
                 <option value="DC">DC - Discard</option>
             </select>
-            <div class="cw-section-title">${t('substatus')}</div>
+            <div class="cw-section-title" style="margin-top: 8px;">${t('substatus')}</div>
             <select id="sub-status-select" class="cw-select" disabled>
                 <option value="">${t('select_substatus')}</option>
             </select>
@@ -360,7 +361,7 @@ export function initCaseNotesAssistant() {
             formData: formData,
             activeTasks: stepTasks.getCheckedElements().map(c => ({
                 key: c.value,
-                count: parseInt(c.closest().querySelector('.stepper-count')?.textContent || 1)
+                count: c.count
             })),
             timestamp: new Date().toISOString()
         };
