@@ -4,6 +4,7 @@ import { SoundManager } from "../../shared/sound-manager.js";
 import { showToast, confirmDialog } from "../../shared/utils.js";
 export function createScenarioSelector(onSelect, state) {
     const container = document.createElement("div"); container.className = "cw-scenario-module";
+    const selectedScenarios = new Set();
 
     // Apple-style Glassmorphism and refined UI
     const styles = `
@@ -27,9 +28,11 @@ export function createScenarioSelector(onSelect, state) {
             font-size: 13px !important;
             font-weight: 500 !important;
         }
-        .cw-tab.active {
-            background: #ffffff !important;
-            box-shadow: 0 3px 8px 0 rgba(0,0,0,0.12), 0 3px 1px 0 rgba(0,0,0,0.04) !important;
+        .cw-scenario-chip.selected {
+            background: #e8f0fe !important;
+            border-color: #1a73e8 !important;
+            color: #1a73e8 !important;
+            box-shadow: 0 2px 4px rgba(26, 115, 232, 0.2) !important;
         }
         .cw-scenario-chip {
             background: #ffffff !important;
@@ -108,9 +111,25 @@ export function createScenarioSelector(onSelect, state) {
         scenarios = scenarios.filter(s => (s.title?.toLowerCase().includes(searchQuery) || (typeof s.content === 'string' && s.content.toLowerCase().includes(searchQuery))) && (activeTab !== 'default' || !s.content.type || s.content.type === 'all' || s.content.type === state.currentCaseType));
         listContainer.innerHTML = ""; if (scenarios.length === 0) { listContainer.innerHTML = "<div class='cw-empty'>Nenhum cenário encontrado.</div>"; return; }
         scenarios.forEach(s => {
-            const chip = document.createElement("div"); chip.className = "cw-scenario-chip"; chip.textContent = s.title || s.id;
+            const chip = document.createElement("div");
+            chip.className = "cw-scenario-chip";
+            if (selectedScenarios.has(s.id)) chip.classList.add("selected");
+            chip.textContent = s.title || s.id;
+
             chip.onmouseenter = () => { const preview = container.querySelector('.cw-scenario-preview'); preview.textContent = typeof s.content === 'object' ? s.content['field-REASON_COMMENTS'] || "Cenário de preenchimento múltiplo" : s.content.substring(0, 100); };
-            chip.onclick = () => { SoundManager.playClick(); onSelect(s); };
+
+            chip.onclick = () => {
+                SoundManager.playClick();
+                if (selectedScenarios.has(s.id)) {
+                    selectedScenarios.delete(s.id);
+                    chip.classList.remove("selected");
+                } else {
+                    selectedScenarios.add(s.id);
+                    chip.classList.add("selected");
+                }
+                onSelect(s, selectedScenarios.has(s.id));
+            };
+
             if (activeTab === 'personal') { const delBtn = document.createElement('span'); delBtn.innerHTML = ' &times;'; delBtn.onclick = async (e) => { e.stopPropagation(); if (await confirmDialog("Excluir cenário?")) { await ScenarioService.deleteScenario(s.id); renderList(); } }; chip.appendChild(delBtn); }
             listContainer.appendChild(chip);
         });

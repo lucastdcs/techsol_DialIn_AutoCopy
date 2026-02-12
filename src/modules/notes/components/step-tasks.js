@@ -769,13 +769,15 @@ export function createStepTasksComponent(onUpdateCallback) {
           header.appendChild(titleWrap);
           card.appendChild(header);
 
+          const screenshotLabels = task.screenshots?.[currentMode] || [];
+
           for (let idx = 0; idx < requiredScreensPerTask; idx++) {
             const group = document.createElement("div");
             group.className = "cw-input-group";
 
             const label = document.createElement("label");
             label.className = "cw-input-label";
-            label.textContent = `Screenshot #${idx + 1}`;
+            label.textContent = screenshotLabels[idx] || `Screenshot #${idx + 1}`;
 
             const pInput = document.createElement("input");
             pInput.className = "cw-input-field";
