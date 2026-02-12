@@ -1,4 +1,5 @@
-import { TASKS_DB } from "../notes-data.js";
+import { TASKS_DB } from "../data/notes-data.js";
+import { screenshotRules } from "../data/screenshot-rules.js";
 
 // --- 1. DESIGN SYSTEM & CONFIG ---
 const DS = {
@@ -694,57 +695,39 @@ export function createStepTasksComponent(onUpdateCallback) {
 
 
   function renderScreenshots() {
-
-screenList.innerHTML = "";
+    screenList.innerHTML = "";
     const keys = Object.keys(selection);
     let hasAny = false;
 
-    // 1. Tenta achar o input de substatus pelo ID (AJUSTE O ID SE NECESSÁRIO)
-    const subStatusEl = document.getElementById("sub-status"); 
-    
-    // 2. Define o padrão
-    let type = "implementation";
-
-    // 3. Se o elemento existir e o valor contiver "Education", muda o tipo
-    if (subStatusEl && subStatusEl.value.toLowerCase().includes("education")) {
-        type = "education";
-    }
-
+    const subStatus = document.getElementById("sub-status-select")?.value || "";
+    const hasTagSupport = !!document.getElementById("tag-support-container"); // Simple check
 
     if (keys.length === 0) {
       screenList.innerHTML = `<div class="cw-empty-state">Selecione tarefas para ver os campos.</div>`;
       return;
     }
-    if (keys.length === 0) {
-      screenList.innerHTML = `<div class="cw-empty-state">Selecione tarefas para ver os campos.</div>`;
-      return;
-    }
 
-    // --- NOVO: DISCLAIMER WIN CRITERIA ---
     const disclaimer = document.createElement("div");
     disclaimer.className = "cw-info-banner";
     disclaimer.innerHTML = `
             <span style="font-size:14px">ℹ️</span>
             <span>
-                Todos os Screenshots são baseados na descrição do 
-                <a href="https://docs.google.com/spreadsheets/d/1X5yeIZZzWQRrPdSDM7oZt2Kt0ooSN4dgLN4J7gWe8O4/" target="_blank" class="cw-info-link">Win Criteria</a>.
+                Os screenshots seguem as diretrizes atuais do Win Criteria e políticas de Tag Support.
             </span>
         `;
     screenList.appendChild(disclaimer);
- 
 
     keys.forEach((key) => {
       const task = selection[key].data;
-      const count = selection[key].count;
+      const taskCount = selection[key].count;
       const brand = selection[key].brand;
-      const prints = task.screenshots
-        ? task.screenshots[type] || []
-        : ["Link da Evidência"];
 
-      if (prints.length > 0) {
+      const requiredScreensPerTask = screenshotRules.getRequiredCount(subStatus, key, hasTagSupport);
+
+      if (requiredScreensPerTask > 0) {
         hasAny = true;
 
-        for (let i = 1; i <= count; i++) {
+        for (let i = 1; i <= taskCount; i++) {
           const card = document.createElement("div");
           card.className = "cw-screen-card";
           card.style.setProperty("--brand-color", brand.color);
@@ -783,14 +766,13 @@ screenList.innerHTML = "";
           header.appendChild(titleWrap);
           card.appendChild(header);
 
-          
-          prints.forEach((req, idx) => {
+          for (let idx = 0; idx < requiredScreensPerTask; idx++) {
             const group = document.createElement("div");
             group.className = "cw-input-group";
 
             const label = document.createElement("label");
             label.className = "cw-input-label";
-            label.textContent = req.replace(/📷|:|•/g, "").trim();
+            label.textContent = `Screenshot #${idx + 1}`;
 
             const pInput = document.createElement("input");
             pInput.className = "cw-input-field";
@@ -798,10 +780,8 @@ screenList.innerHTML = "";
             pInput.placeholder = "Cole o link aqui...";
             pInput.setAttribute("autocomplete", "off");
 
-            // Lógica de Sucesso
             pInput.addEventListener("input", () => {
-              if (pInput.value.trim().length > 5)
-                pInput.classList.add("filled");
+              if (pInput.value.trim().length > 5) pInput.classList.add("filled");
               else pInput.classList.remove("filled");
             });
 
@@ -813,7 +793,7 @@ screenList.innerHTML = "";
             group.appendChild(pInput);
             group.appendChild(check);
             card.appendChild(group);
-          });
+          }
 
           screenList.appendChild(card);
         }
@@ -832,10 +812,7 @@ screenList.innerHTML = "";
     getCheckedElements: () => {
       return Object.keys(selection).map((key) => ({
         value: key,
-        // Simula o DOM para manter compatibilidade com o código antigo de leitura
-        closest: () => ({
-          querySelector: () => ({ textContent: selection[key].count }),
-        }),
+        count: selection[key].count
       }));
     },
 
