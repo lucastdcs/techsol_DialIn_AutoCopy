@@ -18,5 +18,5 @@ export function enableAutoBullet(textarea) {
                 else if (textBefore.endsWith("  ") && currentLine.trim().startsWith("•")) { e.preventDefault(); this.value = textBefore.substring(0, start - 2) + value.substring(end); this.selectionStart = this.selectionEnd = start - 2; }
             }
         }
-    };
+    })
 }

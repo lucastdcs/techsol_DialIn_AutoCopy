@@ -8,7 +8,7 @@ import { createStandardHeader } from "../shared/header-factory.js";
 import { toggleGenieAnimation } from '../shared/animations.js';
 import { QUICK_EMAILS } from "./quick-email-data.js";
 import { triggerProcessingAnimation } from "../shared/command-center.js";
-import { SUBSTATUS_SHORTCODES } from '../notes/notes-data.js';
+import { SUBSTATUS_SHORTCODES } from '../notes/data/notes-data.js';
 import { runQuickEmail, runEmailAutomation } from "../email/email-automation.js";
 import { SnippetService } from "../personal-library/snippet-service.js";
 
