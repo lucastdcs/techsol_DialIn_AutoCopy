@@ -114,12 +114,13 @@ export function createStepTasksComponent(onUpdateCallback) {
     style.id = styleId;
     style.innerHTML = `
             .cw-zen-container {
-                display: flex; flex-direction: column; height: 100%; width: calc(100% + 32px); margin: -16px;
-                font-family: ${DS.font}; background: ${DS.bg}; position: relative; overflow: hidden;
+                display: flex; flex-direction: column;
+                font-family: ${DS.font}; background: ${DS.bg}; position: relative; overflow: visible;
+                border-radius: 12px; border: 1px solid ${DS.border};
             }
             
             /* SCROLL AREA */
-            .cw-zen-content { flex: 1; overflow-y: auto; padding-bottom: 80px; } /* Espaço para o Status Bar */
+            .cw-zen-content { padding-bottom: 20px; }
 
           /* --- HERO SECTION (Refined) --- */
             .cw-hero-section { padding: 20px 24px 0 24px; }
@@ -260,12 +261,13 @@ export function createStepTasksComponent(onUpdateCallback) {
 
             /* STATUS BAR (Footer) */
             .cw-status-bar {
-                position: absolute; bottom: 0; left: 0; width: 100%; box-sizing: border-box;
+                position: sticky; bottom: 0; left: 0; width: 100%; box-sizing: border-box;
                 padding: 12px 24px; background: rgba(255,255,255,0.92); backdrop-filter: blur(10px);
                 border-top: 1px solid ${DS.border};
                 display: flex; align-items: center; justify-content: space-between;
                 transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 box-shadow: ${DS.shadowFloat}; z-index: 10;
+                margin-top: auto;
             }
             .cw-status-bar.visible { transform: translateY(0); }
             .cw-status-text { font-size: 13px; font-weight: 500; color: ${DS.textMain}; }
@@ -704,6 +706,7 @@ export function createStepTasksComponent(onUpdateCallback) {
 
     if (keys.length === 0) {
       screenList.innerHTML = `<div class="cw-empty-state">Selecione tarefas para ver os campos.</div>`;
+      screenshotsContainer.style.display = "none";
       return;
     }
 
@@ -750,7 +753,7 @@ export function createStepTasksComponent(onUpdateCallback) {
           const nameInput = document.createElement("input");
           nameInput.className = "cw-card-title-input";
           nameInput.id = `name-${key}-${i}`;
-          nameInput.value = `${task.name}${count > 1 ? " #" + i : ""}`;
+          nameInput.value = `${task.name}${taskCount > 1 ? " #" + i : ""}`;
           // Tooltip nativo ajuda também
           nameInput.title = "Clique para renomear esta task";
 

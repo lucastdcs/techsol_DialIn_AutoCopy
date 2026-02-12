@@ -3,8 +3,8 @@
  * Decoupled to allow easy updates as Google policies change.
  */
 export const screenshotRules = {
-    // Default rule: 2 screenshots per task unless specified otherwise
-    defaultCount: 2,
+    // Default rule: 1 screenshots per task unless specified otherwise
+    defaultCount: 1,
 
     // Sub-status specific rules
     subStatusRules: {

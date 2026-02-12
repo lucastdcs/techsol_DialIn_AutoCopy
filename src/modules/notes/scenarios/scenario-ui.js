@@ -4,9 +4,67 @@ import { SoundManager } from "../../shared/sound-manager.js";
 import { showToast, confirmDialog } from "../../shared/utils.js";
 export function createScenarioSelector(onSelect, state) {
     const container = document.createElement("div"); container.className = "cw-scenario-module";
+
+    // Apple-style Glassmorphism and refined UI
+    const styles = `
+        .cw-scenario-module {
+            background: rgba(255, 255, 255, 0.7) !important;
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            border-radius: 16px !important;
+            padding: 16px !important;
+            box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.1);
+        }
+        .cw-scenario-tabs {
+            background: rgba(120, 120, 128, 0.12) !important;
+            padding: 2px !important;
+            border-radius: 10px !important;
+            margin-bottom: 16px !important;
+        }
+        .cw-tab {
+            border-radius: 8px !important;
+            padding: 6px 0 !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+        }
+        .cw-tab.active {
+            background: #ffffff !important;
+            box-shadow: 0 3px 8px 0 rgba(0,0,0,0.12), 0 3px 1px 0 rgba(0,0,0,0.04) !important;
+        }
+        .cw-scenario-chip {
+            background: #ffffff !important;
+            border: 1px solid #e5e5ea !important;
+            border-radius: 12px !important;
+            padding: 6px 12px !important;
+            font-size: 13px !important;
+            color: #1c1c1e !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        }
+        .cw-scenario-chip:hover {
+            background: #f2f2f7 !important;
+            transform: translateY(-1px);
+        }
+        .cw-scenario-search input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(120, 120, 128, 0.1);
+            font-size: 13px;
+            margin-bottom: 12px;
+            outline: none;
+        }
+    `;
+    if (!document.getElementById('cw-scenario-refined-styles')) {
+        const styleSheet = document.createElement("style");
+        styleSheet.id = 'cw-scenario-refined-styles';
+        styleSheet.innerText = styles;
+        document.head.appendChild(styleSheet);
+    }
+
     let activeTab = 'default'; let searchQuery = '';
     const render = () => {
-        container.innerHTML = `<div class="cw-scenario-header"><div class="cw-scenario-tabs"><div class="cw-tab ${activeTab === 'default' ? 'active' : ''}" data-tab="default">Padrão</div><div class="cw-tab ${activeTab === 'personal' ? 'active' : ''}" data-tab="personal">Meus</div><div class="cw-tab ${activeTab === 'community' ? 'active' : ''}" data-tab="community">Comunidade</div></div><div class="cw-scenario-search"><input type="text" placeholder="Buscar cenários..." value="${searchQuery}"></div></div><div class="cw-scenario-list"></div><div class="cw-scenario-preview">Passe o mouse para ver os detalhes</div>`;
+        container.innerHTML = `<div class="cw-scenario-header"><div class="cw-scenario-tabs"><div class="cw-tab ${activeTab === 'default' ? 'active' : ''}" data-tab="default">Padrão</div><div class="cw-tab ${activeTab === 'personal' ? 'active' : ''}" data-tab="personal">Meus</div></div><div class="cw-scenario-search"><input type="text" placeholder="Buscar cenários..." value="${searchQuery}"></div></div><div class="cw-scenario-list"></div><div class="cw-scenario-preview">Passe o mouse para ver os detalhes</div>`;
         container.querySelectorAll('.cw-tab').forEach(tab => { tab.onclick = () => { activeTab = tab.dataset.tab; renderList(); SoundManager.playClick(); }; });
         container.querySelector('.cw-scenario-search input').oninput = (e) => { searchQuery = e.target.value.toLowerCase(); renderList(); };
         renderList();
@@ -47,25 +105,6 @@ export function createScenarioSelector(onSelect, state) {
                 return true;
             }).map(([id, data]) => ({ id, title: id.replace('quickfill-', '').replace(/-/g, ' '), content: data }));
         } else if (activeTab === 'personal') scenarios = ScenarioService.getPersonalScenarios();
-        else if (activeTab === 'community') {
-            if (!customScenarios) {
-                const searchLdapBtn = document.createElement('div');
-                searchLdapBtn.className = "cw-scenario-chip";
-                searchLdapBtn.innerHTML = "🔍 Buscar LDAP";
-                searchLdapBtn.onclick = async () => {
-                    const ldap = prompt("Digite o LDAP do colega:");
-                    if (ldap) {
-                        const shared = await ScenarioService.getSharedScenarios(ldap);
-                        if (shared.length === 0) showToast("Nenhum cenário encontrado para este LDAP.");
-                        else renderList(shared);
-                    }
-                };
-                listContainer.appendChild(searchLdapBtn);
-                scenarios = await ScenarioService.getSharedScenarios();
-            } else {
-                scenarios = customScenarios;
-            }
-        }
         scenarios = scenarios.filter(s => (s.title?.toLowerCase().includes(searchQuery) || (typeof s.content === 'string' && s.content.toLowerCase().includes(searchQuery))) && (activeTab !== 'default' || !s.content.type || s.content.type === 'all' || s.content.type === state.currentCaseType));
         listContainer.innerHTML = ""; if (scenarios.length === 0) { listContainer.innerHTML = "<div class='cw-empty'>Nenhum cenário encontrado.</div>"; return; }
         scenarios.forEach(s => {
@@ -73,7 +112,6 @@ export function createScenarioSelector(onSelect, state) {
             chip.onmouseenter = () => { const preview = container.querySelector('.cw-scenario-preview'); preview.textContent = typeof s.content === 'object' ? s.content['field-REASON_COMMENTS'] || "Cenário de preenchimento múltiplo" : s.content.substring(0, 100); };
             chip.onclick = () => { SoundManager.playClick(); onSelect(s); };
             if (activeTab === 'personal') { const delBtn = document.createElement('span'); delBtn.innerHTML = ' &times;'; delBtn.onclick = async (e) => { e.stopPropagation(); if (await confirmDialog("Excluir cenário?")) { await ScenarioService.deleteScenario(s.id); renderList(); } }; chip.appendChild(delBtn); }
-            else if (activeTab === 'community') { const addBtn = document.createElement('span'); addBtn.innerHTML = ' +'; addBtn.onclick = async (e) => { e.stopPropagation(); await ScenarioService.saveScenario(s); showToast("Adicionado!"); }; chip.appendChild(addBtn); }
             listContainer.appendChild(chip);
         });
     };
