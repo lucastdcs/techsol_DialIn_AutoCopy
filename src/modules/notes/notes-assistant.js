@@ -12,6 +12,7 @@ import { createDraftsManager } from "./drafts/draft-ui.js";
 import { createSplitTransferComponent } from "./components/split-transfer.js";
 import { DraftService } from "./drafts/draft-service.js";
 import { SoundManager } from "../shared/sound-manager.js";
+import { getPageData } from "../shared/page-data.js";
 import {
     SUBSTATUS_TEMPLATES,
     SUBSTATUS_SHORTCODES,
@@ -42,8 +43,8 @@ export function initCaseNotesAssistant() {
 
     const scenariosContainer = document.createElement("div");
     scenariosContainer.style.display = "none";
-    const scenarioSelector = createScenarioSelector((scenario) => {
-        applyScenario(scenario);
+    const scenarioSelector = createScenarioSelector((scenario, isSelected) => {
+        applyScenario(scenario, isSelected);
     }, notesState);
     scenariosContainer.appendChild(scenarioSelector);
 
@@ -69,6 +70,11 @@ export function initCaseNotesAssistant() {
     content.appendChild(statusSection);
     content.appendChild(scenariosContainer);
     content.appendChild(dynamicFormContainer);
+
+    // Hide tasks and screenshots initially
+    stepTasks.selectionElement.style.display = "none";
+    stepTasks.screenshotsElement.style.display = "none";
+
     content.appendChild(stepTasks.selectionElement);
     content.appendChild(tagSupport.element);
     content.appendChild(stepTasks.screenshotsElement);
@@ -231,8 +237,10 @@ export function initCaseNotesAssistant() {
         const templateData = SUBSTATUS_TEMPLATES[subStatusKey];
         if (templateData.requiresTasks) {
             stepTasks.selectionElement.style.display = "block";
+            // screenshotsElement display is managed by stepTasks.updateSubStatus() / renderScreenshots()
         } else {
             stepTasks.selectionElement.style.display = "none";
+            stepTasks.screenshotsElement.style.display = "none";
         }
 
         stepTasks.updateSubStatus(subStatusKey);
@@ -244,20 +252,37 @@ export function initCaseNotesAssistant() {
         tagSupport.updateVisibility(notesState.currentSubStatus, checked);
     }
 
-    function applyScenario(scenario) {
+    function applyScenario(scenario, isSelected) {
         const data = scenario.content;
         if (typeof data === 'object') {
             for (const key in data) {
                 if (key === 'linkedTask') {
-                    stepTasks.toggleTask(data.linkedTask, true);
+                    stepTasks.toggleTask(data.linkedTask, isSelected);
                 } else if (key === 'activeTasks') {
-                    data.activeTasks.forEach(t => stepTasks.setTaskCount(t.value, t.count));
+                    if (isSelected) {
+                        data.activeTasks.forEach(t => stepTasks.setTaskCount(t.value, t.count));
+                    }
                 } else if (key.startsWith('field-')) {
-                    notesState.updateField(key, data[key]);
-                    const el = document.getElementById(key);
-                    if (el) {
-                        el.value = data[key];
-                        el.dispatchEvent(new Event('input'));
+                    if (isSelected) {
+                        notesState.updateField(key, data[key]);
+                        const el = document.getElementById(key);
+                        if (el) {
+                            // Cumulative text if it's a list field
+                            if (textareaListFields.includes(key.replace('field-', ''))) {
+                                const currentVal = el.value.trim();
+                                if (currentVal && !currentVal.includes(data[key].trim())) {
+                                    el.value = currentVal + "\n" + data[key];
+                                } else {
+                                    el.value = data[key];
+                                }
+                            } else {
+                                el.value = data[key];
+                            }
+                            el.dispatchEvent(new Event('input'));
+                        }
+                    } else {
+                        // Removal logic is complex for fields; usually users just want to add.
+                        // For simplicity, we mostly support cumulative addition.
                     }
                 }
             }
@@ -265,7 +290,14 @@ export function initCaseNotesAssistant() {
             // Simple text snippet - find the first textarea
             const firstTextarea = dynamicFormContainer.querySelector('textarea');
             if (firstTextarea) {
-                firstTextarea.value = data;
+                if (isSelected) {
+                    const currentVal = firstTextarea.value.trim();
+                    if (currentVal && !currentVal.includes(data.trim())) {
+                        firstTextarea.value = currentVal + "\n" + data;
+                    } else {
+                        firstTextarea.value = data;
+                    }
+                }
                 firstTextarea.dispatchEvent(new Event('input'));
             }
         }
@@ -277,8 +309,12 @@ export function initCaseNotesAssistant() {
         div.style.display = "flex";
         div.style.gap = "8px";
         div.style.paddingTop = "16px";
+        div.style.marginTop = "16px";
         div.style.borderTop = "1px solid #eee";
         
+        const parkBtn = draftsManager.parkButton;
+        parkBtn.style.marginTop = "0"; // Normalize margin to align with others
+
         const btnCopy = document.createElement("button");
         btnCopy.className = "cw-btn-secondary";
         btnCopy.textContent = t('copiar');
@@ -348,10 +384,12 @@ export function initCaseNotesAssistant() {
         scenariosContainer.style.display = "none";
     }
 
-    function collectFullState() {
+    async function collectFullState() {
         // Collect everything needed for a draft
         const formData = {};
         dynamicFormContainer.querySelectorAll('input, textarea').forEach(el => formData[el.id] = el.value);
+
+        const pageData = await getPageData();
 
         return {
             currentCaseType: notesState.currentCaseType,
@@ -363,6 +401,8 @@ export function initCaseNotesAssistant() {
                 key: c.value,
                 count: c.count
             })),
+            clientName: pageData.advertiserName,
+            cid: pageData.cid,
             timestamp: new Date().toISOString()
         };
     }
