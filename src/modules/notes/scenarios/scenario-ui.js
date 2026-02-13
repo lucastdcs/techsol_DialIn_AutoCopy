@@ -23,10 +23,20 @@ export function createScenarioSelector(onSelect, state) {
             margin-bottom: 16px !important;
         }
         .cw-tab {
+            flex: 1;
             border-radius: 8px !important;
-            padding: 6px 0 !important;
+            padding: 8px 0 !important;
             font-size: 13px !important;
-            font-weight: 500 !important;
+            font-weight: 600 !important;
+            color: #5f6368 !important;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            cursor: pointer;
+            text-align: center;
+        }
+        .cw-tab.active {
+            background: #ffffff !important;
+            color: #1a73e8 !important;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important;
         }
         .cw-scenario-chip.selected {
             background: #e8f0fe !important;
@@ -68,7 +78,13 @@ export function createScenarioSelector(onSelect, state) {
     let activeTab = 'default'; let searchQuery = '';
     const render = () => {
         container.innerHTML = `<div class="cw-scenario-header"><div class="cw-scenario-tabs"><div class="cw-tab ${activeTab === 'default' ? 'active' : ''}" data-tab="default">Padrão</div><div class="cw-tab ${activeTab === 'personal' ? 'active' : ''}" data-tab="personal">Meus</div></div><div class="cw-scenario-search"><input type="text" placeholder="Buscar cenários..." value="${searchQuery}"></div></div><div class="cw-scenario-list"></div><div class="cw-scenario-preview">Passe o mouse para ver os detalhes</div>`;
-        container.querySelectorAll('.cw-tab').forEach(tab => { tab.onclick = () => { activeTab = tab.dataset.tab; renderList(); SoundManager.playClick(); }; });
+        container.querySelectorAll('.cw-tab').forEach(tab => {
+            tab.onclick = () => {
+                activeTab = tab.dataset.tab;
+                render(); // Re-render to update tab active state
+                SoundManager.playClick();
+            };
+        });
         container.querySelector('.cw-scenario-search input').oninput = (e) => { searchQuery = e.target.value.toLowerCase(); renderList(); };
         renderList();
     };

@@ -725,9 +725,9 @@ export function createStepTasksComponent(onUpdateCallback) {
       const taskCount = selection[key].count;
       const brand = selection[key].brand;
 
-      const requiredScreensPerTask = screenshotRules.getRequiredCount(subStatus, key, hasTagSupport);
+      const screenshotLabels = task.screenshots?.[currentMode] || [];
 
-      if (requiredScreensPerTask > 0) {
+      if (screenshotLabels.length > 0) {
         hasAny = true;
 
         for (let i = 1; i <= taskCount; i++) {
@@ -754,10 +754,8 @@ export function createStepTasksComponent(onUpdateCallback) {
           nameInput.className = "cw-card-title-input";
           nameInput.id = `name-${key}-${i}`;
           nameInput.value = `${task.name}${taskCount > 1 ? " #" + i : ""}`;
-          // Tooltip nativo ajuda também
           nameInput.title = "Clique para renomear esta task";
 
-          // Dica Visual (Lápis)
           const editHint = document.createElement("span");
           editHint.className = "cw-edit-hint";
           editHint.innerHTML = "✎ Renomear";
@@ -769,15 +767,13 @@ export function createStepTasksComponent(onUpdateCallback) {
           header.appendChild(titleWrap);
           card.appendChild(header);
 
-          const screenshotLabels = task.screenshots?.[currentMode] || [];
-
-          for (let idx = 0; idx < requiredScreensPerTask; idx++) {
+          screenshotLabels.forEach((title, idx) => {
             const group = document.createElement("div");
             group.className = "cw-input-group";
 
             const label = document.createElement("label");
             label.className = "cw-input-label";
-            label.textContent = screenshotLabels[idx] || `Screenshot #${idx + 1}`;
+            label.textContent = title;
 
             const pInput = document.createElement("input");
             pInput.className = "cw-input-field";
@@ -798,7 +794,7 @@ export function createStepTasksComponent(onUpdateCallback) {
             group.appendChild(pInput);
             group.appendChild(check);
             card.appendChild(group);
-          }
+          });
 
           screenList.appendChild(card);
         }
